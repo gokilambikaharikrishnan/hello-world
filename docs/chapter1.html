@@ -444,3 +444,108 @@
     .verdict-fail { background: rgba(252,129,129,0.06); border-color: var(--accent-red); color: var(--accent-red); }
     .verdict-partial { background: rgba(237,137,54,0.06); border-color: var(--accent-orange); color: var(--accent-orange); }
     .verdict-good { background: rgba(72,187,120,0.06); border-color: var(--accent-green); color: var(--accent-green); }
+
+    /* ============================================================
+       COMPARISON TABLE
+    ============================================================ */
+    .table-wrapper {
+      overflow-x: auto;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      margin: 2rem 0;
+    }
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+    .comparison-table thead {
+      background: var(--bg-card2);
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    .comparison-table th {
+      padding: 1rem 1.25rem;
+      text-align: left;
+      font-weight: 700;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      white-space: nowrap;
+      border-bottom: 1px solid var(--border);
+    }
+    .comparison-table th.col-lfp { color: var(--lfp-color); }
+    .comparison-table th.col-nmc { color: var(--nmc-color); }
+    .comparison-table th.col-lead { color: var(--lead-color); }
+    .comparison-table th.col-nicad { color: var(--nicad-color); }
+    .comparison-table th.col-nimh { color: var(--nimh-color); }
+    .comparison-table th.col-nca { color: var(--nca-color); }
+    .comparison-table td {
+      padding: 0.9rem 1.25rem;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      color: var(--text-secondary);
+      vertical-align: top;
+    }
+    .comparison-table tbody tr:last-child td { border-bottom: none; }
+    .comparison-table tbody tr:hover td { background: rgba(255,255,255,0.02); }
+    .comparison-table .metric-name {
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+    .comparison-table .metric-unit {
+      display: block;
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 100px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      white-space: nowrap;
+    }
+    .badge-green  { background: rgba(72,187,120,0.15);  color: var(--lfp-color); }
+    .badge-blue   { background: rgba(99,179,237,0.15);  color: var(--nmc-color); }
+    .badge-gray   { background: rgba(148,163,184,0.15); color: var(--lead-color); }
+    .badge-orange { background: rgba(237,137,54,0.15);  color: var(--nicad-color); }
+    .badge-purple { background: rgba(183,148,244,0.15); color: var(--nimh-color); }
+    .badge-red    { background: rgba(252,129,129,0.15); color: var(--nca-color); }
+    .badge-gold   { background: rgba(246,224,94,0.15);  color: var(--accent-gold); }
+    .best { color: var(--accent-green); font-weight: 700; }
+    .worst { color: var(--accent-red); font-weight: 700; }
+    .good { color: var(--accent-blue); }
+    .fair { color: var(--accent-orange); }
+
+    /* ============================================================
+       CALLOUT BOXES
+    ============================================================ */
+    .callout {
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1.5rem;
+      margin: 2rem 0;
+      display: flex;
+      gap: 1rem;
+      border: 1px solid;
+    }
+    .callout-icon { font-size: 1.4rem; flex-shrink: 0; line-height: 1.5; }
+    .callout-body { flex: 1; }
+    .callout-title { font-weight: 700; font-size: 0.92rem; margin-bottom: 0.4rem; }
+    .callout p { margin-bottom: 0; font-size: 0.9rem; }
+    .callout-info    { background: rgba(99,179,237,0.06);   border-color: rgba(99,179,237,0.25);   }
+    .callout-info    .callout-title { color: var(--accent-blue); }
+    .callout-warning { background: rgba(237,137,54,0.06);   border-color: rgba(237,137,54,0.25);   }
+    .callout-warning .callout-title { color: var(--accent-orange); }
+    .callout-danger  { background: rgba(252,129,129,0.06);  border-color: rgba(252,129,129,0.25);  }
+    .callout-danger  .callout-title { color: var(--accent-red); }
+    .callout-success { background: rgba(72,187,120,0.06);   border-color: rgba(72,187,120,0.25);   }
+    .callout-success .callout-title { color: var(--accent-green); }
+    .callout-physics { background: rgba(183,148,244,0.06);  border-color: rgba(183,148,244,0.25);  }
+    .callout-physics .callout-title { color: var(--accent-purple); }
