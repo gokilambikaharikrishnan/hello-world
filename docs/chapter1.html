@@ -1759,3 +1759,230 @@
         </p>
       </div><!-- end calendar life subsection -->
 
+      <!-- Cost & Cobalt -->
+      <div class="subsection">
+        <div class="subsection-title">Cost Stability: The Cobalt-Free Advantage</div>
+        <p>
+          LFP does not contain cobalt. This is not a minor detail — it is a structural market
+          advantage that grows more significant as energy storage scales globally.
+        </p>
+        <p>
+          <strong>The cobalt problem in NMC/NCA:</strong> Cobalt is primarily mined in the
+          Democratic Republic of Congo (~70% of global supply). The supply chain is concentrated,
+          geopolitically sensitive, and has a well-documented record of supply disruptions and
+          price spikes. In 2018, cobalt prices reached $95,000/tonne — a 300% increase in 18 months.
+          NMC/NCA battery pack costs spiked in parallel. Manufacturers with supply agreements were
+          protected; spot market buyers were not.
+        </p>
+        <p>
+          The DRC's cobalt also carries significant social cost: artisanal and small-scale mining
+          (ASM) accounts for a substantial portion of production, with associated human rights
+          concerns including child labor that have been extensively documented by NGOs and the
+          UN. For end users building "green" home energy systems, cobalt in the supply chain is
+          an ethical liability.
+        </p>
+        <p>
+          <strong>LFP raw materials:</strong> Iron, phosphate, and lithium. Iron is the fourth
+          most abundant element in Earth's crust. Phosphate is globally distributed and already
+          mined at massive scale for fertilizers. Lithium is the variable — but LFP uses the same
+          lithium per kWh as NMC, so it doesn't escape lithium price exposure. However, with
+          only one critical mineral to manage instead of three (Li + Ni + Co), LFP supply chains
+          are inherently more stable.
+        </p>
+        <div class="callout callout-info">
+          <div class="callout-icon">📈</div>
+          <div class="callout-body">
+            <div class="callout-title">LFP Cost Trajectory</div>
+            <p>
+              LFP pack costs have fallen from approximately <strong>$1,200/kWh in 2010</strong> to
+              <strong>~$137/kWh in 2023</strong> (BloombergNEF data). The trajectory continues: LFP
+              is expected to reach $80/kWh by 2026, the threshold commonly cited for economic parity
+              with grid electricity storage in most markets. The cost decline is driven by manufacturing
+              scale (China's CATL and BYD alone have 500+ GWh/year capacity), process optimization,
+              and raw material efficiency — not subsidies.
+            </p>
+          </div>
+        </div>
+      </div><!-- end cost subsection -->
+
+      <!-- Full Comparison Table -->
+      <div class="subsection" id="full-table">
+        <div class="subsection-title">Full Chemistry Comparison Table</div>
+        <p>
+          Every application decision comes down to the numbers. The table below provides a comprehensive
+          comparison across all major rechargeable battery chemistries relevant to UPS and home ESS.
+          All values represent typical production cells at time of writing (2023–2024).
+        </p>
+        <div class="table-wrapper">
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>Metric</th>
+                <th class="col-lead">Lead-Acid</th>
+                <th class="col-nicad">NiCd</th>
+                <th class="col-nimh">NiMH</th>
+                <th class="col-nmc">NMC</th>
+                <th class="col-nca">NCA</th>
+                <th class="col-lfp">LFP ✓</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="metric-name">Nominal Cell Voltage<span class="metric-unit">V/cell</span></span></td>
+                <td>2.0</td>
+                <td>1.2</td>
+                <td>1.2</td>
+                <td class="good">3.6–3.7</td>
+                <td class="good">3.6</td>
+                <td class="good">3.2–3.3</td>
+              </tr>
+              <tr>
+                <td><span class="metric-name">Energy Density (Gravimetric)<span class="metric-unit">Wh/kg</span></span></td>
+                <td class="worst">30–50</td>
+                <td>40–60</td>
+                <td>60–120</td>
+                <td class="best">200–300</td>
+                <td class="best">200–280</td>
+                <td class="good">120–180</td>
+              </tr>
+              <tr>
+                <td><span class="metric-name">Energy Density (Volumetric)<span class="metric-unit">Wh/L</span></span></td>
+                <td class="worst">60–75</td>
+                <td>100–150</td>
+                <td>140–300</td>
+                <td class="best">400–700</td>
+                <td class="best">400–600</td>
+                <td class="good">220–350</td>
+              </tr>
+              <tr>
+                <td><span class="metric-name">Cycle Life @ 80% DoD<span class="metric-unit">cycles</span></span></td>
+                <td class="worst">150–300</td>
+                <td>500–1000</td>
+                <td>300–500</td>
+                <td>1000–2000</td>
+                <td>500–1500</td>
+                <td class="best">3000–5000</td>
+              </tr>
+              <tr>
+                <td><span class="metric-name">Calendar Life<span class="metric-unit">years</span></span></td>
+                <td class="worst">3–5</td>
+                <td>10–20</td>
+                <td>3–5</td>
+                <td>8–12</td>
+                <td>8–12</td>
+                <td class="best">10–15</td>
+              </tr>
+              <tr>
+                <td><span class="metric-name">Self-Discharge<span class="metric-unit">%/month @ 25°C</span></span></td>
+                <td>4–8</td>
+                <td class="worst">10–20</td>
+                <td class="worst">20–30</td>
+                <td class="best">1–2</td>
+                <td class="best">1–2</td>
+                <td class="best">1–3</td>
+              </tr>
+              <tr>
+                <td><span class="metric-name">Operating Temp (Charge)<span class="metric-unit">°C</span></span></td>
+                <td>−20 to +50</td>
+                <td>0 to +45</td>
+                <td>0 to +45</td>
+                <td>0 to +45</td>
+                <td>0 to +45</td>
+                <td class="good">0 to +45</td>
+              </tr>
+              <tr>
+                <td><span class="metric-name">Operating Temp (Discharge)<span class="metric-unit">°C</span></span></td>
+                <td>−20 to +60</td>
+                <td>−20 to +60</td>
+                <td>−20 to +60</td>
+                <td>−20 to +60</td>
+                <td>−20 to +60</td>
+                <td>−20 to +60</td>
+              </tr>
+              <tr>
+                <td><span class="metric-name">Thermal Runaway Risk<span class="metric-unit">abuse scenarios</span></span></td>
+                <td><span class="badge badge-gray">Low (gassing)</span></td>
+                <td><span class="badge badge-orange">Medium</span></td>
+                <td><span class="badge badge-orange">Medium</span></td>
+                <td><span class="badge badge-red">High</span></td>
+                <td><span class="badge badge-red">Very High</span></td>
+                <td><span class="badge badge-green">Negligible</span></td>
+              </tr>
+              <tr>
+                <td><span class="metric-name">Cobalt Content<span class="metric-unit">g/kWh approx</span></span></td>
+                <td>None</td>
+                <td>None</td>
+                <td>None</td>
+                <td class="worst">~5–15 g/Wh</td>
+                <td class="worst">~15–25 g/Wh</td>
+                <td class="best">None</td>
+              </tr>
+              <tr>
+                <td><span class="metric-name">Toxicity<span class="metric-unit">primary concern</span></span></td>
+                <td><span class="badge badge-red">Lead (Pb)</span></td>
+                <td><span class="badge badge-red">Cadmium (Cd)</span></td>
+                <td><span class="badge badge-purple">Moderate</span></td>
+                <td><span class="badge badge-orange">Cobalt</span></td>
+                <td><span class="badge badge-orange">Cobalt</span></td>
+                <td><span class="badge badge-green">Low</span></td>
+              </tr>
+              <tr>
+                <td><span class="metric-name">Memory Effect</span></td>
+                <td>Sulfation</td>
+                <td class="worst">Severe</td>
+                <td>Mild</td>
+                <td class="best">None</td>
+                <td class="best">None</td>
+                <td class="best">None</td>
+              </tr>
+              <tr>
+                <td><span class="metric-name">Pack Cost (2023)<span class="metric-unit">$/kWh</span></span></td>
+                <td class="good">~$150</td>
+                <td>~$400</td>
+                <td>~$300</td>
+                <td>~$180</td>
+                <td>~$190</td>
+                <td class="best">~$137</td>
+              </tr>
+              <tr>
+                <td><span class="metric-name">Deep Discharge Recovery<span class="metric-unit">0% SoC tolerance</span></span></td>
+                <td class="worst">Poor (sulfation)</td>
+                <td class="good">Good</td>
+                <td class="good">Good</td>
+                <td class="good">Good (with BMS)</td>
+                <td class="good">Good (with BMS)</td>
+                <td class="best">Excellent</td>
+              </tr>
+              <tr>
+                <td><span class="metric-name">Float Charge Compatibility<span class="metric-unit">UPS application</span></span></td>
+                <td class="good">Excellent (native)</td>
+                <td class="fair">Fair</td>
+                <td class="fair">Fair</td>
+                <td>Good (with BMS)</td>
+                <td>Good (with BMS)</td>
+                <td class="best">Excellent (with BMS)</td>
+              </tr>
+              <tr>
+                <td><span class="metric-name">UPS Switchover Speed<span class="metric-unit">response time</span></span></td>
+                <td class="good">&lt;4 ms (instantaneous)</td>
+                <td class="good">&lt;4 ms</td>
+                <td class="good">&lt;4 ms</td>
+                <td class="best">&lt;1 ms</td>
+                <td class="best">&lt;1 ms</td>
+                <td class="best">&lt;1 ms</td>
+              </tr>
+              <tr>
+                <td><span class="metric-name">ESS Application Rating</span></td>
+                <td><span class="badge badge-orange">Marginal</span></td>
+                <td><span class="badge badge-red">Disqualified</span></td>
+                <td><span class="badge badge-orange">Poor</span></td>
+                <td><span class="badge badge-blue">Good</span></td>
+                <td><span class="badge badge-blue">Good</span></td>
+                <td><span class="badge badge-green">Optimal</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div><!-- end full-table subsection -->
+
+
