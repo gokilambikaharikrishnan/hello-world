@@ -1175,3 +1175,74 @@
             Historical significance: proved continuous electrochemical current was possible.
           </div>
         </div>
+
+        <!-- 1859: Lead-Acid -->
+        <div class="timeline-item" id="lead-acid">
+          <div class="timeline-year">1859 · Gaston Planté · Paris, France</div>
+          <div class="timeline-heading">Lead-Acid — The Battery That Refuses to Die</div>
+          <div class="timeline-body">
+            <p>
+              Gaston Planté's lead-acid cell was the world's first <em>rechargeable</em> battery, and it
+              remains in production 165 years later. There is a profound irony in this: lead-acid persists
+              not because it is good, but because it is <strong>predictable</strong>, <strong>cheap</strong>,
+              and deeply entrenched in global supply chains and engineering culture.
+            </p>
+            <p>
+              The chemistry involves two electrodes — lead dioxide (PbO₂) at the positive plate,
+              metallic lead (Pb) at the negative — immersed in sulfuric acid electrolyte. On discharge:
+            </p>
+            <div class="formula-block">
+              <span class="formula-label">Discharge Reaction (overall)</span>
+              Pb + PbO₂ + 2H₂SO₄ → 2PbSO₄ + 2H₂O
+              <span class="formula-caption">Both electrodes convert to lead sulfate; sulfuric acid is consumed. On charge, the reaction reverses.</span>
+            </div>
+            <p>
+              The cell voltage is <strong>~2.0 V</strong> — derived from the reduction potential difference
+              between PbO₂/PbSO₄ (+1.69 V vs SHE) and Pb/PbSO₄ (−0.36 V vs SHE). This 2V per cell means
+              six cells in series produce the 12V nominal used in automotive and UPS applications globally.
+            </p>
+            <p>
+              <strong>Why lead-acid still powers most UPS systems in 2024:</strong> A 48V lead-acid rack
+              battery can be purchased for $180. Engineers know exactly how it will behave after 20 years
+              of data. Float charging at 2.27 V/cell is well understood. Replacement is a commodity
+              operation. The entire UPS industry — from charger topologies to battery management —
+              was designed around lead-acid. Switching has a total cost of ownership argument, not a
+              point-in-time cost argument.
+            </p>
+            <p>
+              <strong>Why lead-acid fails for modern ESS:</strong> The problems are fundamental, not
+              engineering limitations that can be designed around.
+            </p>
+            <ul class="content-list cross">
+              <li><strong>Sulfation:</strong> If discharged below ~50% SoC and left there, PbSO₄ crystals
+              recrystallize into a hard form that cannot be re-dissolved on charge.
+              A lead-acid battery discharged to 20% and left for two weeks is likely permanently damaged.</li>
+              <li><strong>Depth of discharge (DoD) tyranny:</strong> Lead-acid delivers its rated cycle life
+              only at ≤30% DoD. At 80% DoD — what home ESS requires — cycle life drops from ~500 to ~150 cycles.
+              You are paying for energy storage you cannot use.</li>
+              <li><strong>Temperature sensitivity:</strong> At 0°C, available capacity is ~70% of nominal.
+              At −20°C, ~40%. At +40°C, cycle life halves. Lead-acid in a hot garage in summer is
+              destroying itself.</li>
+              <li><strong>Gassing and water loss:</strong> Near full charge, water electrolysis produces
+              hydrogen gas — a genuine explosion hazard in confined spaces. Sealed VRLA cells recombine
+              most gas but require pressure valves and still outgas during overcharge.</li>
+              <li><strong>Specific energy:</strong> 30–50 Wh/kg. A 10 kWh lead-acid ESS weighs 200–330 kg.
+              The equivalent LFP system weighs 60–80 kg.</li>
+              <li><strong>Toxicity:</strong> Lead is a neurotoxin with no safe exposure threshold.
+              Battery manufacturing and disposal create significant environmental liability.</li>
+            </ul>
+          </div>
+          <div class="timeline-stats">
+            <div class="timeline-stat">Energy density: <span>30–50 Wh/kg</span></div>
+            <div class="timeline-stat">Cycle life @80% DoD: <span>~150</span></div>
+            <div class="timeline-stat">Cycle life @30% DoD: <span>~500</span></div>
+            <div class="timeline-stat">Voltage/cell: <span>2.0 V</span></div>
+            <div class="timeline-stat">Self-discharge: <span>4–8%/month</span></div>
+            <div class="timeline-stat">Toxicity: <span>High (Pb)</span></div>
+          </div>
+          <div class="timeline-verdict verdict-partial">
+            ESS Verdict: Functional but severely limited by DoD restrictions, weight, temperature sensitivity,
+            and toxicity. Still dominant in UPS in 2024 due to cost and inertia. LFP offers 4–8× more
+            usable energy per kg at 80% DoD cycles vs lead-acid equivalent.
+          </div>
+        </div>
