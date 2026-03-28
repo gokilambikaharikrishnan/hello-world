@@ -549,3 +549,268 @@
     .callout-success .callout-title { color: var(--accent-green); }
     .callout-physics { background: rgba(183,148,244,0.06);  border-color: rgba(183,148,244,0.25);  }
     .callout-physics .callout-title { color: var(--accent-purple); }
+
+    /* ============================================================
+       STAT GRID
+    ============================================================ */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      text-align: center;
+      transition: var(--transition);
+      cursor: default;
+    }
+    .stat-card:hover {
+      border-color: rgba(99,179,237,0.3);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.3), 0 0 20px rgba(99,179,237,0.08);
+    }
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      letter-spacing: -0.03em;
+      line-height: 1;
+      margin-bottom: 0.35rem;
+    }
+    .stat-unit {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* ============================================================
+       TRACEABILITY DIAGRAM
+    ============================================================ */
+    .trace-container {
+      margin: 2.5rem 0;
+    }
+    .trace-row {
+      display: grid;
+      grid-template-columns: 1fr 60px 1fr;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+    .trace-weakness {
+      background: rgba(252,129,129,0.07);
+      border: 1px solid rgba(252,129,129,0.2);
+      border-radius: var(--radius-md);
+      padding: 0.85rem 1rem;
+    }
+    .trace-weakness-title {
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: var(--accent-red);
+      margin-bottom: 0.25rem;
+    }
+    .trace-weakness-body {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+    .trace-arrow {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 1.2rem;
+    }
+    .trace-feature {
+      background: rgba(72,187,120,0.07);
+      border: 1px solid rgba(72,187,120,0.2);
+      border-radius: var(--radius-md);
+      padding: 0.85rem 1rem;
+    }
+    .trace-feature-title {
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: var(--accent-green);
+      margin-bottom: 0.25rem;
+    }
+    .trace-feature-body {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* ============================================================
+       ELECTROCHEMISTRY DIAGRAMS
+    ============================================================ */
+    .crystal-diagram {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      margin: 2rem 0;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .crystal-diagram::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(72,187,120,0.04) 0%, transparent 70%);
+    }
+
+    /* ============================================================
+       PROGRESS BAR & FILL INDICATOR
+    ============================================================ */
+    .progress-bar-wrap {
+      background: rgba(255,255,255,0.05);
+      border-radius: 100px;
+      height: 6px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 100px;
+      transition: width 1s ease;
+    }
+
+    /* ============================================================
+       CHAPTER FOOTER / NAV
+    ============================================================ */
+    .chapter-footer {
+      margin-top: 6rem;
+      padding-top: 3rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 2rem;
+    }
+    .nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.85rem 1.5rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: var(--transition);
+      cursor: pointer;
+    }
+    .nav-btn:hover {
+      border-color: rgba(99,179,237,0.35);
+      color: var(--accent-blue);
+      background: rgba(99,179,237,0.05);
+      transform: translateY(-2px);
+    }
+    .nav-btn-next { background: rgba(99,179,237,0.08); border-color: rgba(99,179,237,0.25); color: var(--accent-blue); }
+    .nav-btn-next:hover { background: rgba(99,179,237,0.15); box-shadow: 0 4px 20px rgba(99,179,237,0.2); }
+
+    /* Formula display */
+    .formula-block {
+      background: var(--bg-card2);
+      border: 1px solid rgba(183,148,244,0.2);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1.75rem;
+      margin: 1.5rem 0;
+      font-family: var(--font-mono);
+      font-size: 1.05rem;
+      color: var(--accent-purple);
+      text-align: center;
+      letter-spacing: 0.03em;
+    }
+    .formula-block .formula-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+    .formula-block .formula-caption {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-family: var(--font-sans);
+      margin-top: 0.5rem;
+      display: block;
+    }
+
+    /* Animated number counter */
+    .counter { display: inline-block; }
+
+    /* Tooltip */
+    [data-tip] { position: relative; cursor: help; border-bottom: 1px dashed rgba(99,179,237,0.4); }
+    [data-tip]:hover::after {
+      content: attr(data-tip);
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-card2);
+      border: 1px solid var(--border-bright);
+      color: var(--text-primary);
+      font-size: 0.78rem;
+      padding: 0.5rem 0.85rem;
+      border-radius: var(--radius-sm);
+      white-space: nowrap;
+      z-index: 100;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      pointer-events: none;
+    }
+
+    /* Highlight box for key insight */
+    .insight-box {
+      background: linear-gradient(135deg, rgba(99,179,237,0.06) 0%, rgba(0,217,255,0.03) 100%);
+      border: 1px solid rgba(99,179,237,0.2);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem 2rem;
+      margin: 2rem 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .insight-box::before {
+      content: '"';
+      position: absolute;
+      top: -0.5rem; left: 1rem;
+      font-size: 6rem;
+      color: rgba(99,179,237,0.08);
+      font-family: Georgia, serif;
+      line-height: 1;
+      pointer-events: none;
+    }
+    .insight-box p { color: var(--text-primary); font-size: 1.02rem; line-height: 1.7; margin-bottom: 0; font-style: italic; }
+    .insight-box cite { display: block; font-size: 0.8rem; color: var(--text-muted); margin-top: 0.75rem; font-style: normal; }
+
+    /* List styles */
+    .content-list { list-style: none; padding: 0; margin: 1.25rem 0 1.5rem; }
+    .content-list li {
+      padding: 0.5rem 0 0.5rem 1.75rem;
+      position: relative;
+      color: var(--text-secondary);
+      font-size: 0.93rem;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+    .content-list li:last-child { border-bottom: none; }
+    .content-list li::before {
+      content: '▸';
+      position: absolute;
+      left: 0;
+      color: var(--accent-blue);
+      font-size: 0.8rem;
+      top: 0.6rem;
+    }
+    .content-list.check li::before { content: '✓'; color: var(--accent-green); }
+    .content-list.cross li::before { content: '✗'; color: var(--accent-red); }
