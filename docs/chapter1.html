@@ -2662,7 +2662,154 @@
   </main><!-- end .main-content -->
 </div><!-- end .page-wrapper -->
 
+<script>
+/* ============================================================
+   INTERACTIVE BAR CHART
+============================================================ */
+const metrics = {
+  energy: {
+    label: 'Gravimetric Energy Density (Wh/kg)',
+    unit: 'Wh/kg',
+    note: 'Higher is better for weight-sensitive applications',
+    max: 300,
+    bars: [
+      { label: 'Lead-Acid', value: 40,  color: '#94a3b8', display: '~40' },
+      { label: 'NiCd',      value: 50,  color: '#ed8936', display: '~50' },
+      { label: 'NiMH',      value: 90,  color: '#b794f4', display: '~90' },
+      { label: 'LFP',       value: 150, color: '#48bb78', display: '~150' },
+      { label: 'NMC',       value: 250, color: '#63b3ed', display: '~250' },
+      { label: 'NCA',       value: 240, color: '#fc8181', display: '~240' },
+    ]
+  },
+  cycles: {
+    label: 'Cycle Life at 80% DoD (cycles)',
+    unit: 'cycles',
+    note: 'Higher is better. Lead-acid and NiMH values at 80% DoD; NiCd at 100% DoD',
+    max: 5000,
+    bars: [
+      { label: 'Lead-Acid', value: 250,  color: '#94a3b8', display: '~250' },
+      { label: 'NiMH',      value: 400,  color: '#b794f4', display: '~400' },
+      { label: 'NCA',       value: 1000, color: '#fc8181', display: '~1000' },
+      { label: 'NMC',       value: 1500, color: '#63b3ed', display: '~1500' },
+      { label: 'NiCd',      value: 750,  color: '#ed8936', display: '~750' },
+      { label: 'LFP',       value: 4000, color: '#48bb78', display: '~4000' },
+    ]
+  },
+  cost: {
+    label: 'Pack Cost 2023 ($/kWh) — Lower is Better',
+    unit: '$/kWh',
+    note: 'Lower cost is better. LFP and lead-acid are competitive, but lead-acid has higher lifetime cost due to fewer cycles.',
+    max: 450,
+    bars: [
+      { label: 'LFP',       value: 137, color: '#48bb78', display: '$137' },
+      { label: 'Lead-Acid', value: 150, color: '#94a3b8', display: '$150' },
+      { label: 'NMC',       value: 180, color: '#63b3ed', display: '$180' },
+      { label: 'NCA',       value: 190, color: '#fc8181', display: '$190' },
+      { label: 'NiMH',      value: 300, color: '#b794f4', display: '$300' },
+      { label: 'NiCd',      value: 400, color: '#ed8936', display: '$400' },
+    ]
+  },
+  self: {
+    label: 'Monthly Self-Discharge (%) — Lower is Better',
+    unit: '%/month',
+    note: 'Lower is better for standby/UPS applications where battery may sit idle for months',
+    max: 35,
+    bars: [
+      { label: 'NMC',       value: 1.5,  color: '#63b3ed', display: '~1.5%' },
+      { label: 'NCA',       value: 1.5,  color: '#fc8181', display: '~1.5%' },
+      { label: 'LFP',       value: 2.0,  color: '#48bb78', display: '~2%' },
+      { label: 'Lead-Acid', value: 6.0,  color: '#94a3b8', display: '~6%' },
+      { label: 'NiCd',      value: 15.0, color: '#ed8936', display: '~15%' },
+      { label: 'NiMH',      value: 25.0, color: '#b794f4', display: '~25%' },
+    ]
+  }
+};
 
+function showMetric(key) {
+  // Update tab active state
+  document.querySelectorAll('.bar-chart-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+
+  const m = metrics[key];
+  const container = document.getElementById('chartContent');
+  container.innerHTML = `
+    <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:1rem; font-family:var(--font-mono);">
+      ${m.note}
+    </div>
+    ${m.bars.map(bar => `
+      <div class="bar-chart-row">
+        <div class="bar-label">${bar.label}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:0%; background:${bar.color};" data-target="${(bar.value / m.max * 100).toFixed(1)}">
+            ${bar.display}
+          </div>
+        </div>
+        <div class="bar-value">${bar.display} ${m.unit}</div>
+      </div>
+    `).join('')}
+  `;
+
+  // Animate bars in
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      container.querySelectorAll('.bar-fill').forEach(bar => {
+        bar.style.width = bar.dataset.target + '%';
+      });
+    });
+  });
+}
+
+// Initialize with energy metric
+document.addEventListener('DOMContentLoaded', () => {
+  // Populate initial chart
+  const m = metrics.energy;
+  const container = document.getElementById('chartContent');
+  container.innerHTML = `
+    <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:1rem; font-family:var(--font-mono);">
+      ${m.note}
+    </div>
+    ${m.bars.map(bar => `
+      <div class="bar-chart-row">
+        <div class="bar-label">${bar.label}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:0%; background:${bar.color};" data-target="${(bar.value / m.max * 100).toFixed(1)}">
+            ${bar.display}
+          </div>
+        </div>
+        <div class="bar-value">${bar.display} ${m.unit}</div>
+      </div>
+    `).join('')}
+  `;
+  setTimeout(() => {
+    container.querySelectorAll('.bar-fill').forEach(bar => {
+      bar.style.width = bar.dataset.target + '%';
+    });
+  }, 100);
+
+  // Sidebar active link highlight on scroll
+  const sections = document.querySelectorAll('section[id], div[id]');
+  const sidebarLinks = document.querySelectorAll('.sidebar-link');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        sidebarLinks.forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('href') === '#' + id) {
+            link.classList.add('active');
+          }
+        });
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+});
+</script>
+
+</body>
+</html>
 
 
 
