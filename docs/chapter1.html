@@ -1340,3 +1340,98 @@
             unsuitable for standby ESS. Appropriate for hybrid EV buffers, not home storage.
           </div>
         </div>
+
+        <!-- 1991: Li-ion -->
+        <div class="timeline-item" id="liion">
+          <div class="timeline-year">1991 · Sony / Asahi Kasei · Japan</div>
+          <div class="timeline-heading">Lithium-Ion — The Revolution</div>
+          <div class="timeline-body">
+            <p>
+              Sony's commercialization of the lithium-ion cell in 1991 — based on foundational work by
+              John Goodenough (LiCoO₂ cathode, 1980), Rachid Yazami (graphite anode, 1980), and
+              Akira Yoshino (full cell assembly concept, 1985) — did not just create a better battery.
+              It created a different category.
+            </p>
+            <p>
+              The core insight was <strong>intercalation</strong>: instead of consuming electrode
+              materials in the discharge reaction (like lead-acid), lithium ions simply move between
+              the anode and cathode crystal structures. The electrodes are preserved. The cycling
+              mechanism is fundamentally more reversible. This is why Li-ion achieves 500–2000+ cycles
+              while lead-acid manages 150–500.
+            </p>
+            <div class="formula-block">
+              <span class="formula-label">Li-ion intercalation (LCO example)</span>
+              Discharge: LiC₆ + CoO₂ → C₆ + LiCoO₂
+              <br>Charge: C₆ + LiCoO₂ → LiC₆ + CoO₂
+              <span class="formula-caption">Li⁺ ions shuttle between graphite anode and oxide cathode. No material is consumed — only hosted.</span>
+            </div>
+            <p>
+              The energy density improvement was immediate and enormous. First-generation Sony cells
+              delivered <strong>~120 Wh/kg</strong> — 3× better than NiMH, 4× better than lead-acid.
+              Modern NMC cells reach 250–300 Wh/kg. LFP cells reach 120–180 Wh/kg (slightly lower,
+              for important safety reasons we will explore in Section 1.2).
+            </p>
+            <p>
+              The cell voltage jumped to <strong>3.6–3.7 V</strong> nominal — three times higher than
+              NiCd/NiMH. This means fewer cells in series to achieve a given pack voltage, reducing
+              complexity. A 48V pack needs only 16 LFP cells (3.2V nominal each) versus 40 NiMH cells.
+            </p>
+            <p>
+              Three researchers who built the foundation of Li-ion — Goodenough, Whittingham, and
+              Yoshino — received the Nobel Prize in Chemistry in 2019. The Nobel Committee called it
+              "a weightless world of clean energy."
+            </p>
+          </div>
+          <div class="timeline-stats">
+            <div class="timeline-stat">Energy density (NMC): <span>200–300 Wh/kg</span></div>
+            <div class="timeline-stat">Energy density (LFP): <span>120–180 Wh/kg</span></div>
+            <div class="timeline-stat">Voltage/cell: <span>3.2–3.7 V</span></div>
+            <div class="timeline-stat">Cycle life: <span>500–5000</span></div>
+            <div class="timeline-stat">Self-discharge: <span>1–3%/month</span></div>
+            <div class="timeline-stat">Nobel Prize: <span>2019</span></div>
+          </div>
+          <div class="timeline-verdict verdict-good">
+            ESS Verdict: Transformative. High energy density, low self-discharge, long cycle life.
+            The weaknesses (narrow voltage window, thermal sensitivity, cell variation) do not disqualify
+            it — they define the requirements for the BMS that must protect it.
+          </div>
+        </div>
+
+        <!-- LFP Emergence -->
+        <div class="timeline-item">
+          <div class="timeline-year">1997 · John Goodenough / Arumugam Manthiram · UT Austin</div>
+          <div class="timeline-heading">LFP (LiFePO₄) — Safety Through Chemistry</div>
+          <div class="timeline-body">
+            <p>
+              John Goodenough — who had already given the world LiCoO₂ in 1980 — published a paper in
+              1997 introducing lithium iron phosphate (LiFePO₄) as a cathode material. The world
+              initially underestimated it. The energy density was lower than NMC. The voltage was 3.2V
+              instead of 3.6V. It seemed like a step backward.
+            </p>
+            <p>
+              Fifteen years later, as thermal runaway incidents accumulated in NMC/NCA applications —
+              laptops, smartphones, aircraft — the battery community realized Goodenough's second great
+              contribution was not a compromise. It was a different design philosophy: <em>safety
+              through crystal structure stability</em>.
+            </p>
+            <p>
+              By 2015, LFP had become the dominant chemistry for stationary energy storage in China.
+              By 2023, it powered the majority of utility-scale grid storage globally and was being
+              adopted by Tesla, BYD, and others for standard-range EVs. The market had caught up to
+              the physics.
+            </p>
+          </div>
+          <div class="timeline-stats">
+            <div class="timeline-stat">First paper: <span>1997</span></div>
+            <div class="timeline-stat">Commercial scale: <span>2005–2010</span></div>
+            <div class="timeline-stat">Voltage/cell: <span>3.2–3.3 V nominal</span></div>
+            <div class="timeline-stat">Target market: <span>ESS, EV, UPS</span></div>
+          </div>
+          <div class="timeline-verdict verdict-good">
+            LFP Verdict: Lower energy density than NMC/NCA, but structurally incapable of the oxygen
+            release that drives thermal runaway. For stationary ESS applications where safety and cycle
+            life matter more than weight, LFP is definitively correct. Section 1.2 explains why in full.
+          </div>
+        </div>
+
+      </div><!-- end .timeline -->
