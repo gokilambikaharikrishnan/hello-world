@@ -2425,6 +2425,158 @@
         </div>
       </div><!-- end short circuit subsection -->
 
+      <!-- Weakness 6: No Self-Regulating Chemistry -->
+      <div class="subsection">
+        <div class="subsection-title">Weakness 6: No Self-Regulating Chemistry</div>
+        <p>
+          Lead-acid has an inherent self-protection mechanism: as it approaches full charge, the
+          charging reaction transitions from plate charging to water electrolysis (gassing). This
+          acts as a soft current limiter — the charger's current is consumed by electrolysis rather
+          than overcharging the plates. It's wasteful (you lose water), but it means a dumb constant-
+          voltage charger can float-charge lead-acid indefinitely without catastrophic overcharge.
+        </p>
+        <p>
+          Li-ion has no such mechanism. The intercalation reaction simply stops when all sites are
+          filled, and any additional charge current goes directly into damaging side reactions —
+          electrolyte oxidation, plating, gas generation. There is no self-limiting chemistry.
+          <strong>If the charger fails open (stuck at high voltage) and the BMS fails simultaneously,
+          the cell will overcharge until it physically fails.</strong> This dual-failure scenario is
+          why IEC 62619 requires two independent layers of protection for Li-ion ESS.
+        </p>
+
+        <div class="card" style="border-color: rgba(72,187,120,0.2);">
+          <div class="card-header">
+            <div class="card-icon" style="background: rgba(72,187,120,0.12); color: var(--accent-green);">🛡</div>
+            <div>
+              <div class="card-title">BMS Requirement Generated: Redundant Protection Layers</div>
+              <div class="card-subtitle">IEC 62619 requires minimum two independent protection layers</div>
+            </div>
+          </div>
+          <ul class="content-list check">
+            <li><strong>Primary layer:</strong> BMS MCU monitors cell voltages and temperatures,
+            commands charger via communication bus to reduce current/voltage, then cuts charge
+            MOSFET if charger doesn't respond</li>
+            <li><strong>Secondary layer:</strong> Independent hardware protection IC (e.g., TI BQ series
+            secondary protector) with its own voltage comparators, directly drives a separate
+            protection FET — completely independent of the primary MCU</li>
+            <li><strong>Tertiary (passive):</strong> Cell-level CID (Current Interrupt Device)
+            in prismatic cells opens internal circuit if internal pressure exceeds threshold —
+            no electronics required, purely mechanical</li>
+            <li>Independent watchdog timer on BMS MCU — if firmware hangs, hardware resets the
+            system and engages safe state (disconnected)</li>
+          </ul>
+        </div>
+      </div><!-- end self-regulating subsection -->
+
+      <!-- Traceability Diagram -->
+      <div class="subsection" id="traceability">
+        <div class="subsection-title">Full Traceability: Weakness → BMS Function Map</div>
+        <p>
+          The following diagram makes the requirement traceability explicit. Every BMS function
+          can be traced to a fundamental physical weakness. There are no arbitrary features.
+        </p>
+
+        <div class="trace-container">
+
+          <div class="trace-row">
+            <div class="trace-weakness">
+              <div class="trace-weakness-title">Narrow Voltage Window</div>
+              <div class="trace-weakness-body">2.5V–3.65V operating range; 200mV overcharge = permanent damage; under-voltage causes Cu dissolution</div>
+            </div>
+            <div class="trace-arrow">→</div>
+            <div class="trace-feature">
+              <div class="trace-feature-title">Cell Voltage Monitoring + OVP/UVP</div>
+              <div class="trace-feature-body">Per-cell ADC ±5mV accuracy, charge/discharge cutoff FETs, hysteresis logic, fault logging</div>
+            </div>
+          </div>
+
+          <div class="trace-row">
+            <div class="trace-weakness">
+              <div class="trace-weakness-title">Thermal Sensitivity</div>
+              <div class="trace-weakness-body">SEI doubles every 10°C; Li plating below 0°C; capacity collapse at −20°C; cascade above 80°C</div>
+            </div>
+            <div class="trace-arrow">→</div>
+            <div class="trace-feature">
+              <div class="trace-feature-title">Temperature Monitoring + Thermal Management</div>
+              <div class="trace-feature-body">NTC per cell group, charge inhibit &lt;0°C, derate above 45°C, dT/dt runaway detection, heater control</div>
+            </div>
+          </div>
+
+          <div class="trace-row">
+            <div class="trace-weakness">
+              <div class="trace-weakness-title">Cell Variation &amp; Divergence</div>
+              <div class="trace-weakness-body">±2–5% initial capacity spread; divergence accelerates with cycling; weakest cell limits pack</div>
+            </div>
+            <div class="trace-arrow">→</div>
+            <div class="trace-feature">
+              <div class="trace-feature-title">Cell Balancing (Passive or Active)</div>
+              <div class="trace-feature-body">Resistive bleed or energy-transfer balancing, per-cell SoC tracking, divergence alarm threshold</div>
+            </div>
+          </div>
+
+          <div class="trace-row">
+            <div class="trace-weakness">
+              <div class="trace-weakness-title">No Visual State Indicator</div>
+              <div class="trace-weakness-body">Flat OCV curve hides SoC; sealed cell is opaque to inspection; no field measurement possible</div>
+            </div>
+            <div class="trace-arrow">→</div>
+            <div class="trace-feature">
+              <div class="trace-feature-title">SoC / SoH Estimation Engine</div>
+              <div class="trace-feature-body">Coulomb counting + OCV correction, model-based estimation, SoH tracking, external reporting (CAN/UART)</div>
+            </div>
+          </div>
+
+          <div class="trace-row">
+            <div class="trace-weakness">
+              <div class="trace-weakness-title">Short Circuit Energy Density</div>
+              <div class="trace-weakness-body">6,400A fault current in &lt;1ms; arc temperature 3,000°C; no mechanical limiting like lead-acid</div>
+            </div>
+            <div class="trace-arrow">→</div>
+            <div class="trace-feature">
+              <div class="trace-feature-title">Overcurrent / Short Circuit Protection</div>
+              <div class="trace-feature-body">Hardware analog OCP in &lt;500μs independent of MCU, SCP in &lt;200μs, external HRC fuse requirement</div>
+            </div>
+          </div>
+
+          <div class="trace-row">
+            <div class="trace-weakness">
+              <div class="trace-weakness-title">No Self-Regulating Chemistry</div>
+              <div class="trace-weakness-body">No built-in overcharge limiting reaction; charger fault → cell damage with no chemical brake</div>
+            </div>
+            <div class="trace-arrow">→</div>
+            <div class="trace-feature">
+              <div class="trace-feature-title">Redundant Protection Layers</div>
+              <div class="trace-feature-body">Primary MCU layer + independent secondary hardware IC + passive CID, watchdog timer, safe-state logic</div>
+            </div>
+          </div>
+
+        </div><!-- end trace-container -->
+
+        <div class="callout callout-success">
+          <div class="callout-icon">✓</div>
+          <div class="callout-body">
+            <div class="callout-title">The BMS Is Not Optional — It Is Physics Compliance</div>
+            <p>
+              Every BMS function described above exists because a physical reality demands it. Remove
+              voltage monitoring and overcharge will destroy cells. Remove temperature monitoring and
+              a cold-climate installation will plate lithium. Remove balancing and cell divergence will
+              erode pack capacity to unacceptable levels within two years. Remove overcurrent protection
+              and a fault event will cause a fire.
+            </p>
+            <p>
+              This is why IEC 62619:2022 (<em>Safety requirements for secondary lithium cells and
+              batteries for use in industrial applications</em>) mandates protection against overcharge,
+              over-discharge, overcurrent, overtemperature, and external short circuit as minimum
+              requirements. The standard exists because the physics demands it, not the other way around.
+            </p>
+          </div>
+        </div>
+
+      </div><!-- end traceability subsection -->
+
+    </section><!-- end section 1.3 -->
+
+
 
 
 
