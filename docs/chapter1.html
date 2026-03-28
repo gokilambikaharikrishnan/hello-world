@@ -1664,3 +1664,98 @@
         </div>
       </div><!-- end thermal subsection -->
 
+      <!-- Cycle Life — Why LFP Lasts Longer -->
+      <div class="subsection">
+        <div class="subsection-title">Cycle Life: 3000–5000 Cycles — Why?</div>
+        <p>
+          LFP cells routinely deliver <strong>3000–5000 cycles at 80% depth of discharge</strong>
+          before reaching the 80% remaining capacity threshold that defines end-of-life. Compare this
+          to NMC at 1000–2000 cycles, NCA at 500–1500, and lead-acid at 150–500 at 80% DoD.
+          The mechanism is structural.
+        </p>
+        <p>
+          Cycle life in Li-ion cells is limited by two primary degradation mechanisms:
+        </p>
+        <ul class="content-list">
+          <li><strong>Volume change stress:</strong> During charge/discharge, lithium ions are
+          inserted/extracted from the crystal lattice, causing the electrode to expand and contract.
+          In LFP, volume change during full cycling is only <strong>~6.8%</strong>. In NMC (high nickel),
+          volume change can reach 10–15%. This cyclical mechanical stress creates microcracks in the
+          crystal that grow over thousands of cycles, ultimately causing particles to fragment and
+          lose electrical contact.</li>
+          <li><strong>SEI growth:</strong> Every charge cycle slightly grows the SEI layer on the
+          anode, consuming lithium and reducing available capacity. LFP operates at lower voltages
+          than NMC (3.2–3.65V vs 3.0–4.2V), and electrolyte oxidation rate is exponentially sensitive
+          to upper voltage — lower voltage ceiling means slower irreversible SEI growth.</li>
+        </ul>
+        <p>
+          Additionally, LFP's two-phase intercalation mechanism (FePO₄ ↔ LiFePO₄, with a moving
+          phase boundary rather than a solid-solution gradient) means the lattice strain is
+          concentrated at the phase boundary rather than distributed throughout the particle.
+          This localized strain turns out to be less damaging than the gradient strain in NMC.
+        </p>
+        <p>
+          <strong>Real-world consequence:</strong> A home ESS cycling once daily reaches 3000 cycles
+          in ~8.2 years. An LFP system can comfortably deliver this. Lead-acid at 80% DoD would
+          require 20 replacements over the same period. NMC would require 2–3.
+        </p>
+
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-value" style="color:var(--lfp-color);">5000</div>
+            <span class="stat-unit">cycles (LFP, 80% DoD)</span>
+            <div class="stat-label">~13.7 years at 1 cycle/day</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" style="color:var(--nmc-color);">2000</div>
+            <span class="stat-unit">cycles (NMC, 80% DoD)</span>
+            <div class="stat-label">~5.5 years at 1 cycle/day</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" style="color:var(--lead-color);">300</div>
+            <span class="stat-unit">cycles (Lead-Acid, 80% DoD)</span>
+            <div class="stat-label">~0.8 years at 1 cycle/day</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" style="color:var(--accent-orange);">6.8%</div>
+            <span class="stat-unit">LFP volume change</span>
+            <div class="stat-label">vs 10–15% in high-Ni NMC</div>
+          </div>
+        </div>
+      </div><!-- end cycle life subsection -->
+
+      <!-- Calendar Life -->
+      <div class="subsection">
+        <div class="subsection-title">Calendar Life: 10–15 Years — The Mechanism</div>
+        <p>
+          Cycle life measures degradation from use. <strong>Calendar life</strong> measures
+          degradation from time — even a battery sitting on a shelf at full charge is aging.
+          For a UPS application where the battery may sit at float charge for years between discharge
+          events, calendar life can be the binding constraint.
+        </p>
+        <p>
+          Calendar aging in Li-ion cells is dominated by three mechanisms:
+        </p>
+        <ul class="content-list">
+          <li><strong>Parasitic SEI growth:</strong> The SEI is not in thermodynamic equilibrium with
+          the electrolyte. It continues to grow slowly as long as lithiated graphite is in contact with
+          electrolyte, consuming cyclable lithium. Rate follows an Arrhenius relationship with temperature —
+          <em>every 10°C increase approximately doubles the degradation rate</em>. Storage at 25°C vs
+          45°C can halve calendar life.</li>
+          <li><strong>Transition metal dissolution:</strong> In NMC/NCA, trace amounts of Ni, Mn, and
+          Co dissolve into the electrolyte over time, migrate to the anode, and deposit as metallic
+          precipitates that catalyze further SEI growth. LFP has minimal iron dissolution at normal
+          operating voltages due to the stability of the PO₄ framework — iron stays in the crystal.</li>
+          <li><strong>Electrolyte decomposition at high voltage:</strong> Holding NMC cells at 4.2V
+          (100% SOC) accelerates electrolyte oxidation at the cathode surface. LFP cells at 3.65V
+          full charge have dramatically slower electrolyte decomposition. This is why LFP systems
+          are often configured to float at ~3.4–3.45V/cell for maximum calendar life.</li>
+        </ul>
+        <p>
+          The result: properly managed LFP cells retain >80% capacity after 10–15 years of calendar
+          aging at 25°C. For a home ESS installation with a 15-year payback horizon, this is essential.
+          Lead-acid typically degrades to replacement threshold in 3–5 years regardless of cycle count
+          from sulfation, grid corrosion, and water loss.
+        </p>
+      </div><!-- end calendar life subsection -->
+
