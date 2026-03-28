@@ -1246,3 +1246,59 @@
             usable energy per kg at 80% DoD cycles vs lead-acid equivalent.
           </div>
         </div>
+
+        <!-- 1899: NiCd -->
+        <div class="timeline-item" id="nicd">
+          <div class="timeline-year">1899 · Waldemar Jungner · Sweden</div>
+          <div class="timeline-heading">Nickel-Cadmium — High Performance, Catastrophic Cost</div>
+          <div class="timeline-body">
+            <p>
+              NiCd was the first battery chemistry to deliver <strong>true deep-cycle capability</strong>.
+              You could discharge it to zero, charge it again, and get full capacity back — repeatedly.
+              This was revolutionary. Lead-acid engineers had spent decades warning users never to go below
+              50% SoC. NiCd simply didn't care.
+            </p>
+            <p>
+              The chemistry uses a cadmium anode, a nickel oxyhydroxide cathode, and potassium hydroxide
+              (KOH) electrolyte. Cell voltage is ~1.2V nominal. The reaction:
+            </p>
+            <div class="formula-block">
+              <span class="formula-label">NiCd Discharge</span>
+              Cd + 2NiOOH + 2H₂O → Cd(OH)₂ + 2Ni(OH)₂
+              <span class="formula-caption">Cadmium is oxidized; nickel oxyhydroxide is reduced to nickel hydroxide.</span>
+            </div>
+            <p>
+              NiCd became the battery of choice for power tools, emergency lighting, aircraft systems, and
+              industrial applications through the 1970s–90s. At its peak, it powered portable electronics
+              before lithium-ion existed.
+            </p>
+            <p>
+              <strong>The memory effect:</strong> NiCd's most infamous property. If regularly discharged to
+              only 50% and recharged, the battery "learns" to deliver only 50% capacity in subsequent
+              cycles. The mechanism involves cadmium hydroxide crystal growth in partially discharged
+              regions — essentially, the chemistry physically adapts to what it is asked to do. For a
+              UPS application where the battery might float-charge for months and then deliver a brief
+              emergency discharge, memory effect could silently reduce emergency capacity to unacceptable levels.
+            </p>
+            <p>
+              <strong>Cadmium toxicity ended NiCd's civilian future.</strong> Cadmium is classified as a
+              Group 1 human carcinogen by IARC. It accumulates in the food chain, concentrates in kidneys,
+              and has a biological half-life of 10–30 years in humans. The EU's Battery Directive 2006/66/EC
+              banned cadmium in portable batteries with narrow exceptions. Industrial NiCd survives in some
+              aircraft and rail applications, but its civilian use is effectively over.
+            </p>
+          </div>
+          <div class="timeline-stats">
+            <div class="timeline-stat">Energy density: <span>40–60 Wh/kg</span></div>
+            <div class="timeline-stat">Cycle life: <span>500–2000</span></div>
+            <div class="timeline-stat">Voltage/cell: <span>1.2 V</span></div>
+            <div class="timeline-stat">Memory effect: <span>Severe</span></div>
+            <div class="timeline-stat">Self-discharge: <span>10–20%/month</span></div>
+            <div class="timeline-stat">Toxicity: <span>Very High (Cd)</span></div>
+          </div>
+          <div class="timeline-verdict verdict-fail">
+            ESS Verdict: Good cycle life and deep discharge capability, but banned for civilian use due to
+            cadmium toxicity. Memory effect creates silent capacity loss in UPS float scenarios.
+            Effectively disqualified from home ESS.
+          </div>
+        </div>
