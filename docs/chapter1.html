@@ -2303,6 +2303,129 @@
         </div>
       </div><!-- end cell variation subsection -->
 
+      <!-- Weakness 4: No Visual State Indicator -->
+      <div class="subsection">
+        <div class="subsection-title">Weakness 4: No Visual State — The Invisible Battery</div>
+
+        <p>
+          Every battery technology before Li-ion had some form of visual or easily measurable
+          state indication:
+        </p>
+        <ul class="content-list">
+          <li><strong>Lead-acid:</strong> Electrolyte specific gravity (hydrometer reading) directly
+          indicates SoC. A trained technician can verify battery health in 2 minutes with a $15 tool.</li>
+          <li><strong>NiCd/NiMH:</strong> Cell voltage at rest is a reasonable SoC indicator
+          (1.20V = charged, 1.10V = discharged, with useful slope throughout).</li>
+          <li><strong>Flooded cells:</strong> Electrolyte level is visually inspectable.</li>
+        </ul>
+
+        <p>
+          Li-ion, and LFP in particular, has <strong>no reliable visual indicator</strong> of any
+          parameter. The cell is a sealed metal can. You cannot see the electrolyte, observe
+          electrode color changes, or perform field measurements without electronic instrumentation.
+          And as noted in the OCV teaser (Section 1.2), the terminal voltage of an LFP cell is
+          nearly flat across the middle 60% of its SoC range — making voltage an unreliable proxy.
+        </p>
+        <p>
+          The consequence: <strong>without a BMS, you have no idea how much energy is in your LFP
+          battery at any given moment</strong>. You don't know if the pack is at 80% or 20% SoC
+          from a 5V terminal voltage measurement on a 48V string. You can't detect a failing cell
+          by visual inspection. You can't verify that balancing has occurred. The battery is, from
+          a human observability standpoint, completely opaque.
+        </p>
+        <p>
+          This is not merely inconvenient — it creates safety and operational risks. An LFP UPS
+          that appears "charged" at its terminal voltage might have a severely degraded cell at
+          40% of nominal capacity that will cause the pack to fail under load in the first 5 minutes
+          of a grid outage. Without per-cell monitoring and SoC estimation, this failure is invisible
+          until it happens.
+        </p>
+
+        <div class="card" style="border-color: rgba(72,187,120,0.2);">
+          <div class="card-header">
+            <div class="card-icon" style="background: rgba(72,187,120,0.12); color: var(--accent-green);">🛡</div>
+            <div>
+              <div class="card-title">BMS Requirement Generated: SoC Estimation + State Reporting</div>
+              <div class="card-subtitle">Coulomb counting, model-based estimation, or hybrid algorithm required</div>
+            </div>
+          </div>
+          <ul class="content-list check">
+            <li>Implement coulomb counting (current integration) for primary SoC estimation:
+            SoC(t) = SoC(t₀) − ∫I(t)dt / Q_nominal</li>
+            <li>Compensate for coulombic efficiency (&lt;100% — some charge is lost to side reactions)</li>
+            <li>Implement OCV-SoC lookup table for SoC correction during rest periods (flat curve
+            means correction must be done carefully, with long rest time ≥30 min for accuracy)</li>
+            <li>Track State of Health (SoH) — actual capacity vs. nominal — through full discharge
+            characterization cycles</li>
+            <li>Report SoC, SoH, remaining runtime, and per-cell voltages via communication bus
+            (CAN, RS485, SMBus, or UART)</li>
+            <li>Implement fuel gauge display output (SOC bar graph, percentage display)</li>
+            <li>Alarm and log conditions: &lt;20% SoC warning, &lt;10% SoC critical, 0% shutoff</li>
+          </ul>
+        </div>
+      </div><!-- end no visual indicator subsection -->
+
+      <!-- Weakness 5: Short Circuit -->
+      <div class="subsection">
+        <div class="subsection-title">Weakness 5: Short Circuit — The Energy Dump Problem</div>
+
+        <p>
+          A modern LFP cell stores enormous energy in a small volume. A single prismatic 280Ah LFP
+          cell stores approximately <strong>896 Wh</strong> (280Ah × 3.2V) — equivalent to the
+          kinetic energy of a 1,200 kg car traveling at 133 km/h. A 48V, 100Ah LFP pack stores
+          4,800 Wh — equivalent to 300 fully charged AA batteries.
+        </p>
+        <p>
+          If this energy is directed into a short circuit path, the discharge rate is limited only
+          by the internal impedance of the cell and the resistance of the fault path. For a typical
+          LFP prismatic cell with internal resistance of 0.5 mΩ, a bolted short circuit at 3.2V
+          produces:
+        </p>
+        <div class="formula-block">
+          <span class="formula-label">Bolted Short Circuit Current</span>
+          I_fault = V_cell / R_internal = 3.2V / 0.0005Ω = <strong>6,400 A</strong>
+          <span class="formula-caption">For a single 280Ah cell. A 16-cell series pack can deliver this current magnitude for fractions of a second, with total energy determined by fault resistance and fuse clearing time.</span>
+        </div>
+        <p>
+          6,400 A through wiring that was designed for 100A will reach arc temperature
+          (>3,000°C) in milliseconds. Copper vaporizes. Insulation burns. The short circuit
+          current in a large LFP pack is sufficient to weld tools, rupture conduit, and start
+          fires in adjacent structures — all within the time it takes for a human to blink.
+        </p>
+        <p>
+          <strong>Key difference from lead-acid:</strong> Lead-acid packs typically have internal
+          resistance 10–20× higher than LFP packs of the same voltage and capacity. Short circuit
+          currents are proportionally lower, and the mechanical robustness of lead-acid plates
+          provides some fault current limiting. LFP's low internal resistance (which is a feature
+          for high-power applications) becomes a liability in short-circuit scenarios.
+        </p>
+
+        <div class="card" style="border-color: rgba(72,187,120,0.2);">
+          <div class="card-header">
+            <div class="card-icon" style="background: rgba(72,187,120,0.12); color: var(--accent-green);">🛡</div>
+            <div>
+              <div class="card-title">BMS Requirement Generated: Overcurrent and Short Circuit Protection</div>
+              <div class="card-subtitle">Must respond in &lt;1 ms to prevent arc damage</div>
+            </div>
+          </div>
+          <ul class="content-list check">
+            <li>Current sensing with shunt resistor or Hall-effect sensor, ≥10 kHz sampling rate
+            for fast fault detection</li>
+            <li>Hardware overcurrent protection (independent of firmware): dedicated analog comparator
+            that triggers MOSFET disconnect in &lt;500 μs regardless of MCU state</li>
+            <li>Configurable overcurrent threshold: typically 2–3× rated continuous current for
+            transient tolerance, with time-inverse characteristic (higher current = faster trip)</li>
+            <li>Short-circuit protection: dedicated hardware detect for ultra-fast current spikes,
+            typically trip at 5–10× rated current within 50–200 μs</li>
+            <li>Fuse requirement: external HRC fuse appropriately sized as backup to BMS disconnect —
+            required by IEC 62619 and UL 9540 for ESS installations</li>
+            <li>Inrush current management: prevent false trips during capacitive load connection
+            (inverter input capacitors create large inrush spikes)</li>
+          </ul>
+        </div>
+      </div><!-- end short circuit subsection -->
+
+
 
 
 
