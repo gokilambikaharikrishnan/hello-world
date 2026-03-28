@@ -2160,6 +2160,150 @@
         </div>
       </div><!-- end voltage window subsection -->
 
+      <!-- Weakness 2: Thermal Sensitivity -->
+      <div class="subsection">
+        <div class="subsection-title">Weakness 2: Thermal Sensitivity and Temperature Dependence</div>
+
+        <p>
+          Li-ion cells are not just vulnerable to high temperatures from thermal runaway initiation —
+          they have <strong>complex temperature-dependent behavior</strong> across their entire operating
+          range that must be actively managed.
+        </p>
+
+        <p><strong>High Temperature Effects (above 45°C operating):</strong></p>
+        <ul class="content-list cross">
+          <li>SEI growth rate doubles approximately every 10°C (Arrhenius kinetics) — storage at 45°C
+          ages cells 2× faster than at 25°C</li>
+          <li>Electrolyte decomposition rate increases nonlinearly with temperature</li>
+          <li>Internal pressure increases due to accelerated gas generation — risk of swelling,
+          vent activation, or in extreme cases, case rupture</li>
+          <li>Above 60°C: most LFP cells approach the onset temperature for accelerated degradation</li>
+          <li>Above 80°C: SEI begins active decomposition — beginning of the thermal runaway
+          precursor chain (though LFP's phosphate framework prevents completion)</li>
+        </ul>
+
+        <p><strong>Low Temperature Effects (below 0°C):</strong></p>
+        <ul class="content-list cross">
+          <li>Lithium ion diffusion coefficient in the graphite anode decreases dramatically —
+          at −10°C, diffusion is approximately 10× slower than at 25°C</li>
+          <li>Charging at below 0°C causes lithium plating (ions cannot intercalate fast enough)
+          — even at very low charge rates. IEC standards prohibit charging LFP below 0°C</li>
+          <li>Available capacity decreases: LFP at −20°C delivers ~60–70% of room-temperature
+          capacity due to increased ionic resistance in electrolyte and sluggish kinetics</li>
+          <li>Internal resistance increases: at −20°C, cell impedance can be 3–5× higher than
+          at 25°C, limiting peak power output — critical for UPS applications that must deliver
+          high instantaneous power</li>
+        </ul>
+
+        <div class="callout callout-warning">
+          <div class="callout-icon">🌡</div>
+          <div class="callout-body">
+            <div class="callout-title">The −20°C UPS Problem</div>
+            <p>
+              A UPS battery installed in an unheated telecom cabinet in winter faces temperatures below
+              0°C. If the grid fails at −15°C, the LFP pack must deliver full load power. The high
+              internal resistance means terminal voltage sags more than expected, potentially triggering
+              a false low-voltage cutoff before the energy is actually depleted. Worse, if the grid
+              returns while the battery is cold, the charger may attempt to recharge below 0°C — causing
+              lithium plating that permanently damages the cells.
+            </p>
+            <p>
+              Proper LFP BMS design for outdoor/uncontrolled temperature environments must include:
+              temperature-compensated charge/discharge cutoffs, low-temperature charge inhibit below 0°C,
+              and optional cell heating elements for pre-conditioning before charge.
+            </p>
+          </div>
+        </div>
+
+        <div class="card" style="border-color: rgba(72,187,120,0.2);">
+          <div class="card-header">
+            <div class="card-icon" style="background: rgba(72,187,120,0.12); color: var(--accent-green);">🛡</div>
+            <div>
+              <div class="card-title">BMS Requirement Generated: Temperature Monitoring + Thermal Management</div>
+              <div class="card-subtitle">Every cell or cell group requires temperature sensing</div>
+            </div>
+          </div>
+          <ul class="content-list check">
+            <li>NTC thermistor or thermocouple per cell group (minimum 1 per 4 cells in a module)</li>
+            <li>High-temperature charge cutoff: inhibit charging above 45°C cell temperature</li>
+            <li>High-temperature discharge derate: reduce max current above 55°C</li>
+            <li>High-temperature emergency disconnect: hard cutoff above 60°C</li>
+            <li>Low-temperature charge inhibit: prohibit charging below 0°C (prevents lithium plating)</li>
+            <li>Temperature-compensated voltage thresholds (cell internal resistance varies with temperature)</li>
+            <li>Heating element control output for cold-climate installations</li>
+            <li>Thermal runaway detection: rate of temperature rise (dT/dt) threshold — e.g., &gt;1°C/s</li>
+          </ul>
+        </div>
+      </div><!-- end thermal sensitivity subsection -->
+
+      <!-- Weakness 3: Cell Variation -->
+      <div class="subsection">
+        <div class="subsection-title">Weakness 3: Cell Variation — Why It Happens and Why It Grows</div>
+
+        <p>
+          No two lithium-ion cells are identical. Even cells from the same production batch, same
+          manufacturing date, and same position in the same roll of electrode material will have
+          slightly different capacities, impedances, and self-discharge rates. This is not a
+          manufacturing quality failure — it is a fundamental consequence of electrochemical
+          complexity. The question is how these initial differences propagate over time.
+        </p>
+
+        <p><strong>Sources of initial cell variation:</strong></p>
+        <ul class="content-list">
+          <li><strong>Active material loading variation:</strong> Electrode coating thickness varies
+          by ±2–5% across a production roll. More active material = slightly more capacity.</li>
+          <li><strong>Electrolyte fill variation:</strong> Cells are vacuum-filled with electrolyte;
+          fill volume accuracy is typically ±0.5%. Slightly more electrolyte = slightly lower impedance.</li>
+          <li><strong>Formation cycle variation:</strong> The initial charge/discharge cycle that forms
+          the SEI is controlled, but the SEI thickness and composition vary with local temperature,
+          pressure, and electrolyte distribution.</li>
+          <li><strong>Compression variation:</strong> In wound cells (cylindrical), winding tension
+          affects electrode contact and ionic access uniformity.</li>
+        </ul>
+
+        <p><strong>Why variation grows with cycling:</strong></p>
+        <p>
+          In a series-connected string of cells, all cells carry the same current. But cells with
+          slightly different capacities will reach voltage limits at different times. When the
+          weakest cell (lowest capacity) hits the upper voltage limit first, the charging algorithm
+          must stop — leaving all other cells partially charged. The weakest cell is now being
+          worked harder (higher relative DoD per cycle), accelerating its degradation relative to
+          the others. This creates a <strong>positive feedback loop of divergence</strong>:
+          weaker cells age faster, their capacity decreases further, they diverge more — until
+          eventually one cell limits the entire pack to a fraction of its designed capacity.
+        </p>
+
+        <p>
+          In a 16-cell series LFP string (48V pack), if one cell degrades to 85% of its initial
+          capacity while others remain at 100%, the effective pack capacity is limited to 85% —
+          even though 15 of 16 cells are fully functional. Without balancing, this degradation
+          accelerates until the weak cell fails catastrophically.
+        </p>
+
+        <div class="card" style="border-color: rgba(72,187,120,0.2);">
+          <div class="card-header">
+            <div class="card-icon" style="background: rgba(72,187,120,0.12); color: var(--accent-green);">🛡</div>
+            <div>
+              <div class="card-title">BMS Requirement Generated: Cell Balancing</div>
+              <div class="card-subtitle">Passive or active balancing to prevent divergence</div>
+            </div>
+          </div>
+          <ul class="content-list check">
+            <li><strong>Passive balancing:</strong> Resistor networks bleed charge from high-SoC cells
+            during charging, allowing all cells to reach the same terminal voltage before charge cutoff.
+            Dissipates energy as heat — simple, low-cost, adequate for moderate imbalance.</li>
+            <li><strong>Active balancing:</strong> Inductor or capacitor-based charge shuttling transfers
+            energy from high-SoC cells to low-SoC cells. More complex and expensive, but preserves
+            energy. Necessary for packs with significant cell-to-cell variation or for applications
+            requiring maximum capacity utilization.</li>
+            <li>Track per-cell capacity over cycles to identify accelerating degradation before failure</li>
+            <li>Alert operator when cell spread exceeds configurable threshold (e.g., &gt;50 mV spread
+            at end of charge indicates balancing failure or degraded cells)</li>
+          </ul>
+        </div>
+      </div><!-- end cell variation subsection -->
+
+
 
 
 
