@@ -363,3 +363,84 @@
       color: var(--text-muted);
       font-family: var(--font-mono);
     }
+
+    /* ============================================================
+       TIMELINE
+    ============================================================ */
+    .timeline {
+      position: relative;
+      padding-left: 2rem;
+      margin: 2.5rem 0;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 8px; bottom: 8px;
+      width: 2px;
+      background: linear-gradient(180deg,
+        var(--accent-blue) 0%,
+        var(--accent-cyan) 30%,
+        var(--accent-green) 70%,
+        var(--accent-purple) 100%);
+      border-radius: 1px;
+    }
+    .timeline-item {
+      position: relative;
+      padding: 0 0 2.5rem 1.75rem;
+    }
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -2.425rem;
+      top: 6px;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--bg-deep);
+      border: 2px solid var(--accent-blue);
+      box-shadow: 0 0 12px rgba(99,179,237,0.4);
+      transition: var(--transition);
+    }
+    .timeline-item:hover::before {
+      background: var(--accent-blue);
+      box-shadow: 0 0 20px rgba(99,179,237,0.7);
+    }
+    .timeline-year {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--accent-cyan);
+      letter-spacing: 0.08em;
+      margin-bottom: 0.35rem;
+    }
+    .timeline-heading {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+    .timeline-body { color: var(--text-secondary); font-size: 0.93rem; }
+    .timeline-stats {
+      display: flex;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+      margin-top: 0.75rem;
+    }
+    .timeline-stat {
+      background: var(--bg-glass);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.35rem 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 0.77rem;
+      color: var(--text-muted);
+    }
+    .timeline-stat span { color: var(--accent-blue); font-weight: 600; }
+    .timeline-verdict {
+      margin-top: 0.75rem;
+      padding: 0.5rem 0.85rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      border-left: 3px solid;
+    }
+    .verdict-fail { background: rgba(252,129,129,0.06); border-color: var(--accent-red); color: var(--accent-red); }
+    .verdict-partial { background: rgba(237,137,54,0.06); border-color: var(--accent-orange); color: var(--accent-orange); }
+    .verdict-good { background: rgba(72,187,120,0.06); border-color: var(--accent-green); color: var(--accent-green); }
