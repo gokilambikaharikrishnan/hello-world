@@ -1560,4 +1560,107 @@
             lock oxygen in place — the foundation of LFP thermal safety.
           </p>
         </div>
-      </div>
+      </div><!-- end olivine subsection -->
+
+      <!-- Thermal Runaway Physics -->
+      <div class="subsection" id="thermal">
+        <div class="subsection-title">Why LFP Cannot Have Thermal Runaway — The Physics</div>
+
+        <div class="callout callout-danger">
+          <div class="callout-icon">🔥</div>
+          <div class="callout-body">
+            <div class="callout-title">The Thermal Runaway Mechanism in NMC/NCA</div>
+            <p>
+              Thermal runaway in oxide-cathode lithium-ion cells (NMC, NCA, LCO) is an
+              <strong>exothermic cascade</strong> driven by oxygen release from the cathode material.
+              Understanding why it happens — and why LFP is immune — requires the thermodynamics.
+            </p>
+          </div>
+        </div>
+
+        <p><strong>Step 1: SEI Decomposition (80–120°C)</strong></p>
+        <p>
+          The <strong>Solid Electrolyte Interphase (SEI)</strong> is a passivation layer that forms
+          on the graphite anode surface during the first charge cycle. It is essential — without it,
+          the electrolyte would continuously react with the lithiated graphite. But the SEI is
+          thermally unstable above ~80°C. When cell temperature rises past 80°C, the SEI begins to
+          decompose exothermically, releasing heat that raises the temperature further — the first
+          positive feedback loop. The reaction generates gases (CO₂, hydrocarbons) that increase
+          internal pressure.
+        </p>
+
+        <p><strong>Step 2: Electrolyte Oxidation (120–150°C)</strong></p>
+        <p>
+          At 120–150°C, the electrolyte (typically LiPF₆ in EC/DMC/EMC carbonate solvents) begins
+          reacting with the now-exposed lithiated graphite anode. These reactions are highly exothermic.
+          The liquid electrolyte can vaporize and contribute combustible gas to the growing internal
+          pressure.
+        </p>
+
+        <p><strong>Step 3: Cathode Oxygen Release — The Point of No Return (NMC/NCA: 180–200°C)</strong></p>
+        <p>
+          In NMC and NCA, the cathode material releases oxygen above approximately 180–200°C.
+          This is the critical, catastrophic step.
+        </p>
+        <div class="formula-block">
+          <span class="formula-label">NMC Cathode Decomposition</span>
+          LiNi₀.₈Mn₀.₁Co₀.₁O₂ → LiNi₀.₈Mn₀.₁Co₀.₁O₂₋ₓ + x/2 O₂↑
+          <span class="formula-caption">Oxygen gas is released from the crystal structure. ΔH ≈ −80 to −120 kJ/mol O₂ — strongly exothermic.</span>
+        </div>
+        <p>
+          The released oxygen immediately reacts with the flammable electrolyte in an oxidation
+          reaction that is <strong>orders of magnitude more energetic</strong> than the SEI or
+          electrolyte reactions alone. Temperatures spike to 600–900°C within milliseconds.
+          The cell ruptures. Burning electrolyte and electrode materials are ejected. If adjacent
+          cells are heated above their thermal runaway threshold, they trigger —
+          <strong>cell-to-cell propagation</strong>. A pack fire becomes self-sustaining.
+        </p>
+
+        <div class="callout callout-physics">
+          <div class="callout-icon">⚛</div>
+          <div class="callout-body">
+            <div class="callout-title">Why LFP Cannot Release Oxygen — The P–O Bond Argument</div>
+            <p>
+              In LFP, oxygen is bound within the phosphate polyanion (PO₄³⁻). The P–O bond has a
+              bond dissociation energy of approximately <strong>544 kJ/mol</strong>. Compare this to
+              the Co–O or Ni–O bond in oxide cathodes: approximately <strong>368 kJ/mol</strong> and
+              <strong>382 kJ/mol</strong> respectively.
+            </p>
+            <p>
+              The PO₄³⁻ group is a thermodynamic "oxygen trap." To release oxygen from LFP, you would
+              need to break the P–O bond — this requires temperatures exceeding <strong>600°C</strong>,
+              well above any realistic abuse scenario. For comparison, NMC begins releasing oxygen at
+              180–200°C.
+            </p>
+            <p>
+              Without oxygen release, the exothermic cascade <em>cannot complete</em>. The SEI might
+              decompose (starting around 120°C in LFP). The electrolyte might react with the anode
+              (starting around 150°C). But without the massive heat from cathode oxygen combustion,
+              the temperature rise is self-limiting, not self-amplifying. The cell may vent gas and
+              experience capacity loss, but it will not enter thermal runaway.
+            </p>
+          </div>
+        </div>
+
+        <p>
+          ARC (Accelerating Rate Calorimetry) data on LFP cells consistently shows:
+        </p>
+        <ul class="content-list check">
+          <li>LFP cells subjected to nail penetration: temperature rises to ~60–80°C and stabilizes. No fire.</li>
+          <li>LFP cells overcharged to 130% SOC: electrolyte decomposition, gas venting. No thermal runaway.</li>
+          <li>LFP cells heated externally to 300°C at 60% SOC: no thermal runaway observed.
+          NMC cells: thermal runaway at ~200°C under the same conditions.</li>
+          <li>Cell-to-cell propagation in LFP packs: extremely rare. In NMC packs: seconds to full pack involvement.</li>
+        </ul>
+
+        <div class="insight-box">
+          <p>
+            "The safety advantage of LFP over NMC is not incremental — it is categorical. You are not
+            dealing with a safer version of the same thermal runaway risk. You are dealing with a
+            different mechanism that, under realistic operating conditions, does not lead to
+            thermal runaway at all."
+          </p>
+          <cite>— Summary derived from NREL thermal abuse testing data, multiple publications 2015–2022</cite>
+        </div>
+      </div><!-- end thermal subsection -->
+
