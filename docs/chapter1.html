@@ -814,3 +814,149 @@
     }
     .content-list.check li::before { content: '✓'; color: var(--accent-green); }
     .content-list.cross li::before { content: '✗'; color: var(--accent-red); }
+
+    /* ============================================================
+       SVG DIAGRAM STYLES
+    ============================================================ */
+    .svg-wrap {
+      width: 100%;
+      overflow-x: auto;
+      margin: 2rem 0;
+    }
+    svg text { font-family: var(--font-sans); }
+
+    /* ============================================================
+       INTERACTIVE BAR CHART
+    ============================================================ */
+    .bar-chart-wrap {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem 2rem;
+      margin: 2rem 0;
+    }
+    .bar-chart-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.35rem;
+    }
+    .bar-chart-subtitle {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      font-family: var(--font-mono);
+    }
+    .bar-chart-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .bar-chart-tab {
+      padding: 0.3rem 0.85rem;
+      border-radius: 100px;
+      font-size: 0.78rem;
+      font-family: var(--font-mono);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .bar-chart-tab:hover { border-color: rgba(99,179,237,0.3); color: var(--accent-blue); }
+    .bar-chart-tab.active { background: rgba(99,179,237,0.12); border-color: rgba(99,179,237,0.35); color: var(--accent-blue); }
+    .bar-chart-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.85rem;
+    }
+    .bar-label {
+      width: 90px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .bar-track {
+      flex: 1;
+      background: rgba(255,255,255,0.05);
+      border-radius: 100px;
+      height: 22px;
+      overflow: hidden;
+      position: relative;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 100px;
+      display: flex;
+      align-items: center;
+      padding-left: 0.5rem;
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      color: rgba(0,0,0,0.7);
+      font-weight: 700;
+      transition: width 1s cubic-bezier(0.4,0,0.2,1);
+      white-space: nowrap;
+    }
+    .bar-value {
+      width: 80px;
+      font-size: 0.82rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    /* ============================================================
+       CHAPTER NAVIGATION TOC
+    ============================================================ */
+    .toc-card {
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem 2rem;
+      margin-bottom: 4rem;
+    }
+    .toc-title {
+      font-size: 0.78rem;
+      font-family: var(--font-mono);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 1.25rem;
+    }
+    .toc-items { display: flex; flex-direction: column; gap: 0.5rem; }
+    .toc-item {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      padding: 0.6rem 0.85rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: var(--transition);
+      text-decoration: none;
+    }
+    .toc-item:hover { background: rgba(99,179,237,0.06); }
+    .toc-num {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--accent-cyan);
+      min-width: 32px;
+    }
+    .toc-text {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      flex: 1;
+    }
+    .toc-text strong { color: var(--text-primary); display: block; font-size: 0.9rem; }
+    .toc-arrow { color: var(--text-muted); font-size: 0.9rem; }
+
+    /* ============================================================
+       PRINT STYLES
+    ============================================================ */
+    @media print {
+      .sidebar, .chapter-footer { display: none; }
+      body { background: white; color: black; }
+      .main-content { padding: 1cm; }
+    }
