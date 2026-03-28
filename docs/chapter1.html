@@ -2576,6 +2576,93 @@
 
     </section><!-- end section 1.3 -->
 
+    <!-- ============================================================
+         INTERACTIVE ENERGY DENSITY COMPARISON
+    ============================================================ -->
+    <section class="section">
+      <div class="section-number">Visual Summary</div>
+      <h2 class="section-title">Battery Metrics at a Glance</h2>
+      <p style="color:var(--text-secondary); margin-bottom:2rem;">
+        Click the tabs to switch between metrics. All values represent typical production cells.
+      </p>
+
+      <div class="bar-chart-wrap" id="barChart">
+        <div class="bar-chart-title">Chemistry Performance Comparison</div>
+        <div class="bar-chart-subtitle">Select a metric to visualize</div>
+        <div class="bar-chart-tabs">
+          <button class="bar-chart-tab active" onclick="showMetric('energy')">Energy Density (Wh/kg)</button>
+          <button class="bar-chart-tab" onclick="showMetric('cycles')">Cycle Life (cycles)</button>
+          <button class="bar-chart-tab" onclick="showMetric('cost')">Pack Cost ($/kWh, lower=better)</button>
+          <button class="bar-chart-tab" onclick="showMetric('self')">Self-Discharge (%/month, lower=better)</button>
+        </div>
+        <div id="chartContent">
+          <!-- populated by JS -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ============================================================
+         CHAPTER SUMMARY
+    ============================================================ -->
+    <section class="section">
+      <div class="section-number">Chapter Summary</div>
+      <h2 class="section-title">Key Takeaways from Chapter 1</h2>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-value" style="color:var(--accent-green); font-size:1.5rem;">LFP</div>
+          <span class="stat-unit">correct chemistry for ESS</span>
+          <div class="stat-label">Structural thermal safety, 5000-cycle life, no cobalt</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color:var(--accent-red); font-size:1.5rem;">6</div>
+          <span class="stat-unit">Li-ion weaknesses</span>
+          <div class="stat-label">Each directly creates a BMS requirement</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color:var(--accent-blue);">544</div>
+          <span class="stat-unit">kJ/mol P–O bond</span>
+          <div class="stat-label">Why LFP cannot release oxygen even under abuse</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color:var(--accent-orange);">200</div>
+          <span class="stat-unit">mV overcharge threshold</span>
+          <div class="stat-label">Above which permanent capacity loss begins</div>
+        </div>
+      </div>
+
+      <div class="callout callout-info" style="margin-top:2rem;">
+        <div class="callout-icon">📖</div>
+        <div class="callout-body">
+          <div class="callout-title">What Chapter 2 Covers</div>
+          <p>
+            Chapter 1 established <em>why</em> LFP is the right chemistry and <em>why</em> a BMS is
+            physically required. Chapter 2 attacks the hardest practical problem in LFP BMS design:
+            <strong>State of Charge Estimation on a Flat OCV Curve</strong>. We will derive the
+            mathematics of coulomb counting, examine the error accumulation problem, explore
+            Extended Kalman Filter-based estimation, and ultimately build an SoC algorithm that
+            works reliably for LFP across temperature, aging, and partial cycles.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHAPTER NAVIGATION FOOTER -->
+    <div class="chapter-footer">
+      <div>
+        <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.5rem;">You are reading</div>
+        <div style="font-size:0.9rem; color:var(--text-primary); font-weight:700;">Chapter 1: The Case for Li-ion</div>
+      </div>
+      <a class="nav-btn nav-btn-next" href="chapter2.html">
+        Chapter 2: SoC Estimation →
+      </a>
+    </div>
+
+  </main><!-- end .main-content -->
+</div><!-- end .page-wrapper -->
+
+
 
 
 
