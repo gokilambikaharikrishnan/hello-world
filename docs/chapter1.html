@@ -1985,4 +1985,59 @@
         </div>
       </div><!-- end full-table subsection -->
 
+      <!-- Application Fit -->
+      <div class="subsection">
+        <div class="subsection-title">Application Fit: UPS Switchover, Float Charging, Deep Discharge</div>
+        <p>
+          Numbers tell part of the story. But UPS and home ESS have specific operational requirements
+          that go beyond energy density and cycle life.
+        </p>
+
+        <p><strong>UPS Switchover Speed:</strong> A UPS must deliver power to critical loads within
+        milliseconds of a grid outage. For online double-conversion UPS (the type used for servers),
+        the battery is always in the power path — switchover time is effectively zero. For line-interactive
+        UPS, the transfer switch must activate before the inverter catches up. IEC 62040-3 defines
+        Class 1 UPS as delivering zero transfer time. LFP cells can deliver full rated current essentially
+        instantaneously — the internal impedance is low (typically 0.5–2 mΩ for a prismatic cell),
+        and there is no induction delay. Lead-acid can also deliver fast response — the technology
+        difference matters less here than BMS design (for Li-ion) and inverter topology.</p>
+
+        <p><strong>Float Charging Compatibility:</strong> Lead-acid was designed for float charging —
+        holding the battery at ~2.27 V/cell indefinitely. LFP is compatible with float charging but
+        requires a different voltage: ~3.4–3.45 V/cell. This is slightly below the upper voltage
+        cutoff (~3.65 V), which means the battery sits at ~90–95% SoC. This reduces electrolyte
+        oxidation rate and extends calendar life. A properly designed LFP BMS will manage this
+        automatically, entering a "storage mode" float voltage that optimizes calendar life for
+        standby applications.</p>
+
+        <p><strong>Deep Discharge Recovery:</strong> Home ESS systems that cycle deeply — drawing
+        down to 10–20% SoC daily — need chemistry that handles this gracefully over years. LFP is
+        essentially indifferent to deep discharge. Unlike lead-acid (which sulfates if left
+        discharged), LFP can be discharged to 0% SoC, left for weeks, and recharged without
+        permanent damage. This is because the intercalation mechanism is fully reversible at any
+        state of charge, including zero. The BMS must still prevent over-discharge (below the
+        minimum cell voltage, typically 2.5V) to avoid copper dissolution at the anode — but within
+        the operating range, LFP handles deep cycling without capacity penalty.</p>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">📡</div>
+          <div class="callout-body">
+            <div class="callout-title">Teaser: The Flat OCV Curve — Chapter 2's Central Challenge</div>
+            <p>
+              LFP has one property that is simultaneously its greatest operational challenge: a nearly
+              flat open-circuit voltage (OCV) curve between 20% and 80% SoC. The cell voltage changes
+              by only ~50mV across this 60% SoC range. This means you cannot determine state of charge
+              from voltage alone — the most natural measurement for any battery system. Traditional
+              voltage-based SoC estimation, which works acceptably for lead-acid and NMC, completely
+              fails for LFP. This forces BMS designers to use coulomb counting, model-based estimation,
+              or hybrid approaches. It is the central challenge of Chapter 2, and the reason LFP BMS
+              design requires more sophisticated algorithms than other chemistries.
+            </p>
+          </div>
+        </div>
+      </div><!-- end application fit subsection -->
+
+    </section><!-- end section 1.2 -->
+
+
 
