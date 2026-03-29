@@ -416,3 +416,78 @@
         <a class="toc-item" href="#s2-7"><span class="toc-num">2.7</span><span class="toc-text"><strong>SOH, Aging &amp; Degradation</strong>SEI growth, calendar aging, lithium plating, capacity fade, EOL criteria</span><span class="toc-arrow">↓</span></a>
       </div>
     </div>
+
+    <!-- ============================================================
+         SECTION 2.1 — FIRST PRINCIPLES
+    ============================================================ -->
+    <section class="section" id="s2-1">
+      <div class="section-number">Section 2.1</div>
+      <h2 class="section-title">What Makes a Battery? First Principles</h2>
+      <p class="section-intro">
+        Every engineer who works with batteries benefits from a clear mental model of what is
+        actually happening inside the cell. Not just "electrochemistry" as a black box, but the
+        specific physical processes — electron flow, ion migration, crystal lattice changes — that
+        determine every measurable parameter the BMS must track and protect.
+      </p>
+
+      <div class="subsection" id="electrochemical-cell">
+        <div class="subsection-title">The Electrochemical Cell — Four Essential Components</div>
+        <p>
+          Every rechargeable battery cell is an <strong>electrochemical cell</strong>: a device that
+          converts chemical potential energy into electrical energy through redox reactions at two
+          electrodes separated by an ion-conducting electrolyte. Four components are essential, and
+          each has a precise, non-negotiable role.
+        </p>
+
+        <div class="anatomy-row">
+          <div class="anatomy-layer" style="background:rgba(237,137,54,0.06);">
+            <div class="anatomy-layer-name" style="color:var(--accent-orange);">Anode (−)</div>
+            <div class="anatomy-layer-formula">LiC₆</div>
+            <div class="anatomy-layer-role">Negative electrode. Oxidation occurs here on discharge — Li⁺ released, electrons emitted into external circuit. In Li-ion: graphite hosting lithium.</div>
+          </div>
+          <div class="anatomy-layer" style="background:rgba(99,179,237,0.04);">
+            <div class="anatomy-layer-name" style="color:var(--accent-blue);">Electrolyte</div>
+            <div class="anatomy-layer-formula">LiPF₆ / EC:DMC</div>
+            <div class="anatomy-layer-role">Ion highway. Carries Li⁺ between electrodes. Conducts ions but NOT electrons — forces electrons through external circuit. Liquid organic solvent.</div>
+          </div>
+          <div class="anatomy-layer" style="background:rgba(72,187,120,0.06);">
+            <div class="anatomy-layer-name" style="color:var(--accent-green);">Cathode (+)</div>
+            <div class="anatomy-layer-formula">LiFePO₄</div>
+            <div class="anatomy-layer-role">Positive electrode. Reduction occurs here on discharge — Li⁺ absorbed, electrons received from external circuit. In LFP: lithium iron phosphate crystal.</div>
+          </div>
+          <div class="anatomy-layer" style="background:rgba(183,148,244,0.04);">
+            <div class="anatomy-layer-name" style="color:var(--accent-purple);">Separator</div>
+            <div class="anatomy-layer-formula">PE/PP Membrane</div>
+            <div class="anatomy-layer-role">Physical barrier. Prevents electronic short circuit while allowing Li⁺ ions through micropores. Typically 15–25 μm thick. Melts above 130°C (safety valve).</div>
+          </div>
+        </div>
+
+        <div class="callout callout-key">
+          <div class="callout-icon">🔑</div>
+          <div class="callout-body">
+            <div class="callout-title">The Critical Distinction: Electrons vs. Ions</div>
+            <p>
+              The electrolyte conducts <strong>lithium ions (Li⁺)</strong> but blocks electrons.
+              This is the entire operating principle. Because electrons cannot flow through the
+              electrolyte, they are forced through the external circuit (your load). That forced
+              electron flow <em>is</em> the current you use. Remove the external circuit and the
+              cell has no way to equilibrate — it holds its charge indefinitely (ignoring
+              self-discharge). This is why "open-circuit voltage" is a stable, meaningful measurement.
+            </p>
+          </div>
+        </div>
+
+        <p>
+          <strong>Where voltage actually comes from:</strong> Cell voltage equals the electrochemical
+          potential difference between cathode and anode — the Gibbs free energy released per mole
+          of reaction, divided by the charge transferred. At standard conditions:
+        </p>
+        <div class="formula-block">
+          <span class="formula-label">Cell Voltage — Origin in Reduction Potentials</span>
+          <span class="formula-line">E_cell = E°_cathode − E°_anode</span>
+          <span class="formula-line">LFP: E°_cathode (Fe³⁺/Fe²⁺ in PO₄ lattice) ≈ +3.45 V vs Li/Li⁺</span>
+          <span class="formula-line">      E°_anode  (Li⁺/LiC₆ graphite)         ≈ +0.15 V vs Li/Li⁺</span>
+          <span class="formula-line formula-highlight">→ E_cell ≈ 3.45 − 0.15 = 3.30 V nominal</span>
+          <span class="formula-caption">The ~0.15V anode potential varies slightly with SoC. The Fe²⁺/Fe³⁺ redox couple in the phosphate lattice pins the plateau. This is why LFP voltage barely changes with SoC.</span>
+        </div>
+      </div>
