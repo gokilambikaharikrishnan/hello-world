@@ -2292,3 +2292,284 @@ T_min (°C)  | Max I_charge | Reason
     </div>
   </section>
 
+
+  <!-- ============================================================
+       SECTION SUMMARY
+  ============================================================ -->
+  <section class="section" id="s3-summary">
+    <div class="section-number">Summary</div>
+    <h2 class="section-title">Chapter 3 Summary — The Thermal Physics Behind Every BMS Threshold</h2>
+    <p class="section-intro">
+      Thermal and mechanical behaviour is not a peripheral concern — it is the direct physical
+      basis for the most critical safety features in the BMS. The following traces each key
+      concept to its firmware manifestation.
+    </p>
+
+    <div class="trace-container">
+      <div class="trace-row">
+        <div class="trace-left">
+          <div class="trace-number">01</div>
+          <div class="trace-label">Q_J = I² × R</div>
+        </div>
+        <div class="trace-arrow">→</div>
+        <div class="trace-right">Heat scales with I² not I — the reason high C-rates are thermally dangerous and why parallel cells dramatically reduce thermal load per cell.</div>
+      </div>
+      <div class="trace-row">
+        <div class="trace-left">
+          <div class="trace-number">02</div>
+          <div class="trace-label">Surface ≠ Core Temp</div>
+        </div>
+        <div class="trace-arrow">→</div>
+        <div class="trace-right">NTC reads 5–15°C below actual cell core temperature at 1C. BMS OT thresholds must be set conservatively (45°C surface = ~55°C core). Firmware applies T_core_est correction.</div>
+      </div>
+      <div class="trace-row">
+        <div class="trace-left">
+          <div class="trace-number">03</div>
+          <div class="trace-label">Stage 1 = Last Window</div>
+        </div>
+        <div class="trace-arrow">→</div>
+        <div class="trace-right">SEI decomposition at 90–120°C is the last point where BMS intervention can prevent thermal runaway. dT/dt &gt; 0.5°C/s detected while T &lt; 90°C means Stage 1 is starting. Disconnect immediately.</div>
+      </div>
+      <div class="trace-row">
+        <div class="trace-left">
+          <div class="trace-number">04</div>
+          <div class="trace-label">LFP — P–O Bond</div>
+        </div>
+        <div class="trace-arrow">→</div>
+        <div class="trace-right">544 kJ/mol P–O bond prevents oxygen release below 270°C. LFP thermal runaway is less catastrophic than NMC/NCA. No self-fuelling combustion chain. The physical basis for indoor ESS safety.</div>
+      </div>
+      <div class="trace-row">
+        <div class="trace-left">
+          <div class="trace-number">05</div>
+          <div class="trace-label">Arrhenius Aging</div>
+        </div>
+        <div class="trace-arrow">→</div>
+        <div class="trace-right">Every 10°C over optimal doubles aging rate. Thermal management that reduces average operating temp by 5°C increases calendar life by ~40%. The economic argument for good thermal design.</div>
+      </div>
+      <div class="trace-row">
+        <div class="trace-left">
+          <div class="trace-number">06</div>
+          <div class="trace-label">ΔT_pack &lt; 5°C</div>
+        </div>
+        <div class="trace-arrow">→</div>
+        <div class="trace-right">Temperature gradient causes differential aging — hot cells age 2–4× faster. Balancing cannot compensate for aging-driven imbalance. Uniform temperature is the only solution.</div>
+      </div>
+      <div class="trace-row">
+        <div class="trace-left">
+          <div class="trace-number">07</div>
+          <div class="trace-label">I_charge = 0 at &lt;0°C</div>
+        </div>
+        <div class="trace-arrow">→</div>
+        <div class="trace-right">Lithium plating below freezing forms dendrites → separator puncture → internal short → thermal runaway. This is an unconditional BMS rule — no exceptions for "gentle charge".</div>
+      </div>
+      <div class="trace-row">
+        <div class="trace-left">
+          <div class="trace-number">08</div>
+          <div class="trace-label">Cell Swelling ~2%</div>
+        </div>
+        <div class="trace-arrow">→</div>
+        <div class="trace-right">LFP 280Ah expands ~0.9 mm per cycle. Pack fixtures need spring compliance. Irreversible swelling indicates gassing — early EOL indicator detectable by thickness measurement or strain gauge.</div>
+      </div>
+      <div class="trace-row">
+        <div class="trace-left">
+          <div class="trace-number">09</div>
+          <div class="trace-label">dT/dt Monitoring</div>
+        </div>
+        <div class="trace-arrow">→</div>
+        <div class="trace-right">Rate of temperature rise, not absolute temperature, is the early thermal runaway signal. dT/dt &gt; 1°C/s with no proportional current = exothermic reaction in progress. Requires 10Hz sampling minimum.</div>
+      </div>
+      <div class="trace-row">
+        <div class="trace-left">
+          <div class="trace-number">10</div>
+          <div class="trace-label">2-of-N Sensor Vote</div>
+        </div>
+        <div class="trace-arrow">→</div>
+        <div class="trace-right">Single failed NTC causes false alarm → UPS goes offline when needed most. Voting logic requires 2+ sensors to agree on warning threshold. Use 1-of-N for thermal runaway detection — no false negatives allowed.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       QUICK REFERENCE
+  ============================================================ -->
+  <section class="section" id="s3-ref">
+    <div class="section-number">Reference</div>
+    <h2 class="section-title">Quick Reference — Thermal Constants and Thresholds</h2>
+
+    <div class="subsection">
+      <div class="subsection-title">LFP 280Ah Thermal Parameters (25°C Reference)</div>
+      <div class="comparison-table-wrap">
+        <table class="comparison-table">
+          <thead>
+            <tr><th>Parameter</th><th>Symbol</th><th>Value</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="metric-name">Specific heat capacity</td><td>c_p</td><td>1.0–1.1 kJ/kg·K</td><td>Average for LFP electrode + casing</td></tr>
+            <tr><td class="metric-name">Cell mass (280Ah)</td><td>m_cell</td><td>~5.5 kg</td><td>Varies by manufacturer</td></tr>
+            <tr><td class="metric-name">Radial thermal conductivity</td><td>λ_r</td><td>0.4–0.8 W/m·K</td><td>Low — limits heat removal from core</td></tr>
+            <tr><td class="metric-name">Axial thermal conductivity</td><td>λ_a</td><td>20–30 W/m·K</td><td>Along tab direction — preferred cooling path</td></tr>
+            <tr><td class="metric-name">SEI decomp. onset</td><td>T_SEI</td><td>90–120°C</td><td>Stage 1 thermal runaway threshold</td></tr>
+            <tr><td class="metric-name">Separator melt point</td><td>T_sep</td><td>130–160°C</td><td>Stage 2 — internal short forms</td></tr>
+            <tr><td class="metric-name">LFP TR onset</td><td>T_TR</td><td>270°C+</td><td>Stage 3 — O₂ cannot be released</td></tr>
+            <tr><td class="metric-name">NMC TR onset</td><td>T_TR_NMC</td><td>~180°C</td><td>Stage 3 for NMC — 90°C lower than LFP</td></tr>
+            <tr><td class="metric-name">OT charge cutoff</td><td>T_OTC</td><td>55°C</td><td>Hard cutoff; 45°C = warning, derate starts</td></tr>
+            <tr><td class="metric-name">UT charge cutoff</td><td>T_UTC</td><td>0°C</td><td>Absolute prohibition; 5°C = 0.1C max rate</td></tr>
+            <tr><td class="metric-name">OT discharge cutoff</td><td>T_OTD</td><td>60°C</td><td>Electrolyte degradation threshold</td></tr>
+            <tr><td class="metric-name">Optimal operating range</td><td>T_opt</td><td>15–35°C</td><td>Minimum aging, maximum capacity</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Thermal Formula Index</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+        <div class="formula-block" style="margin:0;">
+          <span class="formula-label">Joule Heating</span>
+          <span class="formula-line">Q_J = I² × R_internal</span>
+        </div>
+        <div class="formula-block" style="margin:0;">
+          <span class="formula-label">Arrhenius Rate</span>
+          <span class="formula-line">k(T) = A × exp(−Eₐ/RT)</span>
+        </div>
+        <div class="formula-block" style="margin:0;">
+          <span class="formula-label">Core Temperature Estimate</span>
+          <span class="formula-line">T_core ≈ T_surf + k_lag × I²</span>
+        </div>
+        <div class="formula-block" style="margin:0;">
+          <span class="formula-label">Thermal Gradient</span>
+          <span class="formula-line">ΔT = Q_gen × R_thermal</span>
+        </div>
+        <div class="formula-block" style="margin:0;">
+          <span class="formula-label">dT/dt (Low-Pass Filtered)</span>
+          <span class="formula-line">dTdt = 0.8×dTdt_prev + 0.2×ΔT/Δt</span>
+        </div>
+        <div class="formula-block" style="margin:0;">
+          <span class="formula-label">Entropic Heat</span>
+          <span class="formula-line">Q_S = I × T × (dU/dT)</span>
+        </div>
+        <div class="formula-block" style="margin:0;">
+          <span class="formula-label">Total Cell Heat</span>
+          <span class="formula-line">Q_total = Q_J + Q_rxn + Q_S</span>
+        </div>
+        <div class="formula-block" style="margin:0;">
+          <span class="formula-label">Optimal Compression</span>
+          <span class="formula-line">P_fixture = 10–30 kPa</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-success" style="margin:2rem 0;">
+      <div class="callout-icon">✓</div>
+      <div class="callout-body">
+        <div class="callout-title">Chapter 3 Complete — You Understand the Thermal Safety System</div>
+        <p>
+          Heat generation physics, thermal runaway cascade, pack thermal management, mechanical
+          swelling, and BMS thermal firmware — all are now connected in your mental model.
+          Chapter 4 moves to BMS hardware architecture: the AFE ICs, protection FETs, gate
+          drivers, current sensors, and MCU that physically implement everything covered so far.
+        </p>
+      </div>
+    </div>
+
+    <!-- Chapter Navigation Footer -->
+    <div class="chapter-footer">
+      <a class="nav-btn" href="chapter2.html">← Chapter 2: Cell Behaviour</a>
+      <div style="text-align:center;">
+        <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.3rem;">You are reading</div>
+        <div style="font-size:0.9rem; color:var(--text-primary); font-weight:700;">Chapter 3: Thermal &amp; Mechanical</div>
+      </div>
+      <a class="nav-btn nav-btn-next" href="chapter4.html">Chapter 4: BMS Hardware Architecture →</a>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<script>
+/* ============================================================
+   HEAT GENERATION BAR CHART
+============================================================ */
+const heatMetrics = {
+  joule: {
+    max: 360, unit: 'W', note: 'Joule heat Q=I²×R at R_int=0.5mΩ for 280Ah LFP. Note the quadratic scaling.',
+    bars: [
+      { label: '0.1C (28A)',   value: 0.39,  color: '#48bb78', display: '0.4W' },
+      { label: '0.5C (140A)',  value: 9.8,   color: '#48bb78', display: '9.8W' },
+      { label: '1C   (280A)', value: 39.2,  color: '#f6ad55', display: '39W' },
+      { label: '2C   (560A)', value: 156.8, color: '#fc8181', display: '157W' },
+      { label: '3C   (840A)', value: 352.8, color: '#ff4444', display: '353W' },
+    ]
+  },
+  temp_rise: {
+    max: 60, unit: '°C/h', note: 'Adiabatic temperature rise per hour. Real rise depends on cooling. c_p=1.05 kJ/kg·K, m=5.5kg.',
+    bars: [
+      { label: '0.1C (28A)',  value: 0.24,  color: '#48bb78', display: '0.2°C/h' },
+      { label: '0.5C (140A)', value: 6.1,   color: '#48bb78', display: '6°C/h' },
+      { label: '1C  (280A)',  value: 24.5,  color: '#f6ad55', display: '24°C/h' },
+      { label: '2C  (560A)',  value: 55,    color: '#fc8181', display: '55°C/h' },
+      { label: '3C  (840A)',  value: 60,    color: '#ff4444', display: '>60°C/h' },
+    ]
+  },
+  efficiency: {
+    max: 12, unit: '% energy lost as heat', note: 'Percentage of energy throughput dissipated as heat (round-trip at same C-rate).',
+    bars: [
+      { label: '0.1C (28A)',  value: 0.05,  color: '#48bb78', display: '0.05%' },
+      { label: '0.5C (140A)', value: 0.31,  color: '#48bb78', display: '0.31%' },
+      { label: '1C  (280A)',  value: 1.25,  color: '#f6ad55', display: '1.25%' },
+      { label: '2C  (560A)',  value: 5.0,   color: '#fc8181', display: '5.0%' },
+      { label: '3C  (840A)',  value: 11.2,  color: '#ff4444', display: '11.2%' },
+    ]
+  }
+};
+
+function showHeatMetric(key, tabEl) {
+  document.querySelectorAll('#heatBarChart .bar-chart-tab').forEach(t => t.classList.remove('active'));
+  if (tabEl) tabEl.classList.add('active');
+  const m = heatMetrics[key];
+  const container = document.getElementById('heatChartContent');
+  container.innerHTML = `
+    <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:1rem; font-family:var(--font-mono);">${m.note}</div>
+    ${m.bars.map(bar => `
+      <div class="bar-chart-row">
+        <div class="bar-label">${bar.label}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:0%;background:${bar.color};"
+               data-target="${Math.max(4,(bar.value/m.max*100)).toFixed(1)}">
+            ${bar.display}
+          </div>
+        </div>
+        <div class="bar-value">${bar.display} ${m.unit}</div>
+      </div>
+    `).join('')}
+  `;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    container.querySelectorAll('.bar-fill').forEach(b => { b.style.width = b.dataset.target + '%'; });
+  }));
+}
+
+/* ============================================================
+   SIDEBAR SCROLL OBSERVER
+============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  showHeatMetric('joule', null);
+  document.querySelector('#heatBarChart .bar-chart-tab').classList.add('active');
+
+  const sections = document.querySelectorAll('section[id], div[id]');
+  const links    = document.querySelectorAll('.sidebar-link');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        links.forEach(l => {
+          l.classList.remove('active');
+          if (l.getAttribute('href') === '#' + id) l.classList.add('active');
+        });
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => obs.observe(s));
+});
+</script>
+</body>
+</html>
