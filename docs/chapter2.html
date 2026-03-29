@@ -3251,6 +3251,162 @@ T (°C)  | f_T   | Notes
       </div>
     </section>
 
+    <!-- ============================================================
+         SECTION 2.10: BMS COMMISSIONING — FIRST-POWER CHECKLIST
+    ============================================================ -->
+    <section class="section" id="s2-10">
+      <div class="section-number">2.10</div>
+      <h2 class="section-title">BMS Commissioning — Practical First-Power Checklist</h2>
+      <p class="section-intro">
+        Theory becomes hardware when the pack is assembled on the bench for the first time. This section
+        walks through the commissioning procedure that production engineers follow before a new BMS
+        design is trusted with a live pack — covering pre-power checks, initial calibration, protection
+        threshold verification, and SoC initialisation.
+      </p>
+
+      <div class="subsection">
+        <div class="subsection-title">Phase 1 — Pre-Power Verification (No Cells Connected)</div>
+        <div class="callout callout-warning">
+          <div class="callout-icon">⚠</div>
+          <div class="callout-body">
+            <div class="callout-title">Always Verify Before Connecting Cells</div>
+            <p>
+              LFP cells at full charge present ~3.65V per cell, or 58.4V for a 16S pack.
+              This is a live energy source with fault energy sufficient to destroy PCB traces and
+              start fires if the BMS has a wiring error. Pre-power checks on the bare PCB with a
+              bench supply at reduced voltage (5V across the logic supply) catch most faults
+              safely before the pack is committed.
+            </p>
+          </div>
+        </div>
+        <ul style="color:var(--text-secondary); line-height:2; padding-left:1.5rem;">
+          <li>Verify all cell-sense wire connections match the schematic — check with ohmmeter, all sense resistances should match expected topology</li>
+          <li>Verify thermistor resistance at room temperature matches NTC datasheet (e.g. 10kΩ NTC: ~10kΩ at 25°C)</li>
+          <li>Confirm current sensor orientation — positive current should read positive on shunt/Hall sensor</li>
+          <li>Inspect balancing resistor values with ohmmeter before first power</li>
+          <li>Verify protection FET drain-source leakage is within spec (typically &lt;1 μA)</li>
+          <li>Check 5V and 3.3V logic rail regulation with bench supply before cell connection</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">Phase 2 — Initial SoC Calibration</div>
+        <p>
+          The BMS's SoC estimate is only as good as its initial condition. On first power with
+          cells at an unknown SoC, the BMS must perform an OCV-based SoC initialisation:
+        </p>
+        <div class="formula-block">
+          <span class="formula-label">Boot SoC Initialisation Protocol</span>
+          <span class="formula-line">1. Apply I = 0 (open circuit) for t_rest ≥ 30 min</span>
+          <span class="formula-line">2. Read V_cell for all N cells</span>
+          <span class="formula-line">3. Check ΔV_max − ΔV_min &lt; 50mV (cell balance acceptable)</span>
+          <span class="formula-line">4. Map V_OCV → SoC via lookup table for each cell</span>
+          <span class="formula-line">5. Set SoC_initial = average of all cell SoC values</span>
+          <span class="formula-line">6. Flag cells with SoC deviation &gt;5% for investigation</span>
+          <span class="formula-caption">
+            Why 30 minutes? After a discharge or charge event, surface concentration gradients
+            persist in the electrodes. The OCV measured immediately after current stops includes
+            a diffusion overpotential that decays with time constant τ ≈ R₁ × C₁ ≈ 100–300s.
+            30 minutes ensures the cell has fully relaxed to true thermodynamic OCV.
+          </span>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">Phase 3 — Protection Threshold Verification</div>
+        <p>
+          Every protection threshold must be verified by deliberately triggering it under controlled
+          conditions. This cannot be done in simulation — the hardware path (AFE → MCU → FET gate
+          driver) must be exercised end-to-end.
+        </p>
+        <div class="comparison-table-wrap" style="margin:1.5rem 0;">
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>Protection</th>
+                <th>Test Method</th>
+                <th>Pass Criteria</th>
+                <th>Typical Response Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="metric-name">OVP<span class="metric-sub">Overvoltage</span></td>
+                <td>Charge at C/10, let cell voltage reach threshold (typically 3.65V + 50mV)</td>
+                <td>Charge FET opens within response time, alarm asserted</td>
+                <td>&lt;100 ms (hardware comparator path)</td>
+              </tr>
+              <tr>
+                <td class="metric-name">UVP<span class="metric-sub">Undervoltage</span></td>
+                <td>Discharge at C/10, let lowest cell reach threshold (typically 2.8V)</td>
+                <td>Discharge FET opens, alarm asserted, SoC ≤ 5%</td>
+                <td>&lt;100 ms</td>
+              </tr>
+              <tr>
+                <td class="metric-name">OCP<span class="metric-sub">Overcurrent</span></td>
+                <td>Use a programmable load to ramp current to 1.2× OCP threshold</td>
+                <td>Both FETs open within response time, latch set</td>
+                <td>&lt;5 ms (hardware latch path)</td>
+              </tr>
+              <tr>
+                <td class="metric-name">SCP<span class="metric-sub">Short Circuit</span></td>
+                <td>Apply low-resistance load (0.1Ω) via relay with known closing time</td>
+                <td>FET opens within SCP response time (typically &lt;500 μs)</td>
+                <td>&lt;500 μs (dedicated SCP comparator)</td>
+              </tr>
+              <tr>
+                <td class="metric-name">OTP<span class="metric-sub">Overtemperature</span></td>
+                <td>Use heat gun on thermistor, monitor BMS response</td>
+                <td>Charge derated at 45°C warning, full cutoff at 60°C limit</td>
+                <td>&lt;1 s (temperature loop bandwidth)</td>
+              </tr>
+              <tr>
+                <td class="metric-name">UTP<span class="metric-sub">Undertemperature</span></td>
+                <td>Place thermistor in freezer water, connect to BMS</td>
+                <td>Charge blocked at 0°C, full cutoff at −20°C</td>
+                <td>&lt;1 s</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout callout-warning">
+          <div class="callout-icon">⚠</div>
+          <div class="callout-body">
+            <div class="callout-title">SCP Test Safety Note</div>
+            <p>
+              Short circuit protection testing involves intentionally creating a short circuit on
+              a live pack. This must be done in a fire-safe enclosure with PPE, using a relay-switched
+              known resistance (not a direct wire short). The test verifies that the BMS's hardware
+              SCP path responds before the cells' own internal resistance limits current to a
+              safe level — it does <em>not</em> verify that the cells survive an unlimited short.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">Phase 4 — SoC Accuracy Verification via Reference Discharge</div>
+        <p>
+          After protection thresholds are confirmed, perform a full Reference Performance Test (RPT)
+          to calibrate the SoC estimator against a known ground truth:
+        </p>
+        <div class="formula-block">
+          <span class="formula-label">RPT Protocol (IEC 62620 basis)</span>
+          <span class="formula-line">1. Charge to 100% SoC (CC-CV, 0.5C, CV until I &lt; 0.05C)</span>
+          <span class="formula-line">2. Rest 30 minutes</span>
+          <span class="formula-line">3. Discharge at 0.2C to cutoff voltage (2.5V per cell)</span>
+          <span class="formula-line">4. Record Q_actual = ∫I dt (coulomb count with calibrated reference meter)</span>
+          <span class="formula-line">5. Q_actual is the ground-truth capacity. Compare to BMS-reported capacity.</span>
+          <span class="formula-line">6. Update Q_nominal in BMS firmware if error &gt;2%</span>
+          <span class="formula-caption">
+            The RPT should be repeated every 6 months as a scheduled SOH check.
+            A steadily declining Q_actual tracks capacity fade — when Q_actual &lt; 0.8 × Q_rated,
+            the pack has reached end-of-life per IEC 62619.
+          </span>
+        </div>
+      </div>
+    </section>
+
     <!-- Chapter Navigation Footer -->
     <div class="chapter-footer">
       <a class="nav-btn" href="chapter1.html">← Chapter 1: The Case for Li-ion</a>
