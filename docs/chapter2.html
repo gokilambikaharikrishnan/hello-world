@@ -1432,3 +1432,229 @@
       </div><!-- end drift -->
 
     </section><!-- end s2-5 -->
+
+    <!-- ============================================================
+         SECTION 2.6 — SOC ESTIMATION: FIVE TECHNIQUES
+    ============================================================ -->
+    <section class="section" id="s2-6">
+      <div class="section-number">Section 2.6</div>
+      <h2 class="section-title">SOC Estimation — Five Techniques</h2>
+      <p class="section-intro">
+        State of Charge estimation is the most algorithmically demanding function of the BMS.
+        No single technique is perfect. Each has a specific accuracy profile, computational cost,
+        and failure mode. Knowing all five — and understanding why each exists — is essential
+        for BMS architecture decisions.
+      </p>
+
+      <div class="callout callout-key">
+        <div class="callout-icon">🔑</div>
+        <div class="callout-body">
+          <div class="callout-title">Why We Need SOC Estimation at All — The Fundamental Problem</div>
+          <p>
+            A lead-acid battery shows its state of charge directly in its terminal voltage:
+            12.6V ≈ 100%, 12.0V ≈ 50%, 11.8V ≈ 20%. The slope is steep enough to be useful.
+            An LFP cell at 3.34V is anywhere from 30% to 70% SoC. <strong>You fundamentally
+            cannot read SoC from LFP voltage during normal operation.</strong> This is not an
+            engineering limitation to be designed around — it is a consequence of the two-phase
+            thermodynamics described in Section 2.4. The BMS must estimate SoC by other means.
+          </p>
+        </div>
+      </div>
+
+      <!-- T1: OCV Lookup -->
+      <div class="technique-card" id="ocv-method">
+        <div class="technique-header">
+          <div class="technique-num">T1</div>
+          <div class="technique-name">OCV Lookup Table Method</div>
+          <div class="technique-accuracy badge badge-orange">LFP Accuracy: ±15–25% (mid-range)</div>
+        </div>
+        <div class="technique-body">
+          <p>
+            The simplest conceptual approach: measure the cell's open-circuit voltage after a
+            rest period, look it up in a pre-characterized OCV-vs-SoC table, and read off the
+            corresponding SoC.
+          </p>
+          <div class="subsection-sub">Step-by-Step Process</div>
+          <ol class="content-list num">
+            <li>Detect that cell is at rest (|I| &lt; threshold for &gt; T_rest minutes)</li>
+            <li>Measure cell voltage (now approximately OCV since current ≈ 0)</li>
+            <li>Select whether to use the charge OCV table or discharge OCV table based on last current direction (hysteresis correction)</li>
+            <li>Look up nearest SoC values in the table, interpolate linearly between points</li>
+            <li>Apply temperature correction (typically −0.2 mV/°C for LFP)</li>
+            <li>Use result as SOC estimate, reset coulomb counter to this value</li>
+          </ol>
+          <div class="subsection-sub">The Rest Time Problem</div>
+          <p>
+            "After a rest period" is not trivial for LFP. After current stops, the cell voltage
+            relaxes toward OCV — but the relaxation is slow and non-linear. The first 60 seconds:
+            fast IR-drop recovery. The next 5–30 minutes: diffusion relaxation within electrode
+            particles. The next 30 minutes to 4 hours: further slow equilibration of concentration
+            gradients.
+          </p>
+          <p>
+            For an LFP cell at 50% SoC, measured at different rest times after a 1C discharge:
+          </p>
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead><tr><th>Rest Time</th><th>Measured Voltage</th><th>True OCV (fully relaxed)</th><th>Voltage Error</th><th>Resulting SOC Error</th></tr></thead>
+              <tbody>
+                <tr><td>0 s (immediately)</td><td class="worst">3.200 V</td><td>3.340 V</td><td>140 mV</td><td class="worst">~40% under-read</td></tr>
+                <tr><td>30 s</td><td>3.290 V</td><td>3.340 V</td><td>50 mV</td><td class="worst">~20% under-read</td></tr>
+                <tr><td>5 min</td><td>3.322 V</td><td>3.340 V</td><td>18 mV</td><td class="fair">~10% under-read</td></tr>
+                <tr><td>30 min</td><td>3.336 V</td><td>3.340 V</td><td>4 mV</td><td class="fair">~5–15% (flat curve)</td></tr>
+                <tr><td>2 hours</td><td>3.339 V</td><td>3.340 V</td><td>1 mV</td><td class="fair">~5–10% (flat curve)</td></tr>
+                <tr><td>4+ hours</td><td>3.340 V</td><td>3.340 V</td><td>&lt;0.5 mV</td><td class="fair">~5% (irreducible: flat curve)</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            Even after 4 hours of rest, the irreducible SOC uncertainty for LFP in the 20–80%
+            range is approximately <strong>±5–15%</strong> due to the flat OCV curve. The
+            voltage measurement is accurate — the information is simply not there. This is why
+            OCV lookup alone is insufficient for LFP SOC estimation.
+          </p>
+          <div class="technique-meta">
+            <div class="technique-meta-item"><span class="technique-meta-label">Best Use</span><span class="technique-meta-value">Startup initialization, reset anchor</span></div>
+            <div class="technique-meta-item"><span class="technique-meta-label">Accuracy (mid SoC)</span><span class="technique-meta-value good">±5–20% for LFP</span></div>
+            <div class="technique-meta-item"><span class="technique-meta-label">MCU Cost</span><span class="technique-meta-value best">Trivial (table lookup)</span></div>
+            <div class="technique-meta-item"><span class="technique-meta-label">LFP Suitability</span><span class="technique-meta-value fair">Startup only</span></div>
+            <div class="technique-meta-item"><span class="technique-meta-label">Drift</span><span class="technique-meta-value best">None (static)</span></div>
+            <div class="technique-meta-item"><span class="technique-meta-label">Reset Needed</span><span class="technique-meta-value">Requires rest period</span></div>
+          </div>
+        </div>
+      </div><!-- T1 -->
+
+      <!-- T2: Coulomb Counting -->
+      <div class="technique-card" id="cc-method">
+        <div class="technique-header">
+          <div class="technique-num">T2</div>
+          <div class="technique-name">Coulomb Counting (Current Integration)</div>
+          <div class="technique-accuracy badge badge-blue">LFP Accuracy: ±1–5% short-term, drifts</div>
+        </div>
+        <div class="technique-body">
+          <p>
+            As described in Section 2.5, coulomb counting integrates current over time to track
+            accumulated charge. This is the primary tracking method for SOC during active operation.
+          </p>
+          <div class="subsection-sub">Implementation on Embedded MCU</div>
+          <p>
+            On a typical 32-bit MCU running at 72 MHz, the SOC update loop looks like this
+            (pseudocode):
+          </p>
+          <div class="formula-block" style="text-align:left; font-size:0.85rem; padding:1rem 1.5rem;">
+            <span class="formula-label">Coulomb Counting — MCU Implementation (Pseudocode)</span>
+            <span class="formula-line" style="color:var(--text-secondary);">// Called every SAMPLE_PERIOD_MS milliseconds (e.g. 250ms)</span>
+            <span class="formula-line">float current_A = read_current_sensor();       // ADC + calibration</span>
+            <span class="formula-line">float dt_hours  = SAMPLE_PERIOD_MS / 3600000.0f;</span>
+            <span class="formula-line">float dQ_Ah     = current_A * dt_hours;</span>
+            <span class="formula-line">if (current_A &gt; 0) dQ_Ah *= COULOMBIC_EFF;    // charging: apply η ≈ 0.999</span>
+            <span class="formula-line">soc_Ah += dQ_Ah;                               // accumulate (Ah)</span>
+            <span class="formula-line">soc_percent = (soc_Ah / Q_nominal_Ah) * 100.0f;</span>
+            <span class="formula-line">soc_percent = clamp(soc_percent, 0.0f, 100.0f);</span>
+            <span class="formula-caption">Q_nominal_Ah is updated periodically from full-cycle capacity measurements. COULOMBIC_EFF = 0.999 for LFP. soc_Ah drifts if current sensor has offset or gain error.</span>
+          </div>
+          <p>
+            <strong>Critical design note:</strong> Current sensor auto-zero must be implemented.
+            When detected current falls below a noise threshold (e.g., |I| &lt; 0.5A for &gt;10s),
+            the BMS should sample the "zero current" offset and subtract it from all subsequent
+            readings until the next zero-current window. This eliminates the dominant steady-state
+            drift source. Without auto-zero, a 100mA offset on a 280Ah cell accumulates
+            <strong>2.4 Ah = 0.86% SOC</strong> error per hour of standby.
+          </p>
+          <div class="technique-meta">
+            <div class="technique-meta-item"><span class="technique-meta-label">Best Use</span><span class="technique-meta-value">Primary tracking during operation</span></div>
+            <div class="technique-meta-item"><span class="technique-meta-label">Accuracy (fresh reset)</span><span class="technique-meta-value best">±1–2%</span></div>
+            <div class="technique-meta-item"><span class="technique-meta-label">Accuracy (24h no reset)</span><span class="technique-meta-value worst">±5–10%</span></div>
+            <div class="technique-meta-item"><span class="technique-meta-label">MCU Cost</span><span class="technique-meta-value best">Very Low (1 multiply per sample)</span></div>
+            <div class="technique-meta-item"><span class="technique-meta-label">LFP Suitability</span><span class="technique-meta-value best">Excellent (doesn't need OCV slope)</span></div>
+            <div class="technique-meta-item"><span class="technique-meta-label">Drift</span><span class="technique-meta-value worst">Yes — grows with time</span></div>
+          </div>
+        </div>
+      </div><!-- T2 -->
+
+      <!-- T3: ECM -->
+      <div class="technique-card" id="ecm-method">
+        <div class="technique-header">
+          <div class="technique-num">T3</div>
+          <div class="technique-name">Equivalent Circuit Model (ECM)</div>
+          <div class="technique-accuracy badge badge-blue">LFP Accuracy: ±3–8%, better dynamics</div>
+        </div>
+        <div class="technique-body">
+          <p>
+            The Equivalent Circuit Model replaces the electrochemical cell with an electrical
+            circuit that has the same terminal voltage behaviour. The most common form is the
+            Thevenin model, also called the RC model:
+          </p>
+          <div class="diagram-box" style="margin:1.5rem 0; padding:1.5rem;">
+            <svg viewBox="0 0 500 140" width="100%" style="max-width:500px; display:block; margin:0 auto;">
+              <!-- OCV source -->
+              <circle cx="60" cy="70" r="28" fill="none" stroke="#48bb78" stroke-width="2"/>
+              <text x="60" y="65" fill="#48bb78" font-size="11" text-anchor="middle" font-weight="bold">OCV</text>
+              <text x="60" y="80" fill="rgba(255,255,255,0.4)" font-size="9" text-anchor="middle">f(SoC,T)</text>
+              <!-- Wires from OCV -->
+              <line x1="88" y1="50" x2="140" y2="50" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+              <line x1="88" y1="90" x2="440" y2="90" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+              <!-- R0 (ohmic) -->
+              <rect x="140" y="42" width="50" height="16" fill="none" stroke="#63b3ed" stroke-width="1.5" rx="3"/>
+              <text x="165" y="53" fill="#63b3ed" font-size="10" text-anchor="middle">R₀</text>
+              <text x="165" y="70" fill="rgba(255,255,255,0.3)" font-size="8" text-anchor="middle">ohmic</text>
+              <line x1="190" y1="50" x2="240" y2="50" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+              <!-- R1C1 parallel (RC network) -->
+              <rect x="240" y="42" width="40" height="16" fill="none" stroke="#b794f4" stroke-width="1.5" rx="3"/>
+              <text x="260" y="53" fill="#b794f4" font-size="10" text-anchor="middle">R₁</text>
+              <!-- Capacitor C1 below as parallel branch -->
+              <line x1="240" y1="50" x2="240" y2="72" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+              <line x1="280" y1="50" x2="280" y2="72" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+              <line x1="234" y1="72" x2="246" y2="72" stroke="#b794f4" stroke-width="2.5"/>
+              <line x1="234" y1="78" x2="246" y2="78" stroke="#b794f4" stroke-width="2.5"/>
+              <line x1="274" y1="72" x2="286" y2="72" stroke="#b794f4" stroke-width="2.5"/>
+              <line x1="274" y1="78" x2="286" y2="78" stroke="#b794f4" stroke-width="2.5"/>
+              <text x="260" y="95" fill="#b794f4" font-size="8" text-anchor="middle">C₁ ‖ R₁</text>
+              <line x1="280" y1="50" x2="360" y2="50" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+              <!-- Terminals -->
+              <line x1="360" y1="50" x2="440" y2="50" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+              <circle cx="440" cy="50" r="5" fill="#48bb78"/>
+              <circle cx="440" cy="90" r="5" fill="#fc8181"/>
+              <text x="455" y="54" fill="#48bb78" font-size="11" font-weight="bold">V+</text>
+              <text x="455" y="94" fill="#fc8181" font-size="11" font-weight="bold">V−</text>
+              <text x="440" y="115" fill="rgba(255,255,255,0.4)" font-size="9" text-anchor="middle">V_terminal</text>
+              <!-- Labels below components -->
+              <text x="165" y="115" fill="rgba(255,255,255,0.4)" font-size="8.5" text-anchor="middle">0.3–0.8 mΩ</text>
+              <text x="260" y="115" fill="rgba(255,255,255,0.4)" font-size="8.5" text-anchor="middle">0.5–2 mΩ / 200–2000F</text>
+            </svg>
+            <p class="diagram-caption" style="margin-top:0.5rem;">
+              Thevenin ECM (1RC): OCV source (SOC-dependent) + R₀ (ohmic resistance) + R₁C₁ parallel network (diffusion dynamics). V_terminal = OCV(SoC) − I×R₀ − V_C₁
+            </p>
+          </div>
+
+          <p><strong>What each element represents physically:</strong></p>
+          <ul class="content-list">
+            <li><strong>OCV(SoC, T):</strong> The thermodynamic equilibrium voltage — the same
+            OCV-SoC table as Method T1, but now used as a model input, not the sole SOC estimator.
+            Updated as SoC is estimated.</li>
+            <li><strong>R₀ (ohmic resistance):</strong> Immediate voltage drop when current changes.
+            Combines contact resistance, electrolyte bulk resistance, and current collector resistance.
+            Characterizable from current-pulse tests. Changes with temperature and aging.</li>
+            <li><strong>R₁C₁ (RC network):</strong> The relaxation dynamics. When current stops,
+            the voltage doesn't jump instantly to OCV — it relaxes exponentially with time constant
+            τ = R₁×C₁ (~30–300 seconds for LFP). Models the diffusion polarization that builds
+            and decays with current history.</li>
+          </ul>
+          <p>
+            <strong>SOC estimation using ECM:</strong> The model predicts V_terminal given current
+            history and assumed SoC. The SoC is updated iteratively (usually via an optimization
+            step) to minimize the error between predicted and measured terminal voltage. This is
+            better than pure coulomb counting because it uses voltage as a correction signal — but
+            for LFP, with its flat OCV curve, the voltage correction is weak and the model still
+            relies heavily on current integration.
+          </p>
+          <div class="technique-meta">
+            <div class="technique-meta-item"><span class="technique-meta-label">Best Use</span><span class="technique-meta-value">Mid-tier BMS, Kalman filter base model</span></div>
+            <div class="technique-meta-item"><span class="technique-meta-label">Accuracy</span><span class="technique-meta-value good">±3–8%</span></div>
+            <div class="technique-meta-item"><span class="technique-meta-label">MCU Cost</span><span class="technique-meta-value good">Low–Medium (state equation per step)</span></div>
+            <div class="technique-meta-item"><span class="technique-meta-label">LFP Suitability</span><span class="technique-meta-value good">Good — improves dynamics</span></div>
+            <div class="technique-meta-item"><span class="technique-meta-label">Drift</span><span class="technique-meta-value fair">Less than pure CC, not zero</span></div>
+            <div class="technique-meta-item"><span class="technique-meta-label">RAM required</span><span class="technique-meta-value best">~50–200 bytes per cell</span></div>
+          </div>
+        </div>
+      </div><!-- T3 -->
