@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 4: Electrical & Protection | LFP BMS Knowledge Base</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-deep:      #07090f;
+      --bg-card:      #0d1117;
+      --bg-elevated:  #161b22;
+      --bg-hover:     #1c2330;
+      --border:       rgba(255,255,255,0.07);
+      --border-med:   rgba(255,255,255,0.12);
+      --text-primary:  #e6edf3;
+      --text-secondary:#8b949e;
+      --text-muted:    #484f58;
+      --accent-blue:   #63b3ed;
+      --accent-cyan:   #00d9ff;
+      --accent-green:  #48bb78;
+      --accent-orange: #f6ad55;
+      --accent-red:    #fc8181;
+      --accent-purple: #b794f4;
+      --accent-yellow: #f6e05e;
+      --elec-blue:     #4fc3f7;
+      --elec-cyan:     #00e5ff;
+      --elec-violet:   #7c4dff;
+      --font-sans: 'Inter', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --sidebar-w: 265px;
+      --radius: 8px;
+      --radius-lg: 14px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 16px;
+      line-height: 1.7;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── SIDEBAR ─────────────────────────────────────── */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-width: var(--sidebar-w);
+      background: var(--bg-card);
+      border-right: 1px solid var(--border);
+      position: sticky; top: 0;
+      height: 100vh; overflow-y: auto;
+      padding: 1.5rem 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+      flex-shrink: 0;
+    }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--border-med); border-radius: 2px; }
+    .sidebar-logo { padding: 0 1.25rem 1.25rem; border-bottom: 1px solid var(--border); margin-bottom: 1rem; }
+    .sidebar-logo-text { font-size: 0.7rem; font-family: var(--font-mono); color: var(--elec-cyan); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; }
+    .sidebar-title { font-size: 0.85rem; color: var(--text-primary); font-weight: 600; margin-top: 0.25rem; line-height: 1.3; }
+    .sidebar-nav-label { font-size: 0.65rem; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted); padding: 0.75rem 1.25rem 0.3rem; }
+    .sidebar-link {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.45rem 1.25rem;
+      font-size: 0.82rem; color: var(--text-secondary);
+      text-decoration: none; transition: all 0.18s;
+      border-left: 2px solid transparent;
+    }
+    .sidebar-link:hover { color: var(--text-primary); background: var(--bg-elevated); }
+    .sidebar-link.active { color: var(--elec-cyan); border-left-color: var(--elec-cyan); background: rgba(0,229,255,0.05); }
+    .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.5; flex-shrink: 0; }
+    .sidebar-link.active .dot { opacity: 1; }
+
+    /* ── MAIN ─────────────────────────────────────────── */
+    .main { flex: 1; min-width: 0; padding: 3rem 4rem; max-width: 1000px; }
+    @media (max-width: 900px) { .main { padding: 2rem 1.5rem; } .sidebar { display: none; } }
+
+    /* ── HERO ─────────────────────────────────────────── */
+    .hero {
+      margin-bottom: 4rem; padding: 3rem;
+      background: linear-gradient(135deg, rgba(0,229,255,0.07) 0%, rgba(99,179,237,0.05) 40%, rgba(7,9,15,0) 100%);
+      border: 1px solid rgba(0,229,255,0.15); border-radius: var(--radius-lg);
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; top: -50px; right: -50px;
+      width: 200px; height: 200px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,229,255,0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      font-size: 0.7rem; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.14em;
+      color: var(--elec-cyan); background: rgba(0,229,255,0.1); border: 1px solid rgba(0,229,255,0.25);
+      padding: 0.3rem 0.75rem; border-radius: 20px; margin-bottom: 1.25rem;
+    }
+    .hero-title {
+      font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; line-height: 1.15; margin-bottom: 0.75rem;
+      background: linear-gradient(135deg, #00e5ff 0%, #63b3ed 50%, #e6edf3 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .hero-subtitle { font-size: 1.05rem; color: var(--text-secondary); max-width: 620px; line-height: 1.7; margin-bottom: 1.5rem; }
+    .hero-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+    .hero-stat-val { font-size: 1.5rem; font-weight: 800; font-family: var(--font-mono); color: var(--elec-cyan); }
+    .hero-stat-lbl { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+    /* ── SECTIONS ─────────────────────────────────────── */
+    .section { margin-bottom: 5rem; padding-bottom: 3rem; border-bottom: 1px solid var(--border); }
+    .section:last-of-type { border-bottom: none; }
+    .section-number { font-family: var(--font-mono); font-size: 0.72rem; color: var(--elec-cyan); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.5rem; font-weight: 700; }
+    .section-title { font-size: 1.75rem; font-weight: 800; line-height: 1.2; margin-bottom: 1rem; }
+    .section-intro { font-size: 1.05rem; color: var(--text-secondary); line-height: 1.8; max-width: 750px; margin-bottom: 2rem; }
+    .subsection { margin-bottom: 2.5rem; }
+    .subsection-title { font-size: 1.05rem; font-weight: 700; color: var(--elec-cyan); margin-bottom: 1rem; padding-left: 0.75rem; border-left: 3px solid var(--elec-cyan); }
+
+    /* ── CALLOUTS ─────────────────────────────────────── */
+    .callout { display: flex; gap: 1rem; padding: 1.25rem 1.5rem; border-radius: var(--radius); margin: 1.5rem 0; border: 1px solid; }
+    .callout-icon { font-size: 1.3rem; flex-shrink: 0; line-height: 1.4; }
+    .callout-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 0.4rem; }
+    .callout-body p, .callout-body ul { font-size: 0.88rem; line-height: 1.75; color: var(--text-secondary); margin-top: 0.4rem; }
+    .callout-body ul { padding-left: 1.2rem; }
+    .callout-info    { background: rgba(99,179,237,0.06);   border-color: rgba(99,179,237,0.25); }
+    .callout-info    .callout-title { color: var(--accent-blue); }
+    .callout-warning { background: rgba(246,173,85,0.06);   border-color: rgba(246,173,85,0.25); }
+    .callout-warning .callout-title { color: var(--accent-orange); }
+    .callout-danger  { background: rgba(252,129,129,0.06);  border-color: rgba(252,129,129,0.3); }
+    .callout-danger  .callout-title { color: var(--accent-red); }
+    .callout-success { background: rgba(72,187,120,0.06);   border-color: rgba(72,187,120,0.25); }
+    .callout-success .callout-title { color: var(--accent-green); }
+    .callout-elec    { background: rgba(0,229,255,0.05);    border-color: rgba(0,229,255,0.25); }
+    .callout-elec    .callout-title { color: var(--elec-cyan); }
+    .callout-physics { background: rgba(183,148,244,0.06);  border-color: rgba(183,148,244,0.25); }
+    .callout-physics .callout-title { color: var(--accent-purple); }
+
+    /* ── FORMULA BLOCKS ───────────────────────────────── */
+    .formula-block {
+      background: var(--bg-card); border: 1px solid var(--border-med);
+      border-left: 3px solid var(--elec-cyan); border-radius: var(--radius);
+      padding: 1.25rem 1.5rem; margin: 1.25rem 0;
+      display: flex; flex-direction: column; gap: 0.4rem;
+    }
+    .formula-label { font-size: 0.7rem; font-family: var(--font-mono); color: var(--elec-cyan); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.2rem; }
+    .formula-line { font-family: var(--font-mono); font-size: 0.92rem; color: var(--text-primary); background: rgba(255,255,255,0.03); padding: 0.35rem 0.75rem; border-radius: 4px; }
+    .formula-caption { font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem; line-height: 1.6; }
+
+    /* ── STAT GRID ────────────────────────────────────── */
+    .stat-grid { display: grid; gap: 1rem; margin: 1.5rem 0; }
+    .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; transition: border-color 0.2s; }
+    .stat-card:hover { border-color: var(--border-med); }
+    .stat-value { font-size: 1.8rem; font-weight: 800; font-family: var(--font-mono); color: var(--elec-cyan); }
+    .stat-label { font-size: 0.78rem; font-weight: 600; color: var(--text-primary); margin: 0.2rem 0; }
+    .stat-desc  { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5; }
+
+    /* ── COMPARISON TABLE ─────────────────────────────── */
+    .comparison-table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+    .comparison-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.84rem; }
+    .comparison-table th { background: var(--bg-elevated); color: var(--text-secondary); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-med); text-align: left; }
+    .comparison-table td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: top; }
+    .comparison-table tr:last-child td { border-bottom: none; }
+    .comparison-table tr:hover td { background: var(--bg-elevated); }
+    .metric-name { color: var(--text-primary); font-weight: 600; white-space: nowrap; }
+    .metric-sub { display: block; font-size: 0.72rem; color: var(--text-muted); font-weight: 400; }
+
+    /* ── DIAGRAM WRAP ─────────────────────────────────── */
+    .diagram-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2rem; margin: 2rem 0; overflow: hidden; }
+    .diagram-title { font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem; }
+    .diagram-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .diagram-caption { font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-top: 1rem; line-height: 1.6; }
+
+    /* ── BAR CHART ────────────────────────────────────── */
+    .bar-chart-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.75rem; margin: 2rem 0; }
+    .bar-chart-title { font-size: 0.85rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem; }
+    .bar-chart-tabs { display: flex; gap: 0.4rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .bar-chart-tab { font-size: 0.75rem; font-family: var(--font-mono); padding: 0.35rem 0.85rem; border-radius: 20px; border: 1px solid var(--border-med); background: transparent; color: var(--text-secondary); cursor: pointer; transition: all 0.18s; }
+    .bar-chart-tab:hover { background: var(--bg-elevated); color: var(--text-primary); }
+    .bar-chart-tab.active { background: var(--elec-cyan); border-color: var(--elec-cyan); color: #07090f; font-weight: 700; }
+    .bar-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.65rem; }
+    .bar-lbl { font-size: 0.78rem; font-family: var(--font-mono); color: var(--text-secondary); width: 130px; flex-shrink: 0; text-align: right; }
+    .bar-track { flex: 1; background: rgba(255,255,255,0.05); border-radius: 4px; height: 26px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding: 0 0.5rem; font-size: 0.72rem; font-family: var(--font-mono); font-weight: 700; color: rgba(0,0,0,0.85); transition: width 0.7s cubic-bezier(0.4,0,0.2,1); width: 0%; white-space: nowrap; }
+    .bar-val { font-size: 0.78rem; font-family: var(--font-mono); color: var(--text-muted); width: 80px; flex-shrink: 0; }
+
+    /* ── TRACEABILITY ─────────────────────────────────── */
+    .trace-container { display: flex; flex-direction: column; gap: 0.75rem; margin: 1.5rem 0; }
+    .trace-row { display: grid; grid-template-columns: 200px 30px 1fr; align-items: start; gap: 0.75rem; }
+    .trace-left { background: var(--bg-elevated); border-radius: var(--radius); padding: 0.75rem 1rem; }
+    .trace-number { font-size: 0.7rem; font-family: var(--font-mono); color: var(--elec-cyan); font-weight: 700; }
+    .trace-label { font-size: 0.82rem; font-weight: 600; color: var(--text-primary); margin-top: 0.15rem; }
+    .trace-arrow { font-size: 1rem; color: var(--text-muted); padding-top: 0.75rem; text-align: center; }
+    .trace-right { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.7; padding-top: 0.75rem; }
+
+    /* ── CODE BLOCK ───────────────────────────────────── */
+    .code-block { background: #0d1117; border: 1px solid var(--border-med); border-radius: var(--radius); padding: 1.25rem 1.5rem; margin: 1.25rem 0; overflow-x: auto; font-family: var(--font-mono); font-size: 0.84rem; line-height: 1.75; color: var(--text-secondary); }
+    .kw  { color: #ff7b72; }
+    .fn  { color: #d2a8ff; }
+    .num { color: #79c0ff; }
+    .cm  { color: #484f58; }
+    .st  { color: #a5d6ff; }
+    .tp  { color: #ffa657; }
+
+    /* ── PROTECTION TIER CARDS ────────────────────────── */
+    .tier-stack { display: flex; flex-direction: column; gap: 0; margin: 2rem 0; }
+    .tier-card {
+      display: flex; align-items: stretch; border: 1px solid var(--border);
+      border-radius: 0; overflow: hidden; position: relative;
+      transition: border-color 0.2s;
+    }
+    .tier-card:first-child { border-radius: var(--radius) var(--radius) 0 0; }
+    .tier-card:last-child  { border-radius: 0 0 var(--radius) var(--radius); border-top: none; }
+    .tier-card:not(:first-child) { border-top: none; }
+    .tier-card:hover { border-color: var(--border-med); z-index: 1; }
+    .tier-band { width: 6px; flex-shrink: 0; }
+    .tier-body { flex: 1; padding: 1.1rem 1.4rem; display: flex; gap: 1.5rem; align-items: center; }
+    .tier-time { font-family: var(--font-mono); font-size: 1.1rem; font-weight: 800; min-width: 90px; flex-shrink: 0; }
+    .tier-name { font-size: 0.92rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem; }
+    .tier-desc { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.6; }
+
+    /* ── MOSFET TOPOLOGY ──────────────────────────────── */
+    .mos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1.5rem 0; }
+    .mos-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.4rem; }
+    .mos-title { font-size: 0.9rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+    .mos-badge { font-size: 0.65rem; font-family: var(--font-mono); padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 700; }
+
+    /* ── CHAPTER FOOTER ───────────────────────────────── */
+    .chapter-footer { display: grid; grid-template-columns: 1fr auto 1fr; gap: 1rem; align-items: center; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); }
+    .nav-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.65rem 1.25rem; background: var(--bg-elevated); border: 1px solid var(--border-med); border-radius: var(--radius); color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; text-decoration: none; transition: all 0.2s; }
+    .nav-btn:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--elec-cyan); }
+    .nav-btn-next { justify-self: end; color: var(--elec-cyan); border-color: rgba(0,229,255,0.3); }
+
+    /* ── ANIMATIONS ───────────────────────────────────── */
+    @keyframes pulse { 0%,100%{opacity:.6} 50%{opacity:1} }
+    @keyframes slide-in { from{transform:translateX(-10px);opacity:0} to{transform:translateX(0);opacity:1} }
+    @keyframes current-flow {
+      0%   { stroke-dashoffset: 100; }
+      100% { stroke-dashoffset: 0; }
+    }
+    @keyframes blink-red { 0%,100%{fill:#fc8181;opacity:.9} 50%{fill:#ff0000;opacity:1} }
+    @keyframes charge-sweep {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(200%); }
+    }
+
+    @media (max-width: 700px) {
+      .mos-grid   { grid-template-columns: 1fr; }
+      .trace-row  { grid-template-columns: 1fr; }
+      .tier-body  { flex-direction: column; gap: 0.5rem; }
+      .chapter-footer { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── SIDEBAR ──────────────────────────────────────────── -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-text">LFP BMS Knowledge Base</div>
+    <div class="sidebar-title">Chapter 4 — Electrical &amp; Protection</div>
+  </div>
+  <div class="sidebar-nav-label">Other Chapters</div>
+  <a class="sidebar-link" href="chapter1.html"><span class="dot"></span> Ch 1: Li-ion &amp; LFP</a>
+  <a class="sidebar-link" href="chapter2.html"><span class="dot"></span> Ch 2: Cell Behaviour</a>
+  <a class="sidebar-link" href="chapter3.html"><span class="dot"></span> Ch 3: Thermal &amp; Mechanical</a>
+  <div class="sidebar-nav-label">Chapter 4</div>
+  <a class="sidebar-link active" href="#hero"><span class="dot"></span> Overview</a>
+  <a class="sidebar-link" href="#s4-1"><span class="dot"></span> 4.1 Voltage Protection</a>
+  <a class="sidebar-link" href="#s4-2"><span class="dot"></span> 4.2 Current Protection</a>
+  <a class="sidebar-link" href="#s4-3"><span class="dot"></span> 4.3 Cell Balancing</a>
+  <a class="sidebar-link" href="#s4-4"><span class="dot"></span> 4.4 MOSFET Switching</a>
+  <a class="sidebar-link" href="#s4-5"><span class="dot"></span> 4.5 AFE Architecture</a>
+  <a class="sidebar-link" href="#s4-summary"><span class="dot"></span> Summary</a>
+  <a class="sidebar-link" href="#s4-ref"><span class="dot"></span> Quick Reference</a>
+</nav>
+
+<!-- ── MAIN ─────────────────────────────────────────────── -->
+<main class="main" id="main">
+
+  <!-- HERO -->
+  <div class="hero" id="hero">
+    <div class="hero-badge">⚡ Chapter 4 · Electrical &amp; Protection</div>
+    <h1 class="hero-title">Voltage, Current,<br>Balancing &amp; Switching</h1>
+    <p class="hero-subtitle">
+      The BMS is fundamentally an electrical protection system. This chapter dissects every
+      protection layer — from overvoltage and short-circuit detection to cell balancing
+      topologies, MOSFET switching physics, and the analog front-end ICs that make it all possible.
+    </p>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-val">&lt;500μs</div>
+        <div class="hero-stat-lbl">SCD hardware response</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">3.65V</div>
+        <div class="hero-stat-lbl">LFP OVP threshold</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">16-bit</div>
+        <div class="hero-stat-lbl">AFE ADC resolution</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">1mΩ</div>
+        <div class="hero-stat-lbl">Typical shunt resistance</div>
+      </div>
+    </div>
+  </div>
