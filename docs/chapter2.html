@@ -491,3 +491,106 @@
           <span class="formula-caption">The ~0.15V anode potential varies slightly with SoC. The Fe²⁺/Fe³⁺ redox couple in the phosphate lattice pins the plateau. This is why LFP voltage barely changes with SoC.</span>
         </div>
       </div>
+
+      <!-- Intercalation -->
+      <div class="subsection" id="intercalation">
+        <div class="subsection-title">Intercalation — What Physically Happens When a Li-ion Cell Charges</div>
+        <p>
+          The word "intercalation" comes from the Latin <em>intercalare</em> — to insert between.
+          In lithium-ion batteries, it describes the process by which lithium ions are inserted into
+          (or extracted from) the crystal lattice of an electrode material, without permanently
+          altering that material's structure.
+        </p>
+        <p>
+          Think of it like this: imagine a stack of pancakes. Each pancake is a graphene layer in
+          the graphite anode. The gaps between pancakes are where Li⁺ ions park during charging.
+          When you charge the battery, Li⁺ ions squeeze between the graphene layers and sit there,
+          electrostatically held. When you discharge, they unsqueeze and leave. The pancakes
+          (graphene layers) barely change shape — just expand slightly (3.5% for graphite) when
+          the Li⁺ ions are inside.
+        </p>
+        <p>
+          This is fundamentally different from lead-acid, where the electrode <em>is consumed</em>
+          in the reaction (lead converts to lead sulfate). In intercalation, the electrode hosts
+          lithium reversibly — like a hotel that houses guests without changing its structure.
+          This reversibility is why Li-ion achieves 10× more cycles than lead-acid.
+        </p>
+
+        <div class="subsection-sub">Discharge — Following a Li⁺ Ion on Its Journey</div>
+        <p>
+          Start: the cell is fully charged. The anode is a graphite crystal fully loaded with Li⁺
+          ions between its layers (LiC₆). The cathode is FePO₄ — fully depleted lithium iron
+          phosphate, all Li⁺ slots empty.
+        </p>
+        <p>
+          You connect a load (a lamp). Here is what happens at the atomic scale in the next
+          microseconds:
+        </p>
+        <ul class="content-list num">
+          <li><strong>Oxidation at anode:</strong> A Li⁺ ion deintercalates from the graphite anode.
+          The graphite simultaneously releases one electron. The Li⁺ enters the electrolyte.
+          The electron enters the copper current collector, flows through the external circuit
+          (through your lamp, doing work), arrives at the aluminum current collector.</li>
+          <li><strong>Ion migration:</strong> The Li⁺ ion migrates through the electrolyte —
+          pulled toward the cathode by the electric field gradient. This migration is rate-limited
+          by ionic conductivity and the Li⁺ diffusion coefficient in the electrolyte
+          (~10⁻⁶ cm²/s at 25°C). This is why charge rate has limits — you cannot push ions
+          faster than diffusion allows.</li>
+          <li><strong>Reduction at cathode:</strong> The Li⁺ ion reaches the LFP cathode and
+          intercalates into an empty site in the FePO₄ crystal. Simultaneously, the electron
+          arriving from the external circuit reduces Fe³⁺ to Fe²⁺, maintaining charge neutrality.
+          The crystal site now holds LiFePO₄.</li>
+          <li><strong>Result:</strong> One Li⁺ has moved from anode to cathode. One electron has
+          flowed through the external circuit. The process repeats approximately 6×10²³ times
+          per mole of lithium (Avogadro's number) to fully discharge the cell.</li>
+        </ul>
+
+        <div class="formula-block green-theme">
+          <span class="formula-label">Complete LFP Discharge Reaction</span>
+          <span class="formula-line">Anode:    LiC₆ → C₆ + Li⁺ + e⁻</span>
+          <span class="formula-line">Cathode:  FePO₄ + Li⁺ + e⁻ → LiFePO₄</span>
+          <span class="formula-line formula-highlight">Overall: LiC₆ + FePO₄ → C₆ + LiFePO₄  (ΔG° ≈ −309 kJ/mol)</span>
+          <span class="formula-caption">Negative ΔG° = spontaneous reaction = energy is released. Charge reaction is the exact reverse, requiring energy input equal to ΔG°.</span>
+        </div>
+
+        <div class="subsection-sub">Charge — Reversing the Process</div>
+        <p>
+          During charging, an external power supply forces electrons backward — from the aluminum
+          current collector (cathode) through the supply and into the copper collector (anode).
+          This non-spontaneous electron flow drives the non-spontaneous chemistry: Li⁺ is pulled
+          out of the LiFePO₄ cathode (Fe²⁺ oxidized back to Fe³⁺), travels through the electrolyte,
+          and reintercalates into the graphite anode. The energy you put in (from the charger)
+          is stored as chemical potential.
+        </p>
+        <p>
+          The efficiency of this round trip is the <strong>coulombic efficiency</strong>
+          (η ≈ 99–99.9% for LFP) — almost all charge put in can be recovered. The small fraction
+          lost (0.1–1%) goes to side reactions, primarily continued SEI layer growth on the anode.
+          Over thousands of cycles, this tiny loss per cycle accumulates into measurable capacity
+          fade — the subject of Section 2.7.
+        </p>
+
+        <div class="callout callout-physics">
+          <div class="callout-icon">⚛</div>
+          <div class="callout-body">
+            <div class="callout-title">Why BMS Designers Must Understand Intercalation Kinetics</div>
+            <p>
+              Intercalation is not instantaneous. Li⁺ diffusion into the electrode particle is
+              governed by Fick's second law, with diffusion coefficients ranging from
+              10⁻¹⁵ to 10⁻¹¹ m²/s depending on material and temperature. At high charge rates
+              (≥2C), Li⁺ cannot penetrate deep into the particle before more arrives — concentration
+              polarization builds up at the particle surface, and local surface potential rises above
+              the anode equilibrium potential, causing lithium plating instead of intercalation.
+            </p>
+            <p>
+              This is why the BMS must enforce charge rate limits — not as arbitrary conservative
+              specs, but because exceeding them initiates a physically distinct, damaging reaction.
+              At low temperature, diffusion slows further, dramatically lowering the safe charge
+              rate threshold. A cell that accepts 0.5C safely at 25°C may plate lithium at just
+              0.05C at −10°C.
+            </p>
+          </div>
+        </div>
+      </div><!-- end intercalation -->
+
+    </section><!-- end s2-1 -->
