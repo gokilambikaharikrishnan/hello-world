@@ -2643,6 +2643,312 @@
       </div>
     </section>
 
+    <!-- ============================================================
+         SECTION: CAPACITY FADE CURVE VISUALIZATION
+    ============================================================ -->
+    <section class="section">
+      <div class="section-number">Visualization</div>
+      <h2 class="section-title">LFP Capacity Fade — What the Aging Curve Actually Looks Like</h2>
+      <p style="color:var(--text-secondary); margin-bottom:1.5rem; line-height:1.75;">
+        Capacity fade in LFP is not linear. The curve has a characteristic shape — a nearly
+        linear initial decline followed by accelerating fade near end-of-life. Understanding
+        this shape helps the BMS distinguish normal aging from accelerated degradation.
+      </p>
+
+      <div class="diagram-box">
+        <div style="font-size:0.88rem; font-weight:700; color:var(--text-primary); text-align:left; margin-bottom:1rem;">
+          LFP Capacity Fade vs. Cycle Count
+          <span style="font-size:0.75rem; color:var(--text-muted); font-weight:400; margin-left:0.5rem;">(typical prismatic cell, 25°C, 80% DoD, 0.5C charge/discharge)</span>
+        </div>
+        <svg viewBox="0 0 560 300" width="100%" style="max-width:560px; display:block; margin:0 auto;">
+          <!-- Axes -->
+          <line x1="60" y1="260" x2="540" y2="260" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+          <line x1="60" y1="30" x2="60" y2="265" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+          <!-- Grid -->
+          <line x1="60" y1="58" x2="540" y2="58" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="4,4"/>
+          <line x1="60" y1="106" x2="540" y2="106" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="4,4"/>
+          <line x1="60" y1="154" x2="540" y2="154" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="4,4"/>
+          <line x1="60" y1="202" x2="540" y2="202" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="4,4"/>
+          <!-- Y axis: 70–100% SOH, 30px per 10% → 70%=y=260, 100%=y=260-90=170 ... actually let's do 60-100% -->
+          <!-- Y: 60% at y=260, 100% at y=30; range=40%, px=230, 1%=5.75px -->
+          <!-- y = 260 - (SOH-60)*5.75 -->
+          <text x="50" y="33"  fill="rgba(255,255,255,0.4)" font-size="9" text-anchor="end">100%</text>
+          <text x="50" y="63"  fill="rgba(255,255,255,0.4)" font-size="9" text-anchor="end">95%</text>
+          <text x="50" y="120" fill="rgba(255,255,255,0.4)" font-size="9" text-anchor="end">90%</text>
+          <text x="50" y="178" fill="rgba(255,255,255,0.4)" font-size="9" text-anchor="end">85%</text>
+          <text x="50" y="236" fill="rgba(255,255,255,0.4)" font-size="9" text-anchor="end">80%</text>
+          <text x="50" y="262" fill="rgba(255,255,255,0.4)" font-size="9" text-anchor="end">78%</text>
+          <!-- EOL line at SOH=80% -->
+          <line x1="60" y1="230" x2="540" y2="230" stroke="rgba(252,129,129,0.4)" stroke-width="1.5" stroke-dasharray="6,4"/>
+          <text x="545" y="228" fill="#fc8181" font-size="9">EOL 80%</text>
+          <!-- X axis: 0–5000 cycles, 480px → 1 cycle = 0.096px -->
+          <text x="60"  y="275" fill="rgba(255,255,255,0.4)" font-size="9" text-anchor="middle">0</text>
+          <text x="155" y="275" fill="rgba(255,255,255,0.4)" font-size="9" text-anchor="middle">1000</text>
+          <text x="250" y="275" fill="rgba(255,255,255,0.4)" font-size="9" text-anchor="middle">2000</text>
+          <text x="345" y="275" fill="rgba(255,255,255,0.4)" font-size="9" text-anchor="middle">3000</text>
+          <text x="440" y="275" fill="rgba(255,255,255,0.4)" font-size="9" text-anchor="middle">4000</text>
+          <text x="535" y="275" fill="rgba(255,255,255,0.4)" font-size="9" text-anchor="middle">5000</text>
+          <text x="300" y="293" fill="rgba(255,255,255,0.3)" font-size="10" text-anchor="middle">Cycle Number</text>
+
+          <!-- LFP (green) — gradual linear then knee -->
+          <!-- y = 260 - (SOH - 78) * (230/22) ... map SOH 78-100 to y 260-30 -->
+          <!-- Actually: y = 30 + (100-SOH)/(100-78) * (260-30) = 30 + (100-SOH)*10.45 -->
+          <!-- 0 cycles SOH=100: y=30; 1000 SOH=98: y=30+2*10.45=50.9; 2000 SOH=95.5: y=30+4.5*10.45=77; 3000 SOH=92: y=30+8*10.45=113.6; 4000 SOH=88: y=30+12*10.45=155.4; 4500 SOH=84: y=30+16*10.45=197.2; 4800 SOH=80.5: y=30+19.5*10.45=233.8; 5000 SOH=79: y=30+21*10.45=249.4 -->
+          <polyline points="60,30 155,51 250,77 345,114 440,155 487,197 516,230 535,243"
+            fill="none" stroke="#48bb78" stroke-width="2.5" stroke-linejoin="round"/>
+          <!-- LFP fill area -->
+          <polygon points="60,30 155,51 250,77 345,114 440,155 487,197 516,230 535,243 535,260 60,260"
+            fill="rgba(72,187,120,0.06)"/>
+
+          <!-- NMC (blue) — faster fade -->
+          <!-- 0→100, 500→97, 1000→93, 1500→89, 2000→84.5, 2200→80 EOL -->
+          <!-- 500 cycles: x = 60+500*0.096=108 -->
+          <polyline points="60,30 108,61 155,93 202,124 250,161 271,230"
+            fill="none" stroke="#63b3ed" stroke-width="2.5" stroke-linejoin="round" stroke-dasharray="6,3"/>
+
+          <!-- NCA (red) — fastest fade -->
+          <!-- 0→100, 300→96, 600→91, 900→86, 1100→80 EOL -->
+          <polyline points="60,30 89,72 117,115 147,157 166,230"
+            fill="none" stroke="#fc8181" stroke-width="2.5" stroke-linejoin="round" stroke-dasharray="3,3"/>
+
+          <!-- Legend -->
+          <rect x="380" y="40" width="150" height="56" fill="rgba(13,17,23,0.85)" stroke="rgba(255,255,255,0.1)" rx="6"/>
+          <line x1="390" y1="54" x2="410" y2="54" stroke="#48bb78" stroke-width="2.5"/>
+          <text x="416" y="58" fill="#48bb78" font-size="9.5">LFP (3000–5000 cyc)</text>
+          <line x1="390" y1="70" x2="410" y2="70" stroke="#63b3ed" stroke-width="2" stroke-dasharray="6,3"/>
+          <text x="416" y="74" fill="#63b3ed" font-size="9.5">NMC (~1500–2000 cyc)</text>
+          <line x1="390" y1="86" x2="410" y2="86" stroke="#fc8181" stroke-width="2" stroke-dasharray="3,3"/>
+          <text x="416" y="90" fill="#fc8181" font-size="9.5">NCA (~1000–1200 cyc)</text>
+        </svg>
+        <p class="diagram-caption" style="margin-top:0.75rem;">
+          Capacity fade curves showing the characteristic "knee" near EOL (80% SOH). LFP's lower
+          volume change and no transition metal dissolution result in substantially longer cycle life.
+          NMC and NCA reach 80% SOH at 3–5× fewer cycles under identical test conditions.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         ADVANCED SECTION: BATTERY MANAGEMENT IN SERIES-PARALLEL PACKS
+    ============================================================ -->
+    <section class="section">
+      <div class="section-number">Advanced</div>
+      <h2 class="section-title">Managing Multi-Cell Packs — Series, Parallel, and Topology</h2>
+      <p class="section-intro">
+        Real LFP packs for UPS and home ESS are not single cells — they are assemblies of
+        dozens to hundreds of cells in series and parallel configurations. The BMS architecture
+        must account for the electrical and thermal interactions between cells, and the topology
+        dramatically affects protection requirements.
+      </p>
+
+      <div class="subsection">
+        <div class="subsection-title">Series Strings — Voltage Addition, Current Equality</div>
+        <p>
+          When N cells are connected in series, their voltages add and they share the same current:
+        </p>
+        <div class="formula-block">
+          <span class="formula-label">Series String</span>
+          <span class="formula-line">V_pack = N × V_cell_avg  (all cell voltages sum)</span>
+          <span class="formula-line">I_pack = I_cell           (all cells carry same current)</span>
+          <span class="formula-caption">A 16S LFP string (nominal): V = 16 × 3.2V = 51.2V. At full charge: V = 16 × 3.65V = 58.4V. At cutoff: V = 16 × 2.5V = 40V. This is the "48V nominal" system used in home ESS and telecom.</span>
+        </div>
+        <p>
+          <strong>The weakest cell dominates:</strong> Because all cells carry the same current,
+          the cell with the lowest capacity determines when the pack trips protection cutoffs.
+          If cell #7 has 250Ah and all others have 280Ah, the pack effectively has 250Ah capacity
+          even if 15 cells are not depleted. The BMS must monitor every cell individually and
+          cut off discharge when any single cell reaches the undervoltage threshold.
+        </p>
+
+        <div class="callout callout-danger">
+          <div class="callout-icon">⚡</div>
+          <div class="callout-body">
+            <div class="callout-title">Why Per-Cell Voltage Monitoring Is Not Optional</div>
+            <p>
+              A common shortcut in budget BMS designs is to monitor only the total string voltage
+              and divide by N to estimate average cell voltage. This fails because:
+              (1) If cell #7 is at 2.3V (below cutoff) while others are at 3.5V, the string
+              voltage = 16 × average ≈ 54.5V — appearing healthy. (2) Cell #7 is being driven
+              below its cutoff, dissolving copper and accumulating damage, while the BMS reports
+              "normal." (3) After a few such events, cell #7 fails catastrophically — typically
+              with an internal short that then discharges all other cells through the fault.
+              Per-cell monitoring with an analog front-end IC is not a premium feature — it is
+              the minimum viable protection architecture.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">Parallel Groups — Capacity Addition, Voltage Equality</div>
+        <p>
+          When M cells are connected in parallel, their capacities add and they share the same voltage:
+        </p>
+        <div class="formula-block blue-theme">
+          <span class="formula-label">Parallel Group</span>
+          <span class="formula-line">V_group = V_cell  (all cells at same voltage)</span>
+          <span class="formula-line">Q_group = M × Q_cell  (capacities add)</span>
+          <span class="formula-caption">A 2P group of 280Ah cells: Q = 2 × 280Ah = 560Ah. Current splits between parallel cells proportionally to their impedance — lower impedance carries more current.</span>
+        </div>
+        <p>
+          Parallel cells are inherently self-balancing — any voltage imbalance drives a
+          circulating current that equalizes them. This is both an advantage (no active balancing
+          within a parallel group needed) and a risk (if one parallel cell fails internally, it
+          sucks charge from its neighbors at potentially destructive rates).
+        </p>
+        <p>
+          <strong>Common configurations for home ESS:</strong>
+        </p>
+        <ul class="content-list">
+          <li><strong>16S1P (48V, 280Ah = 14.3 kWh):</strong> 16 cells in series, no parallel.
+          Most common configuration for 5–15 kWh home ESS. Simple BMS topology.</li>
+          <li><strong>16S2P (48V, 560Ah = 28.7 kWh):</strong> Two parallel strings of 16 cells.
+          Higher capacity. BMS can monitor per-string or per-cell — per-cell preferred.</li>
+          <li><strong>32S1P (100V, 280Ah = 28 kWh):</strong> Higher voltage for larger inverters.
+          Requires 32 individual cell voltage measurements — more complex AFE configuration.</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">Thermal Management — Why Cell-to-Cell Uniformity Matters</div>
+        <p>
+          In a module of 16 cells, the cells are not all at the same temperature. Inner cells
+          in a stack can be 5–15°C hotter than outer cells, depending on cooling design. This
+          creates differential aging rates within the same module:
+        </p>
+        <ul class="content-list cross">
+          <li>Inner cells age faster (higher temperature → faster SEI growth → faster capacity loss)</li>
+          <li>Inner cells develop higher impedance faster → carry less of the total current</li>
+          <li>This creates a current imbalance within parallel groups — outer cells work harder as
+          inner cells become higher impedance, further exacerbating the imbalance</li>
+        </ul>
+        <p>
+          <strong>BMS design implication:</strong> The BMS should monitor temperature at multiple
+          positions in the module (not just the outer surface), and include the temperature gradient
+          in calendar aging models. For high-accuracy SOH tracking, individual cell impedance
+          measurements allow identification of hot-spot-accelerated degradation before it becomes
+          a failure.
+        </p>
+      </div>
+
+    </section>
+
+    <!-- ============================================================
+         ADVANCED SECTION: BALANCING ALGORITHM DETAILS
+    ============================================================ -->
+    <section class="section">
+      <div class="section-number">Advanced</div>
+      <h2 class="section-title">Cell Balancing — Algorithm Design and Implementation</h2>
+      <p class="section-intro">
+        Chapter 1 introduced the concept of cell balancing. Chapter 2 has established the
+        electrochemical reasons why cells diverge. Now we go into the practical implementation
+        of balancing algorithms in the BMS firmware.
+      </p>
+
+      <div class="subsection">
+        <div class="subsection-title">When to Balance — Timing and Trigger Conditions</div>
+        <p>
+          Balancing is not free. Passive balancing dissipates energy as heat in resistors —
+          typically 50–200 mW per cell, which adds 0.8–3.2W of heat into the module during
+          balancing. Active balancing costs charge efficiency (typically 90–95% efficient).
+          Both approaches reduce available charge time if done improperly.
+        </p>
+        <p>
+          The optimal balancing strategy for LFP at top of charge:
+        </p>
+        <ol class="content-list num">
+          <li>During charging, monitor all cell voltages continuously</li>
+          <li>When the first cell reaches V_balance_threshold (typically OVP − 50mV = 3.60V for LFP), enable the balancing resistor for that cell</li>
+          <li>Continue charging at the same current — the balancing resistor diverts excess current for the high-voltage cell, allowing other cells to catch up</li>
+          <li>When all cells reach the balance threshold, reduce charge current to the termination C-rate (C/20)</li>
+          <li>When all cells reach OVP or charge current drops below the termination threshold, end charging</li>
+          <li>Post-charge balancing: continue balancing for 30–60 minutes after charge ends (at zero current), to equalize residual SoC differences that were masked by IR drop during charging</li>
+        </ol>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">⚖</div>
+          <div class="callout-body">
+            <div class="callout-title">Why Balancing During Charging (Not Discharging) Is More Effective</div>
+            <p>
+              During charging, all cells are approaching their upper voltage limit. The cell with
+              the highest SoC (smallest capacity or previously overcharged) hits the OVP threshold
+              first. Balancing at this point — bleeding charge off the high cell — is energy-efficient
+              because you're only dissipating the excess that would have been wasted anyway in the
+              charge termination logic.
+            </p>
+            <p>
+              During discharging, the weakest cell hits the UVP threshold first. "Balancing" by
+              supplying additional current to the weak cell from stronger cells (active balancing)
+              extends runtime, but requires more complex circuitry and only helps if the imbalance
+              is SoC-based (not capacity-based). A cell with lower capacity will always reach UVP
+              first regardless of SoC balancing.
+            </p>
+          </div>
+        </div>
+
+        <div class="subsection-sub">Passive Balancing Design — Resistor Sizing</div>
+        <p>
+          Each cell in the passive balancing design has a dedicated bypass path: a resistor (R_bal)
+          and a switch (usually a small MOSFET controlled by the BMS AFE). When enabled:
+        </p>
+        <div class="formula-block">
+          <span class="formula-label">Passive Balancing Resistor Sizing</span>
+          <span class="formula-line">I_bal = (V_cell − V_threshold) / R_bal</span>
+          <span class="formula-line">P_bal = V_cell × I_bal  (heat dissipated in resistor)</span>
+          <span class="formula-line">Example: V_cell=3.62V, V_threshold=3.60V, R_bal=30Ω</span>
+          <span class="formula-line formula-highlight">I_bal = 0.02/30 = 0.67 mA,  P_bal = 3.62 × 0.00067 = 2.4 mW</span>
+          <span class="formula-caption">Very gentle balancing — appropriate for minor imbalance maintenance. For fast balancing of significantly imbalanced cells, R_bal = 5Ω → I_bal = 100–200mA, P_bal = 300–700 mW. Thermal design must account for this.</span>
+        </div>
+      </div><!-- end balancing -->
+
+    </section>
+
+    <!-- ============================================================
+         STANDARDS REFERENCE — CHAPTER 2 CONTEXT
+    ============================================================ -->
+    <section class="section">
+      <div class="section-number">Standards</div>
+      <h2 class="section-title">Standards Relevant to Chapter 2 Topics</h2>
+
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead><tr><th>Standard</th><th>Topic</th><th>Chapter 2 Relevance</th><th>Key Requirement</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="metric-name">IEC 61960-3:2017</td>
+              <td>Secondary Li cells — test methods</td>
+              <td>Capacity measurement, cycle life, C-rate definitions</td>
+              <td>Defines how to measure Q_actual for SOH — the reference procedure for capacity characterization</td>
+            </tr>
+            <tr>
+              <td class="metric-name">IEC 62619:2022<span class="metric-sub">Safety</span></td>
+              <td>Industrial Li-ion safety</td>
+              <td>Voltage window enforcement, SOC management requirements</td>
+              <td>Requires OVP and UVP protection. Does not specify SOC algorithm but requires accurate charge management</td>
+            </tr>
+            <tr>
+              <td class="metric-name">IEEE 1725:2021</td>
+              <td>Rechargeable batteries for cellular phones</td>
+              <td>SOC estimation accuracy requirements, calibration cycles</td>
+              <td>Requires SOC error ≤±5% — relevant for BMS accuracy specification targets</td>
+            </tr>
+            <tr>
+              <td class="metric-name">IEC 62620:2014<span class="metric-sub">Large cells</span></td>
+              <td>Secondary Li cells for industrial applications &gt;2Wh</td>
+              <td>Cycle life testing protocol, capacity measurement methodology</td>
+              <td>Defines SOH test conditions — 0.2C discharge from 100% to cutoff. The "standard" capacity measurement.</td>
+            </tr>
+            <tr>
+              <td class="metric-name">SAE J1772 / J2954</td>
+              <td>EV charging (informative)</td>
+              <td>SOC reporting requirements for charging communication</td>
+              <td>Defines SOC accuracy requirements for EV-EVSE communication — informative benchmark for accuracy targets</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
     <!-- Chapter Navigation Footer -->
     <div class="chapter-footer">
       <a class="nav-btn" href="chapter1.html">← Chapter 1: The Case for Li-ion</a>
