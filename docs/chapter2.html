@@ -3407,6 +3407,125 @@ T (°C)  | f_T   | Notes
       </div>
     </section>
 
+    <!-- ============================================================
+         SECTION 2.11: SOH TRENDING AND STATE-OF-POWER
+    ============================================================ -->
+    <section class="section" id="s2-11">
+      <div class="section-number">2.11</div>
+      <h2 class="section-title">SOH Trending and State-of-Power (SoP)</h2>
+      <p class="section-intro">
+        State of Health is not a binary — it is a continuous variable that the BMS must track
+        over years of operation. Understanding how to trend SOH, predict end-of-life, and
+        compute State-of-Power (the maximum instantaneous current the pack can deliver) allows
+        the system to give the host controller accurate capability information at all times.
+      </p>
+
+      <div class="subsection">
+        <div class="subsection-title">SOH Trending — Tracking Capacity Fade Over Time</div>
+        <p>
+          The BMS accumulates SOH data from every RPT cycle and from continuous online estimation.
+          The key insight is that capacity fade in LFP follows a predictable two-phase curve:
+        </p>
+        <ul style="color:var(--text-secondary); line-height:1.9; padding-left:1.5rem;">
+          <li><strong>Phase 1 (cycles 0–80% of EOL cycles):</strong> Linear fade. Rate ≈ 0.01–0.03% capacity loss per cycle at 25°C, 1C. Easy to model, easy to predict.</li>
+          <li><strong>Phase 2 (cycles 80%–EOL):</strong> Accelerating fade — the "knee." SEI growth transitions from √t to linear, lithium inventory is depleted, and resistance increase compounds. Remaining life prediction becomes uncertain.</li>
+        </ul>
+        <div class="formula-block">
+          <span class="formula-label">Linear Fade Model (Phase 1)</span>
+          <span class="formula-line">SOH(N) = 1 − α × N − β × t_cal</span>
+          <span class="formula-caption">
+            N = cycle count, α = cycle fade coefficient (≈ 0.0001–0.0003 per cycle for LFP),
+            t_cal = calendar time in days, β = calendar fade coefficient (≈ 0.00005 per day at 25°C).
+            Both terms contribute — a pack stored at 100% SoC at 35°C ages faster than a cycled pack
+            stored at 50% SoC at 20°C.
+          </span>
+        </div>
+        <div class="formula-block">
+          <span class="formula-label">Remaining Useful Life Estimate</span>
+          <span class="formula-line">N_remaining = (SOH_current − SOH_EOL) / α</span>
+          <span class="formula-line">t_EOL = t_now + N_remaining / avg_cycles_per_day</span>
+          <span class="formula-caption">
+            SOH_EOL = 0.80 (80% capacity = end-of-life per IEC 62619).
+            This estimate is valid only in Phase 1. When SOH drops below ~85%, Phase 2 onset
+            should be flagged with a maintenance alert — the knee is approaching.
+          </span>
+        </div>
+        <p>
+          Production BMS firmware logs SOH at each RPT with a timestamp and cycle count.
+          This telemetry stream, uploaded to a cloud platform, allows fleet-level SOH analytics
+          that catch systematic degradation (bad batch of cells, overtemperature installation,
+          excessive cycling) before individual packs reach EOL unexpectedly.
+        </p>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">State-of-Power (SoP) — What Can the Pack Deliver Right Now?</div>
+        <p>
+          SoC tells you <em>how much energy</em> is stored. SoP tells you <em>how much power</em>
+          the pack can deliver instantaneously without violating any safety constraints.
+          This is the critical signal for applications that need burst power — UPS during switchover,
+          motor start, or grid frequency response.
+        </p>
+        <div class="formula-block">
+          <span class="formula-label">SoP — Peak Discharge Power</span>
+          <span class="formula-line">V_min_cell = 2.8V  (undervoltage protection threshold)</span>
+          <span class="formula-line">V_terminal = OCV(SoC) − I × R_total</span>
+          <span class="formula-line">I_max = (OCV(SoC) − V_min_cell) / R_total</span>
+          <span class="formula-line">P_max_discharge = I_max × V_min_cell × N_series</span>
+          <span class="formula-caption">
+            R_total = R₀ + R₁(1 − exp(−t_pulse/τ)) for a t_pulse duration pulse.
+            For continuous rating (t → ∞): R_total = R₀ + R₁.
+            For a 10-second pulse (common UPS requirement): use R_total ≈ R₀ + 0.7×R₁.
+          </span>
+        </div>
+        <div class="formula-block">
+          <span class="formula-label">SoP — Peak Charge Power</span>
+          <span class="formula-line">V_max_cell = 3.65V  (overvoltage protection threshold)</span>
+          <span class="formula-line">I_max_charge = (V_max_cell − OCV(SoC)) / R_total</span>
+          <span class="formula-line">P_max_charge = I_max_charge × V_max_cell × N_series</span>
+          <span class="formula-caption">
+            Charge SoP is the peak power the pack can accept (regenerative braking, grid stabilisation).
+            At high SoC (OCV close to V_max_cell), charge SoP approaches zero — the pack is nearly full
+            and cannot accept significant incoming power. This must be communicated to the inverter
+            to prevent overvoltage faults.
+          </span>
+        </div>
+        <div class="callout callout-info">
+          <div class="callout-icon">⚡</div>
+          <div class="callout-body">
+            <div class="callout-title">SoP Must Be Updated Every 100ms in UPS Applications</div>
+            <p>
+              UPS systems respond to mains failure in &lt;10ms. The inverter immediately asks for
+              full rated power. If the BMS's SoP estimate is stale (last updated 1 second ago at
+              a different temperature/SoC), the current command may exceed the actual capability —
+              causing a voltage collapse that takes the UPS offline exactly when it is needed.
+              Production BMS firmware runs the SoP calculation in the 100ms task loop, not the
+              1-second slow loop, and broadcasts it on the CAN bus as a priority message.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">Resistance Growth — SOH's Impact on SoP</div>
+        <p>
+          As cells age, not only does capacity (Q) decrease, but internal resistance (R) increases.
+          The resistance growth follows a slower trajectory than capacity fade but compounds SoP
+          degradation dramatically at end of life:
+        </p>
+        <div class="formula-block">
+          <span class="formula-label">Resistance Growth Model</span>
+          <span class="formula-line">R(N, T) = R₀_fresh × (1 + γ_cyc × N + γ_cal × t_cal)</span>
+          <span class="formula-caption">
+            γ_cyc ≈ 0.0002 per cycle (LFP at 1C, 25°C). At 2000 cycles: R = R₀_fresh × 1.4.
+            A 40% resistance increase at SOH = 80% means I_max = (OCV − V_min) / (1.4 × R₀_fresh),
+            so peak current capability is reduced by ~30% even though capacity is only down 20%.
+            For UPS sizing, always derate peak power by the resistance growth factor.
+          </span>
+        </div>
+      </div>
+    </section>
+
     <!-- Chapter Navigation Footer -->
     <div class="chapter-footer">
       <a class="nav-btn" href="chapter1.html">← Chapter 1: The Case for Li-ion</a>
