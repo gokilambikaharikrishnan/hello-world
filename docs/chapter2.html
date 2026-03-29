@@ -2179,3 +2179,183 @@
       </div>
 
     </section><!-- end s2-7 -->
+
+    <!-- ============================================================
+         DEEP DIVE: EQUIVALENT CIRCUIT MODEL PARAMETER IDENTIFICATION
+    ============================================================ -->
+    <section class="section">
+      <div class="section-number">Deep Dive</div>
+      <h2 class="section-title">ECM Parameter Identification — How to Characterise Your Cell</h2>
+      <p class="section-intro">
+        The ECM and EKF algorithms in Section 2.6 require accurate model parameters (R₀, R₁, C₁)
+        to function correctly. These parameters are temperature-dependent, SoC-dependent, and
+        age-dependent. This section explains the standard test procedure for identifying them
+        and the BMS strategy for tracking their change over time.
+      </p>
+
+      <div class="subsection">
+        <div class="subsection-title">Current Pulse Test (HPPC — Hybrid Pulse Power Characterization)</div>
+        <p>
+          The standard method for characterizing battery ECM parameters is the <strong>Hybrid Pulse
+          Power Characterization (HPPC) test</strong>, adapted from the USABC (United States
+          Advanced Battery Consortium) protocol:
+        </p>
+        <ol class="content-list num">
+          <li>Discharge cell to target SoC (e.g., 90%) at 0.2C, wait 30 min for OCV equilibration</li>
+          <li>Apply a discharge pulse at 1C for exactly 10 seconds, record V(t) at 100ms intervals</li>
+          <li>Remove pulse (current = 0), wait 40 seconds, record V(t) — relaxation transient</li>
+          <li>Apply charge pulse at 0.75C for 10 seconds</li>
+          <li>Remove charge pulse, wait 40 seconds</li>
+          <li>Discharge 10% SoC at 0.2C, wait 30 min, repeat at next SoC</li>
+          <li>Repeat across all SoC values (100%, 90%, 80% … 10%, 0%)</li>
+          <li>Repeat full test at multiple temperatures: 0°C, 10°C, 25°C, 35°C, 45°C</li>
+        </ol>
+        <p>
+          From the pulse response, extract parameters:
+        </p>
+        <div class="formula-block" style="text-align:left;">
+          <span class="formula-label">ECM Parameter Extraction from HPPC Pulse</span>
+          <span class="formula-line">R₀ = (V_before − V_at_t=0⁺) / I_pulse     // instantaneous voltage drop (ohmic)</span>
+          <span class="formula-line">ΔV_slow = V_at_10s − V_at_0⁺ − V_at_0s  // voltage due to RC network</span>
+          <span class="formula-line">R₁ = ΔV_slow / I_pulse</span>
+          <span class="formula-line">τ  = −t / ln(1 − V_C1(t)/V_C1_final)    // from relaxation curve</span>
+          <span class="formula-line">C₁ = τ / R₁</span>
+          <span class="formula-caption">This gives R₀, R₁, C₁ at each (SoC, Temperature) point. The result is a 2D lookup table: [SoC][Temp] → {R₀, R₁, τ}. The BMS loads these tables at startup and selects parameters based on current SoC and temperature estimates.</span>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">📈</div>
+          <div class="callout-body">
+            <div class="callout-title">Typical LFP ECM Parameter Values (280Ah Prismatic, 25°C)</div>
+            <p>For orientation: R₀ ≈ 0.3–0.6 mΩ (very low — large area prismatic cells), increases to 1.0–2.0 mΩ at −20°C. R₁ ≈ 0.3–1.0 mΩ (diffusion resistance), τ = R₁×C₁ ≈ 30–150 seconds for LFP (slower diffusion kinetics than NMC). C₁ ≈ 50,000–300,000 F (Farads) — enormous value because the electrode area is huge. These values are for a single cell; multiply R by n_series for pack resistance.</p>
+          </div>
+        </div>
+
+        <div class="subsection-sub">Online Parameter Tracking — BMS as a Continuous Cell Characterizer</div>
+        <p>
+          The HPPC test is performed once (during design/validation). But R₀ changes with
+          temperature and aging throughout the product life. The BMS must track it online:
+        </p>
+        <ul class="content-list">
+          <li><strong>R₀ update from current interrupts:</strong> Every time current changes
+          abruptly (load connect/disconnect, charge start/stop), the instantaneous voltage jump
+          ΔV divided by the current change ΔI gives a real-time R₀ estimate. A rolling average
+          of these estimates tracks slowly-changing R₀.</li>
+          <li><strong>R₀ as a health indicator:</strong> R₀ typically doubles or triples at
+          end-of-life compared to initial values. Tracking R₀ over time gives an independent
+          SOH estimate (impedance-based SOH) that can be correlated with capacity-based SOH.</li>
+          <li><strong>Temperature correction:</strong> Apply the temperature coefficient
+          (approximately −0.5%/°C for LFP R₀) to compensate measurements taken at different
+          temperatures before comparing to the aging baseline.</li>
+        </ul>
+      </div>
+
+    </section>
+
+    <!-- ============================================================
+         INTERACTIVE BAR CHART: SOC METHOD COMPARISON
+    ============================================================ -->
+    <section class="section">
+      <div class="section-number">Interactive</div>
+      <h2 class="section-title">SOC Method Performance at a Glance</h2>
+
+      <div class="bar-chart-wrap" id="socBarChart">
+        <div class="bar-chart-title">SOC Estimation Method Comparison</div>
+        <div class="bar-chart-subtitle">Select a metric to visualize</div>
+        <div class="bar-chart-tabs">
+          <button class="bar-chart-tab active" onclick="showSOCMetric('accuracy', this)">LFP Accuracy (%)</button>
+          <button class="bar-chart-tab" onclick="showSOCMetric('complexity', this)">Implementation Complexity</button>
+          <button class="bar-chart-tab" onclick="showSOCMetric('drift', this)">Drift Rate (lower=better)</button>
+          <button class="bar-chart-tab" onclick="showSOCMetric('ram', this)">RAM Usage (bytes)</button>
+        </div>
+        <div id="socChartContent"></div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         CHAPTER SUMMARY
+    ============================================================ -->
+    <section class="section">
+      <div class="section-number">Chapter Summary</div>
+      <h2 class="section-title">Key Takeaways from Chapter 2</h2>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-value" style="color:var(--accent-cyan); font-size:1.4rem;">Two-Phase</div>
+          <span class="stat-unit">LFP intercalation mechanism</span>
+          <div class="stat-label">FePO₄ ↔ LiFePO₄ — fixes voltage at plateau, causes flat OCV</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color:var(--accent-red);">50mV</div>
+          <span class="stat-unit">OCV change 20–80% SoC</span>
+          <div class="stat-label">Unmeasurable for SoC — forces algorithmic estimation</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color:var(--accent-green);">T5</div>
+          <span class="stat-unit">Hybrid: production standard</span>
+          <div class="stat-label">Coulomb counting + OCV reset = ±3–7% accuracy</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color:var(--accent-purple);">SEI</div>
+          <span class="stat-unit">primary aging mechanism</span>
+          <div class="stat-label">Doubles with every 10°C temperature increase</div>
+        </div>
+      </div>
+
+      <!-- Traceability: Chapter 2 content → Chapter 3 topics -->
+      <div class="trace-container" style="margin-top:2rem;">
+        <div style="font-size:0.78rem; font-family:var(--font-mono); color:var(--text-muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem;">Chapter 2 Knowledge → Chapter 3 Design Decisions</div>
+        <div class="trace-row">
+          <div class="trace-left"><div class="t-title">Flat OCV Curve (Ch 2.4)</div><div class="t-body">50 mV across 60% SoC range — voltage useless for SOC in plateau</div></div>
+          <div class="trace-arrow">→</div>
+          <div class="trace-right"><div class="t-title">ADC Selection & Accuracy Budget</div><div class="t-body">16-bit ADC required for voltage; 16-bit current ADC + auto-zero for coulomb counting</div></div>
+        </div>
+        <div class="trace-row">
+          <div class="trace-left"><div class="t-title">Temperature-Dependent IR Drop (Ch 2.4)</div><div class="t-body">4× impedance increase at −20°C masks voltage under load</div></div>
+          <div class="trace-arrow">→</div>
+          <div class="trace-right"><div class="t-title">Temperature-Compensated Thresholds</div><div class="t-body">Protection cutoffs must adjust with cell temperature, not use fixed values</div></div>
+        </div>
+        <div class="trace-row">
+          <div class="trace-left"><div class="t-title">Coulomb Counting Drift (Ch 2.5)</div><div class="t-body">Current sensor error accumulates — 5–10% SOC drift per day</div></div>
+          <div class="trace-arrow">→</div>
+          <div class="trace-right"><div class="t-title">High-Precision Current Sensing</div><div class="t-body">Kelvin-sense shunt, ±0.05% gain accuracy, auto-zero at rest, temperature compensation</div></div>
+        </div>
+        <div class="trace-row">
+          <div class="trace-left"><div class="t-title">SEI Growth (Ch 2.7)</div><div class="t-body">Arrhenius kinetics — doubles every 10°C, accelerated at high SoC storage</div></div>
+          <div class="trace-arrow">→</div>
+          <div class="trace-right"><div class="t-title">Float Voltage Optimization</div><div class="t-body">Store at 90–95% SoC (3.40–3.45V/cell), temperature-based float voltage adjustment</div></div>
+        </div>
+        <div class="trace-row">
+          <div class="trace-left"><div class="t-title">Lithium Plating (Ch 2.7)</div><div class="t-body">Occurs below 0°C and above 1–2C at low temperature — dendrite risk</div></div>
+          <div class="trace-arrow">→</div>
+          <div class="trace-right"><div class="t-title">Temperature-Gated Charge Enable</div><div class="t-body">Hardware interlock prohibits charge below 0°C, firmware reduces C-rate at 0–10°C</div></div>
+        </div>
+      </div>
+
+      <div class="callout callout-info" style="margin-top:2rem;">
+        <div class="callout-icon">📖</div>
+        <div class="callout-body">
+          <div class="callout-title">What Chapter 3 Covers: BMS Hardware Architecture</div>
+          <p>
+            Chapter 2 established the electrochemistry and algorithms. Chapter 3 descends to hardware:
+            the microcontroller selection, the analog front-end (AFE) ICs that measure cell voltages,
+            the current sensing topologies (shunt vs Hall effect), the protection FET architecture,
+            the communication interfaces (CAN, SMBus, RS485), and the PCB design considerations
+            that determine whether your BMS performs to specification or fails in the field.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Chapter Navigation Footer -->
+    <div class="chapter-footer">
+      <a class="nav-btn" href="chapter1.html">← Chapter 1: The Case for Li-ion</a>
+      <div style="text-align:center;">
+        <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.3rem;">You are reading</div>
+        <div style="font-size:0.9rem; color:var(--text-primary); font-weight:700;">Chapter 2: Understanding the Li-ion Cell</div>
+      </div>
+      <a class="nav-btn nav-btn-next" href="chapter3.html">Chapter 3: BMS Hardware Architecture →</a>
+    </div>
+
+  </main>
+</div>
