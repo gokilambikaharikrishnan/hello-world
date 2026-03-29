@@ -3746,6 +3746,121 @@ T (°C)  | f_T   | Notes
       </div>
     </section>
 
+    <!-- ============================================================
+         SECTION 2.14: QUICK REFERENCE — FORMULAS AND CONSTANTS
+    ============================================================ -->
+    <section class="section" id="s2-ref">
+      <div class="section-number">Reference</div>
+      <h2 class="section-title">Quick Reference — All Key Formulas and Constants</h2>
+      <p class="section-intro">
+        A consolidated reference for the formulas, constants, and typical parameter values covered in
+        this chapter. Designed for use during BMS firmware development and design review.
+      </p>
+
+      <div class="subsection">
+        <div class="subsection-title">Cell Electrical Model Parameters (LFP 280Ah Prismatic, 25°C)</div>
+        <div class="comparison-table-wrap">
+          <table class="comparison-table">
+            <thead>
+              <tr><th>Parameter</th><th>Symbol</th><th>Typical Value</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="metric-name">Nominal voltage</td><td>V_nom</td><td>3.2 V</td><td>Mid-plateau OCV</td></tr>
+              <tr><td class="metric-name">Full charge voltage</td><td>V_max</td><td>3.65 V</td><td>CC-CV charge target</td></tr>
+              <tr><td class="metric-name">Cutoff voltage</td><td>V_min</td><td>2.5 V</td><td>UVP protection threshold</td></tr>
+              <tr><td class="metric-name">OCV plateau width</td><td>ΔV_OCV</td><td>50 mV</td><td>Across 20–80% SoC</td></tr>
+              <tr><td class="metric-name">Ohmic resistance</td><td>R₀</td><td>0.3–0.5 mΩ</td><td>At 25°C; triples at −20°C</td></tr>
+              <tr><td class="metric-name">Diffusion resistance</td><td>R₁</td><td>0.2–0.4 mΩ</td><td>RC network element</td></tr>
+              <tr><td class="metric-name">Diffusion capacitance</td><td>C₁</td><td>50,000–200,000 F</td><td>τ = R₁C₁ ≈ 30–150 s</td></tr>
+              <tr><td class="metric-name">Rated capacity</td><td>Q_nom</td><td>280 Ah</td><td>At 0.2C, 25°C, new cell</td></tr>
+              <tr><td class="metric-name">Coulombic efficiency</td><td>η_c</td><td>99.5–99.9%</td><td>LFP, normal cycling</td></tr>
+              <tr><td class="metric-name">Self-discharge rate</td><td>I_sd</td><td>0.02–0.05%/day</td><td>At 25°C, 50% SoC</td></tr>
+              <tr><td class="metric-name">Cycle life (1C, 80% DoD)</td><td>N_EOL</td><td>3000–5000</td><td>To 80% SOH</td></tr>
+              <tr><td class="metric-name">Peukert exponent</td><td>k</td><td>1.03–1.05</td><td>Lower = more ideal; LFP is excellent</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">Complete Formula Index</div>
+        <div class="equations-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+          <div class="formula-block" style="margin:0;">
+            <span class="formula-label">SoC — Coulomb Counting</span>
+            <span class="formula-line">SoC[n] = SoC[n-1] + η×I×Δt / Q_nom</span>
+          </div>
+          <div class="formula-block" style="margin:0;">
+            <span class="formula-label">Cell Terminal Voltage</span>
+            <span class="formula-line">V_t = OCV(SoC) − I×R₀ − V_C1</span>
+          </div>
+          <div class="formula-block" style="margin:0;">
+            <span class="formula-label">RC Diffusion Dynamics</span>
+            <span class="formula-line">dV_C1/dt = I/C₁ − V_C1/(R₁×C₁)</span>
+          </div>
+          <div class="formula-block" style="margin:0;">
+            <span class="formula-label">Peukert (T-corrected)</span>
+            <span class="formula-line">Q(I,T) = Q_ref × (I_ref/I)^(k(T)−1)</span>
+          </div>
+          <div class="formula-block" style="margin:0;">
+            <span class="formula-label">SOH Definition</span>
+            <span class="formula-line">SOH = Q_actual / Q_rated × 100%</span>
+          </div>
+          <div class="formula-block" style="margin:0;">
+            <span class="formula-label">SoP — Peak Discharge</span>
+            <span class="formula-line">I_max = (OCV − V_min) / R_total</span>
+          </div>
+          <div class="formula-block" style="margin:0;">
+            <span class="formula-label">Calendar Aging (Arrhenius)</span>
+            <span class="formula-line">rate(T) = A × exp(−Eₐ/RT)</span>
+          </div>
+          <div class="formula-block" style="margin:0;">
+            <span class="formula-label">Remaining Runtime</span>
+            <span class="formula-line">t = SoC × Q_nom × SOH × f_T / I</span>
+          </div>
+          <div class="formula-block" style="margin:0;">
+            <span class="formula-label">Passive Balancing Current</span>
+            <span class="formula-line">I_bal = (V_cell − V_threshold) / R_bal</span>
+          </div>
+          <div class="formula-block" style="margin:0;">
+            <span class="formula-label">SEI Growth (Calendar)</span>
+            <span class="formula-line">δ_SEI(t) = k_SEI × √(t × exp(−Eₐ/RT))</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">LFP OCV Reference Points (Full Table)</div>
+        <div class="comparison-table-wrap">
+          <table class="comparison-table">
+            <thead>
+              <tr><th>SoC (%)</th><th>OCV (V)</th><th>dOCV/dSoC (mV/%)</th><th>BMS Significance</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0</td><td>2.50</td><td>—</td><td>Hard UVP cutoff</td></tr>
+              <tr><td>5</td><td>2.85</td><td>7.0</td><td>Steep cliff — last warning region</td></tr>
+              <tr><td>10</td><td>3.08</td><td>4.6</td><td>Low SoC alarm threshold</td></tr>
+              <tr><td>15</td><td>3.18</td><td>2.0</td><td>Transition into plateau</td></tr>
+              <tr><td>20</td><td>3.24</td><td>1.2</td><td>Plateau entry — OCV-SoC unreliable</td></tr>
+              <tr><td>30</td><td>3.28</td><td>0.4</td><td>Deep plateau</td></tr>
+              <tr><td>40</td><td>3.30</td><td>0.2</td><td>Flattest region (±3mV = ±15% SoC error)</td></tr>
+              <tr><td>50</td><td>3.32</td><td>0.2</td><td>Mid-plateau, EKF gain ≈ 0</td></tr>
+              <tr><td>60</td><td>3.33</td><td>0.1</td><td>Flattest region</td></tr>
+              <tr><td>70</td><td>3.34</td><td>0.1</td><td>Still flat</td></tr>
+              <tr><td>80</td><td>3.36</td><td>0.2</td><td>Plateau exit begins</td></tr>
+              <tr><td>85</td><td>3.38</td><td>0.4</td><td>Slope increasing</td></tr>
+              <tr><td>90</td><td>3.42</td><td>0.8</td><td>OCV-SoC regains some utility</td></tr>
+              <tr><td>95</td><td>3.52</td><td>2.0</td><td>Pre-full charge region</td></tr>
+              <tr><td>100</td><td>3.65</td><td>2.6</td><td>Full charge — OVP threshold</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0.5rem; font-family:var(--font-mono);">
+          All values at 25°C, after 30-minute rest (relaxed OCV). dOCV/dSoC is the Kalman gain multiplier —
+          note how it approaches zero at 40–70% SoC, explaining EKF's reduced effectiveness in the LFP plateau.
+        </p>
+      </div>
+    </section>
+
     <!-- Chapter Navigation Footer -->
     <div class="chapter-footer">
       <a class="nav-btn" href="chapter1.html">← Chapter 1: The Case for Li-ion</a>
