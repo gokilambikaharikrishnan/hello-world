@@ -2011,3 +2011,284 @@
     </div>
   </section>
 
+
+  <!-- ============================================================
+       SECTION 3.5: BMS THERMAL FEATURES DERIVED FROM PHYSICS
+  ============================================================ -->
+  <section class="section" id="s3-5">
+    <div class="section-number">3.5</div>
+    <h2 class="section-title">BMS Thermal Features — From Physics to Firmware</h2>
+    <p class="section-intro">
+      Every temperature threshold in the BMS firmware has a physical derivation. This section
+      traces each protection threshold and control action back to the underlying electrochemistry
+      and thermal physics — so you understand not just <em>what</em> the numbers are, but
+      <em>why</em> they are what they are.
+    </p>
+
+    <div class="subsection">
+      <div class="subsection-title">Overtemperature Charge Cutoff — Why 45°C</div>
+      <p>
+        The OT charge cutoff is set at 45°C (warning) and 55°C (hard cutoff) for most LFP BMS
+        designs. This is not arbitrary — it is derived directly from SEI growth kinetics.
+      </p>
+      <div class="formula-block">
+        <span class="formula-label">SEI Growth Rate vs Temperature</span>
+        <span class="formula-line">d(SEI)/dt ∝ exp(−Eₐ_SEI / RT)   [Arrhenius]</span>
+        <span class="formula-line">At 35°C (308K):  relative rate = exp(−50000 / 8.314 / 308) = 1.0 (reference)</span>
+        <span class="formula-line">At 45°C (318K):  relative rate = exp(−50000 / 8.314 / 318) ≈ 2.1 × reference</span>
+        <span class="formula-line">At 55°C (328K):  relative rate = exp(−50000 / 8.314 / 328) ≈ 4.3 × reference</span>
+        <span class="formula-caption">
+          Charging accelerates SEI growth because it drives Li⁺ to the graphite surface where SEI
+          forms. Above 45°C, SEI growth rate doubles → cycle life is halved if sustained.
+          The 45°C warning threshold gives the BMS time to derate before reaching the hard cutoff.
+          Above 55°C, SEI growth is 4× baseline — continued charging is unacceptable.
+          Note: discharge is allowed up to 60°C because during discharge, Li⁺ leaves the graphite
+          (no SEI growth opportunity) and only electrolyte decomposition is the limiting concern.
+        </span>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Undertemperature Charge Cutoff — Why 0°C is Absolute</div>
+      <p>
+        Below 0°C, the BMS must block all charge current — not just derate, but completely prohibit.
+        This is the hardest and most important temperature-related protection rule.
+      </p>
+      <div class="callout callout-danger">
+        <div class="callout-icon">🧊</div>
+        <div class="callout-body">
+          <div class="callout-title">Charging Below 0°C = Lithium Plating = Dendritic Short Circuit Risk</div>
+          <p>
+            Below 0°C, the graphite anode cannot intercalate Li⁺ fast enough.
+            The Li⁺ ions reaching the anode surface cannot enter the lattice and instead
+            deposit as metallic lithium (Li⁰). Unlike intercalated lithium, metallic lithium
+            grows as dendrites — needle-like structures that penetrate through the separator.
+            When a dendrite bridges anode to cathode, it creates a sudden internal short circuit
+            that can release the full stored energy in seconds, with potential for thermal runaway.
+            <br><br>
+            <strong>The BMS rule is unconditional: I_charge = 0 when T_min_cell &lt; 0°C.</strong>
+            No exceptions, no "gentle charge", no "just 0.1C". Any charge current at sub-zero
+            temperatures risks dendrite formation.
+          </p>
+        </div>
+      </div>
+      <div class="formula-block">
+        <span class="formula-label">Temperature-Derated Charge Rate Table (LFP)</span>
+        <span class="formula-caption" style="font-family:var(--font-mono); white-space:pre; font-size:0.82rem;">
+T_min (°C)  | Max I_charge | Reason
+------------|--------------|-------------------------------------------
+  &lt;0        | 0.0C  (OFF)  | Lithium plating — absolute prohibition
+  0 –  5    | 0.1C         | Minimal plating risk at very low rate
+  5 – 10    | 0.2C         | Low rate, monitor dV/dI for plating signs
+ 10 – 15    | 0.5C         | Normal low-temperature charging
+ 15 – 35    | 1.0C (max)   | Optimal temperature range — full rate
+ 35 – 45    | 0.7C         | Derated to reduce self-heating
+ 45 – 55    | 0.3C         | Approaching hard cutoff — minimal current
+  &gt;55       | 0.0C  (OFF)  | Electrolyte degradation risk</span>
+      </div>
+      <p>
+        This table is stored in BMS firmware as a lookup table indexed by T_min_cell (the lowest
+        temperature across all sensors). The charge current command is set to the minimum of
+        (charger-requested current) and (table value × Q_nom). The BMS enforces this, not the charger.
+      </p>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Temperature-Derated Charging — Linear Derating Curve</div>
+      <p>
+        Between the warning and cutoff thresholds, the BMS applies a linear current derating:
+      </p>
+      <!-- Derating curve SVG -->
+      <div class="diagram-wrap">
+        <div class="diagram-title">📉 Charge Current Derating vs Cell Temperature</div>
+        <svg viewBox="0 0 620 220" width="100%" style="max-height:220px;">
+          <defs>
+            <linearGradient id="derateGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stop-color="#63b3ed" stop-opacity="0.7"/>
+              <stop offset="20%"  stop-color="#63b3ed" stop-opacity="0.7"/>
+              <stop offset="35%"  stop-color="#48bb78" stop-opacity="0.7"/>
+              <stop offset="65%"  stop-color="#48bb78" stop-opacity="0.7"/>
+              <stop offset="80%"  stop-color="#f6ad55" stop-opacity="0.7"/>
+              <stop offset="90%"  stop-color="#fc8181" stop-opacity="0.7"/>
+              <stop offset="100%" stop-color="#fc8181" stop-opacity="0.7"/>
+            </linearGradient>
+          </defs>
+
+          <!-- Axes -->
+          <line x1="60" y1="180" x2="590" y2="180" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+          <line x1="60" y1="20"  x2="60"  y2="180" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+
+          <!-- X axis labels (temperature) -->
+          <!-- -20=65 | 0=143 | 10=183 | 25=243 | 35=283 | 45=323 | 55=363 | 60=383 | 65=403 -->
+          <text x="65"  y="196" fill="#8b949e" font-size="9" font-family="JetBrains Mono,monospace" text-anchor="middle">−20°C</text>
+          <text x="143" y="196" fill="#8b949e" font-size="9" font-family="JetBrains Mono,monospace" text-anchor="middle">0°C</text>
+          <text x="243" y="196" fill="#48bb78" font-size="9" font-family="JetBrains Mono,monospace" text-anchor="middle">25°C</text>
+          <text x="323" y="196" fill="#8b949e" font-size="9" font-family="JetBrains Mono,monospace" text-anchor="middle">35°C</text>
+          <text x="363" y="196" fill="#f6ad55" font-size="9" font-family="JetBrains Mono,monospace" text-anchor="middle">45°C</text>
+          <text x="403" y="196" fill="#fc8181" font-size="9" font-family="JetBrains Mono,monospace" text-anchor="middle">55°C</text>
+          <text x="450" y="196" fill="#fc8181" font-size="9" font-family="JetBrains Mono,monospace" text-anchor="middle">60°C</text>
+
+          <!-- Y axis labels (current %) -->
+          <text x="50" y="183" fill="#8b949e" font-size="9" font-family="JetBrains Mono,monospace" text-anchor="end">0%</text>
+          <text x="50" y="133" fill="#8b949e" font-size="9" font-family="JetBrains Mono,monospace" text-anchor="end">50%</text>
+          <text x="50" y="83"  fill="#8b949e" font-size="9" font-family="JetBrains Mono,monospace" text-anchor="end">100%</text>
+          <text x="50" y="53"  fill="#8b949e" font-size="9" font-family="JetBrains Mono,monospace" text-anchor="end">130%</text>
+
+          <!-- Derating curve -->
+          <polyline
+            points="65,183  143,183  183,163  243,83  323,83  363,113  403,163  450,183"
+            fill="none" stroke="url(#derateGrad)" stroke-width="3" stroke-linejoin="round">
+            <animate attributeName="stroke-dasharray" from="0,800" to="800,0" dur="2s" fill="freeze"/>
+          </polyline>
+          <!-- Fill under curve -->
+          <polygon
+            points="65,183  143,183  183,163  243,83  323,83  363,113  403,163  450,183"
+            fill="rgba(72,187,120,0.06)" stroke="none"/>
+
+          <!-- Key point annotations -->
+          <circle cx="143" cy="183" r="5" fill="#63b3ed"/>
+          <text x="143" y="173" text-anchor="middle" fill="#63b3ed" font-size="8.5" font-family="JetBrains Mono,monospace">0.1C</text>
+
+          <circle cx="243" cy="83"  r="5" fill="#48bb78"/>
+          <text x="255" y="75"  text-anchor="start" fill="#48bb78" font-size="8.5" font-family="JetBrains Mono,monospace">1.0C max</text>
+
+          <circle cx="363" cy="113" r="5" fill="#f6ad55"/>
+          <text x="363" y="103" text-anchor="middle" fill="#f6ad55" font-size="8.5" font-family="JetBrains Mono,monospace">0.7C</text>
+
+          <circle cx="403" cy="163" r="5" fill="#fc8181"/>
+          <text x="415" y="162" text-anchor="start" fill="#fc8181" font-size="8.5" font-family="JetBrains Mono,monospace">0.3C</text>
+
+          <!-- Optimal zone shading -->
+          <rect x="183" y="20" width="140" height="160" fill="rgba(72,187,120,0.04)" stroke="rgba(72,187,120,0.15)" stroke-width="1" stroke-dasharray="4,3"/>
+          <text x="253" y="36" text-anchor="middle" fill="rgba(72,187,120,0.6)" font-size="8" font-family="Inter,sans-serif">Optimal zone</text>
+          <text x="253" y="47" text-anchor="middle" fill="rgba(72,187,120,0.6)" font-size="8" font-family="Inter,sans-serif">15–35°C</text>
+        </svg>
+        <p class="diagram-caption">
+          Charge current derating profile. The BMS linearly interpolates between key points and applies
+          the result as a current limit command to the charger via CAN or PWM signal.
+          The optimal zone (15–35°C) allows full C-rate. Outside this zone, rate is reduced to protect
+          either against lithium plating (cold) or accelerated SEI growth (hot).
+        </p>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Thermal Runaway Detection in BMS Firmware — dT/dt Monitoring</div>
+      <p>
+        The most powerful early-warning signal for thermal runaway is the rate of temperature rise
+        (dT/dt). A cell beginning Stage 1 exothermic decomposition will show a temperature rise
+        that is independent of (or disproportionate to) the current — it rises even when no
+        external electrical cause is present.
+      </p>
+      <div class="formula-block">
+        <span class="formula-label">dT/dt Detection Thresholds</span>
+        <span class="formula-line">Normal operation:  dT/dt &lt; 0.1°C/s  (6°C/min)</span>
+        <span class="formula-line">Level 1 alarm:     dT/dt &gt; 0.5°C/s  (30°C/min) → reduce load, increase cooling</span>
+        <span class="formula-line">Level 2 alarm:     dT/dt &gt; 1.0°C/s  (60°C/min) → disconnect pack immediately</span>
+        <span class="formula-line">Thermal runaway:   dT/dt &gt; 2.0°C/s  (120°C/min) → alert fire suppression</span>
+        <span class="formula-caption">
+          These thresholds apply to the maximum dT/dt reading across all sensors.
+          Joule heating at 2C in a healthy cell produces dT/dt ≈ 0.1°C/s at 25°C.
+          SEI decomposition onset (Stage 1) produces dT/dt ≈ 0.5–1°C/s with no proportional
+          current increase. This current-decoupled temperature rise is the definitive thermal
+          runaway signature the BMS must detect.
+        </span>
+      </div>
+
+      <!-- Firmware code block -->
+      <div class="code-block">
+<span class="code-comment">/* ============================================================
+   BMS Thermal Runaway Detection — Embedded C
+   Runs in 100ms task (10 Hz sampling)
+   ============================================================ */</span>
+
+<span class="code-type">typedef struct</span> {
+    <span class="code-type">float</span>   T_prev[MAX_SENSORS];     <span class="code-comment">/* Previous temperature readings      */</span>
+    <span class="code-type">float</span>   dTdt[MAX_SENSORS];       <span class="code-comment">/* Rate of temperature rise (°C/s)    */</span>
+    <span class="code-type">float</span>   dTdt_max;               <span class="code-comment">/* Maximum dT/dt across all sensors   */</span>
+    <span class="code-type">uint8_t</span> alarm_level;           <span class="code-comment">/* 0=OK 1=warn 2=critical 3=runaway   */</span>
+} ThermalMonitor_t;
+
+<span class="code-type">void</span> <span class="code-fn">BMS_ThermalRunawayCheck</span>(ThermalMonitor_t *tm, <span class="code-type">float</span> *T_now) {
+    <span class="code-type">const float</span> DT_SAMPLE  = <span class="code-num">0.1f</span>;    <span class="code-comment">/* 100ms sample period (seconds)      */</span>
+    <span class="code-type">const float</span> L1_THRESH  = <span class="code-num">0.5f</span>;    <span class="code-comment">/* dT/dt Level 1 alarm threshold °C/s */</span>
+    <span class="code-type">const float</span> L2_THRESH  = <span class="code-num">1.0f</span>;    <span class="code-comment">/* dT/dt Level 2 cutoff threshold     */</span>
+    <span class="code-type">const float</span> TR_THRESH  = <span class="code-num">2.0f</span>;    <span class="code-comment">/* Thermal runaway threshold          */</span>
+
+    tm-&gt;dTdt_max = <span class="code-num">0.0f</span>;
+
+    <span class="code-kw">for</span> (<span class="code-type">int</span> i = <span class="code-num">0</span>; i &lt; MAX_SENSORS; i++) {
+        <span class="code-comment">/* Low-pass filter to reject noise */</span>
+        tm-&gt;dTdt[i] = <span class="code-num">0.8f</span> * tm-&gt;dTdt[i]
+                    + <span class="code-num">0.2f</span> * (T_now[i] - tm-&gt;T_prev[i]) / DT_SAMPLE;
+        tm-&gt;T_prev[i] = T_now[i];
+
+        <span class="code-kw">if</span> (tm-&gt;dTdt[i] &gt; tm-&gt;dTdt_max)
+            tm-&gt;dTdt_max = tm-&gt;dTdt[i];
+    }
+
+    <span class="code-comment">/* Classify alarm level */</span>
+    <span class="code-kw">if</span>      (tm-&gt;dTdt_max &gt;= TR_THRESH) tm-&gt;alarm_level = <span class="code-num">3</span>; <span class="code-comment">/* THERMAL RUNAWAY */</span>
+    <span class="code-kw">else if</span> (tm-&gt;dTdt_max &gt;= L2_THRESH) tm-&gt;alarm_level = <span class="code-num">2</span>; <span class="code-comment">/* CRITICAL — cutoff */</span>
+    <span class="code-kw">else if</span> (tm-&gt;dTdt_max &gt;= L1_THRESH) tm-&gt;alarm_level = <span class="code-num">1</span>; <span class="code-comment">/* WARNING — derate */</span>
+    <span class="code-kw">else</span>                                  tm-&gt;alarm_level = <span class="code-num">0</span>; <span class="code-comment">/* NORMAL */</span>
+
+    <span class="code-comment">/* Level 2+: open main FETs immediately */</span>
+    <span class="code-kw">if</span> (tm-&gt;alarm_level &gt;= <span class="code-num">2</span>) {
+        <span class="code-fn">BMS_OpenAllFETs</span>();               <span class="code-comment">/* Disconnect pack from load         */</span>
+        <span class="code-fn">BMS_SetFaultLatch</span>(FAULT_THERMAL); <span class="code-comment">/* Latch — requires manual reset     */</span>
+        <span class="code-fn">CAN_SendAlert</span>(ALERT_THERMAL_RUNAWAY_RISK);
+    }
+
+    <span class="code-comment">/* Level 3: fire suppression alert if connected */</span>
+    <span class="code-kw">if</span> (tm-&gt;alarm_level &gt;= <span class="code-num">3</span>) {
+        <span class="code-fn">GPIO_Assert</span>(PIN_FIRE_SUPPRESSION_TRIGGER);
+        <span class="code-fn">BMS_LogEvent</span>(<span class="code-str">"THERMAL_RUNAWAY"</span>, T_now, tm-&gt;dTdt);
+    }
+}
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-icon">💡</div>
+        <div class="callout-body">
+          <div class="callout-title">Low-Pass Filter Is Essential for dT/dt Measurement</div>
+          <p>
+            Raw dT/dt computation (ΔT/Δt between consecutive samples) is noisy — sensor quantisation
+            noise on a 12-bit ADC at 100ms intervals produces phantom spikes that could trigger false
+            alarms. The exponential moving average filter (α = 0.2 in the code above) smooths the
+            derivative while maintaining response time under 1 second. Tune α carefully: too small
+            (too much smoothing) and the BMS misses fast thermal events; too large (no smoothing)
+            and noise triggers false disconnections.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Multi-Sensor Voting Logic — Preventing False Alarms</div>
+      <p>
+        A single failed NTC (shorted or open) can produce a spurious temperature reading that
+        triggers unnecessary pack shutdown in a UPS application — exactly when the UPS is needed.
+        Production BMS firmware uses voting logic across multiple sensors:
+      </p>
+      <div class="code-block">
+<span class="code-comment">/* Multi-sensor voting — require 2 of N sensors to agree on alarm
+   Prevents single-sensor failures from taking the pack offline    */</span>
+
+<span class="code-type">uint8_t</span> <span class="code-fn">ThermalVote</span>(<span class="code-type">float</span> *T, <span class="code-type">uint8_t</span> n_sensors, <span class="code-type">float</span> threshold) {
+    <span class="code-type">uint8_t</span> votes = <span class="code-num">0</span>;
+    <span class="code-kw">for</span> (<span class="code-type">int</span> i = <span class="code-num">0</span>; i &lt; n_sensors; i++) {
+        <span class="code-kw">if</span> (T[i] &gt; threshold) votes++;
+    }
+    <span class="code-kw">return</span> (votes &gt;= <span class="code-num">2</span>) ? <span class="code-num">1</span> : <span class="code-num">0</span>; <span class="code-comment">/* Require 2+ sensors to confirm     */</span>
+}
+      </div>
+      <p>
+        For thermal runaway (Stage 1 or beyond), reduce to a 1-of-N vote — a single sensor detecting
+        runaway-level dT/dt should immediately disconnect, since the cost of a false positive (UPS
+        offline momentarily) is far less than the cost of ignoring a true positive (cell fire).
+        Only use 2-of-N voting for the lower warning thresholds where false positives are more likely.
+      </p>
+    </div>
+  </section>
+
