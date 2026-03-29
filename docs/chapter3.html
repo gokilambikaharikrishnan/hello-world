@@ -1781,3 +1781,233 @@
     </div>
   </section>
 
+
+  <!-- ============================================================
+       SECTION 3.4: MECHANICAL CONSIDERATIONS
+  ============================================================ -->
+  <section class="section" id="s3-4">
+    <div class="section-number">3.4</div>
+    <h2 class="section-title">Mechanical Considerations — Swelling, Compression, and Vibration</h2>
+    <p class="section-intro">
+      Li-ion cells are not mechanically inert. Every charge and discharge cycle causes the
+      electrodes to physically expand and contract. Over thousands of cycles, this mechanical
+      stress accumulates, affecting cell health, inter-cell electrical contact, and the
+      structural integrity of the pack. The BMS cannot directly monitor swelling, but pack
+      mechanical design must account for it.
+    </p>
+
+    <div class="subsection">
+      <div class="subsection-title">LFP Electrode Swelling — The Lithiation Expansion</div>
+      <p>
+        When Li⁺ intercalates into graphite during charging, the carbon lattice expands.
+        When it deintercalates during discharge, it contracts. This volume change is cyclic
+        and governed by the crystal lattice parameters of the electrode materials:
+      </p>
+      <div class="formula-block">
+        <span class="formula-label">Volume Change During Intercalation</span>
+        <span class="formula-line">LFP cathode: LiFePO₄ ↔ FePO₄ + Li⁺ + e⁻</span>
+        <span class="formula-line">LFP volume change: ΔV/V ≈ 6.8% (a-axis contracts, b-axis expands)</span>
+        <span class="formula-line">Graphite anode: Li_x C₆ — expands ~10% at full lithiation (x=1)</span>
+        <span class="formula-line">Net prismatic cell thickness change: ~2% (LFP) vs ~4–5% (NMC)</span>
+        <span class="formula-caption">
+          A 280Ah prismatic cell with 45mm nominal thickness expands by ~0.9 mm from empty to full.
+          In a 16S pack with all cells expanding simultaneously, the total pack length change is
+          16 × 0.9 mm = 14.4 mm — nearly 1.5 cm. Mechanical fixtures must accommodate this.
+        </span>
+      </div>
+
+      <!-- Swelling animation bars -->
+      <div class="swell-bar-wrap">
+        <div class="swell-label">Cell Thickness at 0% SoC (reference)</div>
+        <div class="swell-track">
+          <div class="swell-fill" id="swell-lfp-0" style="width:80%; background:rgba(72,187,120,0.6);">LFP — 45.0 mm (ref)</div>
+        </div>
+        <div class="swell-label">Cell Thickness at 100% SoC (fully charged)</div>
+        <div class="swell-track">
+          <div class="swell-fill" id="swell-lfp-100" style="width:82%; background:rgba(72,187,120,0.8);">LFP — 45.9 mm (+2.0%)</div>
+        </div>
+        <div class="swell-label">NMC equivalent at 100% SoC</div>
+        <div class="swell-track">
+          <div class="swell-fill" id="swell-nmc-100" style="width:86%; background:rgba(99,179,237,0.7);">NMC — 47.3 mm (+5.1%)</div>
+        </div>
+        <div class="swell-label">Aged LFP at 100% SoC (after 2000 cycles — SEI growth)</div>
+        <div class="swell-track">
+          <div class="swell-fill" id="swell-aged" style="width:85%; background:rgba(246,173,85,0.7);">LFP aged — 47.0 mm (+4.4%)</div>
+        </div>
+      </div>
+      <p style="font-size:0.83rem; color:var(--text-muted); font-family:var(--font-mono); margin-top:0.5rem;">
+        ↑ Swelling comparison for 280Ah prismatic cells. Note: aged LFP approaches NMC new-cell swelling
+        as SEI growth contributes additional volume. Pack fixture design must accommodate aged-cell dimensions.
+      </p>
+
+      <div class="callout callout-warning">
+        <div class="callout-icon">⚠</div>
+        <div class="callout-body">
+          <div class="callout-title">Irreversible Swelling — The Gassing Indicator</div>
+          <p>
+            Cyclic swelling (charging → discharging) is normal and reversible. However,
+            <em>irreversible</em> swelling — where the cell thickness increases permanently over
+            cycles — indicates gas generation inside the cell. This is most commonly caused by:
+            (1) electrolyte oxidation at the cathode surface above 3.65V (overcharge),
+            (2) CO₂ generation from electrolyte reduction at the anode (continued SEI growth),
+            (3) water contamination in the electrolyte generating HF and H₂.
+            Irreversible swelling is detectable by periodic cell thickness measurement and is
+            an early indicator that the cell is approaching end of life. Some advanced BMS systems
+            include a mechanical strain sensor (strain gauge or load cell in the compression fixture)
+            that tracks cumulative swelling as a SOH indicator.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Compression Fixtures — Controlled Pressure for Better Performance</div>
+      <p>
+        Counterintuitively, applying controlled mechanical compression to prismatic LFP cells
+        <em>improves</em> performance and cycle life. This is because compression:
+      </p>
+      <ul style="color:var(--text-secondary); line-height:2; padding-left:1.5rem;">
+        <li>Maintains intimate contact between electrode layers, reducing contact resistance</li>
+        <li>Prevents electrode delamination as the cell breathes through charge/discharge cycles</li>
+        <li>Reduces the volume available for gas pockets to form within the jelly roll</li>
+        <li>Constrains the SEI layer growth by limiting physical expansion space</li>
+      </ul>
+      <div class="formula-block">
+        <span class="formula-label">Optimal Compression Pressure</span>
+        <span class="formula-line">P_optimal = 10–30 kPa (1.5–4.4 PSI) for prismatic LFP 280Ah</span>
+        <span class="formula-line">P_max = 100 kPa — above this, electrolyte expulsion and capacity loss</span>
+        <span class="formula-caption">
+          Applied via end plates + tie rods or aluminium extrusion channel.
+          Belleville washers or spring plates maintain constant pressure as the cell swells.
+          Rigid fixtures with no compliance allow pressure to rise with swelling,
+          potentially exceeding P_max — always include spring compliance in the fixture design.
+          Target: fixture preload of 15 kPa at 50% SoC (equilibrium), allowing ±10 kPa range.
+        </span>
+      </div>
+
+      <!-- Compression fixture diagram -->
+      <div class="diagram-wrap">
+        <div class="diagram-title">🔧 Prismatic Cell Compression Fixture Assembly</div>
+        <svg viewBox="0 0 660 180" width="100%" style="max-height:180px;">
+          <!-- End plate left -->
+          <rect x="20" y="30" width="25" height="120" rx="3" fill="rgba(99,179,237,0.25)" stroke="rgba(99,179,237,0.6)" stroke-width="2"/>
+          <text x="32" y="98" text-anchor="middle" fill="#63b3ed" font-size="8" font-family="JetBrains Mono,monospace" transform="rotate(-90 32 98)">END PLATE</text>
+
+          <!-- Spring washers left -->
+          <ellipse cx="60"  cy="55"  rx="8" ry="5" fill="rgba(246,173,85,0.5)" stroke="#f6ad55" stroke-width="1.5">
+            <animate attributeName="ry" values="5;6;5" dur="2s" repeatCount="indefinite"/>
+          </ellipse>
+          <ellipse cx="60"  cy="145" rx="8" ry="5" fill="rgba(246,173,85,0.5)" stroke="#f6ad55" stroke-width="1.5">
+            <animate attributeName="ry" values="5;6;5" dur="2s" repeatCount="indefinite"/>
+          </ellipse>
+
+          <!-- 6 cells -->
+          <rect x="72"  y="35" width="70" height="110" rx="4" fill="rgba(72,187,120,0.15)"  stroke="rgba(72,187,120,0.5)"  stroke-width="1.5"/>
+          <rect x="148" y="35" width="70" height="110" rx="4" fill="rgba(72,187,120,0.15)"  stroke="rgba(72,187,120,0.5)"  stroke-width="1.5"/>
+          <rect x="224" y="35" width="70" height="110" rx="4" fill="rgba(72,187,120,0.15)"  stroke="rgba(72,187,120,0.5)"  stroke-width="1.5"/>
+          <rect x="300" y="35" width="70" height="110" rx="4" fill="rgba(72,187,120,0.15)"  stroke="rgba(72,187,120,0.5)"  stroke-width="1.5"/>
+          <rect x="376" y="35" width="70" height="110" rx="4" fill="rgba(72,187,120,0.15)"  stroke="rgba(72,187,120,0.5)"  stroke-width="1.5"/>
+          <rect x="452" y="35" width="70" height="110" rx="4" fill="rgba(72,187,120,0.15)"  stroke="rgba(72,187,120,0.5)"  stroke-width="1.5"/>
+
+          <!-- Gap filler pads between cells -->
+          <rect x="142" y="40" width="6"  height="100" rx="2" fill="rgba(183,148,244,0.4)"/>
+          <rect x="218" y="40" width="6"  height="100" rx="2" fill="rgba(183,148,244,0.4)"/>
+          <rect x="294" y="40" width="6"  height="100" rx="2" fill="rgba(183,148,244,0.4)"/>
+          <rect x="370" y="40" width="6"  height="100" rx="2" fill="rgba(183,148,244,0.4)"/>
+          <rect x="446" y="40" width="6"  height="100" rx="2" fill="rgba(183,148,244,0.4)"/>
+
+          <!-- Spring washers right -->
+          <ellipse cx="535" cy="55"  rx="8" ry="5" fill="rgba(246,173,85,0.5)" stroke="#f6ad55" stroke-width="1.5">
+            <animate attributeName="ry" values="5;6;5" dur="2s" repeatCount="indefinite"/>
+          </ellipse>
+          <ellipse cx="535" cy="145" rx="8" ry="5" fill="rgba(246,173,85,0.5)" stroke="#f6ad55" stroke-width="1.5">
+            <animate attributeName="ry" values="5;6;5" dur="2s" repeatCount="indefinite"/>
+          </ellipse>
+
+          <!-- End plate right -->
+          <rect x="547" y="30" width="25" height="120" rx="3" fill="rgba(99,179,237,0.25)" stroke="rgba(99,179,237,0.6)" stroke-width="2"/>
+          <text x="560" y="98" text-anchor="middle" fill="#63b3ed" font-size="8" font-family="JetBrains Mono,monospace" transform="rotate(-90 560 98)">END PLATE</text>
+
+          <!-- Tie rod top -->
+          <line x1="20" y1="42" x2="572" y2="42" stroke="#8b949e" stroke-width="2.5"/>
+          <circle cx="20"  cy="42" r="5" fill="#8b949e"/>
+          <circle cx="572" cy="42" r="5" fill="#8b949e"/>
+          <!-- Tie rod bottom -->
+          <line x1="20" y1="138" x2="572" y2="138" stroke="#8b949e" stroke-width="2.5"/>
+          <circle cx="20"  cy="138" r="5" fill="#8b949e"/>
+          <circle cx="572" cy="138" r="5" fill="#8b949e"/>
+
+          <!-- Labels -->
+          <text x="107" y="172" text-anchor="middle" fill="#48bb78" font-size="8" font-family="Inter,sans-serif">280Ah LFP cells</text>
+          <text x="300" y="172" text-anchor="middle" fill="#b794f4" font-size="8" font-family="Inter,sans-serif">Thermal gap-filler pads (3 W/m·K)</text>
+          <text x="535" y="172" text-anchor="middle" fill="#f6ad55" font-size="8" font-family="Inter,sans-serif">Spring washers</text>
+          <text x="300" y="25"  text-anchor="middle" fill="#8b949e" font-size="8" font-family="Inter,sans-serif">Tie rods (M8 stainless steel)</text>
+        </svg>
+        <p class="diagram-caption">
+          Six 280Ah LFP cells in a compression fixture. Belleville spring washers (orange, animated) maintain
+          constant ~15 kPa preload as cells expand/contract. Purple gap-filler pads (3 W/m·K) conduct heat
+          to end plates and provide electrical isolation. Tie rods (grey) constrain the assembly.
+        </p>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Vibration and Shock — UPS and Home ESS Requirements</div>
+      <p>
+        UPS and home ESS systems face mechanical stress during shipping, installation, and
+        (for floor-mounted systems) from building floor vibration. Standards define the
+        mechanical test requirements:
+      </p>
+      <div class="comparison-table-wrap">
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>Standard</th>
+              <th>Test</th>
+              <th>Condition</th>
+              <th>Relevance to BMS/Pack Design</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="metric-name">IEC 62133-2:2017</td>
+              <td>Vibration test</td>
+              <td>7–50 Hz, 1.0g, 3 axes, 30 min each</td>
+              <td>Cell hold-down fixtures must not loosen; busbars must not fatigue</td>
+            </tr>
+            <tr>
+              <td class="metric-name">IEC 62133-2:2017</td>
+              <td>Shock test</td>
+              <td>100g, 6ms, 3 directions</td>
+              <td>BMS connectors must remain seated; cell tabs must not crack</td>
+            </tr>
+            <tr>
+              <td class="metric-name">IEC 60068-2-27</td>
+              <td>Shock (transport)</td>
+              <td>40g, 11ms half-sine, 18 shocks</td>
+              <td>Pack enclosure must protect cells from deformation during shipping</td>
+            </tr>
+            <tr>
+              <td class="metric-name">IEC 60068-2-64</td>
+              <td>Random vibration</td>
+              <td>Broadband 10–500 Hz, 1.0 g_rms</td>
+              <td>Screw-terminal BMS connections must maintain &lt;5 mΩ contact resistance after test</td>
+            </tr>
+            <tr>
+              <td class="metric-name">UN 38.3</td>
+              <td>Transportation test</td>
+              <td>Vibration + shock + altitude + thermal</td>
+              <td>Required for all Li-ion packs shipped by air — BMS must survive without triggering</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        From a BMS perspective, vibration and shock tests stress the <em>electrical connections</em>
+        more than the firmware. Cell-sense wire crimp connections, balancing lead resistors, and
+        NTC mounting are the typical failure points. Use Molex MX150 or equivalent vibration-rated
+        connectors, not standard JST or Dupont headers, for any wire in the BMS assembly.
+      </p>
+    </div>
+  </section>
+
