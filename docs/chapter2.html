@@ -3133,6 +3133,124 @@ T (°C)  | f_T   | Notes
       </div>
     </section>
 
+    <!-- ============================================================
+         SECTION 2.9: WORKED NUMERICAL EXAMPLES
+    ============================================================ -->
+    <section class="section" id="s2-9">
+      <div class="section-number">2.9</div>
+      <h2 class="section-title">Worked Numerical Examples — Full Runtime Calculation</h2>
+      <p class="section-intro">
+        Abstract formulas become real when you run numbers through them. This section walks through
+        three complete engineering calculations: a UPS runtime prediction, a SoC drift budget for a
+        24-hour monitoring cycle, and a cell balancing energy analysis. Each example uses the
+        real parameters of a commercial 16S1P LFP pack.
+      </p>
+
+      <div class="subsection">
+        <div class="subsection-title">Example 1 — UPS Runtime Prediction at Variable Load</div>
+        <p>
+          <strong>System:</strong> 48V LFP pack, 16S1P, 280Ah cells, SOH = 92%, T = 15°C, initial SoC = 95%.
+          <strong>Load profile:</strong> Critical load 800W for first 10 min, then 400W until cutoff.
+        </p>
+        <div class="formula-block">
+          <span class="formula-label">Step 1 — Available Energy</span>
+          <span class="formula-line">Q_usable = Q_nom × SOH × f_T(15°C) = 280 × 0.92 × 0.94 = 242.1 Ah</span>
+          <span class="formula-line">E_usable = Q_usable × V_nom = 242.1 × 51.2V = 12,395 Wh</span>
+          <span class="formula-line">E_available = E_usable × SoC_initial = 12,395 × 0.95 = 11,775 Wh</span>
+        </div>
+        <div class="formula-block">
+          <span class="formula-label">Step 2 — First 10 Minutes (800W load)</span>
+          <span class="formula-line">I_load = P / V_pack = 800W / 51.2V = 15.6A</span>
+          <span class="formula-line">V_terminal = OCV − I × R_pack = 51.2 − 15.6 × 6.4mΩ = 51.1V  (negligible sag at low rate)</span>
+          <span class="formula-line">E_consumed = 800W × (10/60)h = 133.3 Wh</span>
+          <span class="formula-line">SoC after 10 min = 95% − (133.3 / 12,395) × 100% = 93.9%</span>
+        </div>
+        <div class="formula-block">
+          <span class="formula-label">Step 3 — Remaining Runtime at 400W</span>
+          <span class="formula-line">E_remaining = 11,775 − 133.3 = 11,642 Wh</span>
+          <span class="formula-line">t_remaining = E_remaining / P_load = 11,642 / 400 = 29.1 hours</span>
+          <span class="formula-caption">
+            Total predicted runtime = 10 min + 29.1 h ≈ 29.3 hours at the 400W phase.
+            This assumes no Peukert correction (0.055C rate is negligible) and constant V_nom.
+            For high-accuracy prediction, integrate V_OCV(SoC) over the discharge curve.
+          </span>
+        </div>
+        <div class="callout callout-info">
+          <div class="callout-icon">📐</div>
+          <div class="callout-body">
+            <div class="callout-title">Why V_nom is a Safe Approximation for Runtime</div>
+            <p>
+              Using V_nom = 51.2V for energy calculation introduces ≤3% error for LFP packs in the
+              20–90% SoC range because the flat OCV curve maintains voltage close to nominal throughout.
+              For NMC (sloped OCV), you would need to integrate the OCV-SoC curve to get accurate energy.
+              This is one of the underappreciated practical advantages of LFP's flat curve.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">Example 2 — SoC Drift Budget Over 24 Hours</div>
+        <p>
+          <strong>System:</strong> Same 16S1P pack. BMS uses coulomb counting with a 16-bit ADC current
+          sensor (±0.05% gain error, ±0.5mA offset error). Pack idles with 50mA self-discharge.
+          How much SoC error accumulates in 24 hours?
+        </p>
+        <div class="formula-block">
+          <span class="formula-label">Error Budget Breakdown</span>
+          <span class="formula-line">1. Gain error contribution: ±0.05% × 50mA × 24h = ±0.6 mAh → ±0.6/280000 × 100% ≈ ±0.0002%</span>
+          <span class="formula-line">2. Offset error: ±0.5mA × 24h = ±12 mAh → ±12/280000 × 100% ≈ ±0.004%</span>
+          <span class="formula-line">3. Unmodelled self-discharge: 50mA × 24h = 1200 mAh → 1200/280000 × 100% = 0.43%</span>
+          <span class="formula-line">4. Temperature drift (0°C → 25°C, 25 ppm/°C): ±25ppm × 25°C × 50mA × 24h = ±0.75 mAh ≈ 0.0003%</span>
+          <span class="formula-caption">
+            Dominant error term: unmodelled self-discharge at 0.43%/day. If the BMS does not account for
+            self-discharge, SoC drifts by ~0.43% per day even with a perfect current sensor. Over 30 days
+            idle storage: ~13% cumulative error — rendering coulomb counting unreliable without periodic
+            OCV recalibration.
+          </span>
+        </div>
+        <div class="formula-block">
+          <span class="formula-label">Self-Discharge Compensation</span>
+          <span class="formula-line">I_sd(T) = I_sd_ref × exp[k_sd × (T − T_ref)]</span>
+          <span class="formula-line">For LFP: I_sd_ref ≈ 0.02–0.05% SoC/day at 25°C</span>
+          <span class="formula-caption">
+            Modern BMS firmware adds a background self-discharge current term to the coulomb counter
+            even when no external current is flowing. This constant subtraction keeps SoC accurate
+            during long idle periods — critical for UPS systems that may sit on float charge for months.
+          </span>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">Example 3 — Passive Balancing Energy and Time</div>
+        <p>
+          <strong>Scenario:</strong> A 16S pack has completed charging. Cell voltages range from
+          3.62V (min) to 3.65V (max). The BMS uses passive balancing with R_bal = 10Ω resistors.
+          How long to balance? How much energy is dissipated?
+        </p>
+        <div class="formula-block">
+          <span class="formula-label">Balancing Current and Power</span>
+          <span class="formula-line">ΔV = V_max − V_min = 3.65 − 3.62 = 30 mV</span>
+          <span class="formula-line">I_bal = ΔV / R_bal = 30mV / 10Ω = 3 mA</span>
+          <span class="formula-line">P_bal = I_bal² × R_bal = (0.003)² × 10 = 90 μW per cell</span>
+        </div>
+        <div class="formula-block">
+          <span class="formula-label">Balancing Time</span>
+          <span class="formula-line">ΔQ = C_cell × ΔV / (dV/dSoC)</span>
+          <span class="formula-line">In LFP plateau (dV/dSoC ≈ 0.5mV/% → 0.5mV per 2.8Ah), ΔV = 30mV → ΔQ ≈ 168 mAh</span>
+          <span class="formula-line">t_bal = ΔQ / I_bal = 168 mAh / 3 mA = 56 hours</span>
+          <span class="formula-caption">
+            This reveals a fundamental limitation of passive top balancing: 56 hours to correct a
+            30 mV imbalance. In practice, balancing occurs in parallel with charging (extending charge
+            time) or during rest periods. The 10Ω resistor choice must balance heat dissipation
+            (90 μW × 16 cells = 1.44 mW total — negligible) against balancing speed.
+            Larger packs with 100mV imbalances may take several days — motivating active balancing
+            for high-power applications.
+          </span>
+        </div>
+      </div>
+    </section>
+
     <!-- Chapter Navigation Footer -->
     <div class="chapter-footer">
       <a class="nav-btn" href="chapter1.html">← Chapter 1: The Case for Li-ion</a>
