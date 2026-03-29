@@ -1658,3 +1658,222 @@
           </div>
         </div>
       </div><!-- T3 -->
+
+      <!-- T4: Extended Kalman Filter -->
+      <div class="technique-card" id="ekf-method">
+        <div class="technique-header">
+          <div class="technique-num">T4</div>
+          <div class="technique-name">Extended Kalman Filter (EKF)</div>
+          <div class="technique-accuracy badge badge-green">LFP Accuracy: ±1–4% (best available)</div>
+        </div>
+        <div class="technique-body">
+          <p>
+            The Extended Kalman Filter is the gold standard for SOC estimation in high-accuracy
+            BMS designs. It is an <strong>optimal state estimator</strong> that fuses the
+            prediction from a dynamic model (like the ECM) with the correction from measurements
+            (current and voltage), weighted by the relative uncertainty of each.
+          </p>
+          <p>
+            The name "Extended" Kalman Filter refers to the fact that it handles nonlinear systems
+            (like battery models, where OCV is a nonlinear function of SoC) by linearizing
+            around the current state estimate. A standard Kalman filter only handles linear systems.
+          </p>
+
+          <div class="subsection-sub">What the Kalman Filter Does — Plain Language</div>
+          <p>
+            Imagine you are trying to track the position of a car using two methods:
+            (1) a GPS that gives noisy but absolute position readings, and
+            (2) an odometer that measures distance traveled but accumulates errors.
+            The Kalman filter is the optimal way to fuse both signals — weighting each based
+            on its known uncertainty — to get a better estimate than either alone.
+          </p>
+          <p>
+            In the battery context:
+            <br>• The "odometer" = coulomb counting (tracks charge, drifts)
+            <br>• The "GPS" = voltage measurement compared to predicted voltage from the ECM
+            <br>• The Kalman filter weights these based on process noise (model uncertainty) and
+            measurement noise (sensor noise)
+          </p>
+
+          <div class="subsection-sub">The Two Steps of EKF — Every Sample Period</div>
+          <div class="formula-block" style="text-align:left;">
+            <span class="formula-label">EKF State Vector for Battery SOC</span>
+            <span class="formula-line">x = [SoC,  V_C1]ᵀ</span>
+            <span class="formula-caption">State vector contains: SoC (what we want) and V_C1 (voltage across RC network diffusion capacitor). Both are unknown and estimated simultaneously.</span>
+          </div>
+          <div class="formula-block" style="text-align:left; margin-top:1rem;">
+            <span class="formula-label">Step 1 — PREDICTION (Time Update)</span>
+            <span class="formula-line">SoC⁻[k] = SoC[k-1] + (−η × I[k] × Δt) / Q_nominal</span>
+            <span class="formula-line">V_C1⁻[k] = V_C1[k-1] × exp(−Δt/τ) + R₁ × I[k] × (1 − exp(−Δt/τ))</span>
+            <span class="formula-line">P⁻[k] = A × P[k-1] × Aᵀ + Q          (propagate error covariance)</span>
+            <span class="formula-caption">A = state transition Jacobian. Q = process noise covariance (tuning parameter — how much you trust the model). Superscript ⁻ = predicted (before correction).</span>
+          </div>
+          <div class="formula-block" style="text-align:left; margin-top:1rem;">
+            <span class="formula-label">Step 2 — CORRECTION (Measurement Update)</span>
+            <span class="formula-line">V_predicted = OCV(SoC⁻[k]) − I[k] × R₀ − V_C1⁻[k]</span>
+            <span class="formula-line">y[k] = V_measured[k] − V_predicted        (innovation = voltage error)</span>
+            <span class="formula-line">K[k] = P⁻[k] × Hᵀ × (H × P⁻[k] × Hᵀ + R)⁻¹   (Kalman gain)</span>
+            <span class="formula-line">x[k] = x⁻[k] + K[k] × y[k]               (corrected state)</span>
+            <span class="formula-line">P[k] = (I − K[k] × H) × P⁻[k]            (corrected covariance)</span>
+            <span class="formula-caption">H = measurement Jacobian = [∂OCV/∂SoC,  −1]. R = measurement noise covariance. K = Kalman gain — high K means trust voltage; low K means trust model. For LFP: ∂OCV/∂SoC is very small (flat curve) → K is small → voltage correction is weak → model dominates.</span>
+          </div>
+
+          <div class="callout callout-physics">
+            <div class="callout-icon">⚛</div>
+            <div class="callout-body">
+              <div class="callout-title">Why EKF Handles LFP Better Than Simple Methods — But Still Struggles</div>
+              <p>
+                The Kalman gain K is proportional to ∂OCV/∂SoC — the slope of the OCV curve.
+                For LFP in the plateau region (20–80% SoC), this slope is nearly zero (~0.5 mV/%SoC).
+                This means K ≈ 0 and the voltage innovation y[k] contributes almost nothing to
+                correcting SoC. The EKF is effectively running as a pure coulomb counter in the
+                middle SoC range. It only gets strong voltage correction at the edges (&lt;20%
+                and &gt;90% SoC) where the curve steepens.
+              </p>
+              <p>
+                This is not a failure of the EKF algorithm — it is a fundamental information-theoretic
+                limit. There is simply insufficient voltage information in the LFP flat region.
+                No algorithm can extract what is not there. The EKF does extract what little voltage
+                information exists, and it handles transitions in and out of the plateau region
+                optimally — which is why it outperforms simple methods.
+              </p>
+            </div>
+          </div>
+
+          <div class="subsection-sub">Computational Cost on Embedded MCU</div>
+          <p>
+            For a 2-state EKF (SoC + V_C1), the per-sample computation involves:
+          </p>
+          <ul class="content-list">
+            <li><strong>Matrix operations:</strong> 2×2 matrix multiply, invert (scalar for 1 measurement), add → approximately 20–40 floating point operations per cell per sample</li>
+            <li><strong>OCV lookup:</strong> Table interpolation, or polynomial fit evaluation (~10 ops)</li>
+            <li><strong>Total per cell per sample:</strong> ~50–80 FLOP</li>
+            <li><strong>For a 16-cell pack at 4 Hz sample rate:</strong> ~3,200–5,120 FLOP/s</li>
+            <li><strong>Cortex-M4F (FPU) at 168 MHz:</strong> ~84 MFLOP/s capacity — EKF for 16 cells consumes &lt;0.006% of MCU time</li>
+            <li><strong>Cortex-M0 (no FPU):</strong> Software FP is ~20–50× slower. EKF is feasible but consumes ~0.5–2% of MCU time. Still fine.</li>
+          </ul>
+          <p>
+            <strong>RAM requirement:</strong> Per cell: P matrix (4 floats) + x state (2 floats) +
+            OCV table (100 points × 2 floats) + RC params (4 floats) ≈ 880 bytes per cell.
+            16-cell pack: ~14 KB total. Easily within even a small STM32F0 (4–16 KB RAM minimum).
+          </p>
+          <div class="technique-meta">
+            <div class="technique-meta-item"><span class="technique-meta-label">Best Use</span><span class="technique-meta-value">High-accuracy BMS, safety-critical ESS</span></div>
+            <div class="technique-meta-item"><span class="technique-meta-label">Accuracy</span><span class="technique-meta-value best">±1–4% typical</span></div>
+            <div class="technique-meta-item"><span class="technique-meta-label">MCU Cost</span><span class="technique-meta-value good">Low (&lt;2% CPU on any ARM)</span></div>
+            <div class="technique-meta-item"><span class="technique-meta-label">LFP Suitability</span><span class="technique-meta-value best">Best available</span></div>
+            <div class="technique-meta-item"><span class="technique-meta-label">Drift</span><span class="technique-meta-value best">Self-correcting in real time</span></div>
+            <div class="technique-meta-item"><span class="technique-meta-label">Tuning Required</span><span class="technique-meta-value fair">Yes — Q and R matrices</span></div>
+          </div>
+        </div>
+      </div><!-- T4 -->
+
+      <!-- T5: Hybrid Practical -->
+      <div class="technique-card" id="hybrid-method">
+        <div class="technique-header">
+          <div class="technique-num">T5</div>
+          <div class="technique-name">Hybrid Lookup Table (Practical Engineering Sweet Spot)</div>
+          <div class="technique-accuracy badge badge-blue">LFP Accuracy: ±3–7%, minimal drift</div>
+        </div>
+        <div class="technique-body">
+          <p>
+            Most real-world production LFP BMS designs — from commercial home ESS units to
+            industrial UPS — use a hybrid approach that combines the best properties of
+            coulomb counting and OCV lookup without the full complexity of EKF:
+          </p>
+          <ul class="content-list">
+            <li><strong>Primary tracking:</strong> Coulomb counting with auto-zero (T2) — accurate
+            short-term, fast, requires no model parameters</li>
+            <li><strong>Rest-period correction:</strong> When rest detected (|I| &lt; threshold for
+            T_rest), measure OCV, look up SoC, apply correction to coulomb counter if discrepancy
+            exceeds a threshold (e.g., &gt;5%)</li>
+            <li><strong>End-of-charge reset:</strong> Set SOC = 100% at charge termination — most
+            reliable anchor point for LFP</li>
+            <li><strong>Temperature compensation:</strong> Apply a lookup table correction to both
+            OCV readings and capacity (Q_nominal is reduced at temperature extremes)</li>
+            <li><strong>Full-cycle learning:</strong> Once per week or per 50 cycles, record the
+            actual Ah from full charge to cutoff, update Q_nominal — accounts for cell aging</li>
+          </ul>
+          <p>
+            <strong>Why this is the engineering sweet spot:</strong> The EKF provides marginally
+            better performance in the LFP plateau region (because the voltage correction is weak
+            there anyway), but requires significant implementation and tuning effort. The hybrid
+            approach achieves ±3–7% accuracy with much simpler code, proven reliability, and
+            no risk of filter divergence if model parameters drift. For home ESS and UPS
+            applications where ±5% SOC accuracy is sufficient, the hybrid approach is optimal.
+          </p>
+          <div class="technique-meta">
+            <div class="technique-meta-item"><span class="technique-meta-label">Best Use</span><span class="technique-meta-value">Production ESS, commercial UPS BMS</span></div>
+            <div class="technique-meta-item"><span class="technique-meta-label">Accuracy</span><span class="technique-meta-value good">±3–7%</span></div>
+            <div class="technique-meta-item"><span class="technique-meta-label">MCU Cost</span><span class="technique-meta-value best">Very low</span></div>
+            <div class="technique-meta-item"><span class="technique-meta-label">LFP Suitability</span><span class="technique-meta-value best">Excellent — standard practice</span></div>
+            <div class="technique-meta-item"><span class="technique-meta-label">Drift</span><span class="technique-meta-value good">Bounded by periodic OCV correction</span></div>
+            <div class="technique-meta-item"><span class="technique-meta-label">Implementation</span><span class="technique-meta-value best">100–300 lines of C</span></div>
+          </div>
+        </div>
+      </div><!-- T5 -->
+
+      <!-- SOC Comparison Table -->
+      <div class="subsection">
+        <div class="subsection-title">SOC Technique Full Comparison</div>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr><th>Method</th><th>LFP Accuracy (mid SoC)</th><th>Complexity</th><th>MCU RAM</th><th>Drift</th><th>Reset Needed</th><th>LFP Rec.</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="metric-name">T1: OCV Lookup</td><td class="worst">±15–25%</td><td class="best">Trivial</td><td class="best">&lt;1 KB</td><td class="best">None</td><td class="worst">Needs 2–4h rest</td><td><span class="badge badge-orange">Startup only</span></td></tr>
+              <tr><td class="metric-name">T2: Coulomb Count</td><td class="good">±1–2% fresh</td><td class="best">Very Low</td><td class="best">&lt;100 B</td><td class="worst">Drifts ~2–5%/day</td><td>Periodic</td><td><span class="badge badge-blue">Good w/ resets</span></td></tr>
+              <tr><td class="metric-name">T3: ECM</td><td class="good">±3–8%</td><td class="good">Medium</td><td class="good">~2 KB</td><td class="good">Low</td><td>Occasional</td><td><span class="badge badge-blue">Good</span></td></tr>
+              <tr><td class="metric-name">T4: EKF</td><td class="best">±1–4%</td><td class="worst">High</td><td class="fair">~14 KB (16 cells)</td><td class="best">Self-correcting</td><td>Not needed</td><td><span class="badge badge-green">Best accuracy</span></td></tr>
+              <tr><td class="metric-name">T5: Hybrid</td><td class="good">±3–7%</td><td class="good">Low–Medium</td><td class="best">&lt;5 KB</td><td class="good">Bounded</td><td>EOC reset</td><td><span class="badge badge-green">Production standard</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SOC Init on power up -->
+      <div class="subsection">
+        <div class="subsection-title">SOC Initialisation on Power-Up — What Happens at Boot</div>
+        <p>
+          Every BMS faces a critical question at power-up: <em>what is the current SOC?</em>
+          The answer determines whether the first charge or discharge cycle is safe. A bad
+          initial SOC can cause the pack to be over-discharged (BMS thinks it has 50% remaining
+          when it actually has 20%) or over-charged (thinks it's at 80% when it's at 95%).
+        </p>
+
+        <p><strong>Strategy 1 — NVRAM stored SOC (preferred):</strong> The BMS writes the current
+        SOC to non-volatile memory (NVM) before every power-off and at regular intervals during
+        operation. On boot, it reads the stored value and uses it as the initial condition. If
+        the time elapsed since last write is short, this is highly accurate. If the system was off
+        for weeks, self-discharge must be estimated and subtracted (~1–3% per month for LFP at 25°C).</p>
+
+        <p><strong>Strategy 2 — OCV measurement at boot:</strong> If NVRAM is unavailable or
+        corrupted, wait for the pack to rest (no current flowing), measure OCV, and look up SoC.
+        For LFP this gives ±5–15% accuracy in the plateau region, but is reliable at the edges.
+        If OCV reads 3.60V or higher, SOC &gt; 90% with certainty. If OCV reads 3.20V or lower,
+        SOC &lt; 15% with certainty. The uncertain zone is the plateau, where more sophisticated
+        boot-time estimation is needed.</p>
+
+        <p><strong>Strategy 3 — Conservative boot SOC:</strong> If OCV is in the plateau and NVRAM
+        is unavailable, some BMS designs boot with a conservative estimate (e.g., 50% SOC) and
+        rely on the first charge cycle to reset the coulomb counter to 100% at end-of-charge.
+        This is safe for UPS applications where the pack is immediately float-charged.</p>
+
+        <div class="callout callout-warning">
+          <div class="callout-icon">⚠</div>
+          <div class="callout-body">
+            <div class="callout-title">NVRAM Corruption — The Boot Failure Mode</div>
+            <p>
+              NVRAM can be corrupted by power loss during a write, electrostatic discharge, or
+              flash endurance exhaustion (STM32 internal flash: ~10,000 write cycles). The BMS
+              must always write with a validity checksum (CRC-16 or CRC-32) and verify on read.
+              If the checksum fails, fall back to OCV measurement rather than trusting corrupted
+              data. Overconfident SOC initialization from corrupted NVM is a documented root cause
+              of over-discharge events in field-deployed BMS systems.
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </section><!-- end s2-6 -->
