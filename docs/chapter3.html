@@ -1488,3 +1488,296 @@
     </div>
   </section>
 
+
+  <!-- ============================================================
+       SECTION 3.3: THERMAL MANAGEMENT IN ESS/UPS
+  ============================================================ -->
+  <section class="section" id="s3-3">
+    <div class="section-number">3.3</div>
+    <h2 class="section-title">Thermal Management in ESS and UPS Systems</h2>
+    <p class="section-intro">
+      Thermal management is the engineering discipline of keeping every cell in the pack within
+      its optimal temperature window (15–35°C) at all times. This is not just about preventing
+      thermal runaway — it is about maximising cycle life. Arrhenius law guarantees that every
+      10°C of unnecessary heat cuts calendar life in half.
+    </p>
+
+    <div class="subsection">
+      <div class="subsection-title">Why Thermal Management Directly Determines Cycle Life</div>
+      <div class="formula-block">
+        <span class="formula-label">Arrhenius Aging Acceleration</span>
+        <span class="formula-line">k(T) = k_ref × exp[Eₐ/R × (1/T_ref − 1/T)]</span>
+        <span class="formula-line">Rule of thumb: aging rate doubles every +10°C</span>
+        <span class="formula-caption">
+          A pack that runs at 35°C instead of 25°C ages ~2× faster.
+          A pack at 45°C ages ~4× faster. Over 10 years of operation, this is the difference
+          between replacing the pack once and replacing it four times.
+          For a 15 kWh home ESS pack at $5,000–$8,000 replacement cost,
+          thermal management that saves 5°C average operating temperature pays for itself
+          many times over in extended pack life.
+        </span>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Passive Cooling — Natural Convection</div>
+      <p>
+        Passive cooling relies on natural convection (air currents driven by buoyancy of warm air)
+        and conduction through the cell housing and pack structure. No fans, pumps, or active
+        control — the simplest and most reliable thermal design.
+      </p>
+      <div class="callout callout-success">
+        <div class="callout-icon">✓</div>
+        <div class="callout-body">
+          <div class="callout-title">When Passive Cooling Is Sufficient</div>
+          <p>
+            For LFP home ESS systems with average C-rates below 0.5C and ambient below 30°C,
+            passive cooling with ≥5 mm inter-cell spacing and adequate pack-level ventilation
+            is generally sufficient to keep cells below 35°C. The low internal resistance of
+            LFP (R ≈ 0.5 mΩ) generates relatively little heat at 0.5C, and natural convection
+            can remove 5–10 W/cell without temperature rise above ambient +10°C.
+          </p>
+        </div>
+      </div>
+      <div class="comparison-table-wrap">
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>Passive Cooling Element</th>
+              <th>Function</th>
+              <th>Design Requirement</th>
+              <th>Failure Mode</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="metric-name">Cell spacing (air gap)</td>
+              <td>Convective heat transfer path between cells</td>
+              <td>≥ 3–5 mm between adjacent cell faces</td>
+              <td>Cells touching → zero convection → hot spot</td>
+            </tr>
+            <tr>
+              <td class="metric-name">Aluminium end plates</td>
+              <td>Conduct heat from cell tabs to pack shell</td>
+              <td>λ_Al = 200 W/m·K — use ≥ 3mm thickness</td>
+              <td>Corrosion at tab contact → high thermal resistance</td>
+            </tr>
+            <tr>
+              <td class="metric-name">Thermal gap filler</td>
+              <td>Fill air gaps between cell and heat spreader</td>
+              <td>λ ≥ 3 W/m·K, compressible to fill voids</td>
+              <td>Dry-out or delamination over thermal cycles</td>
+            </tr>
+            <tr>
+              <td class="metric-name">Pack vents / louvers</td>
+              <td>Allow chimney-effect airflow through pack</td>
+              <td>Bottom inlet + top outlet, ≥50 cm² free area</td>
+              <td>Blocked vents trap heat — pack temperature rises steadily</td>
+            </tr>
+            <tr>
+              <td class="metric-name">Pack enclosure material</td>
+              <td>Radiate heat to environment</td>
+              <td>Painted steel or anodised aluminium (ε ≈ 0.85)</td>
+              <td>Unpainted aluminium (ε ≈ 0.05) radiates 17× less heat</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Active Cooling — Forced Air and Liquid</div>
+      <p>
+        When passive cooling is insufficient — typically above 1C continuous discharge or
+        ambient temperatures above 35°C — active cooling is required.
+      </p>
+
+      <div class="stat-grid" style="grid-template-columns:1fr 1fr; gap:1.25rem; margin:1.5rem 0;">
+        <!-- Forced air -->
+        <div class="stat-card">
+          <div class="stat-value" style="color:var(--accent-blue); font-size:1.4rem; margin-bottom:0.5rem;">💨 Forced Air</div>
+          <div style="font-size:0.84rem; color:var(--text-secondary); line-height:1.7;">
+            <strong style="color:var(--text-primary);">Heat transfer coefficient:</strong> 20–80 W/m²·K<br>
+            <strong style="color:var(--text-primary);">Suitable for:</strong> &lt;5 kW continuous, ambient &lt;40°C<br>
+            <strong style="color:var(--text-primary);">Fan power:</strong> 5–30 W per kW of pack output<br>
+            <strong style="color:var(--text-primary);">Pro:</strong> Simple, no liquid risk, easy maintenance<br>
+            <strong style="color:var(--text-primary);">Con:</strong> Dust ingress, noise, limited at high power<br>
+            <strong style="color:var(--text-primary);">BMS integration:</strong> Fan speed proportional to T_cell − T_setpoint via PID
+          </div>
+        </div>
+        <!-- Liquid cooling -->
+        <div class="stat-card">
+          <div class="stat-value" style="color:var(--accent-cyan); font-size:1.4rem; margin-bottom:0.5rem;">💧 Liquid Cooling</div>
+          <div style="font-size:0.84rem; color:var(--text-secondary); line-height:1.7;">
+            <strong style="color:var(--text-primary);">Heat transfer coefficient:</strong> 500–5000 W/m²·K<br>
+            <strong style="color:var(--text-primary);">Suitable for:</strong> &gt;10 kW, all ambient conditions<br>
+            <strong style="color:var(--text-primary);">Coolant:</strong> Water/glycol or dielectric fluid<br>
+            <strong style="color:var(--text-primary);">Pro:</strong> Best thermal uniformity, scalable<br>
+            <strong style="color:var(--text-primary);">Con:</strong> Leak risk, pump maintenance, cost<br>
+            <strong style="color:var(--text-primary);">BMS integration:</strong> Coolant flow rate controlled by BMS via CAN to thermal management ECU
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-icon">⚠</div>
+        <div class="callout-body">
+          <div class="callout-title">BMS Must Control the Cooling System — Not Just Monitor</div>
+          <p>
+            A common design mistake is to treat the BMS and the thermal management system as
+            separate subsystems with separate controllers. This creates a race condition:
+            the BMS detects overtemperature and cuts off the load, but the cooling system is
+            still running at full speed and may cool the pack below its charge temperature limit.
+            The BMS must send cooling commands (fan speed setpoint, coolant valve position) via
+            CAN or a dedicated thermal control interface. The BMS is the single authoritative
+            source of thermal state for the entire system.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Temperature Gradients — The Hidden Threat to Pack Longevity</div>
+      <p>
+        Even if the average pack temperature is within the optimal range, a large temperature
+        gradient between cells is damaging. Cells at different temperatures age at different
+        rates — a 10°C gradient means the hot cells age 2× faster than the cool cells,
+        causing progressive capacity imbalance even in a perfectly cell-balanced pack.
+      </p>
+
+      <!-- Temperature gradient visualisation -->
+      <div class="diagram-wrap">
+        <div class="diagram-title">🌡 Pack Temperature Gradient — Acceptable vs Problematic</div>
+        <svg viewBox="0 0 660 200" width="100%" style="max-height:200px;">
+          <defs>
+            <linearGradient id="goodGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stop-color="#48bb78" stop-opacity="0.5"/>
+              <stop offset="100%" stop-color="#48bb78" stop-opacity="0.2"/>
+            </linearGradient>
+            <linearGradient id="badGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stop-color="#48bb78" stop-opacity="0.3"/>
+              <stop offset="60%"  stop-color="#ffd700" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#ff4444" stop-opacity="0.7"/>
+            </linearGradient>
+          </defs>
+
+          <!-- Good pack — ΔT < 5°C -->
+          <text x="160" y="20" text-anchor="middle" fill="#48bb78" font-size="11" font-family="JetBrains Mono,monospace" font-weight="700">GOOD: ΔT &lt; 5°C</text>
+          <rect x="20" y="30" width="280" height="100" rx="8" fill="url(#goodGrad)" stroke="rgba(72,187,120,0.4)" stroke-width="1.5"/>
+          <!-- Cells uniform -->
+          <rect x="30"  y="40" width="22" height="80" rx="3" fill="rgba(72,187,120,0.4)" stroke="rgba(72,187,120,0.6)" stroke-width="1"/>
+          <rect x="58"  y="40" width="22" height="80" rx="3" fill="rgba(72,187,120,0.4)" stroke="rgba(72,187,120,0.6)" stroke-width="1"/>
+          <rect x="86"  y="40" width="22" height="80" rx="3" fill="rgba(72,187,120,0.4)" stroke="rgba(72,187,120,0.6)" stroke-width="1"/>
+          <rect x="114" y="40" width="22" height="80" rx="3" fill="rgba(72,187,120,0.4)" stroke="rgba(72,187,120,0.6)" stroke-width="1"/>
+          <rect x="142" y="40" width="22" height="80" rx="3" fill="rgba(72,187,120,0.4)" stroke="rgba(72,187,120,0.6)" stroke-width="1"/>
+          <rect x="170" y="40" width="22" height="80" rx="3" fill="rgba(72,187,120,0.45)" stroke="rgba(72,187,120,0.6)" stroke-width="1"/>
+          <rect x="198" y="40" width="22" height="80" rx="3" fill="rgba(72,187,120,0.45)" stroke="rgba(72,187,120,0.6)" stroke-width="1"/>
+          <rect x="226" y="40" width="22" height="80" rx="3" fill="rgba(72,187,120,0.4)" stroke="rgba(72,187,120,0.6)" stroke-width="1"/>
+          <rect x="254" y="40" width="22" height="80" rx="3" fill="rgba(72,187,120,0.4)" stroke="rgba(72,187,120,0.6)" stroke-width="1"/>
+          <text x="160" y="148" text-anchor="middle" fill="#48bb78" font-size="9" font-family="JetBrains Mono,monospace">All cells 27–30°C · Uniform aging</text>
+
+          <!-- Bad pack — ΔT > 15°C -->
+          <text x="490" y="20" text-anchor="middle" fill="#fc8181" font-size="11" font-family="JetBrains Mono,monospace" font-weight="700">BAD: ΔT &gt; 15°C</text>
+          <rect x="350" y="30" width="280" height="100" rx="8" fill="url(#badGrad)" stroke="rgba(252,129,129,0.4)" stroke-width="1.5"/>
+          <rect x="360" y="43" width="22" height="74" rx="3" fill="rgba(72,187,120,0.4)"  stroke="rgba(72,187,120,0.6)"  stroke-width="1"/>
+          <rect x="388" y="41" width="22" height="78" rx="3" fill="rgba(72,187,120,0.4)"  stroke="rgba(72,187,120,0.6)"  stroke-width="1"/>
+          <rect x="416" y="40" width="22" height="80" rx="3" fill="rgba(255,215,0,0.35)"   stroke="rgba(255,215,0,0.6)"   stroke-width="1"/>
+          <rect x="444" y="38" width="22" height="84" rx="3" fill="rgba(255,140,0,0.45)"   stroke="rgba(255,140,0,0.7)"   stroke-width="1"/>
+          <rect x="472" y="35" width="22" height="90" rx="3" fill="rgba(255,68,68,0.55)"   stroke="rgba(255,68,68,0.8)"   stroke-width="1.5"/>
+          <rect x="500" y="35" width="22" height="90" rx="3" fill="rgba(255,68,68,0.55)"   stroke="rgba(255,68,68,0.8)"   stroke-width="1.5"/>
+          <rect x="528" y="37" width="22" height="86" rx="3" fill="rgba(255,68,68,0.45)"   stroke="rgba(255,68,68,0.6)"   stroke-width="1"/>
+          <rect x="556" y="40" width="22" height="80" rx="3" fill="rgba(255,140,0,0.35)"   stroke="rgba(255,140,0,0.5)"   stroke-width="1"/>
+          <rect x="584" y="42" width="22" height="76" rx="3" fill="rgba(255,215,0,0.25)"   stroke="rgba(255,215,0,0.4)"   stroke-width="1"/>
+          <text x="360" y="148" text-anchor="left" fill="#fc8181" font-size="9" font-family="JetBrains Mono,monospace">22°C</text>
+          <text x="484" y="148" text-anchor="middle" fill="#ff4444" font-size="9" font-family="JetBrains Mono,monospace">44°C hot cells</text>
+          <text x="600" y="148" text-anchor="end" fill="#f6ad55" font-size="9" font-family="JetBrains Mono,monospace">29°C</text>
+
+          <!-- Labels bottom -->
+          <text x="160" y="170" text-anchor="middle" fill="#8b949e" font-size="8.5" font-family="Inter,sans-serif">Uniform cooling → all cells age together → balanced pack</text>
+          <text x="490" y="170" text-anchor="middle" fill="#8b949e" font-size="8.5" font-family="Inter,sans-serif">Poor cooling → hot cells age 4× faster → capacity imbalance in 2 years</text>
+        </svg>
+        <p class="diagram-caption">
+          Left: well-cooled pack with &lt;5°C gradient — cells age uniformly. Right: poor thermal design
+          with 22°C gradient — red cells age 4× faster, creating increasing voltage imbalance that
+          balancing circuits cannot fully compensate. Target: ΔT_pack &lt; 5°C across all cells.
+        </p>
+      </div>
+
+      <div class="formula-block">
+        <span class="formula-label">Pack Temperature Uniformity Target</span>
+        <span class="formula-line">ΔT_pack = T_max − T_min  across all cell temperature sensors</span>
+        <span class="formula-line">Target: ΔT_pack &lt; 5°C during normal operation</span>
+        <span class="formula-line">Warning threshold: ΔT_pack &gt; 8°C → reduce load, increase cooling</span>
+        <span class="formula-line">Alarm threshold: ΔT_pack &gt; 12°C → investigate thermal path failure</span>
+        <span class="formula-caption">
+          BMS firmware computes ΔT_pack every measurement cycle and logs it as a health indicator.
+          A gradual increase in ΔT_pack over months (at the same load profile) indicates a deteriorating
+          thermal path — gap filler dry-out, blocked vent, or failing fan — before any cell temperature
+          exceeds the protection threshold.
+        </span>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">NTC Placement Strategy — Where to Measure and Why</div>
+      <p>
+        The accuracy of the BMS's thermal model depends entirely on where the temperature
+        sensors are placed. A single NTC on the PCB tells you almost nothing about cell
+        temperatures in a 16S pack.
+      </p>
+      <div class="ntc-grid">
+        <div class="ntc-card" style="--ntc-color: var(--accent-red);">
+          <div class="ntc-position">Critical</div>
+          <div class="ntc-name">Cell Midpoint Surface</div>
+          <div class="ntc-desc">Mounted flush against the large face of each cell, at mid-height. Captures the hottest surface point. Minimum 1 per every 2 cells.</div>
+        </div>
+        <div class="ntc-card" style="--ntc-color: var(--accent-orange);">
+          <div class="ntc-position">Important</div>
+          <div class="ntc-name">Positive Tab Junction</div>
+          <div class="ntc-desc">At or near the aluminium busbar-to-tab weld. Tab area carries full pack current — highest I²R heating site. Must not exceed 80°C.</div>
+        </div>
+        <div class="ntc-card" style="--ntc-color: var(--accent-yellow);">
+          <div class="ntc-position">Important</div>
+          <div class="ntc-name">Pack Inlet Air / Coolant</div>
+          <div class="ntc-desc">Measures incoming thermal environment. Used to compute delta-T available for cooling and to adjust fan/pump speed feed-forward.</div>
+        </div>
+        <div class="ntc-card" style="--ntc-color: var(--accent-yellow);">
+          <div class="ntc-position">Important</div>
+          <div class="ntc-name">Pack Outlet Air / Coolant</div>
+          <div class="ntc-desc">Measures heat rejection effectiveness. T_outlet − T_inlet × flow rate = actual heat removal rate. Used to verify cooling system performance.</div>
+        </div>
+        <div class="ntc-card" style="--ntc-color: var(--accent-blue);">
+          <div class="ntc-position">Recommended</div>
+          <div class="ntc-name">BMS PCB Ambient</div>
+          <div class="ntc-desc">On-board reference for BMS IC derating. AFE ICs have operating limits (typically −40°C to +85°C). PCB temperature correlates with enclosure interior.</div>
+        </div>
+        <div class="ntc-card" style="--ntc-color: var(--accent-green);">
+          <div class="ntc-position">Optional</div>
+          <div class="ntc-name">Cell Bottom Centre</div>
+          <div class="ntc-desc">Best position to detect cell internal hot spots. Core-to-surface lag ≈ 30–120s at 1C. Bottom sensors respond faster than side sensors for prismatic cells.</div>
+        </div>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-icon">⚠</div>
+        <div class="callout-body">
+          <div class="callout-title">Surface Temperature Underestimates Core Temperature</div>
+          <p>
+            At 1C discharge, the cell core is typically 5–15°C hotter than its surface.
+            An NTC on the cell surface reading 50°C may mean the cell core is at 60–65°C —
+            approaching the SEI decomposition zone. The BMS must apply a thermal lag correction
+            that is a function of current magnitude and cell thermal resistance:
+          </p>
+          <div style="font-family:var(--font-mono); font-size:0.82rem; background:rgba(0,0,0,0.3); padding:0.75rem; border-radius:4px; margin-top:0.5rem; color:var(--accent-orange);">
+            T_core_est = T_surface + k_lag × I² × R_thermal_cell
+          </div>
+          <p style="margin-top:0.5rem;">
+            Where k_lag is an empirically determined correction factor (measured during cell
+            characterisation using a thermocouple inserted into a test cell core vs surface NTC).
+            Typical values: k_lag ≈ 0.08 K/A² for 280Ah prismatic LFP.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
