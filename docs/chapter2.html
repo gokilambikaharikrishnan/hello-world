@@ -728,3 +728,132 @@
       </div><!-- end voltage-window -->
 
     </section><!-- end s2-2 -->
+
+    <!-- ============================================================
+         SECTION 2.3 — CELL FORMATS
+    ============================================================ -->
+    <section class="section" id="s2-3">
+      <div class="section-number">Section 2.3</div>
+      <h2 class="section-title">Cell Formats — Cylindrical, Prismatic, Pouch</h2>
+      <p class="section-intro">
+        The same electrode chemistry (LFP) can be packaged in three fundamentally different
+        physical form factors. The choice of format is not cosmetic — it determines thermal
+        management requirements, manufacturing cost, pack integration complexity, cycle life,
+        and safety behaviour. For UPS and home ESS, the choice matters enormously.
+      </p>
+
+      <div class="subsection">
+        <div class="subsection-title">Cylindrical Cells — 18650, 21700, 4680</div>
+        <p>
+          Cylindrical cells are wound — a long strip of anode material, separator, cathode material,
+          and another separator is wound around a mandrel like a roll of paper towel, then inserted
+          into a steel can. The numbers in the name are the dimensions: an 18650 is
+          <strong>18 mm diameter × 65 mm length</strong>. A 21700 is 21 mm × 70 mm. A 4680 is
+          46 mm × 80 mm.
+        </p>
+        <p>
+          <strong>Why those numbers matter:</strong> Volume scales as r²×h, so going from 18650
+          to 4680 increases cell volume by a factor of ~(23/9)² × (80/65) ≈ 6.9×. Tesla's 4680
+          cell contains approximately 5–6× more energy than an 18650, but far fewer cells are
+          needed per pack — reducing tab welding complexity and associated failure modes.
+        </p>
+        <p>
+          Cylindrical cells have inherent mechanical strength from the steel can. The wound structure
+          means current must flow from the jelly roll core to the terminals through the winding —
+          this creates moderate internal resistance compared to prismatic designs. The cylindrical
+          geometry creates inefficient packing in rectangular module designs (air gaps between cylinders).
+        </p>
+        <div class="callout callout-warning">
+          <div class="callout-icon">🌡</div>
+          <div class="callout-body">
+            <div class="callout-title">Cylindrical Thermal Profile</div>
+            <p>
+              Heat is generated throughout the jelly roll but must escape radially through the steel
+              can to reach the cooling surface. For small cells (18650), the thermal path is short.
+              For large-format cylinders (4680), the center can run significantly hotter than the
+              surface. At high C-rates, center-to-surface temperature gradients of 15–20°C are possible,
+              accelerating degradation non-uniformly. BMS thermal management must account for this
+              internal gradient, not just the surface temperature.
+            </p>
+          </div>
+        </div>
+      </div><!-- end cylindrical -->
+
+      <div class="subsection">
+        <div class="subsection-title">Prismatic Hard-Case Cells — The ESS Standard</div>
+        <p>
+          Prismatic cells stack the electrode layers (rather than winding them) inside a rigid
+          aluminum rectangular enclosure. The layers are either stacked flat or wound flat
+          (a "flat wound" or "Z-fold" design). Typical prismatic LFP cells for ESS:
+          <strong>100Ah, 200Ah, 280Ah, 304Ah</strong> — sizes that have become de facto standards
+          driven by Chinese manufacturers (CATL, EVE, CALB, Lishen).
+        </p>
+        <p>
+          The <strong>280Ah prismatic LFP cell</strong> (~173 × 72 × 205 mm, ~620g) has become
+          the dominant format for DIY and commercial home ESS globally. At 3.2V nominal, one cell
+          stores 896 Wh. A 16-cell series string (48V nominal) stores approximately 14.3 kWh —
+          enough for a typical home's evening energy consumption.
+        </p>
+        <ul class="content-list check">
+          <li>Low internal resistance due to large electrode area and short current path to terminals</li>
+          <li>Good thermal conductivity through flat aluminum case — efficient cooling with side plates</li>
+          <li>Efficient volumetric packing in rectangular modules — no air gaps</li>
+          <li>Flat external surfaces accommodate compression fixtures — critical for managing cell swelling</li>
+          <li>Large format = fewer cells per pack = fewer welds, connectors, and potential failure points</li>
+          <li>Standardized dimensions allow commodity pricing and interchangeable sourcing</li>
+        </ul>
+        <ul class="content-list cross">
+          <li>Large format means a single cell failure can hold significant energy — fault management critical</li>
+          <li>Cell swelling (3–5% expansion over life) requires mechanical constraint in module design</li>
+          <li>Individual cell replacement in a module requires disassembly — field maintenance is harder</li>
+        </ul>
+      </div><!-- end prismatic -->
+
+      <div class="subsection">
+        <div class="subsection-title">Pouch Cells — Maximum Energy Density, Minimum Rigidity</div>
+        <p>
+          Pouch cells stack or layer electrodes inside a flexible aluminum-laminate polymer bag
+          (the "pouch"). No metal can — the bag conforms to the cell contents. This eliminates
+          ~15–20% of the weight of a cylindrical or prismatic format, delivering the highest
+          gravimetric and volumetric energy density of the three formats.
+        </p>
+        <p>
+          Pouch cells are dominant in consumer electronics (smartphones, tablets) and some EV
+          applications (GM Bolt, Nissan Leaf original). For ESS, they have significant disadvantages:
+        </p>
+        <ul class="content-list cross">
+          <li>No structural rigidity — requires external compression frames that add weight and cost</li>
+          <li>Cell swelling is unconstrained without external pressure — pouch "pillowing" can rupture the laminate</li>
+          <li>The flexible pouch provides no mechanical protection against puncture or vibration</li>
+          <li>Tabs and bus bars connecting to external circuits are typically thin and fragile</li>
+          <li>Higher manufacturing complexity — sealing is sensitive to contamination</li>
+        </ul>
+        <p>
+          <strong>For UPS and home ESS: prismatic cells are the right choice.</strong> The combination
+          of large format, high capacity, rigid construction, efficient thermal management, and commodity
+          availability makes prismatic LFP the universal selection for stationary ESS applications.
+        </p>
+
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Format</th>
+                <th>Gravimetric E.D.</th>
+                <th>Volumetric E.D.</th>
+                <th>Internal Resistance</th>
+                <th>Thermal Mgmt</th>
+                <th>ESS Suitability</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td class="metric-name">Cylindrical (18650)</td><td>150–180 Wh/kg</td><td>260–300 Wh/L</td><td class="fair">Medium</td><td class="fair">Moderate (radial)</td><td><span class="badge badge-orange">Fair</span></td></tr>
+              <tr><td class="metric-name">Cylindrical (4680)</td><td>200–260 Wh/kg</td><td>350–400 Wh/L</td><td class="good">Low-Medium</td><td class="fair">Moderate</td><td><span class="badge badge-blue">Good</span></td></tr>
+              <tr><td class="metric-name">Prismatic LFP</td><td>120–160 Wh/kg</td><td>200–280 Wh/L</td><td class="best">Very Low</td><td class="best">Excellent (flat sides)</td><td><span class="badge badge-green">Optimal</span></td></tr>
+              <tr><td class="metric-name">Pouch</td><td>200–280 Wh/kg</td><td>350–500 Wh/L</td><td class="good">Low</td><td class="fair">Moderate (requires frame)</td><td><span class="badge badge-gray">Not Recommended</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div><!-- end pouch -->
+
+    </section><!-- end s2-3 -->
