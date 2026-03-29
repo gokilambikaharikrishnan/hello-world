@@ -3526,6 +3526,226 @@ T (°C)  | f_T   | Notes
       </div>
     </section>
 
+    <!-- ============================================================
+         SECTION 2.12: SECOND-LIFE BATTERIES AND REPURPOSING CONSIDERATIONS
+    ============================================================ -->
+    <section class="section" id="s2-12">
+      <div class="section-number">2.12</div>
+      <h2 class="section-title">Second-Life Batteries — BMS Implications for Repurposed Cells</h2>
+      <p class="section-intro">
+        When an LFP pack reaches 80% SOH in its primary application (e.g., an EV), it is not dead —
+        it has roughly 60–70% of its original useful life remaining in a less demanding second-life
+        application such as stationary energy storage. Understanding what changes in the BMS when
+        managing aged cells is increasingly important as second-life ESS deployments grow.
+      </p>
+
+      <div class="subsection">
+        <div class="subsection-title">What Changes When Cells Age — BMS Parameter Updates Required</div>
+        <p>
+          An aged cell at 80% SOH is a fundamentally different electrochemical device than a fresh cell.
+          The BMS must be reconfigured, not just recalibrated:
+        </p>
+        <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin:1.5rem 0;">
+          <div class="stat-card">
+            <div class="stat-value" style="color:#f6ad55;">Q_nom</div>
+            <div class="stat-label">Reduce to measured Q_actual</div>
+            <div class="stat-desc">Coulomb counting denominator must reflect real capacity, not original nameplate</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" style="color:#f6ad55;">R₀</div>
+            <div class="stat-label">Increase by 30–60%</div>
+            <div class="stat-desc">Higher resistance changes IR drop calc, OCV correction, and SoP limits</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" style="color:#63b3ed;">OCV-SoC Table</div>
+            <div class="stat-label">May shift slightly</div>
+            <div class="stat-desc">Lithium inventory loss shifts the OCV curve lower by 10–30 mV — remap at commissioning</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" style="color:#48bb78;">V_UVP</div>
+            <div class="stat-label">Consider raising cutoff</div>
+            <div class="stat-desc">Aged cells have sharper voltage cliffs — conservative cutoff extends second-life duration</div>
+          </div>
+        </div>
+        <div class="callout callout-warning">
+          <div class="callout-icon">⚠</div>
+          <div class="callout-body">
+            <div class="callout-title">Cell Sorting Is Critical for Second-Life Pack Assembly</div>
+            <p>
+              In a second-life pack assembled from used cells, cell-to-cell capacity variation
+              is much higher than in a factory-fresh pack (±5% vs ±1%). If high and low capacity
+              cells are mixed in a series string, the low-capacity cell will hit undervoltage
+              protection long before the high-capacity cells are depleted, wasting up to 30% of
+              available energy. Before assembly, grade cells by measured capacity (RPT at 0.2C)
+              and keep all cells in a string within ±3% of each other. This "cell grading" step
+              is the single highest-value activity in second-life pack manufacturing.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">EIS — Electrochemical Impedance Spectroscopy for SOH Screening</div>
+        <p>
+          For second-life sorting, the fastest cell characterisation method is Electrochemical
+          Impedance Spectroscopy (EIS). EIS applies a small AC perturbation at multiple frequencies
+          and measures the cell's complex impedance response:
+        </p>
+        <div class="formula-block">
+          <span class="formula-label">EIS Impedance at Key Frequencies</span>
+          <span class="formula-line">High frequency (1–10 kHz): Z_real ≈ R₀ (ohmic resistance, primarily SEI + electrolyte)</span>
+          <span class="formula-line">Mid frequency (1–100 Hz): Z shows semicircle → R_ct (charge transfer resistance, SEI thickness proxy)</span>
+          <span class="formula-line">Low frequency (0.01–1 Hz): Warburg impedance → diffusion characteristics in solid phase</span>
+          <span class="formula-caption">
+            A cell with thick SEI shows elevated R_ct in the mid-frequency semicircle.
+            R₀ increase correlates with electrolyte degradation and separator resistance increase.
+            Warburg slope changes correlate with active material loss.
+            EIS gives a complete fingerprint of the cell's degradation state in &lt;5 minutes per cell —
+            making it the preferred screening tool before second-life assembly.
+          </span>
+        </div>
+        <p>
+          Dedicated EIS instruments (Gamry, Bio-Logic) are lab tools costing $10k–$50k.
+          Embedded EIS capabilities are now appearing in next-generation BMS AFE ICs — allowing
+          continuous in-pack impedance monitoring without cell removal, enabling real-time SOH
+          tracking throughout the second-life deployment.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 2.13: CHAPTER SUMMARY AND KEY TAKEAWAYS
+    ============================================================ -->
+    <section class="section" id="s2-summary">
+      <div class="section-number">Summary</div>
+      <h2 class="section-title">Chapter 2 Summary — The Foundations of BMS Intelligence</h2>
+      <p class="section-intro">
+        This chapter has built the complete technical foundation for understanding why BMS firmware
+        is complex, what physics it is fighting, and what engineering decisions are required at
+        every layer. The following key points capture the essential knowledge every BMS engineer
+        must carry.
+      </p>
+
+      <div class="subsection">
+        <div class="subsection-title">The 10 Principles That Drive Every BMS Design Decision</div>
+        <div class="trace-container">
+          <div class="trace-row">
+            <div class="trace-left">
+              <div class="trace-number">01</div>
+              <div class="trace-label">Two-Phase Intercalation</div>
+            </div>
+            <div class="trace-arrow">→</div>
+            <div class="trace-right">LFP's phase boundary pins OCV at 3.35V across 20–80% SoC — the flat curve is a thermodynamic certainty, not an engineering problem to be fixed.</div>
+          </div>
+          <div class="trace-row">
+            <div class="trace-left">
+              <div class="trace-number">02</div>
+              <div class="trace-label">IR Drop Masks OCV</div>
+            </div>
+            <div class="trace-arrow">→</div>
+            <div class="trace-right">V_terminal = OCV − I×R₀ − V_C1. At any non-zero current, the measured voltage is not OCV. Never use terminal voltage as OCV without a rest period of ≥30 minutes.</div>
+          </div>
+          <div class="trace-row">
+            <div class="trace-left">
+              <div class="trace-number">03</div>
+              <div class="trace-label">Coulomb Counting Drifts</div>
+            </div>
+            <div class="trace-arrow">→</div>
+            <div class="trace-right">Integration of current accumulates sensor offset, gain error, and unmodelled self-discharge. Without periodic correction, SoC error reaches ±15% within weeks.</div>
+          </div>
+          <div class="trace-row">
+            <div class="trace-left">
+              <div class="trace-number">04</div>
+              <div class="trace-label">EKF Gain → 0 in Plateau</div>
+            </div>
+            <div class="trace-arrow">→</div>
+            <div class="trace-right">Because ∂OCV/∂SoC ≈ 0 in the LFP plateau, the Kalman gain K ≈ 0, and EKF reduces to pure coulomb counting in the 20–80% range. Complexity does not buy accuracy here.</div>
+          </div>
+          <div class="trace-row">
+            <div class="trace-left">
+              <div class="trace-number">05</div>
+              <div class="trace-label">T5 Hybrid is Production Standard</div>
+            </div>
+            <div class="trace-arrow">→</div>
+            <div class="trace-right">Coulomb counting primary, OCV correction at rest, EOC reset to 100%. Delivers ±5% accuracy with &lt;3kB RAM. Correct architecture for LFP production firmware.</div>
+          </div>
+          <div class="trace-row">
+            <div class="trace-left">
+              <div class="trace-number">06</div>
+              <div class="trace-label">Temperature Dominates All Parameters</div>
+            </div>
+            <div class="trace-arrow">→</div>
+            <div class="trace-right">Capacity, resistance, safe charge rate, and aging rate are all strong functions of temperature. Every formula in BMS firmware needs a temperature argument.</div>
+          </div>
+          <div class="trace-row">
+            <div class="trace-left">
+              <div class="trace-number">07</div>
+              <div class="trace-label">Weakest Cell Sets Pack Limits</div>
+            </div>
+            <div class="trace-arrow">→</div>
+            <div class="trace-right">In a series string, UVP fires when the lowest-voltage cell hits the threshold. Per-cell monitoring is not a premium feature — it is the minimum viable architecture.</div>
+          </div>
+          <div class="trace-row">
+            <div class="trace-left">
+              <div class="trace-number">08</div>
+              <div class="trace-label">SEI Is Both Friend and Enemy</div>
+            </div>
+            <div class="trace-arrow">→</div>
+            <div class="trace-right">SEI passivates the anode (without it, the cell self-destructs in electrolyte). But SEI growth consumes lithium inventory and increases resistance — the primary aging mechanism.</div>
+          </div>
+          <div class="trace-row">
+            <div class="trace-left">
+              <div class="trace-number">09</div>
+              <div class="trace-label">SOH = Q_actual / Q_rated</div>
+            </div>
+            <div class="trace-arrow">→</div>
+            <div class="trace-right">SOH is not a soft indicator — it is a measured ratio. Verify it with RPT. Log it with timestamps. Trend it. Predict EOL. Replace before the knee, not after.</div>
+          </div>
+          <div class="trace-row">
+            <div class="trace-left">
+              <div class="trace-number">10</div>
+              <div class="trace-label">SoP = Real-Time Capability</div>
+            </div>
+            <div class="trace-arrow">→</div>
+            <div class="trace-right">SoC tells you stored energy. SoP tells you instantaneous power capability. For UPS applications, SoP must be broadcast at 100ms intervals — stale SoP causes voltage collapse under load.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">What Chapter 3 Builds On This Foundation</div>
+        <p>
+          Chapter 3 moves from cell physics to BMS hardware architecture — the actual ICs,
+          circuits, and firmware structures that implement the algorithms described in this chapter.
+          The flat OCV curve problem and the SoC estimation challenges are solved (approximately)
+          in firmware running on a microcontroller reading data from an analog front-end IC.
+          Chapter 3 shows how that hardware is designed, specified, and validated.
+        </p>
+        <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:1.5rem 0;">
+          <div class="stat-card">
+            <div class="stat-value" style="color:#48bb78;">AFE ICs</div>
+            <div class="stat-label">Analog Front-End</div>
+            <div class="stat-desc">TI BQ series, Analog Devices LTC6813 — how per-cell voltage and temperature measurement is implemented in silicon</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" style="color:#63b3ed;">Current Sensing</div>
+            <div class="stat-label">Shunt vs Hall</div>
+            <div class="stat-desc">Trade-off between accuracy (shunt) and isolation/range (Hall effect) — directly impacts coulomb counting accuracy</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" style="color:#b794f4;">FET Topology</div>
+            <div class="stat-label">Protection Switching</div>
+            <div class="stat-desc">Back-to-back MOSFETs for bidirectional current blocking — body diode implications for charge/discharge paths</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" style="color:#f6ad55;">CAN / SMBus</div>
+            <div class="stat-label">Communication</div>
+            <div class="stat-desc">How SoC, SoP, temperature, and fault data are communicated to the host system in real time</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Chapter Navigation Footer -->
     <div class="chapter-footer">
       <a class="nav-btn" href="chapter1.html">← Chapter 1: The Case for Li-ion</a>
