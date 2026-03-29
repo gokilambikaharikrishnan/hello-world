@@ -2347,6 +2347,302 @@
       </div>
     </section>
 
+    <!-- ============================================================
+         ADDITIONAL DEEP CONTENT: LFP vs NMC vs NCA CHEMISTRY DETAIL
+    ============================================================ -->
+    <section class="section">
+      <div class="section-number">Extended Reference</div>
+      <h2 class="section-title">LFP vs. NMC vs. NCA — Deep Electrochemical Comparison</h2>
+      <p class="section-intro">
+        The BMS engineer who works exclusively with LFP should still understand NMC and NCA
+        deeply. Customers compare chemistries. System integrators may specify either. Understanding
+        the electrochemical differences explains why BMS algorithms and protection thresholds
+        differ fundamentally between chemistries — not just numerically, but structurally.
+      </p>
+
+      <div class="subsection">
+        <div class="subsection-title">NMC (LiNiₓMnᵧCoᵤO₂) — Layered Oxide Cathode</div>
+        <p>
+          NMC uses a <strong>layered rock-salt structure</strong> (R-3m space group). Lithium,
+          nickel, manganese, and cobalt ions occupy alternate layers between oxygen layers.
+          During charging, Li⁺ is extracted from the Li layer, leaving vacancies that the
+          transition metal layers expand into slightly.
+        </p>
+        <p>
+          The three transition metals serve distinct roles:
+        </p>
+        <ul class="content-list">
+          <li><strong>Nickel (Ni):</strong> Primary electroactive species. Ni²⁺/Ni⁴⁺ redox couple
+          provides high capacity and high voltage (~3.7V). Higher nickel content → higher energy
+          density → worse thermal stability (onset of O₂ release moves lower).</li>
+          <li><strong>Manganese (Mn):</strong> Structural stabilizer. Mn⁴⁺ is electrochemically
+          inactive but supports the layered structure, reducing volume change. Prevents collapse
+          of layers during deep cycling.</li>
+          <li><strong>Cobalt (Co):</strong> Enables good rate capability and reduces cation mixing
+          (Ni²⁺ accidentally occupying Li sites — causes capacity loss). Also expensive and
+          ethically problematic (see Chapter 1).</li>
+        </ul>
+        <p>
+          The trend in NMC is toward higher nickel content: NMC111 (equal Ni:Mn:Co) → NMC532
+          → NMC622 → NMC811. Each step increases energy density but decreases thermal stability
+          and makes the cathode more sensitive to overcharge. NMC811 begins oxygen release at
+          just ~180°C — only 60°C above typical cell operating temperature in abuse scenarios.
+        </p>
+        <p>
+          <strong>BMS difference vs LFP:</strong> NMC has a more strongly sloped OCV curve
+          (~1.2V change from 0–100% SoC), making voltage-based SOC estimation more reliable.
+          But NMC requires more conservative protection thresholds: upper cutoff 4.2V (vs
+          LFP 3.65V), lower cutoff 2.8–3.0V. The higher upper voltage accelerates electrolyte
+          oxidation — NMC battery management is more sensitive to overcharge margin than LFP.
+        </p>
+      </div><!-- end NMC -->
+
+      <div class="subsection">
+        <div class="subsection-title">NCA (LiNi₀.₈Co₀.₁₅Al₀.₀₅O₂) — High Energy Density, Tight Margins</div>
+        <p>
+          NCA substitutes aluminum for manganese in the NMC layered structure. The result is
+          the highest energy density cathode in commercial production (~200–280 Wh/kg at cell
+          level). Tesla's original 18650-format cells (Panasonic NCA) demonstrated this
+          chemistry's potential. Modern 4680 cells also use NCA-based formulations.
+        </p>
+        <p>
+          Aluminum in NCA plays the same structural stabilization role as manganese in NMC, but
+          Al³⁺ is a smaller ion that increases the structural stability compared to Mn⁴⁺. This
+          allows even higher nickel content (0.80 vs 0.60–0.80 in NMC) for maximum energy density.
+        </p>
+        <ul class="content-list cross">
+          <li>Thermal onset temperature for O₂ release: ~160°C — worst of all major cathode chemistries</li>
+          <li>Very sensitive to moisture — requires dry room manufacturing (&lt;0.1% RH)</li>
+          <li>Higher self-discharge than LFP or NMC at elevated temperatures</li>
+          <li>Requires very precise voltage management — tighter tolerance BMS hardware</li>
+          <li>Cobalt content (15%) creates same supply chain vulnerability as NMC</li>
+        </ul>
+        <p>
+          For a BMS engineer, NCA represents the highest-performance, highest-risk chemistry.
+          Every protection margin needs to be tighter, every temperature threshold lower, and
+          every SOC uncertainty smaller. The BMS complexity (and cost) scales accordingly.
+          This is one reason why large NCA packs (EVs, aircraft) use EKF or more advanced SOC
+          algorithms — the consequences of under- or over-charging are severe.
+        </p>
+      </div><!-- end NCA -->
+
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th style="color:var(--lfp-color);">LFP</th>
+              <th style="color:var(--nmc-color);">NMC 622</th>
+              <th style="color:var(--nca-color);">NCA 80</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="metric-name">Crystal Structure</td><td>Olivine (Pnma)</td><td>Layered oxide (R-3m)</td><td>Layered oxide (R-3m)</td></tr>
+            <tr><td class="metric-name">Active Redox Couple</td><td class="best">Fe²⁺/Fe³⁺</td><td>Ni²⁺/Ni⁴⁺ + Co³⁺/Co⁴⁺</td><td>Ni²⁺/Ni⁴⁺ + Co³⁺/Co⁴⁺</td></tr>
+            <tr><td class="metric-name">Nominal Voltage</td><td>3.2–3.3V</td><td class="good">3.6–3.7V</td><td class="good">3.6V</td></tr>
+            <tr><td class="metric-name">Charge Cutoff</td><td class="best">3.65V</td><td>4.2V</td><td>4.2V</td></tr>
+            <tr><td class="metric-name">Discharge Cutoff</td><td class="best">2.5V</td><td>2.8–3.0V</td><td>2.8V</td></tr>
+            <tr><td class="metric-name">OCV Slope (20–80%)</td><td class="worst">~0.5 mV/%</td><td class="best">~10–15 mV/%</td><td class="best">~12 mV/%</td></tr>
+            <tr><td class="metric-name">SOC from Voltage</td><td class="worst">Very poor</td><td class="good">Usable</td><td class="good">Good</td></tr>
+            <tr><td class="metric-name">O₂ Release Onset</td><td class="best">&gt;600°C</td><td class="fair">~200°C</td><td class="worst">~160°C</td></tr>
+            <tr><td class="metric-name">Thermal Runaway Risk</td><td class="best">Negligible</td><td class="fair">High</td><td class="worst">Very High</td></tr>
+            <tr><td class="metric-name">Volume Change (full cycle)</td><td class="best">6.8%</td><td>10–12%</td><td>10–15%</td></tr>
+            <tr><td class="metric-name">Cycle Life @ 80% DoD</td><td class="best">3000–5000</td><td>1000–2000</td><td>500–1500</td></tr>
+            <tr><td class="metric-name">Cobalt Content</td><td class="best">0%</td><td>10–20%</td><td>15%</td></tr>
+            <tr><td class="metric-name">BMS Complexity</td><td class="best">Standard</td><td class="fair">Higher</td><td class="worst">Highest</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </section><!-- LFP vs NMC vs NCA -->
+
+    <!-- ============================================================
+         DEEP DIVE: PEUKERT EFFECT — ADVANCED TREATMENT
+    ============================================================ -->
+    <section class="section">
+      <div class="section-number">Deep Dive</div>
+      <h2 class="section-title">Capacity-Rate Tradeoff — Beyond Peukert</h2>
+      <p class="section-intro">
+        The Peukert equation gives a useful first approximation of capacity vs. rate, but the
+        actual physics involves more nuance. For a BMS engineer designing a high-accuracy system,
+        understanding the full picture prevents systematic errors in runtime prediction.
+      </p>
+
+      <div class="subsection">
+        <div class="subsection-title">What Really Limits Capacity at High Current</div>
+        <p>
+          When an LFP cell is discharged at high C-rate, multiple simultaneous mechanisms
+          reduce accessible capacity:
+        </p>
+        <p>
+          <strong>Mechanism 1 — Concentration Polarization:</strong> Li⁺ ions migrate from
+          anode to cathode through the electrolyte. At high current, the supply of Li⁺ at the
+          cathode surface depletes faster than bulk diffusion can replenish it. The local Li⁺
+          concentration drops, raising the cathode overpotential. The cell terminal voltage
+          sags below the cutoff threshold while lithium remains in the electrode interior.
+        </p>
+        <p>
+          <strong>Mechanism 2 — Solid-State Diffusion Limitation:</strong> Inside each electrode
+          particle, Li⁺ must diffuse from the surface to the core. At high current, surface
+          Li concentration reaches saturation (during charge) or depletion (during discharge)
+          before the particle interior equilibrates. This creates a "utilization front" that
+          doesn't reach the core — leaving lithium stranded in inaccessible interior sites.
+        </p>
+        <p>
+          <strong>Mechanism 3 — Thermal Effect:</strong> High current generates heat (I²R).
+          Temperature rise during discharge increases ionic conductivity (reducing IR drop and
+          polarization) — a partially compensating effect. At moderate C-rates for LFP, the
+          thermal effect can nearly cancel the diffusion limitation for short bursts.
+          This is why LFP pulse power can exceed the "expected" limit from steady-state Peukert.
+        </p>
+
+        <div class="formula-block" style="text-align:left;">
+          <span class="formula-label">Modified Peukert with Temperature Correction</span>
+          <span class="formula-line">Q_actual(I, T) = Q_ref × (I_ref / I)^(k(T)-1)</span>
+          <span class="formula-line">k(T) = k₀ + α × (T_ref − T)   // k increases at low temperature</span>
+          <span class="formula-line">For LFP: k₀ ≈ 1.03 at 25°C,  α ≈ 0.003 /°C</span>
+          <span class="formula-line formula-highlight">At −10°C: k = 1.03 + 0.003×35 = 1.135  →  at 1C: Q_actual ≈ 280×(1)^0.135 = 254 Ah (−9%)</span>
+          <span class="formula-caption">Low temperature dramatically reduces accessible capacity even at moderate C-rates. A BMS must not claim runtime based on room-temperature capacity when the pack is cold.</span>
+        </div>
+      </div><!-- end Peukert deep -->
+
+      <div class="subsection">
+        <div class="subsection-title">Remaining Runtime Prediction — The BMS Calculation</div>
+        <p>
+          Given current SOC, current discharge current I, temperature T, and cell age (SOH),
+          the BMS can calculate predicted remaining runtime:
+        </p>
+        <div class="formula-block green-theme">
+          <span class="formula-label">Remaining Runtime Calculation</span>
+          <span class="formula-line">Q_remaining = SOC% × Q_nominal × SOH%     // Ah remaining at current health</span>
+          <span class="formula-line">Q_available = Q_remaining × (I_ref/I)^(k-1)  // Peukert correction for current rate</span>
+          <span class="formula-line">Q_temp_adj  = Q_available × f_temp(T)       // temperature derating factor</span>
+          <span class="formula-line formula-highlight">t_remaining = Q_temp_adj / I_current         // hours = Ah / A</span>
+          <span class="formula-caption">f_temp(T) ≈ 1.0 at 25°C, ~0.70 at −10°C, ~0.85 at 0°C, ~1.05 at 40°C. All factors combine multiplicatively. A 48V 280Ah pack at 60% SOC, 80% SOH, −10°C, 100A load: t = (0.60 × 280 × 0.80 × 0.70) / 100 = 0.94 hours.</span>
+        </div>
+        <p>
+          This calculation is updated every second in the BMS firmware, giving a continuously
+          updated "time to empty" display. The accuracy is limited by: SOC accuracy (±5–7% →
+          ±5–7% in Q_remaining), SOH accuracy (±2–5% typically), and load predictability
+          (if load changes, the runtime estimate changes immediately).
+        </p>
+      </div>
+
+    </section>
+
+    <!-- ============================================================
+         FULL OCV TABLE REFERENCE
+    ============================================================ -->
+    <section class="section">
+      <div class="section-number">Reference</div>
+      <h2 class="section-title">LFP OCV-SoC Reference Table (25°C, 0.2C, Prismatic Cell)</h2>
+      <p style="color:var(--text-secondary); margin-bottom:1.5rem; line-height:1.75;">
+        This lookup table represents a typical prismatic LFP cell OCV vs SoC at 25°C after
+        a minimum 30-minute rest. Values are discharge OCV (the lower of the two hysteresis
+        curves). Charge OCV is typically 5–15 mV higher in the plateau region. Use this table
+        as an initial design reference — characterize your specific cells for production.
+      </p>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr><th>SoC (%)</th><th>OCV (V)</th><th>dOCV/dSoC (mV/%)</th><th>Usability</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="best">100</td><td class="best">3.650</td><td>23</td><td><span class="badge badge-green">Good</span></td><td>End of charge — clear anchor point</td></tr>
+            <tr><td>98</td><td>3.550</td><td>50</td><td><span class="badge badge-green">Good</span></td><td>Steep drop entering plateau</td></tr>
+            <tr><td>95</td><td>3.430</td><td>40</td><td><span class="badge badge-blue">Usable</span></td><td>Transition to plateau</td></tr>
+            <tr><td>90</td><td>3.420</td><td>2</td><td><span class="badge badge-orange">Poor</span></td><td>Entering plateau — resolution drops</td></tr>
+            <tr><td>80</td><td>3.365</td><td>5.5</td><td><span class="badge badge-red">Unusable</span></td><td>Plateau — 55 mV over 10% SoC</td></tr>
+            <tr><td>70</td><td>3.352</td><td>1.3</td><td><span class="badge badge-red">Unusable</span></td><td>Deepest plateau — near noise floor</td></tr>
+            <tr><td>60</td><td>3.345</td><td>0.7</td><td><span class="badge badge-red">Unusable</span></td><td>2 mV measurement error = ±3% SoC</td></tr>
+            <tr><td>50</td><td>3.340</td><td>0.5</td><td><span class="badge badge-red">Unusable</span></td><td>1 mV error = ±2% SoC even if accurate</td></tr>
+            <tr><td>40</td><td>3.338</td><td>0.2</td><td><span class="badge badge-red">Unusable</span></td><td>Practically unmeasurable difference</td></tr>
+            <tr><td>30</td><td>3.332</td><td>0.6</td><td><span class="badge badge-red">Unusable</span></td><td>Still plateau</td></tr>
+            <tr><td>20</td><td>3.310</td><td>2.2</td><td><span class="badge badge-orange">Poor</span></td><td>Beginning to slope — barely usable</td></tr>
+            <tr><td>15</td><td>3.270</td><td>8</td><td><span class="badge badge-blue">Usable</span></td><td>Lower shoulder — some resolution</td></tr>
+            <tr><td>10</td><td>3.230</td><td>8</td><td><span class="badge badge-blue">Usable</span></td><td>Steeper — better estimation possible</td></tr>
+            <tr><td>5</td><td>3.100</td><td>26</td><td><span class="badge badge-green">Good</span></td><td>Rapid slope — reliable estimation</td></tr>
+            <tr><td class="worst">0</td><td class="worst">2.500</td><td>120</td><td><span class="badge badge-green">Clear</span></td><td>End of discharge — definitive</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout callout-warning" style="margin-top:1rem;">
+        <div class="callout-icon">📋</div>
+        <div class="callout-body">
+          <div class="callout-title">Using This Table in BMS Firmware</div>
+          <p>
+            The BMS OCV lookup should use linear interpolation between table entries. For production,
+            characterize your specific cell model at 0%, 25%, and the maximum operating temperature,
+            building separate tables for each temperature (at minimum: −10°C, 0°C, 25°C, 40°C).
+            Store tables in flash (ROM) — they are static and should not change during operation.
+            Apply correction: OCV_corrected = OCV_measured − (T − 25) × 0.0002 V/°C.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         KEY EQUATIONS QUICK REFERENCE
+    ============================================================ -->
+    <section class="section">
+      <div class="section-number">Quick Reference</div>
+      <h2 class="section-title">Chapter 2 Equations at a Glance</h2>
+
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(380px,1fr)); gap:1rem; margin:2rem 0;">
+
+        <div class="formula-block green-theme" style="text-align:left;">
+          <span class="formula-label">Cell Voltage (Nernst simplified)</span>
+          E_cell = E°_cathode − E°_anode ≈ 3.30 V (LFP)
+        </div>
+
+        <div class="formula-block" style="text-align:left;">
+          <span class="formula-label">Terminal Voltage Model</span>
+          V_t = OCV − I × R₀ − V_C1
+        </div>
+
+        <div class="formula-block blue-theme" style="text-align:left;">
+          <span class="formula-label">Coulomb Counting (discrete)</span>
+          SoC[n] = SoC[n-1] + η × I[n] × Δt / Q_nom
+        </div>
+
+        <div class="formula-block green-theme" style="text-align:left;">
+          <span class="formula-label">Cell Energy</span>
+          E (Wh) = Q (Ah) × V_avg (V)
+        </div>
+
+        <div class="formula-block" style="text-align:left;">
+          <span class="formula-label">Peukert (with temperature)</span>
+          Q_act = Q_ref × (I_ref/I_act)^(k(T)−1)
+        </div>
+
+        <div class="formula-block blue-theme" style="text-align:left;">
+          <span class="formula-label">SOH (capacity-based)</span>
+          SOH = Q_actual / Q_rated × 100%
+        </div>
+
+        <div class="formula-block green-theme" style="text-align:left;">
+          <span class="formula-label">SEI Growth Rate (Arrhenius)</span>
+          dδ/dt = A × exp(−E_a / R × T)
+        </div>
+
+        <div class="formula-block" style="text-align:left;">
+          <span class="formula-label">Remaining Runtime</span>
+          t_rem = SoC × Q_nom × SOH × f(T) / I
+        </div>
+
+        <div class="formula-block blue-theme" style="text-align:left;">
+          <span class="formula-label">ECM Time Constant</span>
+          τ = R₁ × C₁  (30–150 s for LFP)
+        </div>
+
+        <div class="formula-block green-theme" style="text-align:left;">
+          <span class="formula-label">Kalman Gain</span>
+          K = P⁻Hᵀ (HP⁻Hᵀ + R)⁻¹
+        </div>
+
+      </div>
+    </section>
+
     <!-- Chapter Navigation Footer -->
     <div class="chapter-footer">
       <a class="nav-btn" href="chapter1.html">← Chapter 1: The Case for Li-ion</a>
