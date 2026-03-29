@@ -1877,3 +1877,305 @@
       </div>
 
     </section><!-- end s2-6 -->
+
+    <!-- ============================================================
+         SECTION 2.7 — SOH, AGING & DEGRADATION
+    ============================================================ -->
+    <section class="section" id="s2-7">
+      <div class="section-number">Section 2.7</div>
+      <h2 class="section-title">SOH, Aging &amp; Degradation</h2>
+      <p class="section-intro">
+        A new LFP cell rated at 280Ah will not deliver 280Ah forever. Electrochemical
+        degradation processes, operating continuously both when the cell is in use and when it
+        is at rest, slowly consume its usable capacity. Understanding these processes allows
+        the BMS to track health, predict end-of-life, and optimize operation to extend
+        service life.
+      </p>
+
+      <!-- SOH Definition -->
+      <div class="subsection">
+        <div class="subsection-title">State of Health (SOH) — Definition and Measurement</div>
+        <p>
+          <strong>State of Health (SOH)</strong> is a dimensionless metric expressing how much
+          of a cell's original capacity remains usable:
+        </p>
+        <div class="formula-block green-theme">
+          <span class="formula-label">SOH Definition (Capacity-Based)</span>
+          <span class="formula-line">SOH = Q_actual / Q_rated × 100%</span>
+          <span class="formula-line">Q_actual = measured discharge capacity at 0.2C, 25°C, from 100% to cutoff voltage</span>
+          <span class="formula-caption">Industry standard end-of-life threshold: SOH = 80%. At 80% SOH, a 280Ah cell delivers 224Ah. For ESS applications, cells are often replaced at 70–75% SOH to maintain minimum runtime guarantees.</span>
+        </div>
+        <p>
+          <strong>Alternative SOH definition (impedance-based):</strong> Some BMS designs use
+          internal resistance as a proxy for SOH. As cells age, internal resistance increases
+          due to SEI growth and electrode particle fragmentation. The relationship is not linear
+          but monotonic:
+        </p>
+        <div class="formula-block">
+          <span class="formula-label">SOH (Impedance-Based Approximation)</span>
+          <span class="formula-line">SOH_R = R₀_initial / R₀_current × 100%</span>
+          <span class="formula-caption">Usable for trend monitoring but not for accurate capacity reporting. A cell may show 90% SOH_R while being at 80% capacity SOH, or vice versa, depending on the primary degradation mode.</span>
+        </div>
+
+        <div class="subsection-sub">How SOH is Measured in Practice by the BMS</div>
+        <p>
+          The most accurate method requires a <strong>reference performance test (RPT)</strong>:
+          a full charge to 100% followed by a controlled 0.2C discharge to cutoff, with precise
+          coulomb counting. This gives Q_actual directly. The BMS can trigger an RPT automatically
+          once every 30–100 cycles, typically during a low-priority period (e.g., overnight when
+          grid is available).
+        </p>
+        <p>
+          Between RPTs, the BMS tracks SOH incrementally: each full or near-full cycle, the
+          actual discharged Ah is recorded. A rolling average of the last N full-cycle capacities
+          gives a running estimate of Q_actual. This "forgetting factor" approach lets the BMS
+          track gradual capacity fade without requiring a formal RPT.
+        </p>
+      </div>
+
+      <!-- SEI Growth -->
+      <div class="subsection" id="sei-growth">
+        <div class="subsection-title">The SEI Layer — Battery Aging's Silent Protagonist</div>
+        <p>
+          The <strong>Solid Electrolyte Interphase (SEI)</strong> is the most important
+          phenomenon in lithium-ion battery aging. Understanding it in depth transforms the
+          BMS from a reactive protector to a proactive life-extender.
+        </p>
+
+        <div class="subsection-sub">What the SEI Is and Why It Forms</div>
+        <p>
+          When a lithium-ion cell is first charged, the graphite anode is held at a potential
+          of ~0.1–0.2 V vs Li/Li⁺. At this low potential, the organic electrolyte solvents
+          (ethylene carbonate, dimethyl carbonate) are thermodynamically unstable — they react
+          with the electrode surface. This reaction is:
+        </p>
+        <div class="formula-block">
+          <span class="formula-label">SEI Formation Reaction (Ethylene Carbonate Example)</span>
+          <span class="formula-line">2EC + 2e⁻ + 2Li⁺  →  Li₂CO₃ + CH₂=CH₂</span>
+          <span class="formula-line">     or    →  (CH₂OCO₂Li)₂  (lithium ethylene dicarbonate)</span>
+          <span class="formula-caption">Multiple parallel reactions occur, producing a complex mixture of inorganic (Li₂CO₃, LiF, Li₂O) and organic (lithium alkyl carbonates) compounds. The exact composition depends on electrolyte formulation, temperature, and formation protocol.</span>
+        </div>
+        <p>
+          The SEI forms primarily during the <strong>first charge cycle</strong> (the
+          "formation" step in cell manufacturing). Once formed, it creates a passivation layer
+          that electronically insulates the graphite surface from the electrolyte — stopping
+          further electrolyte decomposition. Without SEI, the electrolyte would continuously
+          react until it was consumed.
+        </p>
+        <p>
+          The SEI is both essential and costly:
+        </p>
+        <ul class="content-list check">
+          <li>Allows stable cell operation by passivating the anode</li>
+          <li>Provides a Li⁺ conducting pathway (only lithium ions can pass through)</li>
+          <li>Self-healing: if mechanically cracked, the fresh graphite surface exposed re-forms SEI</li>
+        </ul>
+        <ul class="content-list cross">
+          <li>Consumes lithium permanently — each Li consumed in SEI formation is "dead" (no longer cyclable)</li>
+          <li>Adds ionic resistance — thicker SEI = higher cell impedance = more heat generation</li>
+          <li>Continues to grow slowly throughout the cell's life</li>
+        </ul>
+
+        <div class="subsection-sub">Why SEI Continues Growing — The Aging Mechanism</div>
+        <p>
+          After the initial formation cycle, the SEI is never truly stable. It continues to grow
+          slowly throughout the cell's service life through two pathways:
+        </p>
+        <p>
+          <strong>1. Solvent diffusion through existing SEI:</strong> The SEI is not a perfect
+          barrier. Electrolyte solvent molecules slowly diffuse through the SEI layer and react
+          with the underlying lithiated graphite. The reaction is slow — the SEI provides ~10⁴–10⁵×
+          reduction in reaction rate compared to bare graphite — but it never stops. The rate
+          follows an Arrhenius dependence on temperature.
+        </p>
+        <p>
+          <strong>2. Volume change cracking:</strong> The graphite anode expands ~3.5% when
+          lithiated (charging) and contracts when delithiated (discharging). Over thousands of
+          cycles, this mechanical cycling cracks the SEI layer, exposing fresh graphite surface.
+          The fresh surface immediately forms new SEI, consuming more lithium. This is the
+          primary degradation mechanism at high cycle count.
+        </p>
+        <div class="formula-block">
+          <span class="formula-label">SEI Growth Rate — Simplified Arrhenius Model</span>
+          <span class="formula-line">dδ/dt = A × exp(−E_a / (R × T)) × (electrode stress factor)</span>
+          <span class="formula-line">δ = SEI thickness,  E_a ≈ 50–80 kJ/mol,  R = 8.314 J/mol·K</span>
+          <span class="formula-line formula-highlight">At 35°C vs 25°C: rate ≈ exp(E_a/R × (1/298 − 1/308)) ≈ 1.5× faster</span>
+          <span class="formula-caption">A 10°C temperature increase roughly doubles or more the SEI growth rate. This is why operating LFP packs at 25°C vs 45°C extends calendar life by 2–4×.</span>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">📊</div>
+          <div class="callout-body">
+            <div class="callout-title">Quantifying Lithium Inventory Loss from SEI Growth</div>
+            <p>
+              A typical LFP cell loses approximately <strong>0.01–0.05% of capacity per cycle</strong>
+              from SEI growth. For a 280Ah cell:
+              <br>• Per cycle: 280 × 0.02% = 0.056 Ah consumed as SEI growth
+              <br>• After 1000 cycles: 56 Ah consumed = 20% capacity loss (→ SOH ~80%)
+              <br>• After 5000 cycles: 280 Ah consumed — but LFP slows down significantly
+                due to lower-quality SEI cracks being fewer (more stable SEI over time)
+            </p>
+            <p>
+              The capacity fade curve for LFP is often "knee-shaped" — approximately linear in
+              the first 80% of life, then accelerating near end-of-life as the SEI becomes too
+              thick and starts conducting electrons (losing its passivation quality).
+            </p>
+          </div>
+        </div>
+      </div><!-- end sei-growth -->
+
+      <!-- Calendar Aging -->
+      <div class="subsection" id="calendar-aging">
+        <div class="subsection-title">Calendar Aging — Degradation Without Use</div>
+        <p>
+          A cell stored on a shelf at full charge is aging. Calendar aging affects every LFP
+          installation — UPS batteries that sit charged for months between discharge events are
+          subject to calendar aging that can be the dominant life-limiting factor.
+        </p>
+        <p>
+          The three primary calendar aging mechanisms:
+        </p>
+        <ul class="content-list">
+          <li><strong>SEI growth (dominant):</strong> As described above — slow but continuous
+          even without cycling. Rate approximately quadrupled for each 10°C temperature increase.</li>
+          <li><strong>Electrolyte decomposition at high SoC:</strong> Holding LFP at 100% SoC
+          (3.65V/cell) accelerates electrolyte oxidation at the cathode surface. Storage at
+          50% SoC significantly reduces this mechanism compared to 100% SoC storage.</li>
+          <li><strong>Lithium plating self-discharge:</strong> In cells that have experienced
+          lithium plating (see below), the plated lithium reacts with electrolyte, consuming
+          lithium and electrolyte — accelerating degradation in already-stressed cells.</li>
+        </ul>
+
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead><tr><th>Storage Condition</th><th>SOH after 1 Year</th><th>SOH after 5 Years</th><th>Primary Mechanism</th></tr></thead>
+            <tbody>
+              <tr><td>25°C, 100% SoC</td><td>~95%</td><td class="fair">~78%</td><td>SEI growth + high-SoC electrolyte oxidation</td></tr>
+              <tr><td>25°C, 50% SoC</td><td class="best">~98%</td><td class="best">~91%</td><td>SEI growth only (slower at lower SoC)</td></tr>
+              <tr><td>40°C, 100% SoC</td><td class="fair">~89%</td><td class="worst">~55%</td><td>Accelerated SEI + electrolyte decomposition</td></tr>
+              <tr><td>40°C, 50% SoC</td><td>~94%</td><td class="fair">~74%</td><td>Accelerated SEI growth</td></tr>
+              <tr><td>10°C, 50% SoC</td><td class="best">~99%</td><td class="best">~96%</td><td>Minimal SEI growth at low temperature</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout callout-success">
+          <div class="callout-icon">✓</div>
+          <div class="callout-body">
+            <div class="callout-title">BMS Design Optimization: Storage SoC</div>
+            <p>
+              For UPS applications where the battery may float at high SoC for extended periods,
+              the BMS should be configured to float at <strong>90–95% SoC</strong> (approximately
+              3.40–3.45 V/cell) rather than 100% (3.65V). This single optimization can extend
+              calendar life by 20–40% compared to floating at full charge, with minimal impact
+              on available backup energy. Some advanced BMS designs implement a "summer mode"
+              (lower float voltage in high-temperature months) and "winter mode" automatically.
+            </p>
+          </div>
+        </div>
+      </div><!-- end calendar-aging -->
+
+      <!-- Lithium Plating -->
+      <div class="subsection">
+        <div class="subsection-title">Lithium Plating — The Fast-Aging Failure Mode</div>
+        <p>
+          Lithium plating occurs when Li⁺ ions arrive at the anode faster than they can
+          intercalate into the graphite. Instead of inserting between graphene layers, the
+          lithium deposits on the anode surface as metallic lithium (Li⁰). The plated lithium
+          can:
+        </p>
+        <ul class="content-list cross">
+          <li>React with electrolyte, forming "dead lithium" that is electrochemically isolated —
+          permanent capacity loss and electrolyte consumption</li>
+          <li>Grow as <strong>dendrites</strong> — needle-like metallic structures that can
+          pierce the separator and cause an internal short circuit</li>
+          <li>Partially strip back (reintercalate) during rest, recovering some capacity but
+          leaving behind dead lithium and SEI debris</li>
+        </ul>
+
+        <p>
+          <strong>When lithium plating occurs:</strong> Any condition where the anode cannot
+          accept Li⁺ fast enough:
+        </p>
+        <ul class="content-list">
+          <li><strong>Low temperature:</strong> Li⁺ diffusion coefficient drops dramatically below 10°C.
+          Even gentle charging (0.1C) can cause plating below −10°C for some LFP formulations.</li>
+          <li><strong>High charge rate:</strong> At 2C+, diffusion polarization builds faster than
+          intercalation can clear it.</li>
+          <li><strong>High SoC near cutoff:</strong> As the anode fills up, remaining empty sites
+          are deep inside particles — diffusion path lengthens, effective rate decreases.</li>
+          <li><strong>Aged anode:</strong> SEI-blocked particle surfaces reduce active area,
+          effectively increasing local current density even at moderate pack-level current.</li>
+        </ul>
+
+        <div class="callout callout-danger">
+          <div class="callout-icon">❄</div>
+          <div class="callout-body">
+            <div class="callout-title">Critical BMS Rule: Prohibit Charging Below 0°C</div>
+            <p>
+              IEC 62619 and all major BMS reference designs prohibit charging LFP below 0°C.
+              The BMS must read cell temperature before any charging begins, and must continuously
+              monitor temperature during charging. If temperature drops below 0°C during a charge
+              cycle, the BMS must immediately reduce charge current to zero or apply pre-heating.
+            </p>
+            <p>
+              A single charging event at −10°C at 0.5C rate can cause measurable lithium plating
+              and accelerate capacity fade by the equivalent of 50–100 normal cycles. For a
+              5000-cycle LFP pack, a single cold-charging event represents 1–2% of total life.
+            </p>
+          </div>
+        </div>
+      </div><!-- end lithium plating -->
+
+      <!-- LFP Aging Advantage + EOL -->
+      <div class="subsection">
+        <div class="subsection-title">LFP Aging Advantage vs NMC — Real Numbers</div>
+        <p>
+          LFP's superior cycle life over NMC is not just a number — it comes from three
+          distinct structural advantages:
+        </p>
+        <ul class="content-list check">
+          <li><strong>Lower volume change (6.8% vs 10–15%):</strong> Less mechanical stress
+          per cycle means slower SEI crack rate and lower particle fragmentation rate</li>
+          <li><strong>No transition metal dissolution:</strong> In NMC, Ni and Mn ions dissolve
+          into electrolyte and deposit on the anode, catalyzing additional SEI growth. The
+          phosphate framework in LFP holds iron firmly in place at normal operating voltages.</li>
+          <li><strong>Lower operating voltage:</strong> LFP operates up to 3.65V vs NMC's 4.2V.
+          SEI growth rate increases exponentially with anode potential — even 0.5V higher anode
+          potential in NMC creates substantially faster SEI growth.</li>
+        </ul>
+
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-value" style="color:var(--lfp-color);">80%</div>
+            <span class="stat-unit">SOH at 3000–5000 cycles (LFP)</span>
+            <div class="stat-label">EOL threshold reached at 3000–5000 cycles typically</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" style="color:var(--nmc-color);">80%</div>
+            <span class="stat-unit">SOH at 800–1500 cycles (NMC)</span>
+            <div class="stat-label">3–4× fewer cycles than LFP in comparable design</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" style="color:var(--accent-gold);">70–75%</div>
+            <span class="stat-unit">SOH — practical replacement threshold</span>
+            <div class="stat-label">When minimum runtime guarantees can no longer be met</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" style="color:var(--accent-purple);">Second</div>
+            <span class="stat-unit">life at 70–80% SOH</span>
+            <div class="stat-label">EV → stationary ESS: lower voltage/power demand suits ESS</div>
+          </div>
+        </div>
+
+        <p>
+          <strong>The EOL story:</strong> Industry standard end-of-life for Li-ion cells is
+          when SOH falls below 80% — the cell retains 80% of its original capacity. For a
+          14.3 kWh home ESS at 80% SOH, that is 11.4 kWh remaining — still useful for many
+          applications. This is why "second life" batteries from EVs (discharged from EV packs
+          when they fall below 80% SOH) are increasingly deployed in stationary ESS where the
+          power and energy demands are less severe.
+        </p>
+      </div>
+
+    </section><!-- end s2-7 -->
