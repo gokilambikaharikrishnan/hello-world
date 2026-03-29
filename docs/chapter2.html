@@ -2949,6 +2949,190 @@
       </div>
     </section>
 
+    <!-- ============================================================
+         SECTION 2.8: TEMPERATURE EFFECTS ON CELL PERFORMANCE
+    ============================================================ -->
+    <section class="section" id="s2-8">
+      <div class="section-number">2.8</div>
+      <h2 class="section-title">Temperature Effects on LFP Cell Performance</h2>
+      <p class="section-intro">
+        Temperature is the single most influential external variable in Li-ion cell behaviour.
+        It affects capacity, internal resistance, safe operating rates, and calendar life simultaneously.
+        For a BMS engineer, understanding the temperature dependencies is not optional — every protection
+        threshold, every SoC correction, and every charging algorithm must be temperature-aware.
+      </p>
+
+      <div class="subsection">
+        <div class="subsection-title">The Arrhenius Foundation — Why Temperature Matters Exponentially</div>
+        <p>
+          Electrochemical reaction rates in a Li-ion cell obey the Arrhenius equation. The rate constant
+          k for any reaction scales as:
+        </p>
+        <div class="formula-block">
+          <span class="formula-label">Arrhenius Rate Law</span>
+          <span class="formula-line">k(T) = A × exp(−Eₐ / R×T)</span>
+          <span class="formula-caption">
+            A = pre-exponential factor, Eₐ = activation energy (J/mol), R = 8.314 J/mol·K, T = temperature in Kelvin.
+            For Li⁺ transport through SEI layer, Eₐ ≈ 50–80 kJ/mol. A 10°C rise doubles the reaction rate.
+          </span>
+        </div>
+        <p>
+          This exponential dependence means that both <em>beneficial</em> reactions (ion transport, faster
+          charge kinetics at high temperature) and <em>harmful</em> reactions (SEI growth, electrolyte
+          decomposition) accelerate together. The BMS cannot capture the benefit without accepting
+          accelerated aging — temperature management is always a trade-off.
+        </p>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">Low-Temperature Effects — The Lithium Plating Cliff</div>
+        <p>
+          Below 0°C, the graphite anode's ability to intercalate Li⁺ ions during charging is severely
+          impaired. The Li⁺ ions arrive at the anode surface faster than they can be absorbed into the
+          graphite lattice. When this happens, lithium deposits as metallic lithium on the anode surface —
+          a process called <strong>lithium plating</strong>.
+        </p>
+        <div class="callout callout-danger">
+          <div class="callout-icon">🧊</div>
+          <div class="callout-body">
+            <div class="callout-title">Lithium Plating — The Irreversible Failure Mode</div>
+            <p>
+              Metallic lithium deposited on the anode does not re-intercalate cleanly. Some of it
+              reacts with electrolyte to form "dead lithium" — isolated metallic islands encapsulated
+              in SEI material. This permanently reduces lithium inventory and capacity. Some deposited
+              lithium forms dendritic structures that grow across the separator and cause an internal
+              short circuit — the root cause of many Li-ion fires and failures. At −20°C,
+              <strong>charging is absolutely prohibited</strong>. At 0°C to 5°C, charging must be
+              derated to ≤0.2C. The BMS enforces these limits via a temperature-indexed charge
+              rate lookup table that overrides all other charge commands.
+            </p>
+          </div>
+        </div>
+        <p>
+          Low temperature also dramatically increases internal resistance. The ohmic resistance R₀
+          and the RC diffusion impedance R₁C₁ both increase because:
+        </p>
+        <ul style="color:var(--text-secondary); line-height:1.9; padding-left:1.5rem;">
+          <li>Ion conductivity in the electrolyte solution drops (viscosity increases)</li>
+          <li>Li⁺ desolvation energy at the electrode surface increases</li>
+          <li>SEI ionic conductance decreases</li>
+          <li>Solid-state diffusion in graphite slows (lower D_Li)</li>
+        </ul>
+        <p>
+          At −20°C, the internal resistance of an LFP cell is typically 3–4× higher than at 25°C.
+          With a 280Ah prismatic cell having R₀ = 0.4 mΩ at 25°C, at −20°C R₀ ≈ 1.5 mΩ.
+          At 100A discharge, the IR drop is 150 mV — enough to falsely trigger undervoltage
+          protection before the cell is actually depleted.
+        </p>
+        <div class="formula-block">
+          <span class="formula-label">Temperature-Corrected IR Drop</span>
+          <span class="formula-line">R₀(T) = R₀_ref × exp[Eₐ_R/R × (1/T − 1/T_ref)]</span>
+          <span class="formula-caption">
+            Eₐ_R ≈ 20–30 kJ/mol for LFP ohmic resistance. At T_ref = 298K (25°C) and T = 253K (−20°C):
+            R₀(−20°C) ≈ R₀_ref × exp[25000/8.314 × (1/253 − 1/298)] ≈ R₀_ref × 3.2
+          </span>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">High-Temperature Effects — Accelerated Aging and Thermal Runaway Risk</div>
+        <p>
+          Elevated temperature accelerates all degradation mechanisms simultaneously:
+        </p>
+        <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:1.5rem 0;">
+          <div class="stat-card">
+            <div class="stat-value" style="color:#fc8181;">2×</div>
+            <div class="stat-label">SEI Growth Rate per +10°C</div>
+            <div class="stat-desc">Arrhenius law — capacity loss accelerates exponentially</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" style="color:#fc8181;">3–5×</div>
+            <div class="stat-label">Cycle Life Reduction at 45°C vs 25°C</div>
+            <div class="stat-desc">LFP at 45°C reaches 80% SOH in ~1000 cycles instead of 3000+</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" style="color:#f6ad55;">80°C</div>
+            <div class="stat-label">SEI Decomposition Onset</div>
+            <div class="stat-desc">Above this, exothermic SEI breakdown begins — BMS must cut off at 60°C max</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" style="color:#48bb78;">270°C+</div>
+            <div class="stat-label">LFP Thermal Runaway Onset</div>
+            <div class="stat-desc">Compared to NMC at ~180°C — LFP's P–O bond stability provides the margin</div>
+          </div>
+        </div>
+        <p>
+          At high temperature, electrolyte solvents (EC, DMC) begin oxidising at the cathode surface
+          above ~60°C, generating CO₂ and CO gas. This is detectable as a rise in cell internal pressure.
+          Prismatic cells with pressure vents will vent above a threshold — the BMS should interpret
+          a sudden drop in internal resistance (gas between electrodes reduces contact) as a sign of
+          thermal stress, even before temperature sensors respond.
+        </p>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">Capacity Derating — The Temperature Lookup Table</div>
+        <p>
+          Production BMS firmware implements temperature-indexed capacity derating factors to ensure
+          SoC estimates remain accurate across the operating temperature range. The nominal capacity
+          Q_nom is measured at 25°C, 0.2C. At any other temperature, the actual usable capacity is:
+        </p>
+        <div class="formula-block">
+          <span class="formula-label">Temperature-Derated Capacity</span>
+          <span class="formula-line">Q_usable(T) = Q_nom × f_T(T)</span>
+          <span class="formula-line">
+            f_T lookup table (LFP typical):
+          </span>
+          <span class="formula-caption" style="font-family:var(--font-mono); white-space:pre;">
+T (°C)  | f_T   | Notes
+--------|-------|----------------------------------
+−20     | 0.60  | Very limited — only for discharge
+−10     | 0.78  | Emergency discharge only
+  0     | 0.88  | Limited charging permitted (≤0.2C)
+ 10     | 0.94  | Normal operations begin
+ 25     | 1.00  | Reference (rated capacity)
+ 35     | 0.99  | Negligible derating
+ 45     | 0.97  | Monitor aging rate
+ 55     | 0.93  | Alarm threshold, reduce load
+ 60     | 0.88  | Hard cutoff recommended</span>
+        </div>
+        <p>
+          This table is stored in MCU flash. At each SoC calculation cycle, the firmware reads the
+          battery temperature, interpolates f_T, and uses Q_usable(T) as the denominator in the
+          SoC formula instead of the fixed Q_nom. Without this correction, a cold pack reading
+          88% capacity would display as 88% SoC when the actual usable energy relative to rated
+          is only 88% × 88% ≈ 77%.
+        </p>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">Temperature Sensor Placement — Where to Measure</div>
+        <p>
+          Temperature measurement location matters significantly. A single sensor on the battery
+          management board will not reflect the temperature inside the cell core. The thermal
+          gradient across a 280Ah prismatic cell can be 5–15°C between the cell surface and the
+          core under high-rate discharge.
+        </p>
+        <div class="callout callout-info">
+          <div class="callout-icon">🌡</div>
+          <div class="callout-body">
+            <div class="callout-title">Best Practice: Multi-Point Temperature Monitoring</div>
+            <ul style="margin:0.5rem 0 0 1rem; line-height:1.9;">
+              <li><strong>NTC thermistor at cell surface midpoint</strong> — catches bulk thermal events</li>
+              <li><strong>NTC at terminal tab</strong> — catches tab/busbar resistance heating</li>
+              <li><strong>NTC at pack inlet and outlet</strong> — monitors airflow/cooling effectiveness</li>
+              <li><strong>PCB ambient sensor</strong> — reference for BMS IC derating</li>
+            </ul>
+            <p style="margin-top:0.5rem;">
+              The BMS uses the <em>maximum</em> temperature reading across all sensors for protection
+              decisions, and the <em>average</em> reading for SoC correction. These two values will
+              diverge during high-rate events — this divergence itself is diagnostic information.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Chapter Navigation Footer -->
     <div class="chapter-footer">
       <a class="nav-btn" href="chapter1.html">← Chapter 1: The Case for Li-ion</a>
