@@ -94,8 +94,31 @@ SIZE: ~210KB
 - 2.13 Chapter Summary — 10 principles traceability, ch3 preview
 - 2.14 Quick Reference — full formula index, LFP parameters table, OCV table
 
-## NEXT: Chapter 3
+## Chapter 3 Status
 FILE: docs/chapter3.html
+LAST_SECTION: All sections complete (3.1 through 3.5 + Summary + Reference)
+LAST_LINE: 2575
+STATUS: complete
+LINES: 2575
+SIZE: ~145KB
+
+## Chapter 3 Sections Written
+- Hero + Sidebar + CSS design system (orange thermal theme)
+- 3.1 Heat Generation — Joule (I²R), reaction, entropic heat; animated 3-source SVG; real wattage table; cell core vs surface gradient SVG
+- 3.2 Thermal Runaway — animated cascade timeline SVG; 5-stage cascade cards (Stages 0–3B); LFP vs NMC comparison; cell-to-cell propagation animated pack SVG; mitigation strategies
+- 3.3 Thermal Management — Arrhenius aging calc; passive/active cooling comparison; temperature gradient pack SVG (good vs bad); NTC placement grid (6 positions); BMS control integration
+- 3.4 Mechanical — LFP swelling physics (2% vs NMC 5%); animated swell bars; compression fixture animated SVG; vibration/shock standards table
+- 3.5 BMS Thermal Features — OT/UT charge cutoffs with physical derivation; derating curve animated SVG; dT/dt firmware code (C language); multi-sensor voting logic code
+- Summary — 10-principle traceability diagram
+- Quick Reference — thermal parameters table, formula index
+
+## Cross-chapter Links
+- chapter1.html: sidebar links to chapter2 and chapter3
+- chapter2.html: sidebar links to chapter1 and chapter3
+- chapter3.html: sidebar links to chapter1 and chapter2; footer links to ch2 and ch4
+
+## NEXT: Chapter 4
+FILE: docs/chapter4.html
 TOPIC: BMS Hardware Architecture
 - AFE ICs (TI BQ series, ADI LTC6813)
 - Current sensing: shunt vs Hall effect
