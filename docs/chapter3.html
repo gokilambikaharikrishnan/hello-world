@@ -851,3 +851,330 @@
     </div>
   </div>
 
+
+  <!-- ============================================================
+       SECTION 3.1: HEAT GENERATION IN LI-ION CELLS
+  ============================================================ -->
+  <section class="section" id="s3-1">
+    <div class="section-number">3.1</div>
+    <h2 class="section-title">Heat Generation in Li-ion Cells</h2>
+    <p class="section-intro">
+      Every Li-ion cell generates heat during charge and discharge. Understanding exactly where
+      that heat comes from — and how much — is the first step in designing thermal management
+      and setting BMS protection thresholds. There are three physically distinct heat sources,
+      and the BMS must know all three.
+    </p>
+
+    <!-- Animated heat source diagram -->
+    <div class="diagram-wrap">
+      <div class="diagram-title">🔥 Three Sources of Heat in a Li-ion Cell</div>
+      <svg viewBox="0 0 700 200" width="100%" style="max-height:200px;">
+        <!-- Joule heating block -->
+        <rect x="20" y="40" width="180" height="120" rx="10"
+          fill="rgba(255,68,68,0.08)" stroke="rgba(255,68,68,0.4)" stroke-width="1.5"/>
+        <text x="110" y="75" text-anchor="middle" fill="#ff4444" font-size="11" font-family="JetBrains Mono,monospace" font-weight="700">JOULE HEATING</text>
+        <text x="110" y="95"  text-anchor="middle" fill="#8b949e" font-size="9.5" font-family="Inter,sans-serif">Q_J = I² × R</text>
+        <text x="110" y="112" text-anchor="middle" fill="#8b949e" font-size="9.5" font-family="Inter,sans-serif">Scales with I²</text>
+        <text x="110" y="129" text-anchor="middle" fill="#8b949e" font-size="9.5" font-family="Inter,sans-serif">Dominant at high C-rate</text>
+        <text x="110" y="148" text-anchor="middle" fill="#ff8c00" font-size="10" font-family="JetBrains Mono,monospace" font-weight="600">~60-80% of total</text>
+        <!-- animated glow -->
+        <circle cx="110" cy="40" r="6" fill="#ff4444" opacity="0.8">
+          <animate attributeName="r" values="5;9;5" dur="2s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.8;0.3;0.8" dur="2s" repeatCount="indefinite"/>
+        </circle>
+
+        <!-- Arrow 1 -->
+        <line x1="200" y1="100" x2="240" y2="100" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" stroke-dasharray="4,3"/>
+        <polygon points="238,96 248,100 238,104" fill="rgba(255,255,255,0.3)"/>
+
+        <!-- Reaction heat block -->
+        <rect x="250" y="40" width="180" height="120" rx="10"
+          fill="rgba(246,173,85,0.08)" stroke="rgba(246,173,85,0.35)" stroke-width="1.5"/>
+        <text x="340" y="75" text-anchor="middle" fill="#f6ad55" font-size="11" font-family="JetBrains Mono,monospace" font-weight="700">REACTION HEAT</text>
+        <text x="340" y="95"  text-anchor="middle" fill="#8b949e" font-size="9.5" font-family="Inter,sans-serif">Q_rxn = I × (V − OCV)</text>
+        <text x="340" y="112" text-anchor="middle" fill="#8b949e" font-size="9.5" font-family="Inter,sans-serif">Exo during discharge</text>
+        <text x="340" y="129" text-anchor="middle" fill="#8b949e" font-size="9.5" font-family="Inter,sans-serif">Endo during charge</text>
+        <text x="340" y="148" text-anchor="middle" fill="#f6ad55" font-size="10" font-family="JetBrains Mono,monospace" font-weight="600">~15-30% of total</text>
+        <circle cx="340" cy="40" r="6" fill="#f6ad55" opacity="0.7">
+          <animate attributeName="r" values="5;8;5" dur="2.4s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.7;0.3;0.7" dur="2.4s" repeatCount="indefinite"/>
+        </circle>
+
+        <!-- Arrow 2 -->
+        <line x1="430" y1="100" x2="470" y2="100" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" stroke-dasharray="4,3"/>
+        <polygon points="468,96 478,100 468,104" fill="rgba(255,255,255,0.3)"/>
+
+        <!-- Entropy heat block -->
+        <rect x="480" y="40" width="200" height="120" rx="10"
+          fill="rgba(183,148,244,0.08)" stroke="rgba(183,148,244,0.3)" stroke-width="1.5"/>
+        <text x="580" y="75" text-anchor="middle" fill="#b794f4" font-size="11" font-family="JetBrains Mono,monospace" font-weight="700">ENTROPIC HEAT</text>
+        <text x="580" y="95"  text-anchor="middle" fill="#8b949e" font-size="9.5" font-family="Inter,sans-serif">Q_S = I × T × dU/dT</text>
+        <text x="580" y="112" text-anchor="middle" fill="#8b949e" font-size="9.5" font-family="Inter,sans-serif">Reversible — absorbs</text>
+        <text x="580" y="129" text-anchor="middle" fill="#8b949e" font-size="9.5" font-family="Inter,sans-serif">or releases by SoC</text>
+        <text x="580" y="148" text-anchor="middle" fill="#b794f4" font-size="10" font-family="JetBrains Mono,monospace" font-weight="600">~5-10% of total</text>
+        <circle cx="580" cy="40" r="6" fill="#b794f4" opacity="0.7">
+          <animate attributeName="r" values="5;7;5" dur="3s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.7;0.3;0.7" dur="3s" repeatCount="indefinite"/>
+        </circle>
+      </svg>
+      <p class="diagram-caption">
+        Three independent heat generation mechanisms in a Li-ion cell. Joule heating dominates at
+        high current; reaction heat depends on the difference between terminal voltage and OCV;
+        entropic heat is reversible and small but measurable.
+      </p>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Source 1: Joule Heating — The Dominant Term</div>
+      <p>
+        Joule heating is ohmic dissipation — electrical energy converted to heat as current flows
+        through the cell's internal resistance. It is the dominant heat source in almost all
+        practical conditions.
+      </p>
+      <div class="formula-block">
+        <span class="formula-label">Joule Heating Power</span>
+        <span class="formula-line">Q_J = I² × R_internal  (Watts)</span>
+        <span class="formula-line">Q_J = I² × (R₀ + R₁)  (simplified Thevenin model)</span>
+        <span class="formula-caption">
+          Critical insight: power scales with I², not I. Doubling the current quadruples the heat.
+          This is the physical reason why high-C-rate operation is thermally dangerous.
+          A 280Ah cell with R₀ = 0.4 mΩ at 1C (280A) dissipates: Q = 280² × 0.4×10⁻³ = 31.4 W.
+          At 2C (560A): Q = 560² × 0.4×10⁻³ = 125.4 W — 4× more heat, not 2×.
+        </span>
+      </div>
+      <p>
+        The I² relationship has a profound implication for pack design: <strong>parallel cells share
+        current</strong>, so a 1P pack at 2C and a 2P pack at 1C carry the same energy throughput,
+        but the 2P pack generates <em>one quarter</em> of the heat. This is why high-power applications
+        favor more parallel cells — the thermal load scales inversely with P².
+      </p>
+
+      <div class="callout callout-physics">
+        <div class="callout-icon">⚛</div>
+        <div class="callout-body">
+          <div class="callout-title">Why R_internal Is Not a Single Resistor</div>
+          <p>
+            The internal resistance seen during Joule heating is the sum of multiple contributions:
+            <br>• <strong>Electrolyte resistance</strong> — ionic conductivity of LiPF₆ in EC/DMC solvent
+            <br>• <strong>SEI resistance</strong> — Li⁺ transport through the anode passivation layer
+            <br>• <strong>Charge transfer resistance</strong> — activation energy for intercalation reactions
+            <br>• <strong>Contact resistance</strong> — cell tab, busbar, and terminal joints
+            <br>• <strong>Current collector resistance</strong> — copper foil (anode) and aluminium foil (cathode)
+            <br><br>
+            Of these, SEI resistance grows over the cell's life, and contact resistance varies with
+            temperature and assembly quality. The BMS's measured R₀ (from HPPC) is the sum of all these.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Real Numbers — Heat at Different C-Rates for LFP 280Ah</div>
+      <p>
+        Using R_internal = 0.5 mΩ (R₀ + R₁, 25°C), nominal capacity 280Ah:
+      </p>
+      <div class="comparison-table-wrap">
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>C-Rate</th>
+              <th>Current (A)</th>
+              <th>Joule Heat (W)</th>
+              <th>Heat in 1h (Wh)</th>
+              <th>Typical Use Case</th>
+              <th>BMS Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="metric-name">0.1C</td>
+              <td>28 A</td>
+              <td>0.39 W</td>
+              <td>0.39 Wh</td>
+              <td>Float charge, idle</td>
+              <td style="color:var(--accent-green);">No action needed</td>
+            </tr>
+            <tr>
+              <td class="metric-name">0.5C</td>
+              <td>140 A</td>
+              <td>9.8 W</td>
+              <td>9.8 Wh</td>
+              <td>Normal home ESS charge/discharge</td>
+              <td style="color:var(--accent-green);">Monitor temperature</td>
+            </tr>
+            <tr>
+              <td class="metric-name">1C</td>
+              <td>280 A</td>
+              <td>39.2 W</td>
+              <td>39.2 Wh</td>
+              <td>UPS discharge, peak demand</td>
+              <td style="color:var(--accent-orange);">Active monitoring, derate if >40°C</td>
+            </tr>
+            <tr>
+              <td class="metric-name">2C</td>
+              <td>560 A</td>
+              <td>156.8 W</td>
+              <td>156.8 Wh</td>
+              <td>High-power UPS switchover burst</td>
+              <td style="color:var(--accent-red);">Time-limited, OTP armed at 45°C</td>
+            </tr>
+            <tr>
+              <td class="metric-name">3C</td>
+              <td>840 A</td>
+              <td>352.8 W</td>
+              <td>352.8 Wh</td>
+              <td>Short circuit / fault condition</td>
+              <td style="color:var(--accent-red);">SCP must fire within &lt;500 μs</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Notice that at 3C, the cell generates <strong>352.8 W of heat</strong> — roughly equivalent
+        to a clothes iron. In a 16-cell series pack all dissipating simultaneously, that is 5.6 kW of
+        heat into the enclosure. Without short-circuit protection firing in microseconds, the pack
+        would reach thermal runaway onset temperatures in minutes.
+      </p>
+    </div>
+
+    <!-- Interactive heat chart -->
+    <div class="bar-chart-wrap" id="heatBarChart">
+      <div class="bar-chart-title">LFP 280Ah Cell — Heat Generation vs C-Rate</div>
+      <div class="bar-chart-tabs">
+        <button class="bar-chart-tab" onclick="showHeatMetric('joule',this)">Joule Heat (W)</button>
+        <button class="bar-chart-tab" onclick="showHeatMetric('temp_rise',this)">Temp Rise/hr (°C)</button>
+        <button class="bar-chart-tab" onclick="showHeatMetric('efficiency',this)">Round-trip Loss (%)</button>
+      </div>
+      <div id="heatChartContent"></div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Source 2: Electrochemical Reaction Heat</div>
+      <p>
+        When current flows and the terminal voltage deviates from the OCV, additional heat is generated
+        by the irreversibility of the electrochemical reactions. This is sometimes called the
+        <em>polarisation heat</em> or <em>overpotential dissipation</em>.
+      </p>
+      <div class="formula-block">
+        <span class="formula-label">Reaction Heat Power</span>
+        <span class="formula-line">Q_rxn = I × η_total  where η_total = V_terminal − OCV</span>
+        <span class="formula-line">During discharge (I &gt; 0): V_terminal &lt; OCV → η &lt; 0 → heat generated</span>
+        <span class="formula-line">During charge  (I &lt; 0): V_terminal &gt; OCV → η &gt; 0 → heat generated</span>
+        <span class="formula-caption">
+          The overpotential η includes activation overpotential (charge transfer at electrode surface)
+          and concentration overpotential (diffusion limitation). For LFP at moderate C-rates, this
+          term is approximately 10–20 mV per cell, contributing 3–6 W at 280A — small but not negligible.
+        </span>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Source 3: Entropic Heat — The Reversible Component</div>
+      <p>
+        Entropy changes during intercalation reactions produce a reversible heat exchange between
+        the cell and its environment. Unlike Joule and reaction heat (always heat out), entropic heat
+        can either heat or cool the cell depending on SoC:
+      </p>
+      <div class="formula-block">
+        <span class="formula-label">Entropic Heat</span>
+        <span class="formula-line">Q_S = I × T × (dU/dT)</span>
+        <span class="formula-caption">
+          dU/dT = entropic coefficient (∂OCV/∂T), measured in V/K. For LFP:
+          dU/dT ≈ +0.1 to −0.3 mV/K depending on SoC — changes sign across the plateau.
+          At T = 298K and I = 280A, Q_S ≈ 280 × 298 × 0.0002 ≈ 16.7 W — comparable to reaction heat.
+          Positive dU/dT means cell absorbs heat during discharge (endothermic — self-cooling).
+          Negative dU/dT means cell releases additional heat (adds to Joule heating).
+          Advanced thermal models in BMS firmware include the entropic term for precise temperature prediction.
+        </span>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-icon">🧊</div>
+        <div class="callout-body">
+          <div class="callout-title">LFP Self-Cooling Effect at Low SoC</div>
+          <p>
+            Between 20–50% SoC, LFP has a slightly positive dU/dT, meaning the cell is slightly
+            endothermic during discharge — it absorbs heat from its surroundings, slightly offsetting
+            Joule heating. This is one reason why LFP cells run cooler than NMC at moderate rates in
+            the mid-SoC range. The effect is small (a few watts) but measurable in precision calorimetry
+            and is why some BMS firmware implementations include an SoC-dependent entropic offset
+            in their thermal model.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Thermal Gradient Inside the Cell — Surface vs Core</div>
+      <p>
+        Even with perfect external heat removal, a temperature gradient exists between the cell
+        core and its surface during high-rate operation. This gradient is governed by the cell's
+        thermal conductivity and geometry.
+      </p>
+      <div class="diagram-wrap">
+        <div class="diagram-title">🌡 Temperature Profile Across a 280Ah Prismatic Cell at 1C Discharge</div>
+        <svg viewBox="0 0 600 180" width="100%" style="max-height:180px;">
+          <!-- Cell outline -->
+          <rect x="50" y="30" width="500" height="120" rx="8"
+            fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+
+          <!-- Temperature gradient fill (hotter in middle) -->
+          <defs>
+            <linearGradient id="cellTempGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stop-color="#63b3ed" stop-opacity="0.3"/>
+              <stop offset="25%"  stop-color="#48bb78" stop-opacity="0.3"/>
+              <stop offset="50%"  stop-color="#ff8c00" stop-opacity="0.4"/>
+              <stop offset="75%"  stop-color="#48bb78" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="#63b3ed" stop-opacity="0.3"/>
+            </linearGradient>
+          </defs>
+          <rect x="50" y="30" width="500" height="120" rx="8" fill="url(#cellTempGrad)"/>
+
+          <!-- Labels -->
+          <text x="300" y="80"  text-anchor="middle" fill="#ff8c00" font-size="12" font-family="JetBrains Mono,monospace" font-weight="700">CORE: T+8°C</text>
+          <text x="300" y="98"  text-anchor="middle" fill="#8b949e" font-size="9.5" font-family="Inter,sans-serif">Peak temperature zone</text>
+          <text x="300" y="116" text-anchor="middle" fill="#8b949e" font-size="9" font-family="Inter,sans-serif">λ_radial ≈ 0.5 W/m·K (LFP)</text>
+
+          <!-- Left surface label -->
+          <text x="75" y="74" text-anchor="middle" fill="#63b3ed" font-size="10" font-family="JetBrains Mono,monospace">Surface</text>
+          <text x="75" y="89" text-anchor="middle" fill="#63b3ed" font-size="11" font-family="JetBrains Mono,monospace" font-weight="700">T_ref</text>
+          <text x="75" y="104" text-anchor="middle" fill="#8b949e" font-size="9" font-family="Inter,sans-serif">NTC reads here</text>
+
+          <!-- Right surface label -->
+          <text x="525" y="74" text-anchor="middle" fill="#63b3ed" font-size="10" font-family="JetBrains Mono,monospace">Surface</text>
+          <text x="525" y="89" text-anchor="middle" fill="#63b3ed" font-size="11" font-family="JetBrains Mono,monospace" font-weight="700">T_ref</text>
+          <text x="525" y="104" text-anchor="middle" fill="#8b949e" font-size="9" font-family="Inter,sans-serif">NTC reads here</text>
+
+          <!-- Gradient arrows -->
+          <line x1="150" y1="90" x2="250" y2="90" stroke="rgba(255,255,255,0.2)" stroke-width="1" stroke-dasharray="3,3"/>
+          <line x1="450" y1="90" x2="350" y2="90" stroke="rgba(255,255,255,0.2)" stroke-width="1" stroke-dasharray="3,3"/>
+
+          <!-- Temperature scale at bottom -->
+          <rect x="50" y="158" width="500" height="8" rx="4"
+            fill="url(#cellTempGrad)" opacity="0.8"/>
+          <text x="50"  y="175" text-anchor="middle" fill="#63b3ed" font-size="8" font-family="JetBrains Mono,monospace">Surface</text>
+          <text x="300" y="175" text-anchor="middle" fill="#ff8c00" font-size="8" font-family="JetBrains Mono,monospace">Core +8°C</text>
+          <text x="550" y="175" text-anchor="middle" fill="#63b3ed" font-size="8" font-family="JetBrains Mono,monospace">Surface</text>
+        </svg>
+        <p class="diagram-caption">
+          At 1C discharge, the prismatic cell core is approximately 5–10°C hotter than its surface.
+          The NTC thermistor mounted on the surface reads T_ref while the active electrode stack runs hotter.
+          The BMS must add a thermal lag correction: T_core ≈ T_surface + ΔT_lag(I, thermal_R).
+        </p>
+      </div>
+
+      <div class="formula-block">
+        <span class="formula-label">Core-to-Surface Temperature Gradient</span>
+        <span class="formula-line">ΔT = Q_gen × R_thermal_cell</span>
+        <span class="formula-line">R_thermal ≈ thickness / (2 × λ × Area)  for a slab geometry</span>
+        <span class="formula-caption">
+          For a 280Ah prismatic cell: thickness ≈ 45mm, λ_radial ≈ 0.5 W/m·K, face area ≈ 0.04 m².
+          R_thermal ≈ 0.045 / (2 × 0.5 × 0.04) ≈ 1.125 K/W.
+          At 1C (Q_gen ≈ 39 W): ΔT ≈ 39 × 1.125 ≈ 44°C (across full thickness — actual is half this
+          for symmetric cooling → ~22°C). This is why surface NTC readings underestimate core temperature.
+          BMS over-temperature cutoff must be set conservatively to account for this lag.
+        </span>
+      </div>
+    </div>
+  </section>
+
