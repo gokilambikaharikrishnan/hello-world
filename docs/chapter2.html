@@ -2359,3 +2359,114 @@
 
   </main>
 </div>
+
+<script>
+/* ============================================================
+   SOC METHOD BAR CHART
+============================================================ */
+const socMetrics = {
+  accuracy: {
+    label: 'SOC Accuracy for LFP (% error, lower = better)',
+    unit: '% error (lower better)',
+    note: 'Mid-SoC accuracy (20–80% range). OCV poor due to flat curve. EKF best but complex.',
+    max: 25,
+    bars: [
+      { label: 'T1: OCV',      value: 20,  color: '#ed8936', display: '±20%' },
+      { label: 'T2: Coul.Cnt', value: 5,   color: '#63b3ed', display: '±5% drifts' },
+      { label: 'T3: ECM',      value: 6,   color: '#b794f4', display: '±6%' },
+      { label: 'T4: EKF',      value: 3,   color: '#48bb78', display: '±3%' },
+      { label: 'T5: Hybrid',   value: 5,   color: '#00d9ff', display: '±5%' },
+    ]
+  },
+  complexity: {
+    label: 'Implementation Complexity (1=trivial, 10=very complex)',
+    unit: '/10',
+    note: 'Development effort, tuning difficulty, risk of bugs. Hybrid is the engineering sweet spot.',
+    max: 10,
+    bars: [
+      { label: 'T1: OCV',      value: 1, color: '#48bb78', display: '1/10' },
+      { label: 'T2: Coul.Cnt', value: 2, color: '#48bb78', display: '2/10' },
+      { label: 'T3: ECM',      value: 4, color: '#63b3ed', display: '4/10' },
+      { label: 'T4: EKF',      value: 9, color: '#fc8181', display: '9/10' },
+      { label: 'T5: Hybrid',   value: 3, color: '#48bb78', display: '3/10' },
+    ]
+  },
+  drift: {
+    label: 'SOC Drift Rate (% per 24h without correction, lower = better)',
+    unit: '%/24h',
+    note: 'How much SOC error accumulates over 24h of continuous operation. OCV has no drift (static). EKF self-corrects.',
+    max: 12,
+    bars: [
+      { label: 'T1: OCV',      value: 0, color: '#48bb78', display: 'None' },
+      { label: 'T2: Coul.Cnt', value: 8, color: '#fc8181', display: '~8%/day' },
+      { label: 'T3: ECM',      value: 4, color: '#ed8936', display: '~4%/day' },
+      { label: 'T4: EKF',      value: 1, color: '#48bb78', display: '~1%/day' },
+      { label: 'T5: Hybrid',   value: 2, color: '#63b3ed', display: '~2%/day' },
+    ]
+  },
+  ram: {
+    label: 'RAM Usage per Cell (bytes, 16-cell pack)',
+    unit: 'bytes/cell',
+    note: 'Approximate RAM needed to maintain state for one cell. OCV lookup table itself is ~400 bytes (separate).',
+    max: 900,
+    bars: [
+      { label: 'T1: OCV',      value: 40,  color: '#48bb78', display: '~40B' },
+      { label: 'T2: Coul.Cnt', value: 20,  color: '#48bb78', display: '~20B' },
+      { label: 'T3: ECM',      value: 140, color: '#63b3ed', display: '~140B' },
+      { label: 'T4: EKF',      value: 880, color: '#ed8936', display: '~880B' },
+      { label: 'T5: Hybrid',   value: 80,  color: '#48bb78', display: '~80B' },
+    ]
+  }
+};
+
+function showSOCMetric(key, tabEl) {
+  document.querySelectorAll('#socBarChart .bar-chart-tab').forEach(t => t.classList.remove('active'));
+  if(tabEl) tabEl.classList.add('active');
+  const m = socMetrics[key];
+  const container = document.getElementById('socChartContent');
+  container.innerHTML = `
+    <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:1rem; font-family:var(--font-mono);">${m.note}</div>
+    ${m.bars.map(bar => `
+      <div class="bar-chart-row">
+        <div class="bar-label">${bar.label}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:0%; background:${bar.color};" data-target="${Math.max(4, (bar.value / m.max * 100)).toFixed(1)}">
+            ${bar.display}
+          </div>
+        </div>
+        <div class="bar-value">${bar.display} ${m.unit}</div>
+      </div>
+    `).join('')}
+  `;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    container.querySelectorAll('.bar-fill').forEach(b => { b.style.width = b.dataset.target + '%'; });
+  }));
+}
+
+/* ============================================================
+   SIDEBAR SCROLL OBSERVER
+============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  // Init SOC chart
+  showSOCMetric('accuracy', null);
+  document.querySelector('#socBarChart .bar-chart-tab').classList.add('active');
+
+  // Sidebar active highlight
+  const sections = document.querySelectorAll('section[id], div[id]');
+  const links = document.querySelectorAll('.sidebar-link');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if(e.isIntersecting) {
+        const id = e.target.id;
+        links.forEach(l => {
+          l.classList.remove('active');
+          if(l.getAttribute('href') === '#'+id) l.classList.add('active');
+        });
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => obs.observe(s));
+});
+</script>
+</body>
+</html>
