@@ -320,3 +320,99 @@
     .anatomy-layer-role { font-size:0.78rem; color:var(--text-muted); line-height:1.5; }
 
     @media print { .sidebar,.chapter-footer{display:none} body{background:white;color:black} .main-content{padding:1cm} }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      LFP BMS Knowledge Base
+      <span>Vol. I — Foundations</span>
+    </div>
+    <div class="sidebar-nav-label">Navigate</div>
+    <a class="sidebar-link" href="../docs/chapter1.html"><span class="dot"></span> ← Chapter 1</a>
+    <div class="sidebar-nav-label">Chapter 2</div>
+    <a class="sidebar-link active" href="#hero"><span class="dot"></span> Overview</a>
+    <a class="sidebar-link" href="#s2-1"><span class="dot"></span> 2.1 First Principles</a>
+    <a class="sidebar-link sidebar-sub" href="#electrochemical-cell"><span class="dot"></span> Electrochemical Cell</a>
+    <a class="sidebar-link sidebar-sub" href="#intercalation"><span class="dot"></span> Intercalation</a>
+    <a class="sidebar-link" href="#s2-2"><span class="dot"></span> 2.2 LFP Cell</a>
+    <a class="sidebar-link sidebar-sub" href="#lfp-reaction"><span class="dot"></span> LFP Reaction</a>
+    <a class="sidebar-link sidebar-sub" href="#voltage-window"><span class="dot"></span> Voltage Window</a>
+    <a class="sidebar-link" href="#s2-3"><span class="dot"></span> 2.3 Cell Formats</a>
+    <a class="sidebar-link" href="#s2-4"><span class="dot"></span> 2.4 Vcell Behaviour</a>
+    <a class="sidebar-link sidebar-sub" href="#flat-curve"><span class="dot"></span> The Flat Curve Problem</a>
+    <a class="sidebar-link sidebar-sub" href="#ir-drop"><span class="dot"></span> IR Drop & C-rate</a>
+    <a class="sidebar-link sidebar-sub" href="#hysteresis"><span class="dot"></span> Hysteresis</a>
+    <a class="sidebar-link" href="#s2-5"><span class="dot"></span> 2.5 Capacity & Coulombs</a>
+    <a class="sidebar-link sidebar-sub" href="#peukert"><span class="dot"></span> Peukert Effect</a>
+    <a class="sidebar-link sidebar-sub" href="#drift"><span class="dot"></span> Coulomb Counting Drift</a>
+    <a class="sidebar-link" href="#s2-6"><span class="dot"></span> 2.6 SOC Estimation</a>
+    <a class="sidebar-link sidebar-sub" href="#ocv-method"><span class="dot"></span> T1: OCV Lookup</a>
+    <a class="sidebar-link sidebar-sub" href="#cc-method"><span class="dot"></span> T2: Coulomb Counting</a>
+    <a class="sidebar-link sidebar-sub" href="#ecm-method"><span class="dot"></span> T3: ECM</a>
+    <a class="sidebar-link sidebar-sub" href="#ekf-method"><span class="dot"></span> T4: Extended Kalman</a>
+    <a class="sidebar-link sidebar-sub" href="#hybrid-method"><span class="dot"></span> T5: Hybrid (Practical)</a>
+    <a class="sidebar-link" href="#s2-7"><span class="dot"></span> 2.7 SOH & Aging</a>
+    <a class="sidebar-link sidebar-sub" href="#sei-growth"><span class="dot"></span> SEI Layer Growth</a>
+    <a class="sidebar-link sidebar-sub" href="#calendar-aging"><span class="dot"></span> Calendar Aging</a>
+    <div class="sidebar-nav-label" style="margin-top:auto; padding-top:1rem;">Progress</div>
+    <div style="padding:0 0.5rem;">
+      <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.4rem; font-family:var(--font-mono);">Chapter 2 of 7</div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" style="width:28%; background:linear-gradient(90deg, var(--accent-green), var(--accent-cyan));"></div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- HERO -->
+    <section class="hero" id="hero">
+      <div class="hero-badge">LFP BMS Knowledge Base · Chapter 2</div>
+      <div class="hero-chapter">Chapter 02 / 07</div>
+      <h1 class="hero-title">Understanding the Li-ion Cell</h1>
+      <p class="hero-subtitle">
+        Before you can protect a battery, you must understand it from the inside out.
+        This chapter descends to the atomic scale — electrons, lithium ions, crystal lattices,
+        intercalation kinetics — and climbs back up to the engineering challenges every BMS
+        designer must master: the flat OCV curve, coulomb counting drift, SOC estimation
+        algorithms, and the aging mechanisms that silently consume your battery's capacity
+        over years of operation.
+      </p>
+      <div class="hero-meta">
+        <div class="hero-meta-item">
+          <span class="hero-meta-label">Reading Time</span>
+          <span class="hero-meta-value">~55 min</span>
+        </div>
+        <div class="hero-meta-item">
+          <span class="hero-meta-label">Complexity</span>
+          <span class="hero-meta-value">Intermediate–Advanced</span>
+        </div>
+        <div class="hero-meta-item">
+          <span class="hero-meta-label">Sections</span>
+          <span class="hero-meta-value">7 major, 20+ sub</span>
+        </div>
+        <div class="hero-meta-item">
+          <span class="hero-meta-label">Pre-requisite</span>
+          <span class="hero-meta-value">Chapter 1</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- TOC -->
+    <div class="toc-card">
+      <div class="toc-title">In This Chapter</div>
+      <div class="toc-items">
+        <a class="toc-item" href="#s2-1"><span class="toc-num">2.1</span><span class="toc-text"><strong>What Makes a Battery? First Principles</strong>Electrochemical cells, electrode potentials, intercalation — where voltage really comes from</span><span class="toc-arrow">↓</span></a>
+        <a class="toc-item" href="#s2-2"><span class="toc-num">2.2</span><span class="toc-text"><strong>LFP Cell Specifically</strong>Reaction equations, voltage window physics, LFP vs NMC vs NCA deep comparison</span><span class="toc-arrow">↓</span></a>
+        <a class="toc-item" href="#s2-3"><span class="toc-num">2.3</span><span class="toc-text"><strong>Cell Formats</strong>Cylindrical, prismatic, pouch — construction, thermal behaviour, ESS tradeoffs</span><span class="toc-arrow">↓</span></a>
+        <a class="toc-item" href="#s2-4"><span class="toc-num">2.4</span><span class="toc-text"><strong>Vcell Behaviour — The Heart of BMS</strong>The flat OCV curve, IR drop, C-rate depression, hysteresis, temperature effects</span><span class="toc-arrow">↓</span></a>
+        <a class="toc-item" href="#s2-5"><span class="toc-num">2.5</span><span class="toc-text"><strong>Capacity, Energy &amp; Coulomb Concepts</strong>Ah, Wh, C-rate, Peukert effect, coulomb counting, drift accumulation</span><span class="toc-arrow">↓</span></a>
+        <a class="toc-item" href="#s2-6"><span class="toc-num">2.6</span><span class="toc-text"><strong>SOC Estimation — Five Techniques</strong>OCV lookup, coulomb counting, ECM, Extended Kalman Filter, hybrid approach</span><span class="toc-arrow">↓</span></a>
+        <a class="toc-item" href="#s2-7"><span class="toc-num">2.7</span><span class="toc-text"><strong>SOH, Aging &amp; Degradation</strong>SEI growth, calendar aging, lithium plating, capacity fade, EOL criteria</span><span class="toc-arrow">↓</span></a>
+      </div>
+    </div>
