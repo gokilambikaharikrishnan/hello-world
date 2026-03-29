@@ -138,3 +138,185 @@
     .subsection-title { font-size:1.25rem; font-weight:700; color:var(--text-primary); margin-bottom:1rem; display:flex; align-items:center; gap:0.75rem; }
     .subsection-title::before { content:''; width:4px; height:20px; border-radius:2px; background:var(--accent-green); flex-shrink:0; }
     .subsection-sub { font-size:1.05rem; font-weight:700; color:var(--text-primary); margin:1.5rem 0 0.75rem; padding-left:1rem; border-left:2px solid rgba(72,187,120,0.3); }
+
+    /* ============================================================
+       CARDS & CALLOUTS
+    ============================================================ */
+    .card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:2rem; margin-bottom:1.5rem; transition:var(--transition); }
+    .card:hover { border-color:rgba(99,179,237,0.25); box-shadow:var(--shadow-glow); transform:translateY(-2px); }
+    .card-header { display:flex; align-items:center; gap:1rem; margin-bottom:1.25rem; }
+    .card-icon { width:44px; height:44px; border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:center; font-size:1.35rem; flex-shrink:0; }
+    .card-title { font-size:1rem; font-weight:700; color:var(--text-primary); }
+    .card-subtitle { font-size:0.8rem; color:var(--text-muted); font-family:var(--font-mono); }
+
+    .callout { border-radius:var(--radius-md); padding:1.25rem 1.5rem; margin:2rem 0; display:flex; gap:1rem; border:1px solid; }
+    .callout-icon { font-size:1.4rem; flex-shrink:0; line-height:1.5; }
+    .callout-body { flex:1; }
+    .callout-title { font-weight:700; font-size:0.92rem; margin-bottom:0.4rem; }
+    .callout p { margin-bottom:0; font-size:0.9rem; }
+    .callout p + p { margin-top:0.75rem; }
+    .callout-info    { background:rgba(99,179,237,0.06);   border-color:rgba(99,179,237,0.25);   } .callout-info .callout-title    { color:var(--accent-blue); }
+    .callout-warning { background:rgba(237,137,54,0.06);   border-color:rgba(237,137,54,0.25);   } .callout-warning .callout-title { color:var(--accent-orange); }
+    .callout-danger  { background:rgba(252,129,129,0.06);  border-color:rgba(252,129,129,0.25);  } .callout-danger .callout-title  { color:var(--accent-red); }
+    .callout-success { background:rgba(72,187,120,0.06);   border-color:rgba(72,187,120,0.25);   } .callout-success .callout-title { color:var(--accent-green); }
+    .callout-physics { background:rgba(183,148,244,0.06);  border-color:rgba(183,148,244,0.25);  } .callout-physics .callout-title { color:var(--accent-purple); }
+    .callout-key     { background:rgba(246,224,94,0.05);   border-color:rgba(246,224,94,0.25);   } .callout-key .callout-title     { color:var(--accent-gold); }
+
+    /* ============================================================
+       STAT GRID
+    ============================================================ */
+    .stat-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(170px,1fr)); gap:1rem; margin:2rem 0; }
+    .stat-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); padding:1.25rem; text-align:center; transition:var(--transition); cursor:default; }
+    .stat-card:hover { border-color:rgba(99,179,237,0.3); transform:translateY(-3px); box-shadow:0 8px 30px rgba(0,0,0,0.3),0 0 20px rgba(99,179,237,0.08); }
+    .stat-value { font-size:2rem; font-weight:800; font-family:var(--font-mono); letter-spacing:-0.03em; line-height:1; margin-bottom:0.35rem; }
+    .stat-unit { font-size:0.75rem; color:var(--text-muted); font-family:var(--font-mono); display:block; margin-bottom:0.5rem; }
+    .stat-label { font-size:0.8rem; color:var(--text-muted); line-height:1.4; }
+
+    /* ============================================================
+       FORMULA BLOCKS
+    ============================================================ */
+    .formula-block { background:var(--bg-card2); border:1px solid rgba(183,148,244,0.2); border-radius:var(--radius-md); padding:1.25rem 1.75rem; margin:1.5rem 0; font-family:var(--font-mono); font-size:1.02rem; color:var(--accent-purple); text-align:center; letter-spacing:0.03em; }
+    .formula-block .formula-label { font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.1em; display:block; margin-bottom:0.5rem; font-family:var(--font-sans); }
+    .formula-block .formula-caption { font-size:0.78rem; color:var(--text-muted); font-family:var(--font-sans); margin-top:0.6rem; display:block; line-height:1.5; }
+    .formula-block .formula-line { display:block; margin-bottom:0.35rem; }
+    .formula-highlight { color:var(--accent-cyan); font-weight:700; }
+    .formula-block.green-theme { border-color:rgba(72,187,120,0.25); color:var(--accent-green); }
+    .formula-block.blue-theme { border-color:rgba(99,179,237,0.25); color:var(--accent-blue); }
+
+    /* ============================================================
+       CONTENT LISTS
+    ============================================================ */
+    .content-list { list-style:none; padding:0; margin:1.25rem 0 1.5rem; }
+    .content-list li { padding:0.5rem 0 0.5rem 1.75rem; position:relative; color:var(--text-secondary); font-size:0.93rem; border-bottom:1px solid rgba(255,255,255,0.03); }
+    .content-list li:last-child { border-bottom:none; }
+    .content-list li::before { content:'▸'; position:absolute; left:0; color:var(--accent-blue); font-size:0.8rem; top:0.6rem; }
+    .content-list.check li::before { content:'✓'; color:var(--accent-green); }
+    .content-list.cross li::before { content:'✗'; color:var(--accent-red); }
+    .content-list.num  li { counter-increment:list; }
+    .content-list.num  li::before { content:counter(list)'.'; color:var(--accent-cyan); font-family:var(--font-mono); font-size:0.8rem; }
+    .content-list.num { counter-reset:list; }
+
+    /* ============================================================
+       TABLES
+    ============================================================ */
+    .table-wrapper { overflow-x:auto; border-radius:var(--radius-lg); border:1px solid var(--border); margin:2rem 0; }
+    .data-table { width:100%; border-collapse:collapse; font-size:0.875rem; }
+    .data-table thead { background:var(--bg-card2); }
+    .data-table th { padding:1rem 1.25rem; text-align:left; font-weight:700; font-size:0.78rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-muted); white-space:nowrap; border-bottom:1px solid var(--border); }
+    .data-table td { padding:0.9rem 1.25rem; border-bottom:1px solid rgba(255,255,255,0.04); color:var(--text-secondary); vertical-align:top; }
+    .data-table tbody tr:last-child td { border-bottom:none; }
+    .data-table tbody tr:hover td { background:rgba(255,255,255,0.02); }
+    .data-table .metric-name { font-weight:600; color:var(--text-primary); font-size:0.85rem; }
+    .data-table .metric-sub { display:block; font-size:0.72rem; font-family:var(--font-mono); color:var(--text-muted); margin-top:2px; }
+    .best  { color:var(--accent-green); font-weight:700; }
+    .worst { color:var(--accent-red); font-weight:700; }
+    .good  { color:var(--accent-blue); }
+    .fair  { color:var(--accent-orange); }
+    .badge { display:inline-block; padding:2px 8px; border-radius:100px; font-size:0.72rem; font-weight:600; font-family:var(--font-mono); white-space:nowrap; }
+    .badge-green  { background:rgba(72,187,120,0.15);  color:var(--lfp-color); }
+    .badge-blue   { background:rgba(99,179,237,0.15);  color:var(--nmc-color); }
+    .badge-gray   { background:rgba(148,163,184,0.15); color:var(--lead-color); }
+    .badge-orange { background:rgba(237,137,54,0.15);  color:var(--nicad-color); }
+    .badge-purple { background:rgba(183,148,244,0.15); color:var(--nimh-color); }
+    .badge-red    { background:rgba(252,129,129,0.15); color:var(--nca-color); }
+    .badge-gold   { background:rgba(246,224,94,0.15);  color:var(--accent-gold); }
+    .badge-teal   { background:rgba(56,178,172,0.15);  color:var(--accent-teal); }
+
+    /* ============================================================
+       DIAGRAM WRAPPERS
+    ============================================================ */
+    .diagram-box { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:2rem; margin:2rem 0; position:relative; overflow:hidden; text-align:center; }
+    .diagram-box::before { content:''; position:absolute; inset:0; background:radial-gradient(circle at 50% 50%, rgba(72,187,120,0.03) 0%, transparent 70%); pointer-events:none; }
+    .diagram-caption { font-size:0.8rem; color:var(--text-muted); margin-top:1rem; line-height:1.5; }
+
+    /* ============================================================
+       INSIGHT / QUOTE
+    ============================================================ */
+    .insight-box { background:linear-gradient(135deg,rgba(72,187,120,0.05) 0%,rgba(0,217,255,0.02) 100%); border:1px solid rgba(72,187,120,0.2); border-radius:var(--radius-lg); padding:1.75rem 2rem; margin:2rem 0; position:relative; overflow:hidden; }
+    .insight-box::before { content:'"'; position:absolute; top:-0.5rem; left:1rem; font-size:6rem; color:rgba(72,187,120,0.08); font-family:Georgia,serif; line-height:1; pointer-events:none; }
+    .insight-box p { color:var(--text-primary); font-size:1.02rem; line-height:1.7; margin-bottom:0; font-style:italic; }
+    .insight-box cite { display:block; font-size:0.8rem; color:var(--text-muted); margin-top:0.75rem; font-style:normal; }
+
+    /* ============================================================
+       TRACEABILITY
+    ============================================================ */
+    .trace-container { margin:2.5rem 0; }
+    .trace-row { display:grid; grid-template-columns:1fr 60px 1fr; align-items:center; gap:0.5rem; margin-bottom:0.75rem; }
+    .trace-left { background:rgba(252,129,129,0.07); border:1px solid rgba(252,129,129,0.2); border-radius:var(--radius-md); padding:0.85rem 1rem; }
+    .trace-left .t-title { font-weight:700; font-size:0.88rem; color:var(--accent-red); margin-bottom:0.25rem; }
+    .trace-left .t-body  { font-size:0.8rem; color:var(--text-secondary); line-height:1.5; }
+    .trace-arrow { text-align:center; color:var(--text-muted); font-size:1.2rem; }
+    .trace-right { background:rgba(72,187,120,0.07); border:1px solid rgba(72,187,120,0.2); border-radius:var(--radius-md); padding:0.85rem 1rem; }
+    .trace-right .t-title { font-weight:700; font-size:0.88rem; color:var(--accent-green); margin-bottom:0.25rem; }
+    .trace-right .t-body  { font-size:0.8rem; color:var(--text-secondary); line-height:1.5; }
+
+    /* ============================================================
+       TOC & NAV
+    ============================================================ */
+    .toc-card { background:var(--bg-card2); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.75rem 2rem; margin-bottom:4rem; }
+    .toc-title { font-size:0.78rem; font-family:var(--font-mono); letter-spacing:0.12em; text-transform:uppercase; color:var(--text-muted); margin-bottom:1.25rem; }
+    .toc-items { display:flex; flex-direction:column; gap:0.5rem; }
+    .toc-item { display:flex; align-items:center; gap:0.85rem; padding:0.6rem 0.85rem; border-radius:var(--radius-sm); cursor:pointer; transition:var(--transition); text-decoration:none; }
+    .toc-item:hover { background:rgba(99,179,237,0.06); }
+    .toc-num { font-family:var(--font-mono); font-size:0.75rem; color:var(--accent-cyan); min-width:32px; }
+    .toc-text { font-size:0.88rem; color:var(--text-secondary); flex:1; }
+    .toc-text strong { color:var(--text-primary); display:block; font-size:0.9rem; }
+    .toc-arrow { color:var(--text-muted); font-size:0.9rem; }
+
+    /* ============================================================
+       PROGRESS BAR
+    ============================================================ */
+    .progress-bar-wrap { background:rgba(255,255,255,0.05); border-radius:100px; height:6px; overflow:hidden; margin-top:0.5rem; }
+    .progress-bar-fill { height:100%; border-radius:100px; transition:width 1s ease; }
+
+    /* ============================================================
+       BAR CHART (interactive)
+    ============================================================ */
+    .bar-chart-wrap { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.75rem 2rem; margin:2rem 0; }
+    .bar-chart-title { font-size:0.9rem; font-weight:700; color:var(--text-primary); margin-bottom:0.35rem; }
+    .bar-chart-subtitle { font-size:0.78rem; color:var(--text-muted); margin-bottom:1.5rem; font-family:var(--font-mono); }
+    .bar-chart-tabs { display:flex; gap:0.5rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+    .bar-chart-tab { padding:0.3rem 0.85rem; border-radius:100px; font-size:0.78rem; font-family:var(--font-mono); border:1px solid var(--border); color:var(--text-muted); cursor:pointer; transition:var(--transition); background:transparent; }
+    .bar-chart-tab:hover { border-color:rgba(99,179,237,0.3); color:var(--accent-blue); }
+    .bar-chart-tab.active { background:rgba(99,179,237,0.12); border-color:rgba(99,179,237,0.35); color:var(--accent-blue); }
+    .bar-chart-row { display:flex; align-items:center; gap:1rem; margin-bottom:0.85rem; }
+    .bar-label { width:90px; font-size:0.82rem; font-weight:600; color:var(--text-secondary); text-align:right; flex-shrink:0; }
+    .bar-track { flex:1; background:rgba(255,255,255,0.05); border-radius:100px; height:22px; overflow:hidden; }
+    .bar-fill { height:100%; border-radius:100px; display:flex; align-items:center; padding-left:0.5rem; font-size:0.72rem; font-family:var(--font-mono); color:rgba(0,0,0,0.75); font-weight:700; transition:width 1s cubic-bezier(0.4,0,0.2,1); white-space:nowrap; }
+    .bar-value { width:80px; font-size:0.82rem; font-family:var(--font-mono); color:var(--text-muted); flex-shrink:0; }
+
+    /* ============================================================
+       CHAPTER NAV FOOTER
+    ============================================================ */
+    .chapter-footer { margin-top:6rem; padding-top:3rem; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:2rem; }
+    .nav-btn { display:inline-flex; align-items:center; gap:0.75rem; padding:0.85rem 1.5rem; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); color:var(--text-secondary); font-weight:600; font-size:0.9rem; transition:var(--transition); cursor:pointer; text-decoration:none; }
+    .nav-btn:hover { border-color:rgba(99,179,237,0.35); color:var(--accent-blue); background:rgba(99,179,237,0.05); transform:translateY(-2px); }
+    .nav-btn-next { background:rgba(99,179,237,0.08); border-color:rgba(99,179,237,0.25); color:var(--accent-blue); }
+    .nav-btn-next:hover { background:rgba(99,179,237,0.15); box-shadow:0 4px 20px rgba(99,179,237,0.2); }
+
+    /* ============================================================
+       SOC TECHNIQUE COMPARISON CARD
+    ============================================================ */
+    .technique-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); margin-bottom:1.5rem; overflow:hidden; transition:var(--transition); }
+    .technique-card:hover { border-color:rgba(99,179,237,0.25); box-shadow:var(--shadow-glow); }
+    .technique-header { display:flex; align-items:center; gap:1rem; padding:1.25rem 1.5rem; border-bottom:1px solid var(--border); background:var(--bg-card2); }
+    .technique-num { font-family:var(--font-mono); font-size:1.2rem; font-weight:800; color:var(--accent-cyan); min-width:2rem; }
+    .technique-name { font-size:1rem; font-weight:700; color:var(--text-primary); flex:1; }
+    .technique-accuracy { font-family:var(--font-mono); font-size:0.78rem; padding:0.2rem 0.6rem; border-radius:100px; }
+    .technique-body { padding:1.5rem; }
+    .technique-meta { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:0.75rem; margin-top:1rem; }
+    .technique-meta-item { background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:var(--radius-sm); padding:0.6rem 0.85rem; }
+    .technique-meta-label { font-size:0.7rem; font-family:var(--font-mono); color:var(--text-muted); text-transform:uppercase; letter-spacing:0.08em; display:block; margin-bottom:0.25rem; }
+    .technique-meta-value { font-size:0.88rem; font-weight:600; color:var(--text-primary); }
+
+    /* ============================================================
+       CELL ANATOMY DIAGRAM
+    ============================================================ */
+    .anatomy-row { display:flex; align-items:stretch; gap:0; margin:2rem 0; border-radius:var(--radius-lg); overflow:hidden; border:1px solid var(--border); }
+    .anatomy-layer { flex:1; padding:1.5rem 1rem; text-align:center; border-right:1px solid var(--border); }
+    .anatomy-layer:last-child { border-right:none; }
+    .anatomy-layer-name { font-weight:700; font-size:0.9rem; color:var(--text-primary); margin-bottom:0.5rem; }
+    .anatomy-layer-formula { font-family:var(--font-mono); font-size:0.82rem; color:var(--accent-cyan); margin-bottom:0.5rem; }
+    .anatomy-layer-role { font-size:0.78rem; color:var(--text-muted); line-height:1.5; }
+
+    @media print { .sidebar,.chapter-footer{display:none} body{background:white;color:black} .main-content{padding:1cm} }
