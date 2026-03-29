@@ -60,14 +60,50 @@ SIZE: ~165KB
 - Formula display blocks
 - IntersectionObserver for sidebar
 
-## NEXT: Chapter 2
+## Chapter 2 Status
 FILE: docs/chapter2.html
-TOPIC: SoC Estimation on a Flat OCV Curve
-- Coulomb counting math
-- Error accumulation problem
-- Extended Kalman Filter
-- OCV-SoC lookup tables for LFP
-- Hybrid algorithms
+LAST_SECTION: All sections complete (2.1 through 2.14 + Summary + Reference)
+LAST_LINE: 4004
+STATUS: complete
+LINES: 4004
+SIZE: ~210KB
+
+## Chapter 2 Sections Written
+- 2.1 First Principles — Li-ion intercalation, half-reactions, Nernst equation
+- 2.2 LFP Cell Specifically — olivine, two-phase mechanism, flat OCV explanation
+- 2.3 Cell Formats — cylindrical, prismatic, pouch; 280Ah standard
+- 2.4 Vcell Behaviour — flat OCV curve deep dive, IR drop, Thevenin ECM
+- 2.5 Capacity and Coulombs — Peukert, temperature correction, runtime prediction
+- 2.6 SoC Estimation — 5 techniques: OCV lookup, coulomb counting, ECM, EKF, T5 hybrid
+- 2.7 SOH and Aging — SEI growth, calendar aging, lithium plating, capacity fade SVG
+- ECM Parameter Identification — HPPC test, R₀/R₁/C₁ extraction
+- Interactive SOC bar chart (accuracy, complexity, drift, RAM metrics)
+- LFP/NMC/NCA deep comparison table
+- Peukert deep dive with temperature-corrected formula
+- OCV-SoC reference table (15 points)
+- Key equations reference grid (10 formulas)
+- Capacity fade SVG (LFP vs NMC vs NCA)
+- Multi-cell pack topology (series/parallel, weakest cell)
+- Cell balancing algorithms (passive timing, energy analysis)
+- Standards reference table (IEC 62619, 62620, 62933, IEEE 1725, SAE J1772)
+- 2.8 Temperature Effects — Arrhenius, lithium plating, derating table
+- 2.9 Worked Numerical Examples — runtime, drift budget, balancing energy
+- 2.10 BMS Commissioning — pre-power checklist, protection verification, RPT
+- 2.11 SOH Trending and SoP — fade model, remaining life, resistance growth
+- 2.12 Second-Life Batteries — parameter updates, cell sorting, EIS screening
+- 2.13 Chapter Summary — 10 principles traceability, ch3 preview
+- 2.14 Quick Reference — full formula index, LFP parameters table, OCV table
+
+## NEXT: Chapter 3
+FILE: docs/chapter3.html
+TOPIC: BMS Hardware Architecture
+- AFE ICs (TI BQ series, ADI LTC6813)
+- Current sensing: shunt vs Hall effect
+- Protection FET topology (back-to-back MOSFETs)
+- Gate driver circuits
+- Communication interfaces: CAN, SMBus, RS485
+- MCU selection and firmware architecture
+- PCB layout considerations for high-current paths
 
 ## Resume Instructions
 If user says "continue", "resume", "go", "limit reset", "start where u left":
