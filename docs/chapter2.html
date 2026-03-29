@@ -594,3 +594,137 @@
       </div><!-- end intercalation -->
 
     </section><!-- end s2-1 -->
+
+    <!-- ============================================================
+         SECTION 2.2 — LFP CELL SPECIFICALLY
+    ============================================================ -->
+    <section class="section" id="s2-2">
+      <div class="section-number">Section 2.2</div>
+      <h2 class="section-title">LFP Cell Specifically</h2>
+      <p class="section-intro">
+        Chapter 1 made the case for LFP over other chemistries. Now we go deeper into the LFP cell
+        itself — the exact reaction equations, the physical meaning of its voltage limits, and a
+        precise electrochemical comparison against the competing chemistries every BMS engineer
+        should understand.
+      </p>
+
+      <div class="subsection" id="lfp-reaction">
+        <div class="subsection-title">The LFP Cathode Reaction — Step by Step</div>
+        <p>
+          Lithium iron phosphate adopts the olivine crystal structure (orthorhombic, space group
+          <em>Pnma</em>). The iron atoms occupy octahedral sites coordinated by six oxygen atoms.
+          The phosphorus atoms sit in tetrahedral PO₄ groups. Lithium ions occupy one-dimensional
+          channels (M1 sites) that run parallel to the b-axis — the highway along which Li⁺ ions
+          must travel during intercalation.
+        </p>
+        <p>
+          Unlike NMC and NCA, where lithium extraction creates a continuous solid-solution
+          (the Li content varies smoothly with SoC), LFP follows a <strong>two-phase
+          mechanism</strong>. There are only two stable phases:
+        </p>
+        <ul class="content-list">
+          <li><strong>LiFePO₄</strong> — the fully lithiated phase (discharged cathode). Iron is
+          in the +2 oxidation state (Fe²⁺). Unit cell volume: ~291 ų.</li>
+          <li><strong>FePO₄</strong> — the delithiated phase (charged cathode). Iron is in the
+          +3 oxidation state (Fe³⁺). Unit cell volume: ~272 ų.</li>
+        </ul>
+        <p>
+          During charging, a phase boundary moves through each LFP particle from the outside
+          inward, converting LiFePO₄ → FePO₄. During discharge, the boundary moves outward,
+          converting FePO₄ → LiFePO₄. While both phases coexist in a particle, the
+          thermodynamic equilibrium potential is fixed at ~3.45V vs Li/Li⁺ — the potential
+          of the FePO₄/LiFePO₄ phase boundary. This is what causes the flat OCV plateau.
+        </p>
+        <div class="formula-block green-theme">
+          <span class="formula-label">LFP Cathode Half-Reaction</span>
+          <span class="formula-line">Discharge: FePO₄ + Li⁺ + e⁻  →  LiFePO₄  (Fe³⁺ → Fe²⁺)</span>
+          <span class="formula-line">Charge:    LiFePO₄  →  FePO₄ + Li⁺ + e⁻  (Fe²⁺ → Fe³⁺)</span>
+          <span class="formula-caption">The Fe³⁺/Fe²⁺ redox couple has E° ≈ +3.45V vs Li/Li⁺. This determines the plateau voltage. No oxygen atoms are ever released — PO₄ holds them covalently at 544 kJ/mol.</span>
+        </div>
+        <div class="formula-block" style="text-align:left;">
+          <span class="formula-label">LFP Full Cell Reaction (with graphite anode)</span>
+          <span class="formula-line">Charge:    LiFePO₄ + C₆  →  FePO₄ + LiC₆</span>
+          <span class="formula-line">Discharge: FePO₄ + LiC₆  →  LiFePO₄ + C₆</span>
+          <span class="formula-caption">Volume change during full cycling: ~6.8% for the LFP cathode. Compare to NMC (high-Ni): 10–15%. Lower volume change = less mechanical stress = more cycles.</span>
+        </div>
+      </div><!-- end lfp-reaction -->
+
+      <div class="subsection" id="voltage-window">
+        <div class="subsection-title">LFP Voltage Window — Physical Meaning of 2.5V to 3.65V</div>
+        <p>
+          The BMS enforces a voltage window of <strong>2.5 V – 3.65 V per cell</strong>.
+          These are not arbitrary safety margins. Each limit corresponds to a specific
+          physical event in the cell.
+        </p>
+
+        <div class="callout callout-danger">
+          <div class="callout-icon">⬆</div>
+          <div class="callout-body">
+            <div class="callout-title">Upper Limit: 3.65 V — Why This Number</div>
+            <p>
+              At 3.65V, the LFP cathode is fully delithiated (all sites converted to FePO₄).
+              There are no more empty Li⁺ slots in the cathode crystal. Continued charging cannot
+              do useful electrochemistry. Instead:
+            </p>
+            <p>
+              Above ~3.75V: Electrolyte begins oxidizing at the cathode surface, forming a
+              growing CEI (cathode-electrolyte interphase) layer. This permanently increases
+              impedance. Above ~4.0V: Iron dissolution begins — Fe³⁺ ions dissolve from the
+              FePO₄ lattice into the electrolyte, migrate to the anode, and deposit as iron
+              metal dendrites that can puncture the separator. Above ~4.2V on the anode side:
+              lithium plating occurs — metallic lithium dendrites form.
+            </p>
+            <p>
+              The 3.65V cutoff provides ~100mV margin above the plateau, balancing full capacity
+              utilization against electrolyte stability. Set it to 3.75V and you gain a few
+              percent capacity but accelerate aging by 2–5× in the cells that chronically reach it.
+            </p>
+          </div>
+        </div>
+
+        <div class="callout callout-warning">
+          <div class="callout-icon">⬇</div>
+          <div class="callout-body">
+            <div class="callout-title">Lower Limit: 2.5 V — Copper Dissolution Threshold</div>
+            <p>
+              The anode copper current collector is electrochemically stable as long as the
+              anode potential remains low. As the cell discharges deeply, the anode potential
+              rises toward the standard potential of the Cu/Cu²⁺ couple (+0.34V vs SHE,
+              or approximately +3.4V vs Li/Li⁺ at the anode). At cell terminal voltages below
+              ~2.5V, the copper collector begins to oxidize — Cu → Cu²⁺ + 2e⁻.
+            </p>
+            <p>
+              Cu²⁺ ions dissolve into the electrolyte, migrate to the cathode, and deposit
+              on the LFP surface, blocking Li⁺ intercalation sites. They also deposit on
+              the separator, potentially nucleating dendritic shorts. Even a single 0V event
+              can deposit enough copper to measurably increase impedance and reduce capacity.
+              Repeated deep discharges below 2.5V are cumulative and irreversible.
+            </p>
+          </div>
+        </div>
+
+        <p>
+          <strong>Nominal voltage (3.2–3.3V) vs. operating range:</strong> The nominal voltage
+          is the average voltage during a standard 0.2C discharge at 25°C — this is the voltage
+          you use for energy calculations (Wh = Ah × V_nominal). It is not the open-circuit
+          voltage at any particular SoC; it is the time-averaged value across the discharge curve.
+          For LFP, the flat plateau means this average closely matches the plateau potential.
+        </p>
+
+        <p>
+          <strong>LFP vs. NMC — why nominal voltage differs:</strong> NMC uses a layered oxide
+          cathode (LiNiₓMnᵧCoᵤO₂). The Ni²⁺/Ni⁴⁺ and Co²⁺/Co³⁺ redox couples operate at
+          higher potential than Fe²⁺/Fe³⁺. This gives NMC a nominal voltage of ~3.6–3.7V vs
+          LFP's 3.2V — a 12–15% higher energy per cell. Higher voltage is why NMC achieves
+          higher energy density despite similar cathode mass.
+        </p>
+
+        <div class="stat-grid">
+          <div class="stat-card"><div class="stat-value" style="color:var(--lfp-color);">3.2V</div><span class="stat-unit">LFP nominal</span><div class="stat-label">Fe²⁺/Fe³⁺ redox couple pins plateau</div></div>
+          <div class="stat-card"><div class="stat-value" style="color:var(--nmc-color);">3.7V</div><span class="stat-unit">NMC nominal</span><div class="stat-label">Ni and Co couples at higher potential</div></div>
+          <div class="stat-card"><div class="stat-value" style="color:var(--accent-orange);">1.15V</div><span class="stat-unit">LFP total window</span><div class="stat-label">2.5V to 3.65V usable range</div></div>
+          <div class="stat-card"><div class="stat-value" style="color:var(--accent-red);">6.8%</div><span class="stat-unit">volume change</span><div class="stat-label">LFP on full cycle vs NMC 10–15%</div></div>
+        </div>
+      </div><!-- end voltage-window -->
+
+    </section><!-- end s2-2 -->
