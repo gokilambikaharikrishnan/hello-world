@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 3: Thermal & Mechanical | LFP BMS Knowledge Base</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       DESIGN TOKENS
+    ============================================================ */
+    :root {
+      --bg-deep:      #07090f;
+      --bg-card:      #0d1117;
+      --bg-elevated:  #161b22;
+      --bg-hover:     #1c2330;
+      --border:       rgba(255,255,255,0.07);
+      --border-med:   rgba(255,255,255,0.12);
+
+      --text-primary:  #e6edf3;
+      --text-secondary:#8b949e;
+      --text-muted:    #484f58;
+
+      --accent-green:  #48bb78;
+      --accent-blue:   #63b3ed;
+      --accent-orange: #f6ad55;
+      --accent-red:    #fc8181;
+      --accent-purple: #b794f4;
+      --accent-cyan:   #00d9ff;
+      --accent-yellow: #f6e05e;
+
+      --thermal-red:   #ff4444;
+      --thermal-orange:#ff8c00;
+      --thermal-yellow:#ffd700;
+      --thermal-green: #48bb78;
+      --thermal-blue:  #63b3ed;
+
+      --font-sans: 'Inter', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      --sidebar-w: 260px;
+      --radius:    8px;
+      --radius-lg: 14px;
+    }
+
+    /* ============================================================
+       RESET & BASE
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 16px;
+      line-height: 1.7;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ============================================================
+       SIDEBAR
+    ============================================================ */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-width: var(--sidebar-w);
+      background: var(--bg-card);
+      border-right: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 1.5rem 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+      flex-shrink: 0;
+    }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-track { background: transparent; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--border-med); border-radius: 2px; }
+
+    .sidebar-logo {
+      padding: 0 1.25rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1rem;
+    }
+    .sidebar-logo-text {
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      color: var(--accent-orange);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .sidebar-title {
+      font-size: 0.85rem;
+      color: var(--text-primary);
+      font-weight: 600;
+      margin-top: 0.25rem;
+      line-height: 1.3;
+    }
+    .sidebar-nav-label {
+      font-size: 0.65rem;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      padding: 0.75rem 1.25rem 0.3rem;
+    }
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.45rem 1.25rem;
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: all 0.18s;
+      border-left: 2px solid transparent;
+    }
+    .sidebar-link:hover { color: var(--text-primary); background: var(--bg-elevated); }
+    .sidebar-link.active {
+      color: var(--accent-orange);
+      border-left-color: var(--accent-orange);
+      background: rgba(246,173,85,0.06);
+    }
+    .dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0.5;
+      flex-shrink: 0;
+    }
+    .sidebar-link.active .dot { opacity: 1; }
+
+    /* ============================================================
+       MAIN CONTENT
+    ============================================================ */
+    .main { flex: 1; min-width: 0; padding: 3rem 4rem; max-width: 1000px; }
+    @media (max-width: 900px) { .main { padding: 2rem 1.5rem; } }
+
+    /* ============================================================
+       HERO
+    ============================================================ */
+    .hero {
+      margin-bottom: 4rem;
+      padding: 3rem;
+      background: linear-gradient(135deg, rgba(255,68,68,0.08) 0%, rgba(255,140,0,0.06) 40%, rgba(7,9,15,0) 100%);
+      border: 1px solid rgba(255,68,68,0.15);
+      border-radius: var(--radius-lg);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 220px; height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,140,0,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-chapter-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--accent-orange);
+      background: rgba(246,173,85,0.1);
+      border: 1px solid rgba(246,173,85,0.25);
+      padding: 0.3rem 0.75rem;
+      border-radius: 20px;
+      margin-bottom: 1.25rem;
+    }
+    .hero-title {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 0.75rem;
+      background: linear-gradient(135deg, #ff6b6b 0%, #ffa94d 60%, #e6edf3 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-subtitle {
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      max-width: 600px;
+      line-height: 1.7;
+      margin-bottom: 1.5rem;
+    }
+    .hero-stats {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+    .hero-stat { text-align: center; }
+    .hero-stat-val {
+      font-size: 1.5rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: var(--accent-orange);
+    }
+    .hero-stat-lbl {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* ============================================================
+       SECTION STRUCTURE
+    ============================================================ */
+    .section {
+      margin-bottom: 5rem;
+      padding-bottom: 3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .section:last-of-type { border-bottom: none; }
+    .section-number {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--accent-orange);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+    .section-title {
+      font-size: 1.75rem;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+    }
+    .section-intro {
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      line-height: 1.8;
+      max-width: 750px;
+      margin-bottom: 2rem;
+    }
+    .subsection { margin-bottom: 2.5rem; }
+    .subsection-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--accent-orange);
+      margin-bottom: 1rem;
+      padding-left: 0.75rem;
+      border-left: 3px solid var(--accent-orange);
+    }
+
+    /* ============================================================
+       CALLOUT BOXES
+    ============================================================ */
+    .callout {
+      display: flex;
+      gap: 1rem;
+      padding: 1.25rem 1.5rem;
+      border-radius: var(--radius);
+      margin: 1.5rem 0;
+      border: 1px solid;
+    }
+    .callout-icon { font-size: 1.3rem; flex-shrink: 0; line-height: 1.4; }
+    .callout-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 0.4rem; }
+    .callout-body p { font-size: 0.88rem; line-height: 1.75; margin-top: 0.5rem; color: var(--text-secondary); }
+    .callout-body ul { font-size: 0.88rem; line-height: 1.9; color: var(--text-secondary); }
+    .callout-info    { background: rgba(99,179,237,0.06); border-color: rgba(99,179,237,0.25); }
+    .callout-info    .callout-title { color: var(--accent-blue); }
+    .callout-warning { background: rgba(246,173,85,0.06); border-color: rgba(246,173,85,0.25); }
+    .callout-warning .callout-title { color: var(--accent-orange); }
+    .callout-danger  { background: rgba(252,129,129,0.06); border-color: rgba(252,129,129,0.3); }
+    .callout-danger  .callout-title { color: var(--accent-red); }
+    .callout-success { background: rgba(72,187,120,0.06); border-color: rgba(72,187,120,0.25); }
+    .callout-success .callout-title { color: var(--accent-green); }
+    .callout-thermal { background: rgba(255,68,68,0.08); border-color: rgba(255,68,68,0.3); }
+    .callout-thermal .callout-title { color: var(--thermal-red); }
+    .callout-physics { background: rgba(183,148,244,0.06); border-color: rgba(183,148,244,0.25); }
+    .callout-physics .callout-title { color: var(--accent-purple); }
+
+    /* ============================================================
+       FORMULA BLOCKS
+    ============================================================ */
+    .formula-block {
+      background: var(--bg-card);
+      border: 1px solid var(--border-med);
+      border-left: 3px solid var(--accent-orange);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      margin: 1.25rem 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .formula-label {
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      color: var(--accent-orange);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.2rem;
+    }
+    .formula-line {
+      font-family: var(--font-mono);
+      font-size: 0.92rem;
+      color: var(--text-primary);
+      background: rgba(255,255,255,0.03);
+      padding: 0.35rem 0.75rem;
+      border-radius: 4px;
+    }
+    .formula-caption {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-top: 0.25rem;
+      line-height: 1.6;
+    }
+
+    /* ============================================================
+       STAT GRID
+    ============================================================ */
+    .stat-grid { display: grid; gap: 1rem; margin: 1.5rem 0; }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      transition: border-color 0.2s;
+    }
+    .stat-card:hover { border-color: var(--border-med); }
+    .stat-value { font-size: 1.8rem; font-weight: 800; font-family: var(--font-mono); color: var(--accent-orange); }
+    .stat-label { font-size: 0.78rem; font-weight: 600; color: var(--text-primary); margin: 0.2rem 0; }
+    .stat-desc  { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5; }
+
+    /* ============================================================
+       COMPARISON TABLE
+    ============================================================ */
+    .comparison-table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+    .comparison-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 0.84rem;
+    }
+    .comparison-table th {
+      background: var(--bg-elevated);
+      color: var(--text-secondary);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border-med);
+      text-align: left;
+    }
+    .comparison-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-secondary);
+      vertical-align: top;
+    }
+    .comparison-table tr:last-child td { border-bottom: none; }
+    .comparison-table tr:hover td { background: var(--bg-elevated); }
+    .metric-name { color: var(--text-primary); font-weight: 600; white-space: nowrap; }
+    .metric-sub { display: block; font-size: 0.72rem; color: var(--text-muted); font-weight: 400; }
+
+    /* ============================================================
+       DIAGRAM / SVG CONTAINERS
+    ============================================================ */
+    .diagram-wrap {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      margin: 2rem 0;
+      overflow: hidden;
+    }
+    .diagram-title {
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .diagram-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .diagram-caption {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 1rem;
+      line-height: 1.6;
+    }
+
+    /* ============================================================
+       THERMAL CASCADE STAGE CARDS
+    ============================================================ */
+    .cascade-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin: 2rem 0;
+    }
+    .cascade-stage {
+      display: flex;
+      gap: 1.5rem;
+      align-items: flex-start;
+      position: relative;
+      padding-bottom: 0;
+    }
+    .cascade-stage::before {
+      content: '';
+      position: absolute;
+      left: 24px;
+      top: 52px;
+      width: 2px;
+      height: calc(100% - 10px);
+      background: linear-gradient(to bottom, var(--stage-color, #ff4444), transparent);
+      opacity: 0.4;
+    }
+    .cascade-stage:last-child::before { display: none; }
+    .cascade-icon-wrap {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+      border: 2px solid var(--stage-color, #ff4444);
+      background: rgba(255,68,68,0.1);
+      margin-top: 0.25rem;
+      position: relative;
+      z-index: 1;
+    }
+    .cascade-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--stage-color, #ff4444);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      flex: 1;
+      margin-bottom: 1.5rem;
+      transition: border-color 0.2s;
+    }
+    .cascade-content:hover { border-color: var(--stage-color, #ff4444); }
+    .cascade-temp {
+      font-family: var(--font-mono);
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--stage-color, #ff4444);
+      margin-bottom: 0.25rem;
+    }
+    .cascade-label {
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+    }
+    .cascade-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+    .cascade-desc {
+      font-size: 0.87rem;
+      color: var(--text-secondary);
+      line-height: 1.75;
+    }
+
+    /* ============================================================
+       ANIMATED TEMPERATURE GRADIENT BAR
+    ============================================================ */
+    .temp-gradient-bar {
+      height: 32px;
+      border-radius: 6px;
+      background: linear-gradient(to right,
+        var(--thermal-blue) 0%,
+        var(--thermal-green) 20%,
+        var(--thermal-yellow) 50%,
+        var(--thermal-orange) 75%,
+        var(--thermal-red) 100%
+      );
+      position: relative;
+      margin: 1rem 0;
+      overflow: visible;
+    }
+    .temp-gradient-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      margin-top: 0.4rem;
+    }
+    .temp-pointer {
+      position: absolute;
+      top: -6px;
+      transform: translateX(-50%);
+      width: 2px;
+      height: 44px;
+      background: white;
+      opacity: 0.8;
+    }
+    .temp-pointer::after {
+      content: attr(data-label);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.68rem;
+      font-family: var(--font-mono);
+      color: white;
+      white-space: nowrap;
+      background: rgba(0,0,0,0.7);
+      padding: 2px 6px;
+      border-radius: 3px;
+      margin-bottom: 4px;
+    }
+
+    /* ============================================================
+       INTERACTIVE BAR CHART
+    ============================================================ */
+    .bar-chart-wrap {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      margin: 2rem 0;
+    }
+    .bar-chart-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+    .bar-chart-tabs {
+      display: flex;
+      gap: 0.4rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .bar-chart-tab {
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      padding: 0.35rem 0.85rem;
+      border-radius: 20px;
+      border: 1px solid var(--border-med);
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .bar-chart-tab:hover { background: var(--bg-elevated); color: var(--text-primary); }
+    .bar-chart-tab.active { background: var(--accent-orange); border-color: var(--accent-orange); color: #07090f; font-weight: 700; }
+    .bar-chart-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.65rem; }
+    .bar-label { font-size: 0.78rem; font-family: var(--font-mono); color: var(--text-secondary); width: 110px; flex-shrink: 0; text-align: right; }
+    .bar-track { flex: 1; background: rgba(255,255,255,0.05); border-radius: 4px; height: 26px; overflow: hidden; }
+    .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      padding: 0 0.5rem;
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: rgba(0,0,0,0.85);
+      transition: width 0.7s cubic-bezier(0.4,0,0.2,1);
+      width: 0%;
+      white-space: nowrap;
+    }
+    .bar-value { font-size: 0.78rem; font-family: var(--font-mono); color: var(--text-muted); width: 70px; flex-shrink: 0; }
+
+    /* ============================================================
+       TRACEABILITY / TRACE ROWS
+    ============================================================ */
+    .trace-container { display: flex; flex-direction: column; gap: 0.75rem; margin: 1.5rem 0; }
+    .trace-row {
+      display: grid;
+      grid-template-columns: 200px 30px 1fr;
+      align-items: start;
+      gap: 0.75rem;
+    }
+    .trace-left { background: var(--bg-elevated); border-radius: var(--radius); padding: 0.75rem 1rem; }
+    .trace-number { font-size: 0.7rem; font-family: var(--font-mono); color: var(--accent-orange); font-weight: 700; }
+    .trace-label { font-size: 0.82rem; font-weight: 600; color: var(--text-primary); margin-top: 0.15rem; }
+    .trace-arrow { font-size: 1rem; color: var(--text-muted); padding-top: 0.75rem; text-align: center; }
+    .trace-right { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.7; padding-top: 0.75rem; }
+
+    /* ============================================================
+       NTC PLACEMENT DIAGRAM — GRID
+    ============================================================ */
+    .ntc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .ntc-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .ntc-card:hover { border-color: var(--border-med); }
+    .ntc-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--ntc-color, var(--accent-orange));
+    }
+    .ntc-position {
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      color: var(--ntc-color, var(--accent-orange));
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.4rem;
+    }
+    .ntc-name {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+    .ntc-desc { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.6; }
+
+    /* ============================================================
+       CHAPTER FOOTER / NAVIGATION
+    ============================================================ */
+    .chapter-footer {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 1rem;
+      align-items: center;
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+    }
+    .nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 1.25rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-med);
+      border-radius: var(--radius);
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .nav-btn:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--accent-orange); }
+    .nav-btn-next { justify-self: end; color: var(--accent-orange); border-color: rgba(246,173,85,0.3); }
+
+    /* ============================================================
+       PULSE / GLOW ANIMATIONS
+    ============================================================ */
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+    @keyframes heat-flicker {
+      0%   { opacity: 0.7; transform: scaleX(1); }
+      25%  { opacity: 1;   transform: scaleX(1.02); }
+      50%  { opacity: 0.8; transform: scaleX(0.99); }
+      75%  { opacity: 1;   transform: scaleX(1.01); }
+      100% { opacity: 0.7; transform: scaleX(1); }
+    }
+    @keyframes rise {
+      from { transform: translateY(10px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+    @keyframes thermal-spread {
+      0%   { r: 4; opacity: 0.9; }
+      50%  { r: 8; opacity: 0.6; }
+      100% { r: 4; opacity: 0.9; }
+    }
+    @keyframes spin-slow {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    .anim-rise { animation: rise 0.5s ease both; }
+
+    /* ============================================================
+       SWELLING ANIMATION BAR
+    ============================================================ */
+    .swell-bar-wrap { margin: 1.5rem 0; }
+    .swell-label { font-size: 0.78rem; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 0.4rem; }
+    .swell-track {
+      background: rgba(255,255,255,0.05);
+      border-radius: 6px;
+      height: 36px;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 0.75rem;
+    }
+    .swell-fill {
+      height: 100%;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      padding: 0 0.75rem;
+      font-size: 0.78rem;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: rgba(0,0,0,0.85);
+      transition: width 1s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* ============================================================
+       STEP LIST
+    ============================================================ */
+    .step-list { list-style: none; padding: 0; margin: 1rem 0; }
+    .step-list li {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .step-list li:last-child { border-bottom: none; }
+    .step-num {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: rgba(246,173,85,0.15);
+      border: 1px solid rgba(246,173,85,0.4);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      color: var(--accent-orange);
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .step-content { flex: 1; }
+    .step-title { font-weight: 600; color: var(--text-primary); font-size: 0.9rem; margin-bottom: 0.25rem; }
+    .step-desc { font-size: 0.84rem; color: var(--text-secondary); line-height: 1.65; }
+
+    /* ============================================================
+       CODE BLOCK
+    ============================================================ */
+    .code-block {
+      background: #0d1117;
+      border: 1px solid var(--border-med);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      margin: 1.25rem 0;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 0.84rem;
+      line-height: 1.7;
+      color: var(--text-secondary);
+    }
+    .code-kw { color: #ff7b72; }
+    .code-fn { color: #d2a8ff; }
+    .code-num { color: #79c0ff; }
+    .code-comment { color: #484f58; }
+    .code-str { color: #a5d6ff; }
+    .code-type { color: #ffa657; }
+
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .trace-row { grid-template-columns: 1fr; }
+      .hero-stats { gap: 1rem; }
+      .chapter-footer { grid-template-columns: 1fr; text-align: center; }
+      .nav-btn-next { justify-self: stretch; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ============================================================
+     SIDEBAR
+============================================================ -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-text">LFP BMS Knowledge Base</div>
+    <div class="sidebar-title">Chapter 3 — Thermal &amp; Mechanical</div>
+  </div>
+
+  <div class="sidebar-nav-label">Chapters</div>
+  <a class="sidebar-link" href="chapter1.html"><span class="dot"></span> ← Chapter 1: Li-ion &amp; LFP</a>
+  <a class="sidebar-link" href="chapter2.html"><span class="dot"></span> ← Chapter 2: Cell Behaviour</a>
+
+  <div class="sidebar-nav-label">Chapter 3</div>
+  <a class="sidebar-link active" href="#hero"><span class="dot"></span> Overview</a>
+  <a class="sidebar-link" href="#s3-1"><span class="dot"></span> 3.1 Heat Generation</a>
+  <a class="sidebar-link" href="#s3-2"><span class="dot"></span> 3.2 Thermal Runaway</a>
+  <a class="sidebar-link" href="#s3-3"><span class="dot"></span> 3.3 Thermal Management</a>
+  <a class="sidebar-link" href="#s3-4"><span class="dot"></span> 3.4 Mechanical Effects</a>
+  <a class="sidebar-link" href="#s3-5"><span class="dot"></span> 3.5 BMS Thermal Features</a>
+  <a class="sidebar-link" href="#s3-summary"><span class="dot"></span> Summary</a>
+  <a class="sidebar-link" href="#s3-ref"><span class="dot"></span> Quick Reference</a>
+</nav>
+
+<!-- ============================================================
+     MAIN CONTENT
+============================================================ -->
+<main class="main" id="main">
+
+  <!-- HERO -->
+  <div class="hero" id="hero">
+    <div class="hero-chapter-badge">🔥 Chapter 3 · Thermal &amp; Mechanical</div>
+    <h1 class="hero-title">Heat, Runaway, and<br>Mechanical Integrity</h1>
+    <p class="hero-subtitle">
+      The BMS is not just an electrical device — it is a thermal safety system.
+      Understanding heat generation physics, thermal runaway cascade, and mechanical
+      swelling in LFP cells is the foundation of every protection threshold in the firmware.
+    </p>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-val">270°C+</div>
+        <div class="hero-stat-lbl">LFP TR onset</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">~2%</div>
+        <div class="hero-stat-lbl">LFP volume expansion per cycle</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">1°C/s</div>
+        <div class="hero-stat-lbl">BMS dT/dt alarm threshold</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">5°C</div>
+        <div class="hero-stat-lbl">Max pack temperature gradient target</div>
+      </div>
+    </div>
+  </div>
+
