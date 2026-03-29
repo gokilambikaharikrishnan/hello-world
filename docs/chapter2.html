@@ -1204,3 +1204,231 @@
       </div><!-- end hysteresis -->
 
     </section><!-- end s2-4 -->
+
+    <!-- ============================================================
+         SECTION 2.5 — CAPACITY, ENERGY & COULOMBS
+    ============================================================ -->
+    <section class="section" id="s2-5">
+      <div class="section-number">Section 2.5</div>
+      <h2 class="section-title">Capacity, Energy &amp; Coulomb Concepts</h2>
+      <p class="section-intro">
+        The BMS is, at its core, a charge accountant. It must track every electron that flows
+        in and out of the battery, convert that count into meaningful units (Ah, Wh, percentage),
+        and do so accurately over years of operation. This requires a thorough understanding of
+        the underlying concepts and their engineering traps.
+      </p>
+
+      <div class="subsection">
+        <div class="subsection-title">Capacity (Ah) — Physical Meaning</div>
+        <p>
+          Battery <strong>capacity</strong> is measured in <strong>ampere-hours (Ah)</strong> —
+          the product of current and time. A cell with a rated capacity of 280 Ah can deliver
+          1 ampere for 280 hours, or 280 amperes for 1 hour, or any combination of
+          <em>average current × hours = 280 Ah</em>.
+        </p>
+        <p>
+          Physically, capacity represents the total amount of lithium that can shuttle between
+          anode and cathode. For a 280Ah cell:
+        </p>
+        <div class="formula-block">
+          <span class="formula-label">Moles of Li in a 280Ah LFP Cell</span>
+          <span class="formula-line">Q = 280 Ah = 280 × 3600 = 1,008,000 C (coulombs)</span>
+          <span class="formula-line">n_Li = Q / (F) = 1,008,000 / 96,485 = <span class="formula-highlight">10.45 mol Li</span></span>
+          <span class="formula-line">Mass of Li = 10.45 × 6.941 g/mol = <span class="formula-highlight">72.5 g of lithium</span></span>
+          <span class="formula-caption">Faraday's constant F = 96,485 C/mol. Every 280Ah cycle moves 72.5 grams of lithium atoms between anode and cathode and back. Over 5000 cycles, each lithium atom makes the journey ~5000 times.</span>
+        </div>
+
+        <div class="subsection-sub">Energy (Wh) = Capacity × Average Voltage</div>
+        <p>
+          Energy stored in the cell is the integral of power over the discharge:
+        </p>
+        <div class="formula-block">
+          <span class="formula-label">Cell Energy</span>
+          <span class="formula-line">E = ∫V(t) × I(t) dt  ≈  Q_Ah × V_avg</span>
+          <span class="formula-line">LFP 280Ah cell:  E = 280 Ah × 3.20 V = <span class="formula-highlight">896 Wh = 0.896 kWh</span></span>
+          <span class="formula-line">16-cell 48V pack: E = 16 × 896 Wh = <span class="formula-highlight">14.3 kWh</span></span>
+          <span class="formula-caption">The average voltage for LFP at 0.2C is ~3.2V. The BMS reports energy in Wh or kWh to the user; it internally tracks Ah via current integration.</span>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-title">C-Rate — Normalizing Current to Capacity</div>
+        <p>
+          The <strong>C-rate</strong> is a way to express charge or discharge current relative
+          to a cell's capacity, making comparisons meaningful across cells of different sizes.
+          1C for a given cell means the current that would fully discharge it in exactly 1 hour:
+        </p>
+        <div class="formula-block blue-theme">
+          <span class="formula-label">C-Rate Definition</span>
+          <span class="formula-line">I_rate = C_rated / hours</span>
+          <span class="formula-line">For 280Ah: 1C = 280 A,  0.5C = 140 A,  0.2C = 56 A,  2C = 560 A</span>
+          <span class="formula-caption">C-rate is dimensionally hours⁻¹ but treated as a ratio. "2C" means twice the current, half the discharge time. Higher C-rate = more current = more heat = faster aging.</span>
+        </div>
+        <p>
+          <strong>Why C-rate matters for BMS design:</strong> The BMS must configure protection
+          thresholds in real current (Amperes), derived from C-rate specifications for the
+          cell. Maximum continuous discharge current for most prismatic LFP cells is 0.5C–1C.
+          Peak current (for ≤10 seconds) may be 2–3C. Short-circuit currents above 5C trigger
+          hardware protection. These thresholds directly define the current sensor range,
+          the MOSFET sizing, and the fuse specification.
+        </p>
+      </div>
+
+      <!-- Peukert Effect -->
+      <div class="subsection" id="peukert">
+        <div class="subsection-title">The Peukert Effect — Why Available Capacity Drops at High Current</div>
+        <p>
+          Wilhelm Peukert observed in 1897 (for lead-acid, but applies generally) that available
+          capacity decreases at higher discharge rates. For LFP, the effect is smaller than for
+          lead-acid but still measurable and must be accounted for in SOC algorithms.
+        </p>
+        <div class="formula-block">
+          <span class="formula-label">Peukert's Equation</span>
+          <span class="formula-line">Q_actual = Q_rated × (C_rated / I_actual)^(k-1)</span>
+          <span class="formula-line">k = Peukert exponent: ~1.01–1.05 for LFP, ~1.1–1.3 for lead-acid</span>
+          <span class="formula-caption">At k=1.05 for LFP 280Ah: at 1C (280A), Q_actual = 280 × (1/1)^0.05 = 280 Ah. At 2C (560A): Q_actual = 280 × (0.5)^0.05 = 280 × 0.966 = 270.5 Ah — 3.4% less.</span>
+        </div>
+        <p>
+          <strong>Physical mechanism:</strong> At high discharge rates, Li⁺ ions cannot diffuse
+          deeply into electrode particles fast enough. The outer surface regions deplete and reach
+          the voltage cutoff while the interior is still fully lithiated. The cell trips the
+          low-voltage protection at a higher residual charge than it would at low rates. From a
+          BMS perspective, the cell "ran out" of accessible capacity, even though some lithium
+          is still trapped inside the particles.
+        </p>
+        <p>
+          <strong>BMS implication:</strong> SOC estimated from accumulated coulombs assumes a
+          constant capacity (Q_nominal). If the cell is discharged at 2C, the actual accessible
+          capacity is ~3–5% lower — the coulomb counter will think there is still 3–5% SoC
+          remaining when the low-voltage cutoff triggers. This creates an expected inconsistency
+          in SOC reports at end-of-discharge under high current. Advanced BMS algorithms apply
+          a C-rate correction factor to Q_nominal dynamically.
+        </p>
+
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead><tr><th>C-Rate</th><th>Current (280Ah)</th><th>Available Capacity</th><th>Capacity Loss vs 0.2C</th><th>Cause</th></tr></thead>
+            <tbody>
+              <tr><td>0.2C</td><td>56 A</td><td class="best">~280 Ah</td><td class="best">Baseline</td><td>Near-equilibrium, full penetration</td></tr>
+              <tr><td>0.5C</td><td>140 A</td><td>~277 Ah</td><td class="good">~1%</td><td>Minor diffusion limitation</td></tr>
+              <tr><td>1C</td><td>280 A</td><td>~272 Ah</td><td class="fair">~3%</td><td>Moderate concentration gradient</td></tr>
+              <tr><td>2C</td><td>560 A</td><td>~261 Ah</td><td class="worst">~7%</td><td>Significant diffusion limitation</td></tr>
+              <tr><td>3C</td><td>840 A</td><td>~245 Ah</td><td class="worst">~12%</td><td>Strong polarization, reduced access</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div><!-- end peukert -->
+
+      <!-- Coulomb Counting and Drift -->
+      <div class="subsection" id="drift">
+        <div class="subsection-title">Coulomb Counting — The Integral and Its Drift Problem</div>
+        <p>
+          Coulomb counting (also called current integration or charge integration) is the primary
+          method for SOC tracking in Li-ion BMS systems. The concept is simple:
+        </p>
+        <div class="formula-block green-theme">
+          <span class="formula-label">Coulomb Counting — The Core Equation</span>
+          <span class="formula-line">SOC(t) = SOC(t₀) + (1/Q_nominal) × ∫[t₀ to t] η(I) × I(τ) dτ</span>
+          <span class="formula-line">Where: SOC(t₀) = initial SOC,  η(I) = coulombic efficiency (~0.999 for LFP),  Q_nominal = rated capacity (Ah)</span>
+          <span class="formula-caption">In discrete time (as the MCU does it): SOC[n] = SOC[n-1] + (η × I[n] × Δt) / Q_nominal. I[n] is current in amperes (positive=charge, negative=discharge). Δt = sampling interval in hours.</span>
+        </div>
+
+        <p>
+          <strong>What the BMS actually executes in code:</strong> Every Δt seconds (typically
+          100–250 ms), the microcontroller reads the current sensor, multiplies current by Δt
+          to get incremental charge (in ampere-seconds, converted to Ah by dividing by 3600),
+          applies the coulombic efficiency correction, and adds this increment to the accumulated
+          SOC. The result is updated to the SOC register and used for all reporting and protection
+          decisions.
+        </p>
+
+        <div class="subsection-sub">Why Coulombs Drift Over Time — The Accumulation Problem</div>
+        <p>
+          Coulomb counting <em>sounds</em> simple but has a fundamental weakness: every error in
+          current measurement accumulates. Unlike a voltage measurement that can be re-taken
+          independently at any time, a current integration error from 3 hours ago is still in
+          your SOC estimate right now. There is no self-correction.
+        </p>
+        <p>
+          Sources of drift, with quantitative estimates for a 280Ah cell running 24 hours/day:
+        </p>
+
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr><th>Error Source</th><th>Typical Magnitude</th><th>SOC Error After 24h</th><th>Mitigation</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="metric-name">Current sensor offset<span class="metric-sub">e.g. shunt amp, Hall sensor</span></td>
+                <td>±0.5 mA (±0.5 mV × 1 mΩ shunt)</td>
+                <td class="fair">0.0005 A × 24h / 280 Ah = <strong>0.004%</strong> — negligible alone</td>
+                <td>Auto-zero when current = 0</td>
+              </tr>
+              <tr>
+                <td class="metric-name">Current sensor gain error<span class="metric-sub">% of reading</span></td>
+                <td>±0.1% of reading</td>
+                <td class="worst">0.1% × 280A × 1h / 280 Ah = <strong>0.1% per hour → 2.4% per day</strong></td>
+                <td>Factory calibration, temperature correction</td>
+              </tr>
+              <tr>
+                <td class="metric-name">Coulombic efficiency error<span class="metric-sub">assuming η=1.0 instead of 0.999</span></td>
+                <td>0.1% of each charge cycle</td>
+                <td class="fair">0.001 × 280 Ah / 280 = <strong>0.1% per cycle</strong></td>
+                <td>Use correct η, update with aging</td>
+              </tr>
+              <tr>
+                <td class="metric-name">Sampling quantization<span class="metric-sub">12-bit ADC, ±0.5 LSB</span></td>
+                <td>±0.012% of full scale</td>
+                <td class="best">Averages out: <strong>&lt;0.01%</strong></td>
+                <td>Oversampling, averaging</td>
+              </tr>
+              <tr>
+                <td class="metric-name">Temperature drift of sensor<span class="metric-sub">shunt resistance changes</span></td>
+                <td>±50 ppm/°C for manganin shunt</td>
+                <td class="fair">At 30°C rise: 0.15% gain error → <strong>0.36% per day</strong></td>
+                <td>Temperature-compensated shunt, Kelvin sensing</td>
+              </tr>
+              <tr>
+                <td class="metric-name">Initial SOC uncertainty<span class="metric-sub">from OCV measurement at boot</span></td>
+                <td>±5% (LFP flat curve)</td>
+                <td class="worst">Persists until recalibrated: <strong>±5%</strong></td>
+                <td>Long rest OCV + table lookup at startup</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          <strong>Combined worst-case example:</strong> A BMS with 0.1% gain error, a 30°C
+          temperature swing, and no OCV correction can accumulate:
+        </p>
+        <div class="formula-block">
+          <span class="formula-label">SOC Error After 24h — Realistic Worst Case</span>
+          <span class="formula-line">Gain error: 2.4% per day</span>
+          <span class="formula-line">Temperature drift: 0.36% per day</span>
+          <span class="formula-line">Initial OCV uncertainty: ±5%</span>
+          <span class="formula-line formula-highlight">Total: ±7.8% SOC error after 24 hours of continuous operation</span>
+          <span class="formula-caption">For a 14.3 kWh pack, 7.8% error = ±1.1 kWh of unknown energy. This is why coulomb counting alone is inadequate and must be paired with periodic OCV correction.</span>
+        </div>
+
+        <div class="callout callout-success">
+          <div class="callout-icon">✓</div>
+          <div class="callout-body">
+            <div class="callout-title">Reset Strategy — When and How to Recalibrate</div>
+            <p>
+              The standard strategy for managing coulomb counting drift is to reset the SOC
+              estimate against a more accurate method at opportunistic moments:
+              (1) <strong>End of charge reset:</strong> When the BMS detects charge cutoff
+              conditions (all cells at OVP threshold, current drops to C/20 tail),
+              set SOC = 100% with high confidence. (2) <strong>Rest OCV correction:</strong>
+              After the cell has rested for ≥30 minutes (detected by current &lt; 1A for LFP),
+              measure OCV, look up the table, and correct the coulomb count. (3) <strong>NVRAM
+              storage:</strong> Store the last-known SOC and timestamp to NVRAM before power-off.
+              On restart, use stored SOC + estimate drift during off-time as initial condition.
+            </p>
+          </div>
+        </div>
+      </div><!-- end drift -->
+
+    </section><!-- end s2-5 -->
