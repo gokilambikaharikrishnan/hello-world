@@ -1081,3 +1081,126 @@
           </p>
         </div>
       </div><!-- end flat-curve -->
+
+      <!-- Terminal Voltage vs OCV -->
+      <div class="subsection" id="ir-drop">
+        <div class="subsection-title">Terminal Voltage vs. OCV — The IR Drop Problem</div>
+        <p>
+          The <strong>OCV</strong> is what the cell <em>wants</em> to be at rest. The
+          <strong>terminal voltage</strong> is what you actually measure on the cell terminals
+          during operation. The difference is the voltage drop across the cell's internal
+          resistance, plus diffusion polarization:
+        </p>
+        <div class="formula-block blue-theme">
+          <span class="formula-label">Terminal Voltage Model</span>
+          <span class="formula-line">V_terminal = OCV − I × R_internal − V_polarization(t)</span>
+          <span class="formula-line">Discharge: V_terminal &lt; OCV  (voltage drops under load)</span>
+          <span class="formula-line">Charge:    V_terminal &gt; OCV  (voltage rises during charging)</span>
+          <span class="formula-caption">R_internal for a 280Ah LFP prismatic cell: typically 0.2–0.5 mΩ at 25°C. V_polarization rises over seconds-to-minutes as concentration gradients build.</span>
+        </div>
+
+        <p>
+          <strong>Why this matters for BMS design:</strong> If you read terminal voltage during
+          a discharge at 200A (0.7C for a 280Ah cell), and R_internal = 0.4 mΩ:
+        </p>
+        <div class="formula-block">
+          <span class="formula-label">IR Drop Example — 200A Discharge</span>
+          <span class="formula-line">ΔV_IR = I × R = 200 A × 0.0004 Ω = <span class="formula-highlight">0.08 V = 80 mV</span></span>
+          <span class="formula-caption">Terminal voltage reads 80 mV below OCV. Since the LFP plateau changes only 50 mV across 20–80% SoC, this IR drop completely masks SoC information. You cannot read SoC from terminal voltage under load — ever — for LFP.</span>
+        </div>
+
+        <p>
+          At higher currents (2C = 560A for this cell), IR drop reaches 224 mV — larger than
+          the entire useful OCV variation from 20% to 100% SoC. The cell appears to have a
+          lower terminal voltage at high current purely from resistance, regardless of SoC.
+          This is why some UPS systems falsely report "low battery" when high loads are applied
+          to LFP packs — the BMS misinterprets IR-induced voltage sag as low SoC.
+        </p>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">💡</div>
+          <div class="callout-body">
+            <div class="callout-title">BMS Design Requirement: Current-Compensated Voltage</div>
+            <p>
+              Any BMS that uses voltage in its SOC algorithm must compensate for IR drop.
+              This requires measuring the current simultaneously with voltage, knowing (or
+              estimating) R_internal, and computing the estimated OCV as:
+              OCV_est = V_terminal + I × R_internal. R_internal changes with temperature and
+              aging — so the BMS must track it continuously using pulse characterization or
+              model-based estimation.
+            </p>
+          </div>
+        </div>
+
+        <div class="subsection-sub">C-Rate Effect on Voltage Depression</div>
+        <p>
+          Even with IR compensation, terminal voltage is further depressed at high current by
+          diffusion polarization — concentration gradients in the electrolyte and within electrode
+          particles that take minutes to equilibrate. Higher C-rate → deeper diffusion polarization
+          → lower terminal voltage at the same true SoC:
+        </p>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr><th>C-Rate</th><th>Current (280Ah cell)</th><th>Typical Voltage Sag at 50% SoC</th><th>Apparent vs True SoC Error</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>0.1C</td><td>28 A</td><td class="best">−10 mV</td><td class="best">&lt;5% error</td><td>Near-OCV conditions, minimal correction needed</td></tr>
+              <tr><td>0.5C</td><td>140 A</td><td class="good">−50 mV</td><td class="good">~10–15% error without compensation</td><td>Typical home ESS average discharge</td></tr>
+              <tr><td>1C</td><td>280 A</td><td class="fair">−130 mV</td><td class="fair">~20–30% error without compensation</td><td>Peak loads, UPS heavy load</td></tr>
+              <tr><td>2C</td><td>560 A</td><td class="worst">−280 mV</td><td class="worst">&gt;50% error without compensation</td><td>Short-circuit detection regime</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div><!-- end ir-drop -->
+
+      <!-- Hysteresis -->
+      <div class="subsection" id="hysteresis">
+        <div class="subsection-title">Hysteresis — Charge Curve vs. Discharge Curve</div>
+        <p>
+          A subtlety of LFP that surprises many engineers: the OCV curve is <em>not</em> the same
+          for charging and discharging. The OCV measured after charging (charging OCV) sits
+          approximately <strong>10–20 mV higher</strong> than the OCV measured after discharging
+          to the same SoC (discharging OCV).
+        </p>
+        <p>
+          This is the <strong>hysteresis</strong> of LFP — a consequence of the thermodynamics
+          of the two-phase transition. Moving the phase boundary in one direction (lithiating
+          FePO₄ → LiFePO₄) costs slightly different energy than moving it in the other direction
+          (delithiating LiFePO₄ → FePO₄), due to coherency strain and nucleation energy at the
+          phase boundary. The cell does not trace the same equilibrium path in both directions.
+        </p>
+        <p>
+          <strong>BMS design implication:</strong> An SOC lookup table derived only from discharge
+          curves will be incorrect for a cell that has recently been charged. The BMS must maintain
+          two OCV tables (charge and discharge) or use a single mid-point curve with ±10mV
+          uncertainty. This adds another ±3–5% SoC uncertainty on top of the already-problematic
+          flat curve. For SOC estimation algorithms that use OCV correction, the history of the
+          cell (last charging vs discharging direction) must be tracked.
+        </p>
+
+        <div class="callout callout-physics">
+          <div class="callout-icon">⚛</div>
+          <div class="callout-body">
+            <div class="callout-title">Temperature Effect on LFP Cell Voltage</div>
+            <p>
+              Temperature affects LFP terminal voltage through three mechanisms:
+              (1) <strong>OCV temperature coefficient:</strong> LFP OCV decreases by ~0.1–0.3 mV/°C.
+              A cell at 0°C reads ~3–7 mV lower than the same cell at 25°C at the same SoC.
+              (2) <strong>Internal resistance increase:</strong> Ionic conductivity of electrolyte
+              decreases dramatically at low temperature (~4× higher resistance at −20°C vs 25°C),
+              increasing IR drop. A 200A load that creates 80 mV drop at 25°C may create 320 mV
+              drop at −20°C. (3) <strong>Kinetic polarization:</strong> Slower diffusion at
+              low temperature increases electrode polarization voltage.
+            </p>
+            <p>
+              Combined effect: at −20°C under moderate load, terminal voltage can be 500–800 mV
+              lower than at 25°C at the same SoC. The BMS low-voltage cutoff must be
+              temperature-compensated or the pack will falsely trip the discharge cutoff
+              at 50–60% SoC in cold environments.
+            </p>
+          </div>
+        </div>
+      </div><!-- end hysteresis -->
+
+    </section><!-- end s2-4 -->
