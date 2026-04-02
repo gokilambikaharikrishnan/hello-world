@@ -1520,3 +1520,260 @@
     </div>
   </section>
 
+
+  <!-- ═══════════════════════════════════════════════════
+       SUMMARY
+  ═══════════════════════════════════════════════════ -->
+  <section class="section" id="s4-summary">
+    <div class="section-number">Summary</div>
+    <h2 class="section-title">Chapter 4 Summary — The Protection Hierarchy</h2>
+    <p class="section-intro">
+      Every circuit, threshold, and algorithm in this chapter traces back to physical failure modes
+      in the cell. Here is the complete traceability from fault to protection mechanism.
+    </p>
+
+    <div class="trace-container">
+      <div class="trace-row">
+        <div class="trace-left">
+          <div class="trace-number">01</div>
+          <div class="trace-label">Pack Voltage ≠ Cell Voltage</div>
+        </div>
+        <div class="trace-arrow">→</div>
+        <div class="trace-right">Per-cell AFE monitoring with 16-bit ADC. One weak cell at 2.3V is invisible in the pack total. Without per-cell data, UVP cannot fire at the right time.</div>
+      </div>
+      <div class="trace-row">
+        <div class="trace-left">
+          <div class="trace-number">02</div>
+          <div class="trace-label">Cu Dissolution at &lt;2.5V</div>
+        </div>
+        <div class="trace-arrow">→</div>
+        <div class="trace-right">UVP hard cutoff at 2.5V with 2.8V warning. Pre-charge sequence required before resuming normal charge after UVP event — prevents high-rate charge onto damaged SEI.</div>
+      </div>
+      <div class="trace-row">
+        <div class="trace-left">
+          <div class="trace-number">03</div>
+          <div class="trace-label">Cathode Instability at &gt;3.65V</div>
+        </div>
+        <div class="trace-arrow">→</div>
+        <div class="trace-right">OVP threshold at 3.65V with 50mV hysteresis. Hardware comparator path for &lt;100ms response. Gas generation and lithium plating begin above this threshold.</div>
+      </div>
+      <div class="trace-row">
+        <div class="trace-left">
+          <div class="trace-number">04</div>
+          <div class="trace-label">I² × R Heat Kills in &lt;1ms</div>
+        </div>
+        <div class="trace-arrow">→</div>
+        <div class="trace-right">SCD hardware comparator — fires in &lt;500μs, bypasses MCU entirely. Latches after event — manual reset required. Software cannot respond fast enough.</div>
+      </div>
+      <div class="trace-row">
+        <div class="trace-left">
+          <div class="trace-number">05</div>
+          <div class="trace-label">Capacitor Inrush on Connect</div>
+        </div>
+        <div class="trace-arrow">→</div>
+        <div class="trace-right">Pre-charge circuit with R_pchg ≈ 100Ω, relay, and voltage-match detection. Limits inrush from kA to &lt;1A. ~600ms sequence before main FET closes.</div>
+      </div>
+      <div class="trace-row">
+        <div class="trace-left">
+          <div class="trace-number">06</div>
+          <div class="trace-label">Cells Drift Apart Over Cycles</div>
+        </div>
+        <div class="trace-arrow">→</div>
+        <div class="trace-right">Passive balancing during CV phase — 5–200mA bleed through R_bal. LFP plateau means balancing only works at top or bottom of charge. Monthly full-charge cycle mandatory.</div>
+      </div>
+      <div class="trace-row">
+        <div class="trace-left">
+          <div class="trace-number">07</div>
+          <div class="trace-label">Body Diode Allows Current Bypass</div>
+        </div>
+        <div class="trace-arrow">→</div>
+        <div class="trace-right">Back-to-back MOSFETs (common source). Both FETs must open to fully isolate pack. Each FET's body diode faces opposite direction — single FET open is insufficient.</div>
+      </div>
+      <div class="trace-row">
+        <div class="trace-left">
+          <div class="trace-number">08</div>
+          <div class="trace-label">MCU Crash Leaves Pack Live</div>
+        </div>
+        <div class="trace-arrow">→</div>
+        <div class="trace-right">AFE watchdog timer — opens FETs if MCU stops petting within 2s. Safety-critical feature. Must be petted from highest-priority hardware timer task.</div>
+      </div>
+      <div class="trace-row">
+        <div class="trace-left">
+          <div class="trace-number">09</div>
+          <div class="trace-label">High Common-Mode Voltage</div>
+        </div>
+        <div class="trace-arrow">→</div>
+        <div class="trace-right">Flying capacitor multiplexer in AFE measures each cell differentially, isolated from the high common-mode rail. 16-bit ΔΣ ADC gives 100μV resolution — ±5% SoC accuracy in plateau.</div>
+      </div>
+      <div class="trace-row">
+        <div class="trace-left">
+          <div class="trace-number">10</div>
+          <div class="trace-label">FET Fail-Closed = No Protection</div>
+        </div>
+        <div class="trace-arrow">→</div>
+        <div class="trace-right">Boot self-test: open FET, apply test pulse, verify V_drain rises. Fail-closed FET detected before pack enters service. Series fuse or dual-FET topology as backup.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════
+       QUICK REFERENCE
+  ═══════════════════════════════════════════════════ -->
+  <section class="section" id="s4-ref">
+    <div class="section-number">Reference</div>
+    <h2 class="section-title">Quick Reference — Protection Thresholds &amp; Formulas</h2>
+
+    <div class="subsection">
+      <div class="subsection-title">LFP 16S1P Pack — Standard Protection Thresholds</div>
+      <div class="comparison-table-wrap">
+        <table class="comparison-table">
+          <thead>
+            <tr><th>Protection</th><th>Threshold</th><th>Response Time</th><th>Recovery Condition</th><th>Path</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="metric-name">OVP</td><td>3.65V/cell</td><td>&lt;100ms</td><td>V_cell &lt; 3.60V + charger command</td><td style="color:var(--elec-cyan);">HW comparator</td></tr>
+            <tr><td class="metric-name">UVP</td><td>2.50V/cell</td><td>&lt;100ms</td><td>Pre-charge to 2.8V then CC-CV</td><td style="color:var(--elec-cyan);">HW comparator</td></tr>
+            <tr><td class="metric-name">OVP warning</td><td>3.62V/cell</td><td>&lt;1s</td><td>Auto — resume when V &lt; 3.60V</td><td style="color:var(--accent-blue);">SW firmware</td></tr>
+            <tr><td class="metric-name">UVP warning</td><td>2.80V/cell</td><td>&lt;1s</td><td>Auto — resume when load removed</td><td style="color:var(--accent-blue);">SW firmware</td></tr>
+            <tr><td class="metric-name">SCD</td><td>3–5× I_rated</td><td>&lt;500μs</td><td>Manual reset only</td><td style="color:var(--accent-red);">HW latch</td></tr>
+            <tr><td class="metric-name">OCD-continuous</td><td>1.1× I_rated, &gt;5s</td><td>&lt;100ms</td><td>Auto after 30s cool-down</td><td style="color:var(--accent-blue);">SW firmware</td></tr>
+            <tr><td class="metric-name">OCD-pulse</td><td>3× I_rated, &gt;50ms</td><td>&lt;5ms</td><td>Auto after 10s cool-down</td><td style="color:var(--elec-cyan);">HW+SW</td></tr>
+            <tr><td class="metric-name">OCC</td><td>1C charge rate</td><td>&lt;1s</td><td>Charger current-limit command</td><td style="color:var(--accent-blue);">SW firmware</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Key Formulas</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.5rem 0;">
+        <div class="formula-block" style="margin:0;">
+          <span class="formula-label">Short-Circuit Current</span>
+          <span class="formula-line">I_sc = V_pack / R_total</span>
+        </div>
+        <div class="formula-block" style="margin:0;">
+          <span class="formula-label">Passive Balancing Current</span>
+          <span class="formula-line">I_bal = ΔV / R_bal</span>
+        </div>
+        <div class="formula-block" style="margin:0;">
+          <span class="formula-label">FET Conduction Loss</span>
+          <span class="formula-line">P_FET = I² × RDS(on)</span>
+        </div>
+        <div class="formula-block" style="margin:0;">
+          <span class="formula-label">Pre-charge Time Constant</span>
+          <span class="formula-line">τ = R_pchg × C_load</span>
+        </div>
+        <div class="formula-block" style="margin:0;">
+          <span class="formula-label">Shunt Voltage</span>
+          <span class="formula-line">V_shunt = I × R_shunt</span>
+        </div>
+        <div class="formula-block" style="margin:0;">
+          <span class="formula-label">AFE Resolution</span>
+          <span class="formula-line">LSB = V_range / 2^N_bits</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-success" style="margin:2rem 0;">
+      <div class="callout-icon">✓</div>
+      <div class="callout-body">
+        <div class="callout-title">Chapter 4 Complete — The Protection Stack is Now Fully Understood</div>
+        <p>From per-cell voltage monitoring to sub-millisecond short-circuit detection, from passive
+        balancing to pre-charge sequencing — every electrical protection layer has a physical root cause
+        and a hardware or firmware implementation. Chapter 5 moves to BMS communication architecture:
+        CAN bus, SMBus, RS-485, and how the BMS reports state to inverters, chargers, and cloud systems.</p>
+      </div>
+    </div>
+
+    <div class="chapter-footer">
+      <a class="nav-btn" href="chapter3.html">← Chapter 3: Thermal &amp; Mechanical</a>
+      <div style="text-align:center;">
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.3rem;">You are reading</div>
+        <div style="font-size:0.9rem;color:var(--text-primary);font-weight:700;">Chapter 4: Electrical &amp; Protection</div>
+      </div>
+      <a class="nav-btn nav-btn-next" href="chapter5.html">Chapter 5: Communication →</a>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<script>
+/* ── CURRENT PROTECTION CHART ───────────────────────── */
+const currData = {
+  current: {
+    max: 5600, unit: 'A', note: 'Peak current for each protection event (280Ah LFP cell)',
+    bars: [
+      { label: 'Float / OCC',   value: 280,  color: '#48bb78', display: '280A (1C)' },
+      { label: 'OCD-Cont.',     value: 308,  color: '#63b3ed', display: '308A (1.1C)' },
+      { label: 'OCD-Pulse',     value: 840,  color: '#f6ad55', display: '840A (3C)' },
+      { label: 'SCD threshold', value: 1400, color: '#fc8181', display: '1400A (5C)' },
+      { label: 'Hard short',    value: 5500, color: '#ff1744', display: '~5500A' },
+    ]
+  },
+  time: {
+    max: 10, unit: 's max allowed', note: 'Maximum allowed duration at this current before protection fires',
+    bars: [
+      { label: 'Float / OCC',   value: 9.9, color: '#48bb78', display: 'continuous' },
+      { label: 'OCD-Cont.',     value: 5,   color: '#63b3ed', display: '5s max' },
+      { label: 'OCD-Pulse',     value: 0.05,color: '#f6ad55', display: '50ms' },
+      { label: 'SCD threshold', value: 0.005,color:'#fc8181', display: '5ms' },
+      { label: 'Hard short',    value: 0.0005,color:'#ff1744',display: '500μs' },
+    ]
+  },
+  heat: {
+    max: 17000, unit: 'W peak', note: 'Instantaneous Joule heat = I² × R_pack (R=8mΩ for 16S pack)',
+    bars: [
+      { label: 'Float / OCC',   value: 627,   color: '#48bb78', display: '627W' },
+      { label: 'OCD-Cont.',     value: 760,   color: '#63b3ed', display: '760W' },
+      { label: 'OCD-Pulse',     value: 5645,  color: '#f6ad55', display: '5.6kW' },
+      { label: 'SCD threshold', value: 15680, color: '#fc8181', display: '15.7kW' },
+      { label: 'Hard short',    value: 16900, color: '#ff1744', display: '~17kW' },
+    ]
+  }
+};
+
+function showCurr(key, tabEl) {
+  document.querySelectorAll('#currChart .bar-chart-tab').forEach(t => t.classList.remove('active'));
+  if (tabEl) tabEl.classList.add('active');
+  const m = currData[key];
+  const c = document.getElementById('currChartContent');
+  c.innerHTML = `
+    <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:1rem;font-family:var(--font-mono);">${m.note}</div>
+    ${m.bars.map(b => `
+      <div class="bar-row">
+        <div class="bar-lbl">${b.label}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:0%;background:${b.color};"
+               data-target="${Math.max(4,(b.value/m.max*100)).toFixed(1)}">${b.display}</div>
+        </div>
+        <div class="bar-val">${b.display}</div>
+      </div>`).join('')}`;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    c.querySelectorAll('.bar-fill').forEach(b => { b.style.width = b.dataset.target + '%'; });
+  }));
+}
+
+/* ── SIDEBAR SCROLL OBSERVER ────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  showCurr('current', null);
+  document.querySelector('#currChart .bar-chart-tab').classList.add('active');
+
+  const sections = document.querySelectorAll('section[id], div[id]');
+  const links    = document.querySelectorAll('.sidebar-link');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        links.forEach(l => {
+          l.classList.remove('active');
+          if (l.getAttribute('href') === '#' + id) l.classList.add('active');
+        });
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => obs.observe(s));
+});
+</script>
+</body>
+</html>
