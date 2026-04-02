@@ -112,21 +112,39 @@ SIZE: ~145KB
 - Summary — 10-principle traceability diagram
 - Quick Reference — thermal parameters table, formula index
 
+## Chapter 4 Status
+FILE: docs/chapter4.html
+LAST_SECTION: All sections complete (4.1 through 4.5 + Summary + Reference)
+LAST_LINE: 1779
+STATUS: complete
+LINES: 1779
+SIZE: ~95KB
+
+## Chapter 4 Sections Written
+- Hero + Sidebar + CSS design system (cyan electrical theme)
+- 4.1 Voltage Protection — per-cell monitoring, animated weak-cell SVG, OVP/UVP physics, OVP event timeline SVG, Cu dissolution table, 16-bit ADC resolution
+- 4.2 Current Protection — response time tier stack (SCD/OCD/OCC), SCD hardware path animated SVG, inrush calc, shunt vs Hall side-by-side cards, interactive current bar chart
+- 4.3 Cell Balancing — root causes, imbalance impact SVG, passive vs active topology visuals, LFP plateau blindspot OCV SVG with animated markers
+- 4.4 MOSFET Switching — back-to-back FET topology animated SVG, RDS(on) calc, pre-charge 4-phase animated sequence SVG, FET failure mode table
+- 4.5 AFE Architecture — full AFE IC block diagram animated SVG, flying capacitor explanation, SPI daisy chain C code, BQ76952 vs LTC6813 comparison table
+- Summary — 10-principle traceability diagram
+- Quick Reference — protection threshold table, formula grid
+
 ## Cross-chapter Links
 - chapter1.html: sidebar links to chapter2 and chapter3
 - chapter2.html: sidebar links to chapter1 and chapter3
-- chapter3.html: sidebar links to chapter1 and chapter2; footer links to ch2 and ch4
+- chapter3.html: sidebar links to chapter1, chapter2, chapter4; footer links to ch2 and ch4
+- chapter4.html: sidebar links to chapter1, chapter2, chapter3; footer links to ch3 and ch5
 
-## NEXT: Chapter 4
-FILE: docs/chapter4.html
-TOPIC: BMS Hardware Architecture
-- AFE ICs (TI BQ series, ADI LTC6813)
-- Current sensing: shunt vs Hall effect
-- Protection FET topology (back-to-back MOSFETs)
-- Gate driver circuits
-- Communication interfaces: CAN, SMBus, RS485
-- MCU selection and firmware architecture
-- PCB layout considerations for high-current paths
+## NEXT: Chapter 5
+FILE: docs/chapter5.html
+TOPIC: BMS Communication Architecture
+- CAN bus protocol and BMS messages
+- SMBus / I2C for smart battery
+- RS-485 for industrial systems
+- SoC/SoH reporting formats
+- Fault code structures
+- Cloud telemetry and logging
 
 ## Resume Instructions
 If user says "continue", "resume", "go", "limit reset", "start where u left":
