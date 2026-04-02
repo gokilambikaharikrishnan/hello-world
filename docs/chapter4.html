@@ -1275,3 +1275,248 @@
     </div>
   </section>
 
+
+  <!-- ═══════════════════════════════════════════════════
+       SECTION 4.5 — AFE ARCHITECTURE
+  ═══════════════════════════════════════════════════ -->
+  <section class="section" id="s4-5">
+    <div class="section-number">4.5</div>
+    <h2 class="section-title">Analog Front-End (AFE) Architecture</h2>
+    <p class="section-intro">
+      The AFE IC is the BMS's sensory system — the silicon that translates raw cell voltages,
+      pack current, and temperatures into digital data the MCU can act on. Without a precision
+      AFE, every algorithm in this book is running on garbage data.
+    </p>
+
+    <div class="subsection">
+      <div class="subsection-title">What the AFE Does — Full Picture</div>
+
+      <!-- AFE architecture block diagram -->
+      <div class="diagram-wrap">
+        <div class="diagram-title">🔲 AFE IC Internal Architecture — TI BQ76952 / ADI LTC6813 Style</div>
+        <svg viewBox="0 0 660 280" width="100%" style="max-height:280px;">
+          <!-- AFE IC outer box -->
+          <rect x="140" y="20" width="380" height="240" rx="10" fill="rgba(0,229,255,0.03)" stroke="rgba(0,229,255,0.3)" stroke-width="2"/>
+          <text x="330" y="15" text-anchor="middle" fill="rgba(0,229,255,0.5)" font-size="9" font-family="JetBrains Mono,monospace">AFE IC</text>
+
+          <!-- Cell voltage mux -->
+          <rect x="155" y="40" width="110" height="50" rx="5" fill="rgba(99,179,237,0.1)" stroke="rgba(99,179,237,0.4)" stroke-width="1.5"/>
+          <text x="210" y="62" text-anchor="middle" fill="#63b3ed" font-size="9.5" font-family="JetBrains Mono,monospace" font-weight="700">CELL VOLTAGE</text>
+          <text x="210" y="76" text-anchor="middle" fill="#63b3ed" font-size="9.5" font-family="JetBrains Mono,monospace">MULTIPLEXER</text>
+
+          <!-- Delta-Sigma ADC -->
+          <rect x="155" y="105" width="110" height="50" rx="5" fill="rgba(0,229,255,0.1)" stroke="rgba(0,229,255,0.4)" stroke-width="1.5"/>
+          <text x="210" y="127" text-anchor="middle" fill="#00e5ff" font-size="9.5" font-family="JetBrains Mono,monospace" font-weight="700">ΔΣ ADC</text>
+          <text x="210" y="141" text-anchor="middle" fill="#8b949e" font-size="9" font-family="Inter,sans-serif">16-bit, 1mV res.</text>
+
+          <!-- Arrow mux to ADC -->
+          <line x1="210" y1="90" x2="210" y2="105" stroke="rgba(0,229,255,0.5)" stroke-width="1.5" marker-end="url(#arrowB)"/>
+
+          <!-- Current sense amp -->
+          <rect x="155" y="170" width="110" height="50" rx="5" fill="rgba(183,148,244,0.1)" stroke="rgba(183,148,244,0.4)" stroke-width="1.5"/>
+          <text x="210" y="192" text-anchor="middle" fill="#b794f4" font-size="9.5" font-family="JetBrains Mono,monospace" font-weight="700">CURRENT</text>
+          <text x="210" y="206" text-anchor="middle" fill="#b794f4" font-size="9.5" font-family="JetBrains Mono,monospace">SENSE AMP</text>
+
+          <!-- Temp ADC -->
+          <rect x="295" y="40" width="110" height="50" rx="5" fill="rgba(246,173,85,0.1)" stroke="rgba(246,173,85,0.4)" stroke-width="1.5"/>
+          <text x="350" y="62" text-anchor="middle" fill="#f6ad55" font-size="9.5" font-family="JetBrains Mono,monospace" font-weight="700">TEMPERATURE</text>
+          <text x="350" y="76" text-anchor="middle" fill="#f6ad55" font-size="9.5" font-family="JetBrains Mono,monospace">ADC (NTC)</text>
+
+          <!-- Protection comparators -->
+          <rect x="295" y="105" width="110" height="50" rx="5" fill="rgba(252,129,129,0.1)" stroke="rgba(252,129,129,0.4)" stroke-width="1.5"/>
+          <text x="350" y="122" text-anchor="middle" fill="#fc8181" font-size="9.5" font-family="JetBrains Mono,monospace" font-weight="700">HARDWARE</text>
+          <text x="350" y="135" text-anchor="middle" fill="#fc8181" font-size="9.5" font-family="JetBrains Mono,monospace">COMPARATORS</text>
+          <text x="350" y="148" text-anchor="middle" fill="#8b949e" font-size="8.5" font-family="Inter,sans-serif">OVP/UVP/SCD</text>
+
+          <!-- Balancing FET drivers -->
+          <rect x="295" y="170" width="110" height="50" rx="5" fill="rgba(72,187,120,0.1)" stroke="rgba(72,187,120,0.4)" stroke-width="1.5"/>
+          <text x="350" y="192" text-anchor="middle" fill="#48bb78" font-size="9.5" font-family="JetBrains Mono,monospace" font-weight="700">BALANCING</text>
+          <text x="350" y="206" text-anchor="middle" fill="#48bb78" font-size="9.5" font-family="JetBrains Mono,monospace">FET DRIVERS</text>
+
+          <!-- Digital core / registers -->
+          <rect x="435" y="80" width="70" height="130" rx="5" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+          <text x="470" y="105" text-anchor="middle" fill="#e6edf3" font-size="9" font-family="JetBrains Mono,monospace" font-weight="700">DIGITAL</text>
+          <text x="470" y="118" text-anchor="middle" fill="#e6edf3" font-size="9" font-family="JetBrains Mono,monospace">CORE</text>
+          <text x="470" y="136" text-anchor="middle" fill="#8b949e" font-size="8" font-family="Inter,sans-serif">Registers</text>
+          <text x="470" y="149" text-anchor="middle" fill="#8b949e" font-size="8" font-family="Inter,sans-serif">SPI/I²C</text>
+          <text x="470" y="162" text-anchor="middle" fill="#8b949e" font-size="8" font-family="Inter,sans-serif">Watchdog</text>
+          <text x="470" y="175" text-anchor="middle" fill="#8b949e" font-size="8" font-family="Inter,sans-serif">ALERT pin</text>
+          <text x="470" y="188" text-anchor="middle" fill="#8b949e" font-size="8" font-family="Inter,sans-serif">Daisy chain</text>
+
+          <!-- Internal bus lines -->
+          <line x1="265" y1="65" x2="295" y2="65" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+          <line x1="265" y1="130" x2="295" y2="130" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+          <line x1="265" y1="195" x2="295" y2="195" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+          <line x1="405" y1="65" x2="435" y2="115" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+          <line x1="405" y1="130" x2="435" y2="140" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+          <line x1="405" y1="195" x2="435" y2="175" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+
+          <!-- External: Cell inputs (left) -->
+          <text x="20" y="45" fill="#63b3ed" font-size="8.5" font-family="JetBrains Mono,monospace">VC1–VC16</text>
+          <text x="20" y="58" fill="#8b949e" font-size="8" font-family="Inter,sans-serif">cell sense</text>
+          <line x1="90" y1="50" x2="155" y2="65" stroke="rgba(99,179,237,0.5)" stroke-width="1.5">
+            <animate attributeName="stroke-dasharray" from="0,80" to="80,0" dur="1.5s" repeatCount="indefinite"/>
+          </line>
+
+          <!-- External: Shunt inputs -->
+          <text x="20" y="185" fill="#b794f4" font-size="8.5" font-family="JetBrains Mono,monospace">SRP/SRN</text>
+          <text x="20" y="198" fill="#8b949e" font-size="8" font-family="Inter,sans-serif">shunt ±</text>
+          <line x1="80" y1="192" x2="155" y2="195" stroke="rgba(183,148,244,0.5)" stroke-width="1.5">
+            <animate attributeName="stroke-dasharray" from="0,80" to="80,0" dur="1.8s" repeatCount="indefinite"/>
+          </line>
+
+          <!-- External: SPI to MCU (right) -->
+          <text x="530" y="135" fill="#e6edf3" font-size="8.5" font-family="JetBrains Mono,monospace">SPI/I²C</text>
+          <text x="530" y="148" fill="#8b949e" font-size="8" font-family="Inter,sans-serif">to MCU</text>
+          <line x1="505" y1="140" x2="530" y2="140" stroke="rgba(255,255,255,0.4)" stroke-width="1.5">
+            <animate attributeName="stroke-dasharray" from="0,30" to="30,0" dur="0.6s" repeatCount="indefinite"/>
+          </line>
+
+          <!-- External: Gate driver outputs -->
+          <text x="530" y="200" fill="#48bb78" font-size="8.5" font-family="JetBrains Mono,monospace">BAL_FETs</text>
+          <text x="530" y="213" fill="#f6ad55" font-size="8.5" font-family="JetBrains Mono,monospace">CHG/DSG</text>
+          <line x1="505" y1="185" x2="530" y2="200" stroke="rgba(72,187,120,0.5)" stroke-width="1.5"/>
+
+          <!-- External: ALERT pin -->
+          <text x="530" y="100" fill="#fc8181" font-size="8.5" font-family="JetBrains Mono,monospace">ALERT</text>
+          <line x1="505" y1="110" x2="530" y2="100" stroke="rgba(252,129,129,0.5)" stroke-width="1.5">
+            <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite"/>
+          </line>
+        </svg>
+        <p class="diagram-caption">
+          AFE IC internal blocks. Animated lines show active data paths. Cell voltages enter the
+          multiplexer which feeds the 16-bit ΔΣ ADC. Hardware comparators fire the ALERT pin and
+          gate driver directly for fast faults. All data aggregates in the digital core and is read
+          by the MCU over SPI at 1–10 kHz.
+        </p>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Cell Voltage Measurement — Flying Capacitor and Delta-Sigma ADC</div>
+      <p>Measuring cell voltages in a series string presents a fundamental challenge: the cells
+      sit at successively higher common-mode voltages (cell 1 at 0–3.65V, cell 16 at ~54–58V).
+      The AFE must measure each cell's <em>differential</em> voltage on top of a high common-mode rail.</p>
+
+      <div class="callout callout-elec">
+        <div class="callout-icon">⚡</div>
+        <div class="callout-body">
+          <div class="callout-title">Flying Capacitor Measurement Technique</div>
+          <p>The AFE multiplexer connects a small sampling capacitor (the "flying capacitor", ~50 pF)
+          across each cell in sequence. The capacitor charges to the cell's differential voltage,
+          then the MUX disconnects it from the cell bus and connects it to the ADC input —
+          which now sees only a low-voltage signal equal to V_cell, isolated from the high common-mode.
+          The ΔΣ ADC then digitises this with 16-bit resolution over a conversion window of ~1ms.
+          Total scan time for 16 cells: 16 × 1ms = 16ms — fast enough for 60Hz fault detection.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">AFE-to-MCU Communication — SPI Daisy Chain for Multi-AFE Systems</div>
+      <p>A single AFE IC handles 12–16 cells. A 32S pack needs two AFEs. The daisy-chain
+      topology lets the MCU communicate with all AFEs through a single SPI port:</p>
+      <div class="code-block">
+<span class="cm">/* SPI daisy chain read — two AFE ICs, 16 cells each
+   MCU sends command to AFE1; AFE1 forwards to AFE2;
+   response propagates back through chain              */</span>
+
+<span class="kw">void</span> <span class="fn">AFE_ReadAllCellVoltages</span>(<span class="tp">uint16_t</span> *v_cells, <span class="tp">uint8_t</span> n_cells) {
+    <span class="tp">uint8_t</span>  cmd[<span class="num">4</span>] = { AFE_CMD_RDCVA, <span class="num">0x00</span>, <span class="num">0x00</span>, <span class="num">0x00</span> };
+    <span class="tp">uint8_t</span>  resp[<span class="num">48</span>];     <span class="cm">/* 2 bytes/cell × 16 cells × 1.5 (overhead) */</span>
+
+    <span class="fn">SPI_CS_Assert</span>();
+    <span class="fn">SPI_Transmit</span>(cmd, <span class="kw">sizeof</span>(cmd));        <span class="cm">/* broadcast to chain         */</span>
+    <span class="fn">SPI_Receive</span>(resp, <span class="kw">sizeof</span>(resp));        <span class="cm">/* all AFEs reply in sequence  */</span>
+    <span class="fn">SPI_CS_Deassert</span>();
+
+    <span class="kw">for</span> (<span class="tp">int</span> i = <span class="num">0</span>; i &lt; n_cells; i++) {
+        <span class="cm">/* 2-byte raw reading → voltage in mV */</span>
+        <span class="tp">uint16_t</span> raw = ((resp[i*<span class="num">2</span>] &lt;&lt; <span class="num">8</span>) | resp[i*<span class="num">2</span>+<span class="num">1</span>]);
+        v_cells[i] = (raw * <span class="num">100</span>UL) / <span class="num">3276</span>;   <span class="cm">/* LSB = ~100μV for BQ76952  */</span>
+    }
+}
+
+<span class="cm">/* AFE watchdog — must be petted every 2s or AFE opens FETs
+   This ensures MCU lockup results in safe pack disconnect   */</span>
+<span class="kw">void</span> <span class="fn">AFE_PetWatchdog</span>(<span class="kw">void</span>) {
+    <span class="fn">AFE_WriteReg</span>(AFE_REG_WDOG, <span class="num">0xA5</span>);    <span class="cm">/* magic byte resets timer    */</span>
+}
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-icon">⚠</div>
+        <div class="callout-body">
+          <div class="callout-title">Watchdog Is a Safety-Critical Feature — Do Not Disable</div>
+          <p>The AFE watchdog timer opens the main FETs if the MCU stops petting it within the timeout
+          window (typically 1–2s). This is a critical safety feature: if the MCU crashes, hangs, or
+          enters an infinite loop, the watchdog ensures the pack disconnects rather than remaining
+          connected with no active protection. Never disable the watchdog during debug — instead, increase
+          the timeout temporarily. In production firmware, the watchdog pet must be in the highest-priority
+          task with a hardware timer, not a software delay loop that can be blocked.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">AFE IC Comparison — TI BQ76952 vs ADI LTC6813</div>
+      <div class="comparison-table-wrap">
+        <table class="comparison-table">
+          <thead>
+            <tr><th>Feature</th><th>TI BQ76952</th><th>ADI LTC6813-1</th><th>Design Implication</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="metric-name">Cell count</td>
+              <td>3–16 cells</td>
+              <td>Up to 18 cells</td>
+              <td>LTC6813 supports 18S in a single IC — fewer ICs for larger packs</td>
+            </tr>
+            <tr>
+              <td class="metric-name">ADC resolution</td>
+              <td>16-bit ΔΣ</td>
+              <td>16-bit ΔΣ</td>
+              <td>Both achieve ~100μV LSB — equivalent accuracy</td>
+            </tr>
+            <tr>
+              <td class="metric-name">Measurement time</td>
+              <td>~16ms (all cells)</td>
+              <td>~7ms (all cells, 7kHz mode)</td>
+              <td>LTC6813 faster — better for high-speed protection loops</td>
+            </tr>
+            <tr>
+              <td class="metric-name">Communication</td>
+              <td>I²C or SPI</td>
+              <td>SPI only (isoSPI for isolation)</td>
+              <td>LTC6813 isoSPI enables optical/transformer isolation in high-voltage stacks</td>
+            </tr>
+            <tr>
+              <td class="metric-name">Hardware OVP/UVP</td>
+              <td>Yes — configurable registers</td>
+              <td>Yes — programmable comparators</td>
+              <td>Both fire ALERT pin &lt;1ms without MCU involvement</td>
+            </tr>
+            <tr>
+              <td class="metric-name">Integrated balancing</td>
+              <td>Yes — 16 internal FET drivers</td>
+              <td>Yes — 18 PWM outputs</td>
+              <td>Both drive external balancing resistor FETs directly — no extra gate driver needed</td>
+            </tr>
+            <tr>
+              <td class="metric-name">Temperature inputs</td>
+              <td>9 GPIO (NTC compatible)</td>
+              <td>5 GPIO</td>
+              <td>BQ76952 supports more NTC sensors per IC — better for dense packs</td>
+            </tr>
+            <tr>
+              <td class="metric-name">Package / cost</td>
+              <td>48-pin QFN, ~$5–8</td>
+              <td>48-pin LQFP, ~$8–12</td>
+              <td>TI slightly lower cost; ADI stronger in automotive/high-voltage applications</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
