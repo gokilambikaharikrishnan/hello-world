@@ -1035,3 +1035,243 @@
     </div>
   </section>
 
+
+  <!-- ═══════════════════════════════════════════════════
+       SECTION 4.4 — MOSFET SWITCHING
+  ═══════════════════════════════════════════════════ -->
+  <section class="section" id="s4-4">
+    <div class="section-number">4.4</div>
+    <h2 class="section-title">MOSFET Switching</h2>
+    <p class="section-intro">
+      The MOSFET is the BMS's actuator — the component that physically disconnects the pack
+      from the load or charger when protection events fire. Understanding the switching topology,
+      body diode behaviour, and the pre-charge circuit separates a safe design from a damaging one.
+    </p>
+
+    <div class="subsection">
+      <div class="subsection-title">Charge FET and Discharge FET — Why Two Separate Switches</div>
+      <p>A BMS uses two back-to-back N-channel MOSFETs (common-source configuration) rather than
+      a single switch. This allows independent control of charge and discharge current paths.</p>
+
+      <!-- MOSFET topology animated SVG -->
+      <div class="diagram-wrap">
+        <div class="diagram-title">⚡ Back-to-Back MOSFET Topology — Common Source Configuration</div>
+        <svg viewBox="0 0 660 220" width="100%" style="max-height:220px;">
+          <defs>
+            <marker id="arrowB" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
+              <polygon points="0,0 0,7 7,3.5" fill="rgba(0,229,255,0.7)"/>
+            </marker>
+            <marker id="arrowR" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
+              <polygon points="0,0 0,7 7,3.5" fill="rgba(252,129,129,0.7)"/>
+            </marker>
+          </defs>
+
+          <!-- BATTERY PACK (left) -->
+          <rect x="20" y="80" width="60" height="60" rx="6" fill="rgba(72,187,120,0.1)" stroke="rgba(72,187,120,0.5)" stroke-width="1.5"/>
+          <text x="50" y="108" text-anchor="middle" fill="#48bb78" font-size="10" font-family="JetBrains Mono,monospace" font-weight="700">PACK</text>
+          <text x="50" y="122" text-anchor="middle" fill="#8b949e" font-size="8.5" font-family="Inter,sans-serif">58V / 280Ah</text>
+
+          <!-- Pack+ wire -->
+          <line x1="80" y1="95" x2="170" y2="95" stroke="rgba(252,129,129,0.6)" stroke-width="2.5"/>
+          <text x="125" y="89" text-anchor="middle" fill="#fc8181" font-size="8.5" font-family="JetBrains Mono,monospace">PACK+</text>
+
+          <!-- DISCHARGE FET (Q1) -->
+          <rect x="170" y="65" width="80" height="80" rx="6" fill="rgba(0,229,255,0.07)" stroke="rgba(0,229,255,0.4)" stroke-width="1.5"/>
+          <text x="210" y="95" text-anchor="middle" fill="#00e5ff" font-size="10" font-family="JetBrains Mono,monospace" font-weight="700">Q1</text>
+          <text x="210" y="110" text-anchor="middle" fill="#8b949e" font-size="9" font-family="Inter,sans-serif">Discharge</text>
+          <text x="210" y="123" text-anchor="middle" fill="#8b949e" font-size="9" font-family="Inter,sans-serif">FET</text>
+          <!-- Gate drive line Q1 -->
+          <line x1="210" y1="145" x2="210" y2="175" stroke="#f6ad55" stroke-width="1.5" stroke-dasharray="3,2"/>
+          <text x="220" y="172" fill="#f6ad55" font-size="8" font-family="JetBrains Mono,monospace">DSG_GATE</text>
+
+          <!-- Body diode Q1 (points right = allows charge current) -->
+          <text x="248" y="82" fill="rgba(255,255,255,0.3)" font-size="8" font-family="Inter,sans-serif">→ body diode</text>
+
+          <!-- Common source node -->
+          <line x1="250" y1="95" x2="290" y2="95" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+          <circle cx="270" cy="95" r="4" fill="rgba(255,255,255,0.3)"/>
+          <text x="270" y="115" text-anchor="middle" fill="#484f58" font-size="8" font-family="JetBrains Mono,monospace">common source</text>
+
+          <!-- CHARGE FET (Q2) -->
+          <rect x="290" y="65" width="80" height="80" rx="6" fill="rgba(99,179,237,0.07)" stroke="rgba(99,179,237,0.4)" stroke-width="1.5"/>
+          <text x="330" y="95" text-anchor="middle" fill="#63b3ed" font-size="10" font-family="JetBrains Mono,monospace" font-weight="700">Q2</text>
+          <text x="330" y="110" text-anchor="middle" fill="#8b949e" font-size="9" font-family="Inter,sans-serif">Charge</text>
+          <text x="330" y="123" text-anchor="middle" fill="#8b949e" font-size="9" font-family="Inter,sans-serif">FET</text>
+          <!-- Gate drive Q2 -->
+          <line x1="330" y1="145" x2="330" y2="175" stroke="#f6ad55" stroke-width="1.5" stroke-dasharray="3,2"/>
+          <text x="340" y="172" fill="#f6ad55" font-size="8" font-family="JetBrains Mono,monospace">CHG_GATE</text>
+
+          <!-- Body diode Q2 (points left = allows discharge current) -->
+          <text x="370" y="82" fill="rgba(255,255,255,0.3)" font-size="8" font-family="Inter,sans-serif">← body diode</text>
+
+          <!-- PACK- wire -->
+          <line x1="370" y1="95" x2="430" y2="95" stroke="rgba(99,179,237,0.6)" stroke-width="2.5"/>
+
+          <!-- Shunt resistor -->
+          <rect x="430" y="82" width="50" height="26" rx="4" fill="rgba(246,173,85,0.1)" stroke="rgba(246,173,85,0.5)" stroke-width="1.5"/>
+          <text x="455" y="99" text-anchor="middle" fill="#f6ad55" font-size="9" font-family="JetBrains Mono,monospace">R_shunt</text>
+          <text x="455" y="111" text-anchor="middle" fill="#8b949e" font-size="8" font-family="JetBrains Mono,monospace">1mΩ</text>
+
+          <!-- PACK- to load/charger connector -->
+          <line x1="480" y1="95" x2="540" y2="95" stroke="rgba(99,179,237,0.6)" stroke-width="2.5"/>
+          <text x="510" y="89" text-anchor="middle" fill="#63b3ed" font-size="8.5" font-family="JetBrains Mono,monospace">PACK−</text>
+
+          <!-- Load/Charger block -->
+          <rect x="540" y="75" width="100" height="40" rx="6" fill="rgba(183,148,244,0.08)" stroke="rgba(183,148,244,0.4)" stroke-width="1.5"/>
+          <text x="590" y="98" text-anchor="middle" fill="#b794f4" font-size="10" font-family="JetBrains Mono,monospace">LOAD /</text>
+          <text x="590" y="110" text-anchor="middle" fill="#b794f4" font-size="10" font-family="JetBrains Mono,monospace">CHARGER</text>
+
+          <!-- Top bus P+ wire from pack to load -->
+          <line x1="80" y1="85" x2="80" y2="30" stroke="rgba(252,129,129,0.4)" stroke-width="1.5"/>
+          <line x1="80" y1="30" x2="590" y2="30" stroke="rgba(252,129,129,0.4)" stroke-width="1.5"/>
+          <line x1="590" y1="30" x2="590" y2="75" stroke="rgba(252,129,129,0.4)" stroke-width="1.5"/>
+          <text x="330" y="24" text-anchor="middle" fill="rgba(252,129,129,0.5)" font-size="8.5" font-family="JetBrains Mono,monospace">direct positive bus (always connected)</text>
+
+          <!-- Gate Driver block -->
+          <rect x="220" y="185" width="120" height="30" rx="4" fill="rgba(246,173,85,0.08)" stroke="rgba(246,173,85,0.35)" stroke-width="1"/>
+          <text x="280" y="204" text-anchor="middle" fill="#f6ad55" font-size="9" font-family="JetBrains Mono,monospace">GATE DRIVER IC</text>
+
+          <!-- AFE/MCU -->
+          <rect x="100" y="185" width="100" height="30" rx="4" fill="rgba(0,229,255,0.06)" stroke="rgba(0,229,255,0.3)" stroke-width="1"/>
+          <text x="150" y="204" text-anchor="middle" fill="#00e5ff" font-size="9" font-family="JetBrains Mono,monospace">AFE / MCU</text>
+          <line x1="200" y1="200" x2="220" y2="200" stroke="rgba(246,173,85,0.4)" stroke-width="1" stroke-dasharray="3,2"/>
+        </svg>
+        <p class="diagram-caption">
+          Q1 (discharge FET) and Q2 (charge FET) share a common-source node. With sources tied together,
+          each FET's body diode faces opposite directions — when Q1 is off but Q2 is on, Q1's body diode
+          still allows discharge current to flow. This is why <em>both</em> FETs must be opened to fully
+          isolate the pack. The shunt resistor on the negative bus measures pack current for both paths.
+        </p>
+      </div>
+
+      <div class="formula-block">
+        <span class="formula-label">FET Selection — RDS(on) Power Loss</span>
+        <span class="formula-line">P_FET = I² × RDS(on) × N_parallel</span>
+        <span class="formula-line">Target: P_FET &lt; 2W per FET at max continuous current</span>
+        <span class="formula-line">Example: I = 280A, target P = 2W → RDS(on) max = 2 / 280² = 25 μΩ</span>
+        <span class="formula-line">Solution: parallel 4× FETs at 100 μΩ each → effective RDS = 25 μΩ ✓</span>
+        <span class="formula-caption">
+          Modern N-channel power MOSFETs (e.g. IRFB7437, CSD18537) achieve 1–3 mΩ RDS(on) individually.
+          For 280A continuous current a single FET would dissipate 78W — unacceptable.
+          Paralleling 4–8 FETs distributes the thermal load. Each FET must have a small
+          source-degeneration resistor (1–5 mΩ) to ensure equal current sharing during switching transients.
+        </span>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Pre-Charge Circuit — Protecting the Load Capacitors</div>
+      <p>When the discharge FET closes onto a discharged load with large input capacitors (e.g.
+      an inverter with 1000μF of DC-link capacitance), the inrush current spike can reach
+      thousands of amps — enough to weld FET contacts or blow fuses.</p>
+
+      <div class="formula-block">
+        <span class="formula-label">Inrush Current Without Pre-Charge</span>
+        <span class="formula-line">I_peak = V_pack / R_esr_caps  (at t=0, capacitor looks like short circuit)</span>
+        <span class="formula-line">Example: 58V pack, R_esr = 5 mΩ → I_peak = 58 / 0.005 = 11,600A</span>
+        <span class="formula-line">This exceeds SCD threshold → BMS trips immediately → FET never closes</span>
+      </div>
+
+      <!-- Pre-charge sequence animated SVG -->
+      <div class="diagram-wrap">
+        <div class="diagram-title">🔌 Pre-Charge Sequence — Four-Phase Turn-On</div>
+        <svg viewBox="0 0 660 170" width="100%" style="max-height:170px;">
+          <!-- Timeline base -->
+          <line x1="40" y1="130" x2="630" y2="130" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>
+
+          <!-- Phase 1: Both FETs off -->
+          <rect x="40" y="30" width="120" height="90" rx="4" fill="rgba(252,129,129,0.06)" stroke="rgba(252,129,129,0.25)" stroke-width="1"/>
+          <text x="100" y="55" text-anchor="middle" fill="#fc8181" font-size="9.5" font-family="JetBrains Mono,monospace" font-weight="700">Phase 1</text>
+          <text x="100" y="70" text-anchor="middle" fill="#8b949e" font-size="9" font-family="Inter,sans-serif">Both FETs OFF</text>
+          <text x="100" y="84" text-anchor="middle" fill="#8b949e" font-size="9" font-family="Inter,sans-serif">Pack isolated</text>
+          <text x="100" y="98" text-anchor="middle" fill="#8b949e" font-size="9" font-family="Inter,sans-serif">V_load = 0V</text>
+
+          <!-- Phase 2: Pre-charge resistor -->
+          <rect x="168" y="30" width="140" height="90" rx="4" fill="rgba(246,173,85,0.06)" stroke="rgba(246,173,85,0.3)" stroke-width="1"/>
+          <text x="238" y="55" text-anchor="middle" fill="#f6ad55" font-size="9.5" font-family="JetBrains Mono,monospace" font-weight="700">Phase 2</text>
+          <text x="238" y="70" text-anchor="middle" fill="#8b949e" font-size="9" font-family="Inter,sans-serif">Pre-charge relay ON</text>
+          <text x="238" y="84" text-anchor="middle" fill="#8b949e" font-size="9" font-family="Inter,sans-serif">R_pchg in series</text>
+          <text x="238" y="98" text-anchor="middle" fill="#f6ad55" font-size="9" font-family="Inter,sans-serif">V_load rises slowly</text>
+          <!-- rising line -->
+          <polyline points="168,125 308,75" fill="none" stroke="#f6ad55" stroke-width="2">
+            <animate attributeName="stroke-dasharray" from="0,200" to="200,0" dur="1.5s" fill="freeze"/>
+          </polyline>
+
+          <!-- Phase 3: Wait for voltage match -->
+          <rect x="316" y="30" width="130" height="90" rx="4" fill="rgba(99,179,237,0.06)" stroke="rgba(99,179,237,0.25)" stroke-width="1"/>
+          <text x="381" y="55" text-anchor="middle" fill="#63b3ed" font-size="9.5" font-family="JetBrains Mono,monospace" font-weight="700">Phase 3</text>
+          <text x="381" y="70" text-anchor="middle" fill="#8b949e" font-size="9" font-family="Inter,sans-serif">Wait: V_load ≈ V_pack</text>
+          <text x="381" y="84" text-anchor="middle" fill="#8b949e" font-size="9" font-family="Inter,sans-serif">Monitor voltage delta</text>
+          <text x="381" y="98" text-anchor="middle" fill="#63b3ed" font-size="9" font-family="Inter,sans-serif">ΔV &lt; 2V → proceed</text>
+          <line x1="316" y1="75" x2="446" y2="73" stroke="#63b3ed" stroke-width="2"/>
+
+          <!-- Phase 4: Main FET closes -->
+          <rect x="454" y="30" width="160" height="90" rx="4" fill="rgba(72,187,120,0.06)" stroke="rgba(72,187,120,0.3)" stroke-width="1"/>
+          <text x="534" y="55" text-anchor="middle" fill="#48bb78" font-size="9.5" font-family="JetBrains Mono,monospace" font-weight="700">Phase 4</text>
+          <text x="534" y="70" text-anchor="middle" fill="#8b949e" font-size="9" font-family="Inter,sans-serif">Discharge FET closes</text>
+          <text x="534" y="84" text-anchor="middle" fill="#8b949e" font-size="9" font-family="Inter,sans-serif">Pre-charge relay OFF</text>
+          <text x="534" y="98" text-anchor="middle" fill="#48bb78" font-size="9" font-family="Inter,sans-serif">Normal operation ✓</text>
+
+          <!-- tick marks on timeline -->
+          <text x="100" y="146" text-anchor="middle" fill="#484f58" font-size="8.5" font-family="JetBrains Mono,monospace">~0ms</text>
+          <text x="238" y="146" text-anchor="middle" fill="#484f58" font-size="8.5" font-family="JetBrains Mono,monospace">+50ms</text>
+          <text x="381" y="146" text-anchor="middle" fill="#484f58" font-size="8.5" font-family="JetBrains Mono,monospace">+200–500ms</text>
+          <text x="534" y="146" text-anchor="middle" fill="#484f58" font-size="8.5" font-family="JetBrains Mono,monospace">+600ms total</text>
+        </svg>
+        <p class="diagram-caption">
+          Pre-charge sequence: (1) pack isolated, (2) pre-charge relay bypasses main FET through R_pchg (~100Ω),
+          slowly charging load capacitors, (3) BMS monitors until V_load ≈ V_pack (ΔV &lt; 2V),
+          (4) closes main discharge FET and opens pre-charge relay. Total time ~600ms — imperceptible to users.
+        </p>
+      </div>
+
+      <div class="formula-block">
+        <span class="formula-label">Pre-Charge Resistor Calculation</span>
+        <span class="formula-line">R_pchg = V_pack / I_pchg_max  (limit inrush to safe level)</span>
+        <span class="formula-line">Time constant: τ = R_pchg × C_load</span>
+        <span class="formula-line">V_cap(t) = V_pack × (1 − e^(−t/τ))  → 95% charge at t = 3τ</span>
+        <span class="formula-caption">
+          Example: V_pack = 58V, C_load = 2000μF, I_max = 500mA safe inrush.
+          R_pchg = 58V / 0.5A = 116Ω → use 100Ω 5W resistor.
+          τ = 100 × 0.002 = 200ms. 95% charged at 3τ = 600ms. ✓
+          The pre-charge relay is typically a small signal relay (5V coil) rated 1A — 
+          it handles the limited pre-charge current easily while the main FETs handle the 280A+ load.
+        </span>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">FET Failure Modes and Redundancy</div>
+      <div class="comparison-table-wrap">
+        <table class="comparison-table">
+          <thead>
+            <tr><th>Failure Mode</th><th>Electrical State</th><th>Consequence</th><th>Detection</th><th>Mitigation</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="metric-name">Fail-Open<span class="metric-sub">Gate driver fault</span></td>
+              <td>FET stuck open — cannot close</td>
+              <td style="color:var(--accent-orange);">Pack cannot deliver power — UPS fails to switch over</td>
+              <td>Self-test at boot: close FET, measure V_drain — should equal V_source</td>
+              <td>Redundant FET in parallel with OR diode</td>
+            </tr>
+            <tr>
+              <td class="metric-name">Fail-Closed<span class="metric-sub">Gate oxide breakdown</span></td>
+              <td>FET stuck closed — cannot open</td>
+              <td style="color:var(--accent-red);">Loss of protection — OVP, UVP, OCD cannot disconnect pack</td>
+              <td>Self-test: open FET, apply test current — V_drain should rise. If not: FET shorted.</td>
+              <td>Series fuse or second FET in series (2×2 topology)</td>
+            </tr>
+            <tr>
+              <td class="metric-name">Partial Degradation<span class="metric-sub">Increased RDS(on)</span></td>
+              <td>FET conducting but lossy</td>
+              <td style="color:var(--accent-yellow);">Hot spot on PCB, reduced efficiency, eventually thermal failure</td>
+              <td>Monitor V_drop across FET at known current — deviation from expected R × I indicates degradation</td>
+              <td>Thermal monitoring on FET package; replace at commissioning if V_drop high</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
