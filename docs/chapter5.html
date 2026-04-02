@@ -282,3 +282,113 @@
       </div>
     </div>
   </div>
+
+  <!-- ═══════════════════════════════════════
+       SECTION 5.1 — WHY STANDARDS EXIST
+  ═══════════════════════════════════════ -->
+  <section class="section" id="s5-1">
+    <div class="section-number">5.1</div>
+    <h2 class="section-title">Why Standards Exist</h2>
+    <p class="section-intro">
+      Battery standards are not bureaucratic paperwork — they are written in fire.
+      Every requirement in IEC 62133 or UL 1973 was preceded by a real incident:
+      a recalled product, a burned aircraft, an evacuated apartment block.
+      Understanding where standards come from makes it easier to follow them correctly.
+    </p>
+
+    <div class="subsection">
+      <div class="subsection-title">The Incidents That Created the Modern Standards Landscape</div>
+
+      <div class="incident-timeline">
+        <!-- 2006 -->
+        <div class="incident-item">
+          <div class="incident-year" style="background:rgba(248,113,113,0.15);border:1.5px solid rgba(248,113,113,0.5);color:#f87171;">2006</div>
+          <div class="incident-body">
+            <div class="incident-title">Dell / Sony Laptop Battery Recall — 9.6 Million Units</div>
+            <div class="incident-desc">Sony-manufactured 18650 cells had metallic contamination from the manufacturing process. Dendritic growth from contaminant particles caused internal short circuits in laptops worldwide. Multiple fires reported on aircraft.</div>
+            <div class="incident-outcome" style="color:#f87171;">→ Triggered: IEC 62133 cell-level manufacturing quality requirements; FAA battery fire suppression rules for cabins</div>
+          </div>
+        </div>
+        <!-- 2013 -->
+        <div class="incident-item">
+          <div class="incident-year" style="background:rgba(251,191,36,0.15);border:1.5px solid rgba(251,191,36,0.5);color:#fbbf24;">2013</div>
+          <div class="incident-body">
+            <div class="incident-title">Boeing 787 Dreamliner — Two Pack Fires, Global Fleet Grounded</div>
+            <div class="incident-desc">Two separate incidents (Boston and Tokyo) involving GS Yuasa Li-ion packs. Root cause: electrolyte venting and internal thermal runaway propagation. The packs met all then-current standards — yet still failed. The FAA grounded all 787s for 3 months.</div>
+            <div class="incident-outcome" style="color:#fbbf24;">→ Triggered: Revision of FAA Special Condition SC-BATM; new requirements for cell-to-cell propagation containment; reinforced IEC 62133 thermal propagation tests</div>
+          </div>
+        </div>
+        <!-- 2016 -->
+        <div class="incident-item">
+          <div class="incident-year" style="background:rgba(248,113,113,0.15);border:1.5px solid rgba(248,113,113,0.5);color:#f87171;">2016</div>
+          <div class="incident-body">
+            <div class="incident-title">Samsung Galaxy Note 7 — 2.5 Million Units Recalled Globally</div>
+            <div class="incident-desc">Two separate battery suppliers both produced packs with insufficient space for electrode expansion. During charging, electrode swelling caused internal short circuits. 35+ fires reported on aircraft; banned from all commercial flights worldwide.</div>
+            <div class="incident-outcome" style="color:#f87171;">→ Triggered: Samsung SDI and Amperex internal process overhaul; UN 38.3 transport test tightening; updated IEC 62368 consumer electronics power safety</div>
+          </div>
+        </div>
+        <!-- 2019 -->
+        <div class="incident-item">
+          <div class="incident-year" style="background:rgba(251,191,36,0.15);border:1.5px solid rgba(251,191,36,0.5);color:#fbbf24;">2019</div>
+          <div class="incident-body">
+            <div class="incident-title">Arizona APS Grid ESS Fire — 4 Firefighters Injured</div>
+            <div class="incident-desc">A 2 MWh grid storage installation using NMC chemistry experienced thermal runaway in one module. When firefighters opened the container, accumulated combustible gas (CO, H₂) caused a deflagration. The fire suppression system had been activated but gas had continued accumulating.</div>
+            <div class="incident-outcome" style="color:#fbbf24;">→ Triggered: NFPA 855 revision with stricter gas detection and ventilation requirements; UL 9540A large-scale fire testing protocol; EPRI Battery Storage Hazard Assessment</div>
+          </div>
+        </div>
+        <!-- 2021+ -->
+        <div class="incident-item">
+          <div class="incident-year" style="background:rgba(45,212,191,0.15);border:1.5px solid rgba(45,212,191,0.4);color:#2dd4bf;">Now</div>
+          <div class="incident-body">
+            <div class="incident-title">Home ESS Residential Fires — Multiple Jurisdictions</div>
+            <div class="incident-desc">As residential LFP storage deployments scale to millions of units, sporadic fire incidents continue — mostly from non-certified products sold through online channels without UL 1973 or IEC 62619 certification. Insurance and building codes are tightening rapidly.</div>
+            <div class="incident-outcome" style="color:#2dd4bf;">→ Active: UL 1973 edition 3 in development; California Title 19 mandatory certification for all residential ESS; EU Battery Regulation 2023/1542 requiring Declaration of Conformity</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">The Standards Bodies and Their Jurisdictions</div>
+      <div class="stat-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin:1.5rem 0;">
+        <div class="stat-card">
+          <div class="stat-value" style="font-size:1.4rem;">IEC</div>
+          <div class="stat-label">International Electrotechnical Commission</div>
+          <div class="stat-desc">Global. Publishes IEC 62133, 61960, 62619, 62620, 62933. The primary technical standards body for batteries worldwide. EU, Asia, and most markets reference IEC directly.</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="font-size:1.4rem;">UL</div>
+          <div class="stat-label">UL Solutions (formerly Underwriters Laboratories)</div>
+          <div class="stat-desc">USA. Publishes UL 1973 (stationary ESS), UL 9540 (ESS systems), UL 9540A (fire test). Required for US market access. UL certification also accepted in Canada and increasingly globally.</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="font-size:1.4rem;">UN</div>
+          <div class="stat-label">United Nations</div>
+          <div class="stat-desc">Global transport. UN 38.3 (transport testing) is mandatory for all Li-ion cells/packs shipped by air, sea, or road. Published under UN Recommendations on the Transport of Dangerous Goods.</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="font-size:1.4rem;">ISO</div>
+          <div class="stat-label">International Organization for Standardization</div>
+          <div class="stat-desc">Global. ISO 12405 (EV battery testing), ISO 6469 (EV safety). Less directly relevant for ESS/UPS but sets testing methodologies referenced by IEC.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Cost of Non-Compliance — The Business Case for Certification</div>
+      <div class="callout callout-danger">
+        <div class="callout-icon">⚠</div>
+        <div class="callout-body">
+          <div class="callout-title">Non-Certified Products Cannot Be Legally Sold in Most Markets</div>
+          <ul>
+            <li><strong>USA:</strong> UL 1973 certification required for utility interconnection in all 50 states under NEC Article 706. Uncertified products cannot be connected to the grid or installed in occupied buildings.</li>
+            <li><strong>EU:</strong> CE marking requires compliance with Low Voltage Directive and Battery Regulation. IEC 62619 is the harmonised standard — non-compliant products face market withdrawal.</li>
+            <li><strong>Air freight:</strong> UN 38.3 certification required for all Li-ion shipments. Uncertified batteries are classified as prohibited dangerous goods — carrier liability exposure.</li>
+            <li><strong>Insurance:</strong> Building and equipment insurers increasingly require ESS certification. Uncertified products void fire insurance coverage.</li>
+            <li><strong>Liability:</strong> In a product fire, non-compliance is evidence of negligence in civil litigation — multiplying damages exposure.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
