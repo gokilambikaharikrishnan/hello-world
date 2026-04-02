@@ -392,3 +392,234 @@
     </div>
   </section>
 
+
+  <!-- ═══════════════════════════════════════
+       SECTION 5.2 — IEC 62133
+  ═══════════════════════════════════════ -->
+  <section class="section" id="s5-2">
+    <div class="section-number">5.2</div>
+    <h2 class="section-title">IEC 62133 — Safety Requirements</h2>
+    <p class="section-intro">
+      IEC 62133 is the foundational cell-level safety standard. It defines abuse tests
+      that every Li-ion cell must survive before entering a certified product.
+      Understanding each test reveals the exact failure mode it guards against —
+      and precisely how the BMS contributes to passing it.
+    </p>
+
+    <div class="std-card" style="--card-accent:#2dd4bf;">
+      <div class="std-card-header">
+        <div>
+          <div class="std-name">IEC 62133-2:2017</div>
+          <div class="std-full-name">Secondary cells and batteries containing alkaline or other non-acid electrolytes — Safety requirements for portable sealed secondary lithium cells, and for batteries made from them, for use in portable applications</div>
+          <span class="std-scope-tag">Portable &amp; Stationary Li-ion</span>
+          <span class="std-scope-tag">Cell-level + Pack-level</span>
+        </div>
+        <div class="std-badge">FOUNDATIONAL</div>
+      </div>
+      <p style="font-size:0.87rem;color:var(--text-secondary);line-height:1.75;margin-bottom:1rem;">
+        IEC 62133 Part 2 specifically covers lithium cells and packs. It is the minimum safety 
+        gate every Li-ion product must clear. Six core abuse tests simulate the worst-case 
+        conditions a battery could encounter during normal use or foreseeable misuse.
+      </p>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">The Six Core Safety Tests</div>
+      <div class="test-grid">
+        <div class="test-card">
+          <div class="test-id">Test 7.3.1</div>
+          <div class="test-name">Continuous Low-Rate Charge</div>
+          <div class="test-desc">Cell charged at C/10 for 28 days continuously — simulating a faulty charger that never terminates. Tests BMS and cell robustness against chronic overcharge.</div>
+          <div class="test-pass">Pass: no fire, no explosion, no leakage</div>
+        </div>
+        <div class="test-card">
+          <div class="test-id">Test 7.3.2</div>
+          <div class="test-name">Vibration</div>
+          <div class="test-desc">Sinusoidal sweep 7–50 Hz, 1g, three axes, 90 min each. Simulates transport and operational vibration. Tests mechanical integrity of cell construction and connections.</div>
+          <div class="test-pass">Pass: no fire, explosion, leakage, or capacity loss &gt;5%</div>
+        </div>
+        <div class="test-card">
+          <div class="test-id">Test 7.3.3</div>
+          <div class="test-name">Thermal Abuse</div>
+          <div class="test-desc">Cell stored at 130°C for 30 min. Simulates external heat source (adjacent cell TR, hot storage environment). Tests separator robustness at thermal extremes.</div>
+          <div class="test-pass">Pass: no fire or explosion (venting acceptable)</div>
+        </div>
+        <div class="test-card">
+          <div class="test-id">Test 7.3.4</div>
+          <div class="test-name">Overcharge</div>
+          <div class="test-desc">Cell charged at 3× rated current to 10V (for Li-ion). Simulates complete BMS failure with runaway charger. Validates that cell vents safely without explosion.</div>
+          <div class="test-pass">Pass: no fire or explosion</div>
+        </div>
+        <div class="test-card">
+          <div class="test-id">Test 7.3.5</div>
+          <div class="test-name">Forced Discharge</div>
+          <div class="test-desc">Fully discharged cell driven to −1V by a series load — polarity reversal. Simulates deep over-discharge in a series string where a weak cell reverses.</div>
+          <div class="test-pass">Pass: no fire or explosion</div>
+        </div>
+        <div class="test-card">
+          <div class="test-id">Test 7.3.6</div>
+          <div class="test-name">External Short Circuit</div>
+          <div class="test-desc">Full charge cell shorted through &lt;100 mΩ at 20°C and 55°C. Tests cell's intrinsic current interrupt device (CID) and PTC response. Simulates wiring fault.</div>
+          <div class="test-pass">Pass: no fire or explosion; surface T &lt;170°C</div>
+        </div>
+      </div>
+
+      <!-- SVG: Test cascade showing BMS role in each -->
+      <div class="diagram-wrap">
+        <div class="diagram-title">🔬 How the BMS Contributes to IEC 62133 Compliance</div>
+        <svg viewBox="0 0 660 200" width="100%" style="max-height:200px;">
+          <defs>
+            <marker id="arrG" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+              <polygon points="0,0 0,6 6,3" fill="rgba(45,212,191,0.7)"/>
+            </marker>
+          </defs>
+          <!-- BMS box (centre) -->
+          <rect x="240" y="70" width="180" height="60" rx="8" fill="rgba(45,212,191,0.08)" stroke="rgba(45,212,191,0.45)" stroke-width="2"/>
+          <text x="330" y="97"  text-anchor="middle" fill="#2dd4bf" font-size="11" font-family="JetBrains Mono,monospace" font-weight="700">BMS</text>
+          <text x="330" y="113" text-anchor="middle" fill="#8b949e" font-size="9" font-family="Inter,sans-serif">Protection + Monitoring</text>
+
+          <!-- Test bubbles pointing at BMS -->
+          <!-- Overcharge -->
+          <rect x="20" y="20" width="110" height="36" rx="5" fill="rgba(248,113,113,0.1)" stroke="rgba(248,113,113,0.4)" stroke-width="1"/>
+          <text x="75" y="37" text-anchor="middle" fill="#f87171" font-size="9" font-family="JetBrains Mono,monospace" font-weight="700">Overcharge</text>
+          <text x="75" y="49" text-anchor="middle" fill="#8b949e" font-size="8" font-family="Inter,sans-serif">OVP stops charge FET</text>
+          <line x1="130" y1="38" x2="240" y2="85" stroke="rgba(248,113,113,0.4)" stroke-width="1.2" marker-end="url(#arrG)"/>
+
+          <!-- Forced discharge -->
+          <rect x="20" y="80" width="110" height="36" rx="5" fill="rgba(251,191,36,0.1)" stroke="rgba(251,191,36,0.4)" stroke-width="1"/>
+          <text x="75" y="97" text-anchor="middle" fill="#fbbf24" font-size="9" font-family="JetBrains Mono,monospace" font-weight="700">Forced Discharge</text>
+          <text x="75" y="109" text-anchor="middle" fill="#8b949e" font-size="8" font-family="Inter,sans-serif">UVP stops discharge FET</text>
+          <line x1="130" y1="98" x2="240" y2="100" stroke="rgba(251,191,36,0.4)" stroke-width="1.2" marker-end="url(#arrG)"/>
+
+          <!-- Short circuit -->
+          <rect x="20" y="140" width="110" height="36" rx="5" fill="rgba(163,230,53,0.1)" stroke="rgba(163,230,53,0.4)" stroke-width="1"/>
+          <text x="75" y="157" text-anchor="middle" fill="#a3e635" font-size="9" font-family="JetBrains Mono,monospace" font-weight="700">Short Circuit</text>
+          <text x="75" y="169" text-anchor="middle" fill="#8b949e" font-size="8" font-family="Inter,sans-serif">SCD &lt;500μs hardware latch</text>
+          <line x1="130" y1="158" x2="240" y2="115" stroke="rgba(163,230,53,0.4)" stroke-width="1.2" marker-end="url(#arrG)"/>
+
+          <!-- Thermal abuse -->
+          <rect x="530" y="20" width="110" height="36" rx="5" fill="rgba(248,113,113,0.1)" stroke="rgba(248,113,113,0.4)" stroke-width="1"/>
+          <text x="585" y="37" text-anchor="middle" fill="#f87171" font-size="9" font-family="JetBrains Mono,monospace" font-weight="700">Thermal Abuse</text>
+          <text x="585" y="49" text-anchor="middle" fill="#8b949e" font-size="8" font-family="Inter,sans-serif">OTP cutoff at 60°C</text>
+          <line x1="530" y1="38" x2="420" y2="85" stroke="rgba(248,113,113,0.4)" stroke-width="1.2" marker-end="url(#arrG)"/>
+
+          <!-- Vibration -->
+          <rect x="530" y="80" width="110" height="36" rx="5" fill="rgba(96,165,250,0.1)" stroke="rgba(96,165,250,0.35)" stroke-width="1"/>
+          <text x="585" y="97" text-anchor="middle" fill="#60a5fa" font-size="9" font-family="JetBrains Mono,monospace" font-weight="700">Vibration</text>
+          <text x="585" y="109" text-anchor="middle" fill="#8b949e" font-size="8" font-family="Inter,sans-serif">Mechanical design (not BMS)</text>
+          <line x1="530" y1="98" x2="420" y2="100" stroke="rgba(96,165,250,0.3)" stroke-width="1.2" stroke-dasharray="4,3"/>
+
+          <!-- Low-rate charge -->
+          <rect x="530" y="140" width="110" height="36" rx="5" fill="rgba(167,139,250,0.1)" stroke="rgba(167,139,250,0.4)" stroke-width="1"/>
+          <text x="585" y="157" text-anchor="middle" fill="#a78bfa" font-size="9" font-family="JetBrains Mono,monospace" font-weight="700">Low-Rate Overcharge</text>
+          <text x="585" y="169" text-anchor="middle" fill="#8b949e" font-size="8" font-family="Inter,sans-serif">OVP + watchdog timer</text>
+          <line x1="530" y1="158" x2="420" y2="115" stroke="rgba(167,139,250,0.4)" stroke-width="1.2" marker-end="url(#arrG)"/>
+        </svg>
+        <p class="diagram-caption">
+          Five of the six IEC 62133 tests are directly addressed by BMS protection features.
+          Vibration (Test 7.3.2) is a mechanical design concern — the BMS ensures electrical
+          connections remain intact but cannot help if the physical cell structure fails.
+        </p>
+      </div>
+    </div>
+
+    <div class="callout callout-std">
+      <div class="callout-icon">📋</div>
+      <div class="callout-body">
+        <div class="callout-title">IEC 62133 vs IEC 62619 — Know the Difference</div>
+        <p>IEC 62133 covers <em>portable</em> applications (cells and small packs up to 100Wh).
+        IEC 62619:2022 is the sister standard for <em>industrial and stationary</em> applications
+        (larger systems, higher voltages, ESS and UPS). For a home ESS product, you need
+        <strong>IEC 62619</strong>, not 62133. Many manufacturers mistakenly cite 62133
+        when the applicable standard is 62619. Both share similar test philosophies but
+        62619 adds requirements for communication, SOC management, and installation.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════
+       SECTION 5.3 — IEC 61960
+  ═══════════════════════════════════════ -->
+  <section class="section" id="s5-3">
+    <div class="section-number">5.3</div>
+    <h2 class="section-title">IEC 61960 — Performance Characterisation</h2>
+    <p class="section-intro">
+      IEC 61960 defines how cell and battery performance is measured and reported.
+      It is the reference standard behind every number on a cell datasheet —
+      the rated capacity, the cycle life figure, the C-rate definitions.
+      Understanding it lets you read datasheets critically.
+    </p>
+
+    <div class="std-card" style="--card-accent:#34d399;">
+      <div class="std-card-header">
+        <div>
+          <div class="std-name">IEC 61960-3:2017</div>
+          <div class="std-full-name">Secondary cells and batteries containing alkaline or other non-acid electrolytes — Secondary lithium cells and batteries for portable applications — Part 3: Prismatic and cylindrical lithium secondary cells</div>
+          <span class="std-scope-tag">Performance Measurement</span>
+          <span class="std-scope-tag">Datasheet Reference Standard</span>
+        </div>
+        <div class="std-badge" style="background:rgba(52,211,153,0.12);color:#34d399;border-color:rgba(52,211,153,0.3);">PERFORMANCE</div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Key Tests and What They Mean for ESS Design</div>
+      <div class="comparison-table-wrap">
+        <table class="comparison-table">
+          <thead>
+            <tr><th>Test</th><th>Procedure</th><th>What the Number Means</th><th>ESS Design Implication</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="metric-name">Rated capacity<span class="metric-sub">Clause 7.3</span></td>
+              <td>0.2C discharge from full charge to cutoff at 20°C, rest after each step</td>
+              <td>The Ah number on the label. The <em>definitive</em> measurement — all other capacity figures are relative to this.</td>
+              <td>Your BMS Q_nominal must match this exact test condition. Using 1C for the RPT will give a lower number — not a defect, just Peukert effect.</td>
+            </tr>
+            <tr>
+              <td class="metric-name">C-rate capacity<span class="metric-sub">Clause 7.4</span></td>
+              <td>Discharge at 1C, 2C, 5C from full charge at 20°C</td>
+              <td>How much of rated capacity is available at different currents. LFP typically: 1C → 98%, 2C → 95%, 5C → 88%.</td>
+              <td>BMS runtime prediction must use the C-rate adjusted capacity, not rated capacity, at high discharge rates. Peukert exponent k extracted from this data.</td>
+            </tr>
+            <tr>
+              <td class="metric-name">Cycle life<span class="metric-sub">Clause 7.6</span></td>
+              <td>1C charge / 1C discharge, 100% DoD, 20°C. Count cycles until capacity &lt; 80% of initial.</td>
+              <td>The "3000 cycle" or "5000 cycle" claim. This is the cycle count to 80% SOH under standard conditions.</td>
+              <td>Real-world cycle life depends heavily on DoD (80% DoD → ~1.5× more cycles than 100% DoD), temperature, and charge rate. Standard test is worst-case reference.</td>
+            </tr>
+            <tr>
+              <td class="metric-name">Self-discharge<span class="metric-sub">Clause 7.5</span></td>
+              <td>Fully charge, store at 20°C for 28 days, measure retained capacity</td>
+              <td>% capacity remaining after 28 days idle. LFP typically 98–99% (i.e. 1–2% self-discharge per month).</td>
+              <td>BMS coulomb counter must add a self-discharge current term to prevent SoC drift during long idle periods. Value from this test feeds the firmware constant.</td>
+            </tr>
+            <tr>
+              <td class="metric-name">Temperature performance<span class="metric-sub">Clause 7.7</span></td>
+              <td>Capacity at −20°C, 0°C, 20°C (reference), 60°C</td>
+              <td>The f_T derating table for the BMS. Shows how much capacity is available at each temperature relative to 20°C reference.</td>
+              <td>Directly populates the BMS temperature derating lookup table used in SoC calculation and runtime prediction.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Reading a Cell Datasheet with IEC 61960 in Mind</div>
+      <div class="callout callout-warning">
+        <div class="callout-icon">⚠</div>
+        <div class="callout-body">
+          <div class="callout-title">Five Red Flags on Cell Datasheets</div>
+          <ul>
+            <li><strong>Capacity measured at C/5 not C/10:</strong> C/5 gives higher apparent capacity than the IEC standard C/10 — inflated numbers. Verify test condition in footnotes.</li>
+            <li><strong>Cycle life at partial DoD:</strong> "5000 cycles" claimed at 20% DoD is not comparable to "3000 cycles" at 100% DoD. Always compare at same DoD.</li>
+            <li><strong>No temperature derating curves:</strong> Legitimate datasheets include capacity vs temperature graphs. Absence means the manufacturer hasn't tested, or is hiding poor cold performance.</li>
+            <li><strong>No self-discharge figure:</strong> Required by IEC 61960. Absence is non-compliance.</li>
+            <li><strong>Capacity measured at T=25°C vs T=20°C:</strong> IEC standard is 20°C. Measuring at 25°C gives ~1–2% higher capacity. Small but worth noting when comparing cells.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
