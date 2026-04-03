@@ -3008,3 +3008,237 @@
       </div>
     </div>
   </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       QUICK REFERENCE
+  ═══════════════════════════════════════════════════════════════ -->
+  <section id="s6-ref" class="chapter-section">
+    <div class="section-inner">
+      <div class="section-label">Quick Reference</div>
+      <h2 class="section-title">BMS Architecture Reference Index</h2>
+
+      <!-- Formula grid -->
+      <h3 class="subsection-title">Key Equations</h3>
+      <div class="formula-grid">
+        <div class="formula-card">
+          <div class="formula-name">Coulomb counting SoC</div>
+          <div class="formula-eq">SoC(t) = SoC₀ − ∫I·dt / C_full</div>
+          <div class="formula-note">Drift: ~0.5% per hour at 1C. Correct with OCV every rest period.</div>
+        </div>
+        <div class="formula-card">
+          <div class="formula-name">SoH capacity definition</div>
+          <div class="formula-eq">SoH_C = C_full_now / C_design</div>
+          <div class="formula-note">Replace battery at SoH &lt;0.80 (80%). Measure with calibration cycle.</div>
+        </div>
+        <div class="formula-card">
+          <div class="formula-name">Calendar aging (Arrhenius)</div>
+          <div class="formula-eq">k_age = exp(−Ea/kT) / exp(−Ea/kT_ref)</div>
+          <div class="formula-note">Ea≈0.35eV (LFP). Doubles every 10°C. Integrate over time for total age.</div>
+        </div>
+        <div class="formula-card">
+          <div class="formula-name">SoF (functional readiness)</div>
+          <div class="formula-eq">SoF = SoC × η(T) × SoH_C</div>
+          <div class="formula-note">Used for UPS runtime: t = C_design × SoF / I_load</div>
+        </div>
+        <div class="formula-card">
+          <div class="formula-name">SoP (max charge power)</div>
+          <div class="formula-eq">P_chg = I_cc × derate(T, SoC) × V_pack</div>
+          <div class="formula-note">Sent in CAN 0x351 as CCL/CVL. Inverter must not exceed these limits.</div>
+        </div>
+        <div class="formula-card">
+          <div class="formula-name">NVM write life with leveling</div>
+          <div class="formula-eq">N_life = N_endurance × N_pages</div>
+          <div class="formula-note">16 pages × 1M cycles = 16M writes = 30+ years at 60s interval.</div>
+        </div>
+        <div class="formula-card">
+          <div class="formula-name">AFE measurement time</div>
+          <div class="formula-eq">t_meas = N_cells × t_convert</div>
+          <div class="formula-note">t_convert ≈ 1ms per cell (Δ-Σ). 16 cells = 16ms. Pipeline for 10ms loop.</div>
+        </div>
+        <div class="formula-card">
+          <div class="formula-name">NTC temperature (Steinhart-Hart)</div>
+          <div class="formula-eq">1/T = A + B·ln(R) + C·ln(R)³</div>
+          <div class="formula-note">A,B,C from NTC datasheet. R = V_ref×R_pull/(V_adc−1) − R_pull simplified.</div>
+        </div>
+      </div>
+
+      <!-- Hardware parameters reference -->
+      <h3 class="subsection-title">BMS Hardware Parameters — LFP 16S 280Ah Reference Design</h3>
+      <div style="overflow-x:auto;">
+      <table class="comp-table">
+        <thead>
+          <tr><th>Parameter</th><th>Value</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Cell count (series)</td><td>16S</td><td>Nominal pack voltage 16 × 3.2V = 51.2V</td></tr>
+          <tr><td>Pack voltage range</td><td>40V – 58.4V</td><td>16 × 2.5V to 16 × 3.65V</td></tr>
+          <tr><td>Design capacity</td><td>280Ah (14.3kWh)</td><td>At C/10, 20°C, IEC 61960</td></tr>
+          <tr><td>Max charge current</td><td>140A (0.5C)</td><td>Above 0.5C reduces cycle life for LFP</td></tr>
+          <tr><td>Max discharge current</td><td>280A (1C cont)</td><td>2C peak for 30s (inverter inrush)</td></tr>
+          <tr><td>OVP threshold</td><td>3.65V/cell</td><td>58.4V pack. Disconnect within 100ms</td></tr>
+          <tr><td>UVP threshold</td><td>2.5V/cell</td><td>40.0V pack. Disconnect within 1s</td></tr>
+          <tr><td>OCP threshold</td><td>300A (1.07C)</td><td>SCD hardware path ≤500μs</td></tr>
+          <tr><td>OTP charge cutoff</td><td>55°C</td><td>Li plating risk above 55°C on LFP</td></tr>
+          <tr><td>UTP charge cutoff</td><td>−10°C</td><td>Conservative; some designs allow to −20°C with derating</td></tr>
+          <tr><td>OTP discharge cutoff</td><td>60°C</td><td>Slightly higher than charge — less plating risk</td></tr>
+          <tr><td>AFE IC</td><td>TI BQ76952</td><td>Or ADI LTC6813-1 for harsh environments</td></tr>
+          <tr><td>Shunt resistor</td><td>1mΩ, 0.1%</td><td>Power = 300² × 0.001 = 90W at SCD — size accordingly</td></tr>
+          <tr><td>CAN baud rate</td><td>250 kbps</td><td>PYLON-compatible. 500kbps optional for short cable runs</td></tr>
+          <tr><td>NVM</td><td>AT24C256 (32KB)</td><td>256 × 16-page wear leveled sectors</td></tr>
+          <tr><td>Backup SRAM</td><td>4KB (STM32 BKP)</td><td>Powered by CR1225 coin cell, 11yr life</td></tr>
+          <tr><td>MCU</td><td>STM32G431CB</td><td>Cortex-M4F, 128KB Flash, 32KB RAM, CAN-FD</td></tr>
+          <tr><td>Measurement loop</td><td>10ms</td><td>IWDG timeout: 100ms (allow 10 missed cycles)</td></tr>
+          <tr><td>SoC accuracy (warm)</td><td>±3%</td><td>Coulomb counting + 30min OCV correction</td></tr>
+          <tr><td>SoH accuracy</td><td>±5%</td><td>Calibration cycle every 30 cycles</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<script>
+/* ── Sidebar scroll-spy ────────────────────────────────────── */
+const sidebarLinks = document.querySelectorAll('.sidebar-link');
+const sections = document.querySelectorAll('[id]');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      sidebarLinks.forEach(a => {
+        a.classList.toggle('active', a.getAttribute('href') === '#' + id);
+      });
+    }
+  });
+}, { threshold: 0.2, rootMargin: '-60px 0px -60% 0px' });
+sections.forEach(s => { if(s.id) observer.observe(s); });
+
+/* ── Interactive State Machine ─────────────────────────────── */
+const stateData = {
+  POWER_ON: {
+    color: '#818cf8',
+    entry: 'MCU boot sequence begins. Clock trees initialized (HSE → PLL → 168MHz). All peripherals reset. Stack and heap initialized. Watchdog timer started (IWDG, 100ms timeout).',
+    active: 'Verify RAM integrity (stack canary check). Load critical boot vector from Flash. Set all FET outputs to OPEN (safe default). Initialize AFE via SPI (send configuration registers).',
+    exit: 'NVM read attempted. If valid: restore SoC/SoH/cycle count. If corrupt: initialize defaults. Transition always to INIT.',
+    transitions: 'Always → INIT (no conditions, automatic)'
+  },
+  INIT: {
+    color: '#a78bfa',
+    entry: 'Run self-test on all modules. Read NVM and validate CRC. Initialize AFE protection thresholds (OVP=3.65V, UVP=2.5V, SCD=300A equivalent). Configure CAN peripheral.',
+    active: 'Measure OCV on all 16 cells. If pack at rest (|I|<C/20 for >5min): initialize SoC from OCV table. Otherwise: restore SoC from NVM/BSRAM. Pet IWDG and AFE watchdog.',
+    exit: 'All self-tests passed. SoC initialized. AFE responding to SPI. CAN bus-on achieved. → IDLE',
+    transitions: 'Self-test pass → IDLE | Self-test fail → FAULT (critical) | Voltage out of range → FAULT'
+  },
+  IDLE: {
+    color: '#34d399',
+    entry: 'Charge FET: OPEN. Discharge FET: OPEN. All monitoring active at 10ms interval. CAN TX: periodic status messages every 1s. Enable low-power mode between measurement loops.',
+    active: 'Monitor cell voltages, temperatures, isolation resistance. Evaluate state transitions. Run SOX at 100ms. Update BSRAM at 1s. Write NVM checkpoint at 60s. Update SoH at 1hr.',
+    exit: 'Charger detected on CAN (0x35C CHG enable) → PRE_CHARGE | Load connected (current >1A) → DISCHARGE | No activity 5min → SLEEP | Any fault → FAULT',
+    transitions: 'Charger → PRE_CHARGE | Load → DISCHARGE | Timeout → SLEEP | Fault → FAULT'
+  },
+  SLEEP: {
+    color: '#64748b',
+    entry: 'Enter MCU STOP mode (all peripherals off except RTC + BSRAM + IWDG). Current consumption: ~50μA (down from ~20mA active). All FETs remain OPEN. RTC continues counting.',
+    active: 'Wake on: RTC periodic interrupt (every 30s — brief measurement check), CAN activity on bus (transceiver wake line), external fault signal from AFE.',
+    exit: 'On each wake: run one measurement cycle. If all cells nominal, return to SLEEP. If charger or load detected → IDLE. If fault detected → FAULT.',
+    transitions: 'CAN wake → IDLE | Charger detect → IDLE | Fault → FAULT | Periodic wake + nominal → SLEEP (return)'
+  },
+  PRE_CHARGE: {
+    color: '#00e5ff',
+    entry: 'Pre-charge FET closed (routes current through 100Ω resistor). Main CHG FET remains OPEN. Monitor capacitor charge voltage on output terminals. Set 2s timeout.',
+    active: 'Monitor V_output (measured at load terminals via additional voltage divider + ADC). Wait for V_output to reach 95% of V_pack. Typical time: 600ms for 600μF inverter capacitance.',
+    exit: 'V_output > 95% V_pack → close main CHG FET, open pre-charge FET → CHARGE | Timeout 2s without reaching 95% → FAULT (load short or capacitor open circuit)',
+    transitions: 'V_balanced → CHARGE | Timeout → FAULT | Fault detected → FAULT'
+  },
+  CHARGE: {
+    color: '#34d399',
+    entry: 'CHG FET: CLOSED. DSG FET state depends on simultaneous charge+discharge scenario. Enable CC (constant current) charge phase. Set target current from SoP limit. Log charge start event with RTC.',
+    active: 'Monitor: all cell voltages every 10ms, current every 10ms, temperatures every 10ms. Run cell balancing (1s loop) if ΔV > 20mV. Transition CC→CV when any cell reaches 3.60V. Stop charge when current < C/20 (fully charged).',
+    exit: 'Charge complete (I < C/20 at CV voltage) → IDLE + increment cycle count | Any cell OVP → FAULT | OTP → FAULT | Charger disconnects → IDLE',
+    transitions: 'Charge complete → IDLE | OVP → FAULT | OTP → FAULT | Charger disconnect → IDLE'
+  },
+  DISCHARGE: {
+    color: '#f59e0b',
+    entry: 'DSG FET: CLOSED. CHG FET state depends on bidirectional scenario. Enable SoC tracking at 100ms. Compute initial SoP (discharge current limit). Send CAN 0x351 DCL to inverter.',
+    active: 'Monitor: UVP (2.5V), OCP, OTP, dT/dt every 10ms. Update SoC at 100ms — coulomb count + temperature compensation. Update SoP at 100ms — reduce DCL as SoC approaches 10%. Send CAN status every 1s.',
+    exit: 'UVP triggered (any cell < 2.5V) → FAULT | OCP → FAULT | Load disconnects (I < 0.1A for >5s) → IDLE | SoC reaches 5% → FAULT (deep discharge prevention)',
+    transitions: 'Load disconnect → IDLE | UVP → FAULT | OCP → FAULT | SoC=5% → FAULT'
+  },
+  BALANCING: {
+    color: '#f97316',
+    entry: 'Evaluate ΔV across all cells. Enable AFE balance FET (write BAL_CTRL register) for cells above V_min + threshold. Log balancing start event. Typically runs concurrently during CHARGE state.',
+    active: 'Monitor ΔV every 1s. Discharge high cells through internal 200mA bleed resistor (passive balancing). Balance power: P_bal = ΔV²/R_bal ≈ 0.5W per cell at ΔV=50mV. Monitor cell temperature — disable if T > 45°C.',
+    exit: 'ΔV < 10mV (balanced) → disable all balance FETs → return to CHARGE or IDLE | OTP (balance FET heat) → disable balance → return to CHARGE',
+    transitions: 'ΔV < 10mV → CHARGE/IDLE | OTP on balancing FET → CHARGE/IDLE'
+  },
+  FAULT: {
+    color: '#ef4444',
+    entry: 'IMMEDIATELY: Open both CHG and DSG FETs. Latch fault state (clear requires explicit command). Log fault event to circular buffer with RTC timestamp, cell index, and value. Broadcast CAN 0x35A alarm flags.',
+    active: 'Keep all FETs OPEN. Continue monitoring cell voltages and temperatures. Continue CAN TX every 1s (fault flag bits set). Write fault to NVM immediately. Optional: activate fire suppression GPIO if dT/dt > 3°C/s.',
+    exit: 'FAULT is latched — cannot self-clear. Requires: (1) fault condition no longer present, (2) explicit CAN RESET command from host OR power cycle. Then → RECOVERY.',
+    transitions: 'Fault cleared + reset command → RECOVERY | Watchdog timeout → MCU resets → POWER_ON (fault in NVM)'
+  },
+  RECOVERY: {
+    color: '#f59e0b',
+    entry: 'Validate that fault condition is no longer present. Re-read all cell voltages. Check temperatures. Verify AFE communication. Check isolation resistance.',
+    active: 'Run abbreviated self-test (no full INIT required). Validate SoC estimate is reasonable. Log recovery event with timestamp. Wait for all checks to pass for 3 consecutive 10ms cycles.',
+    exit: 'All checks pass → IDLE | Any parameter still out of range → FAULT (re-latch) | Self-test fails → FAULT',
+    transitions: 'All safe → IDLE | Any fault still present → FAULT'
+  }
+};
+
+function selectState(stateName) {
+  // Update detail panel
+  const data = stateData[stateName];
+  if (!data) return;
+  document.getElementById('state-detail').innerHTML = `
+    <div style="font-family:monospace;font-size:11px;color:${data.color};font-weight:bold;margin-bottom:0.8rem;font-size:14px;">${stateName}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:0.8rem;">
+      <div>
+        <div style="color:#64748b;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.3rem;font-family:monospace;">Entry Actions</div>
+        <div style="color:#94a3b8;font-size:12px;line-height:1.6;">${data.entry}</div>
+      </div>
+      <div>
+        <div style="color:#64748b;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.3rem;font-family:monospace;">Active Monitoring</div>
+        <div style="color:#94a3b8;font-size:12px;line-height:1.6;">${data.active}</div>
+      </div>
+      <div>
+        <div style="color:#64748b;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.3rem;font-family:monospace;">Exit Conditions</div>
+        <div style="color:#94a3b8;font-size:12px;line-height:1.6;">${data.exit}</div>
+      </div>
+    </div>
+    <div style="background:#0a0f14;border-radius:6px;padding:0.6rem 1rem;font-family:monospace;font-size:11px;color:${data.color};">
+      Transitions: ${data.transitions}
+    </div>
+  `;
+
+  // Update SVG highlight
+  const colors = { POWER_ON:'#818cf8', INIT:'#a78bfa', IDLE:'#34d399', SLEEP:'#64748b',
+    PRE_CHARGE:'#00e5ff', CHARGE:'#34d399', DISCHARGE:'#f59e0b', BALANCING:'#f97316',
+    FAULT:'#ef4444', RECOVERY:'#f59e0b' };
+  Object.keys(colors).forEach(s => {
+    const el = document.getElementById('sm-' + s);
+    if (el) {
+      el.style.filter = (s === stateName) ? 'drop-shadow(0 0 8px ' + colors[s] + ')' : '';
+      el.style.strokeWidth = (s === stateName) ? '3' : '2';
+    }
+  });
+
+  // Update card selection
+  document.querySelectorAll('.state-card').forEach(c => c.classList.remove('selected'));
+  const card = document.getElementById('card-' + stateName);
+  if (card) { card.classList.add('selected'); card.scrollIntoView({block:'nearest'}); }
+}
+
+/* ── Arch block hover ──────────────────────────────────────── */
+document.querySelectorAll('.arch-block').forEach(b => {
+  b.style.transition = 'transform 0.2s, box-shadow 0.2s';
+});
+
+/* Init — show IDLE state by default */
+window.addEventListener('DOMContentLoaded', () => selectState('IDLE'));
+</script>
+</body>
+</html>
