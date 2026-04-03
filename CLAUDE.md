@@ -156,15 +156,36 @@ SIZE: ~95KB
 - chapter4.html: sidebar links to chapter1, chapter2, chapter3, chapter5; footer links to ch3 and ch5
 - chapter5.html: footer links to chapter4 and chapter6
 
-## NEXT: Chapter 6
+## Chapter 6 Status
 FILE: docs/chapter6.html
-TOPIC: BMS Communication Architecture
-- CAN bus protocol and BMS messages
-- SMBus / I2C for smart battery
-- RS-485 for industrial systems
-- SoC/SoH reporting formats
-- Fault code structures
-- Cloud telemetry and logging
+LAST_SECTION: All sections complete (6.1 through 6.6 + Summary + Reference)
+LAST_LINE: 3244
+STATUS: complete
+LINES: 3244
+SIZE: ~185KB
+
+## Chapter 6 Sections Written
+- Hero + Sidebar + CSS design system (purple/indigo architecture theme)
+- 6.1 Requirement Traceability — animated 8-row physics→silicon master map SVG
+- 6.2 Hardware Architecture — full system block diagram SVG, AFE deep dive (flying cap + Δ-Σ ADC + watchdog), MCU requirements, MCU selection table, CAN bus physical layer SVG, frame structure, BMS CAN message set (0x351–0x380), STM32 code, NVM write strategy SVG, wear leveling + CRC code, backup SRAM architecture, RTC + calendar aging code, event logging circular buffer + code
+- 6.3 Firmware Architecture — module overview SVG, protection timing hierarchy (5 layers), interactive state machine SVG (11 states + click-for-detail), timing architecture (6 timing layers)
+- 6.4 World-Class BMS — Tesla (cell-level fusing, OTA, 24-bit shunt), BYD (CTP, blade, nail penetration), CATL (cloud SoH, EIS, adaptive charging), common principles
+- 6.5 Communication Stack — SMBus register table (16 registers), I2C code, CAN/SMBus/UART protocol comparison
+- 6.6 SOX Complete — animated update cycle SVG, SoC (CC + OCV + EKF + T-comp), SoH (capacity + resistance + cycle + calendar Arrhenius), SoF, SoP, integration code
+- Summary — 12 design principles grid, 6-layer architecture animated SVG
+- Quick Reference — 8-formula grid, 20-row hardware parameters table (16S 280Ah reference design)
+
+## Cross-chapter Links
+- chapter1.html: sidebar links to ch2–ch6
+- chapter2.html: sidebar links to ch1, ch3–ch6
+- chapter3.html: sidebar links to ch1, ch2, ch4–ch6
+- chapter4.html: sidebar links to ch1–ch3, ch5, ch6
+- chapter5.html: sidebar links to ch1–ch4, ch6; footer links to ch4 and ch6
+- chapter6.html: sidebar links to ch1–ch5; footer links to ch5 and ch7
+
+## NEXT: Chapter 7
+FILE: docs/chapter7.html
+TOPIC: Advanced Topics — Second Life, Fault Injection Testing, Cloud BMS, AI in BMS
 
 ## Resume Instructions
 If user says "continue", "resume", "go", "limit reset", "start where u left":
