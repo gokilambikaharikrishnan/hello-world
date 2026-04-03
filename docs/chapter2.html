@@ -321,6 +321,45 @@
 
     @media print { .sidebar,.chapter-footer{display:none} body{background:white;color:black} .main-content{padding:1cm} }
   </style>
+<style id="__comic-extra">
+/* ---- NEON TABLE ---- */
+.content-main table{border-collapse:collapse!important;border:3px solid #60a5fa!important;box-shadow:0 0 20px rgba(96,165,250,.2)!important;width:100%;}
+.content-main th{background:rgba(96,165,250,.2)!important;color:#60a5fa!important;border:2px solid #60a5fa!important;font-family:Bangers,cursive!important;letter-spacing:.07em!important;font-size:1rem!important;padding:.6rem 1rem!important;text-transform:uppercase!important;}
+.content-main td{border:1px solid rgba(96,165,250,.25)!important;padding:.55rem 1rem!important;}
+.content-main tr:hover td{background:rgba(96,165,250,.06)!important;}
+
+/* ---- COMIC HERO META ITEMS ---- */
+.hero-meta-item{border:2px solid rgba(96,165,250,.35)!important;border-radius:0!important;background:rgba(96,165,250,.06)!important;box-shadow:3px 3px 0 rgba(96,165,250,.15)!important;transition:transform .2s,box-shadow .2s!important;}
+.hero-meta-item:hover{transform:translate(-2px,-2px)!important;box-shadow:5px 5px 0 rgba(96,165,250,.25)!important;}
+.hero-meta-label{font-family:Bangers,cursive!important;letter-spacing:.1em!important;font-size:.8rem!important;}
+
+/* ---- NEON SECTION LABELS ---- */
+.section-intro,.chapter-intro{border-left:5px solid #60a5fa!important;padding-left:1.2rem!important;}
+
+/* ---- KEY VALUE / FORMULA HIGHLIGHTS ---- */
+.formula,.math-block,code.formula{font-family:Bangers,cursive!important;font-size:1.1em!important;color:#60a5fa!important;letter-spacing:.04em!important;background:rgba(96,165,250,.08)!important;border:2px solid rgba(96,165,250,.3)!important;padding:.3rem .8rem!important;border-radius:0!important;}
+
+/* ---- SIDEBAR LOGO PULSE ---- */
+.sidebar-logo::after{content:'◆';color:#60a5fa;animation:__pulse 2s ease infinite;margin-left:.4rem;font-size:.8rem;}
+@keyframes __pulse{0%,100%{opacity:1;text-shadow:0 0 8px #60a5fa}50%{opacity:.3;text-shadow:none}}
+
+/* ---- STAT BOXES ---- */
+.stat-card,.spec-item,.metric-card{border:2px solid rgba(96,165,250,.4)!important;border-radius:0!important;background:rgba(96,165,250,.06)!important;box-shadow:4px 4px 0 rgba(96,165,250,.2)!important;transition:transform .15s!important;}
+.stat-card:hover,.spec-item:hover,.metric-card:hover{transform:translate(-2px,-2px)!important;}
+
+/* ---- HERO SUBTITLE NEON LINE ---- */
+.hero-subtitle{border-left:4px solid #60a5fa!important;padding-left:1rem!important;}
+
+/* ---- PROGRESS BARS ---- */
+.progress-bar-wrap,.progress-fill-bar{border-radius:0!important;}
+
+/* ---- MOBILE FIXES ---- */
+@media(max-width:768px){
+  #chapter-navbar{padding:.4rem .5rem;gap:.3rem;}
+  #chapter-navbar a{font-size:.8rem;padding:.25rem .5rem;}
+  .content-main h2{font-size:2rem!important;}
+}
+</style>
 </head>
 <body>
 <!-- ═══ GEN-Z COMIC STYLE ═══ -->
@@ -4706,5 +4745,42 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(function(){if(div.parentNode)div.parentNode.removeChild(div);},2500);
 })();
 </script>
+<script id="__comic-js-extra">
+/* Tilt effect on hero meta items */
+document.querySelectorAll('.hero-meta-item').forEach(function(el){
+  el.addEventListener('mousemove',function(e){
+    var r=el.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
+    el.style.transform='translate(-2px,-2px) rotateX('+(-y*10)+'deg) rotateY('+(x*10)+'deg)';
+  });
+  el.addEventListener('mouseleave',function(){el.style.transform='';});
+});
+/* Neon flash on sidebar active link change */
+document.querySelectorAll('.sidebar-link').forEach(function(a){
+  a.addEventListener('click',function(){
+    a.style.boxShadow='0 0 15px #60a5fa';
+    setTimeout(function(){a.style.boxShadow='';},500);
+  });
+});
+/* Comic pop on h3 appear */
+(function(){
+  var obs=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        e.target.style.animation='__h3pop .5s cubic-bezier(.34,1.56,.64,1) forwards';
+        obs.unobserve(e.target);
+      }
+    });
+  },{threshold:.4});
+  if(!document.getElementById('__h3pop')){
+    var s=document.createElement('style');s.id='__h3pop';
+    s.textContent='@keyframes __h3pop{0%{opacity:0;transform:scale(.85) translateX(-10px)}100%{opacity:1;transform:scale(1) translateX(0)}}';
+    document.head.appendChild(s);
+  }
+  document.querySelectorAll('.content-main h3').forEach(function(h){
+    h.style.opacity='0';obs.observe(h);
+  });
+})();
+</script>
+
 </body>
 </html>
