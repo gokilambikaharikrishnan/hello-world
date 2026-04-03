@@ -3887,6 +3887,369 @@ T (°C)  | f_T   | Notes
       </div>
     </div>
 
+    <!-- ══════ CH2 ANIMATIONS ══════ -->
+    <section class="section" id="ch2-animations" style="background:#060610;border-top:3px solid #60a5fa">
+      <div class="section-number" style="color:#60a5fa">Interactive Animations</div>
+      <h2 class="section-title" style="color:#60a5fa">Chapter 2 — Visual Explainers</h2>
+
+      <!-- Li+ Ion Movement Canvas -->
+      <div style="margin:2rem 0;padding:1.5rem;background:#0a0a18;border:2px solid #1e293b;border-radius:8px">
+        <h3 style="color:#60a5fa;margin-bottom:.5rem;font-size:1.1rem">⚛️ Li+ Ion Movement — Charge & Discharge</h3>
+        <p style="color:#64748b;font-size:.85rem;margin-bottom:1rem">Watch lithium ions intercalate through the electrolyte while electrons flow in the external circuit.</p>
+        <div style="display:flex;gap:.8rem;margin-bottom:1rem;flex-wrap:wrap">
+          <button id="btn-charge" onclick="setCellMode('charge')" style="padding:.5rem 1.2rem;background:#1e3a5f;border:2px solid #60a5fa;color:#60a5fa;cursor:pointer;font-weight:700;font-family:inherit;border-radius:4px">⚡ CHARGE</button>
+          <button id="btn-discharge" onclick="setCellMode('discharge')" style="padding:.5rem 1.2rem;background:#1a0f00;border:2px solid #fbbf24;color:#fbbf24;cursor:pointer;font-weight:700;font-family:inherit;border-radius:4px">🔋 DISCHARGE</button>
+          <button id="btn-pause" onclick="togglePause()" style="padding:.5rem 1.2rem;background:#1a1a2e;border:2px solid #475569;color:#94a3b8;cursor:pointer;font-family:inherit;border-radius:4px">⏸ PAUSE</button>
+        </div>
+        <canvas id="liion-canvas" width="700" height="260" style="width:100%;background:#080814;border-radius:6px;display:block"></canvas>
+      </div>
+
+      <!-- OCV Curve Drawing Animation -->
+      <div style="margin:2rem 0;padding:1.5rem;background:#0a0a18;border:2px solid #1e293b;border-radius:8px">
+        <h3 style="color:#60a5fa;margin-bottom:1rem;font-size:1.1rem">📈 OCV Curve Drawing Itself — LFP Flat Plateau</h3>
+        <svg id="ocv-svg" viewBox="0 0 700 280" style="width:100%;height:auto">
+          <!-- Axes -->
+          <line x1="70" y1="20" x2="70" y2="240" stroke="#334155" stroke-width="1.5"/>
+          <line x1="70" y1="240" x2="660" y2="240" stroke="#334155" stroke-width="1.5"/>
+          <text x="15" y="130" fill="#64748b" font-size="9" transform="rotate(-90 15 130)">OCV (V/cell)</text>
+          <text x="365" y="265" text-anchor="middle" fill="#64748b" font-size="9">State of Charge →</text>
+          <!-- Grid -->
+          <line x1="70" y1="60" x2="660" y2="60" stroke="#1e293b" stroke-dasharray="4,4" stroke-width="1"/><text x="64" y="64" text-anchor="end" fill="#64748b" font-size="8">3.65V</text>
+          <line x1="70" y1="100" x2="660" y2="100" stroke="#1e293b" stroke-dasharray="4,4" stroke-width="1"/><text x="64" y="104" text-anchor="end" fill="#64748b" font-size="8">3.45V</text>
+          <line x1="70" y1="140" x2="660" y2="140" stroke="#1e293b" stroke-dasharray="4,4" stroke-width="1"/><text x="64" y="144" text-anchor="end" fill="#64748b" font-size="8">3.30V</text>
+          <line x1="70" y1="180" x2="660" y2="180" stroke="#1e293b" stroke-dasharray="4,4" stroke-width="1"/><text x="64" y="184" text-anchor="end" fill="#64748b" font-size="8">3.10V</text>
+          <line x1="70" y1="210" x2="660" y2="210" stroke="#1e293b" stroke-dasharray="4,4" stroke-width="1"/><text x="64" y="214" text-anchor="end" fill="#64748b" font-size="8">2.50V</text>
+          <!-- SoC labels -->
+          <text x="70" y="255" text-anchor="middle" fill="#64748b" font-size="8">0%</text>
+          <text x="248" y="255" text-anchor="middle" fill="#64748b" font-size="8">20%</text>
+          <text x="424" y="255" text-anchor="middle" fill="#64748b" font-size="8">80%</text>
+          <text x="660" y="255" text-anchor="middle" fill="#64748b" font-size="8">100%</text>
+          <!-- LFP OCV path: steep up 0→5%, long flat 5→95%, steep up 95→100% -->
+          <!-- Path approximated: (70,210)→(100,145)→(140,135)→(540,133)→(590,110)→(640,68)→(660,55) -->
+          <path id="lfp-ocv" d="M70,210 L100,145 L130,137 L540,133 L580,115 L630,75 L660,58"
+            fill="none" stroke="#fbbf24" stroke-width="3"
+            stroke-dasharray="1200" stroke-dashoffset="1200">
+            <animate attributeName="stroke-dashoffset" values="1200;0" dur="3s" begin="0.5s" fill="freeze"/>
+          </path>
+          <!-- NMC path for comparison (draws after) -->
+          <path id="nmc-ocv" d="M70,210 L110,175 L200,150 L350,125 L500,100 L620,75 L660,58"
+            fill="none" stroke="#a78bfa" stroke-width="2" stroke-dasharray="4,3"
+            stroke-dashoffset="900" opacity="0.6">
+            <animate attributeName="stroke-dashoffset" values="900;0" dur="2.5s" begin="3s" fill="freeze"/>
+            <animate attributeName="opacity" values="0;0.6" dur="0.5s" begin="3s" fill="freeze"/>
+          </path>
+          <!-- Legend -->
+          <line x1="400" y1="25" x2="430" y2="25" stroke="#fbbf24" stroke-width="3"/>
+          <text x="435" y="29" fill="#fbbf24" font-size="10">LFP — FLAT PLATEAU (diagnostic challenge)</text>
+          <line x1="400" y1="42" x2="430" y2="42" stroke="#a78bfa" stroke-width="2" stroke-dasharray="4,3"/>
+          <text x="435" y="46" fill="#a78bfa" font-size="10">NMC — slopes continuously</text>
+          <!-- Flat zone annotation -->
+          <rect x="130" y="115" width="410" height="38" rx="3" fill="#fbbf24" opacity="0.06" stroke="#fbbf24" stroke-width="1" stroke-dasharray="3,3"/>
+          <text x="335" y="130" text-anchor="middle" fill="#fbbf24" font-size="9" opacity="0.8">⚠ SoC estimation impossible from OCV here (20%–80%)</text>
+          <text x="335" y="143" text-anchor="middle" fill="#fbbf24" font-size="9" opacity="0.6">BMS must use Coulomb Counting + EKF through this plateau</text>
+        </svg>
+      </div>
+
+      <!-- SEI Layer Growth Animation -->
+      <div style="margin:2rem 0;padding:1.5rem;background:#0a0a18;border:2px solid #1e293b;border-radius:8px">
+        <h3 style="color:#60a5fa;margin-bottom:.5rem;font-size:1.1rem">🧬 SEI Layer Growth Over Cycles</h3>
+        <p style="color:#64748b;font-size:.85rem;margin-bottom:1rem">The solid electrolyte interphase thickens with each cycle, consuming lithium and reducing capacity.</p>
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:.8rem;flex-wrap:wrap">
+          <button onclick="runSEIAnim()" style="padding:.5rem 1.2rem;background:#001a00;border:2px solid #34d399;color:#34d399;cursor:pointer;font-weight:700;font-family:inherit;border-radius:4px">▶ RUN AGING SIMULATION</button>
+          <span id="cycle-display" style="font-family:monospace;color:#fbbf24;font-size:1.1rem">Cycles: 0</span>
+          <span id="cap-display" style="font-family:monospace;color:#34d399;font-size:1rem">Capacity: 100%</span>
+        </div>
+        <canvas id="sei-canvas" width="700" height="200" style="width:100%;background:#080814;border-radius:6px;display:block"></canvas>
+      </div>
+
+      <!-- Capacity Fade Curve -->
+      <div style="margin:2rem 0;padding:1.5rem;background:#0a0a18;border:2px solid #1e293b;border-radius:8px">
+        <h3 style="color:#60a5fa;margin-bottom:1rem;font-size:1.1rem">📉 Capacity Fade — LFP vs NMC vs NCA</h3>
+        <svg id="fade-svg" viewBox="0 0 700 260" style="width:100%;height:auto">
+          <line x1="70" y1="20" x2="70" y2="220" stroke="#334155" stroke-width="1.5"/>
+          <line x1="70" y1="220" x2="660" y2="220" stroke="#334155" stroke-width="1.5"/>
+          <text x="365" y="248" text-anchor="middle" fill="#64748b" font-size="9">Cycle Number →</text>
+          <!-- Grid + labels -->
+          <line x1="70" y1="60" x2="660" y2="60" stroke="#1e293b" stroke-dasharray="4,4" stroke-width="1"/><text x="64" y="64" text-anchor="end" fill="#64748b" font-size="8">100%</text>
+          <line x1="70" y1="100" x2="660" y2="100" stroke="#ef4444" stroke-dasharray="4,4" stroke-width="1" opacity="0.4"/><text x="64" y="104" text-anchor="end" fill="#ef4444" font-size="8" opacity="0.7">80% EOL</text>
+          <line x1="70" y1="140" x2="660" y2="140" stroke="#1e293b" stroke-dasharray="4,4" stroke-width="1"/><text x="64" y="144" text-anchor="end" fill="#64748b" font-size="8">60%</text>
+          <text x="70" y="234" text-anchor="middle" fill="#64748b" font-size="8">0</text>
+          <text x="248" y="234" text-anchor="middle" fill="#64748b" font-size="8">1,000</text>
+          <text x="424" y="234" text-anchor="middle" fill="#64748b" font-size="8">3,000</text>
+          <text x="660" y="234" text-anchor="middle" fill="#64748b" font-size="8">5,000</text>
+          <!-- LFP: stays above 80% line to 4000+ cycles -->
+          <path d="M70,60 Q200,62 350,68 Q500,75 580,100 Q630,115 660,130"
+            fill="none" stroke="#fbbf24" stroke-width="3" stroke-dasharray="700" stroke-dashoffset="700">
+            <animate attributeName="stroke-dashoffset" values="700;0" dur="2.5s" begin="0.4s" fill="freeze"/>
+          </path>
+          <!-- NMC: crosses 80% at ~1500 cycles -->
+          <path d="M70,60 Q150,65 250,90 Q350,115 450,145 Q550,170 660,195"
+            fill="none" stroke="#a78bfa" stroke-width="2" stroke-dasharray="700" stroke-dashoffset="700">
+            <animate attributeName="stroke-dashoffset" values="700;0" dur="2.5s" begin="1s" fill="freeze"/>
+          </path>
+          <!-- NCA: crosses 80% at ~1000 cycles -->
+          <path d="M70,60 Q140,68 220,100 Q320,135 420,165 Q530,190 660,215"
+            fill="none" stroke="#f87171" stroke-width="2" stroke-dasharray="700" stroke-dashoffset="700">
+            <animate attributeName="stroke-dashoffset" values="700;0" dur="2.5s" begin="1.5s" fill="freeze"/>
+          </path>
+          <!-- EOL line annotation -->
+          <text x="670" y="104" fill="#ef4444" font-size="8">← EOL</text>
+          <!-- Legend -->
+          <line x1="100" y1="25" x2="130" y2="25" stroke="#fbbf24" stroke-width="3"/><text x="135" y="29" fill="#fbbf24" font-size="10">LFP — 3,000–5,000 cycles</text>
+          <line x1="340" y1="25" x2="370" y2="25" stroke="#a78bfa" stroke-width="2"/><text x="375" y="29" fill="#a78bfa" font-size="10">NMC — 1,000–2,000 cycles</text>
+          <line x1="100" y1="42" x2="130" y2="42" stroke="#f87171" stroke-width="2"/><text x="135" y="46" fill="#f87171" font-size="10">NCA — 800–1,500 cycles</text>
+        </svg>
+      </div>
+    </section>
+
+    <script>
+    // ── LI+ ION CANVAS ANIMATION ──────────────────────────────
+    (function() {
+      const canvas = document.getElementById('liion-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let W = canvas.width, H = canvas.height;
+      let mode = 'charge', paused = false;
+      const ions = [];
+      const electrons = [];
+
+      // Layout zones
+      const cathodeX = 0, cathodeW = W*0.2;
+      const anodeX = W*0.8, anodeW = W*0.2;
+      const sepaX = W*0.2, sepaW = W*0.6;
+
+      // Create ions
+      for (let i = 0; i < 12; i++) {
+        ions.push({
+          x: Math.random() * cathodeW + cathodeX + 10,
+          y: 40 + Math.random() * (H - 80),
+          r: 5, speed: 0.8 + Math.random() * 0.6,
+          phase: Math.random() * Math.PI * 2
+        });
+      }
+      // Create electrons (flow in external circuit)
+      for (let i = 0; i < 8; i++) {
+        electrons.push({
+          t: i / 8, // position along circuit path 0-1
+          speed: 0.004 + Math.random() * 0.002
+        });
+      }
+
+      function getElectronPos(t) {
+        // Goes: bottom-left → right → top → left → back
+        const perim = 2 * (W + 30);
+        const pos = t * perim;
+        if (pos < W) return {x: pos + 0, y: H - 10};
+        if (pos < W + 30) return {x: W - 5, y: H - 10 - (pos - W)};
+        if (pos < 2*W + 30) return {x: W - (pos - W - 30), y: 10};
+        return {x: 5, y: 10 + (pos - 2*W - 30)};
+      }
+
+      window.setCellMode = function(m) { mode = m; }
+      window.togglePause = function() { paused = !paused; }
+
+      function draw() {
+        ctx.clearRect(0, 0, W, H);
+
+        // Cathode (LFP structure)
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(0, 20, cathodeW, H - 40);
+        ctx.fillStyle = '#fbbf24';
+        ctx.font = 'bold 11px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillText('LFP', cathodeW/2, H/2);
+        ctx.fillText('Cathode', cathodeW/2, H/2 + 16);
+        // Draw olivine layers
+        for (let y = 30; y < H - 30; y += 18) {
+          ctx.fillStyle = 'rgba(251,191,36,0.12)';
+          ctx.fillRect(5, y, cathodeW - 10, 12);
+        }
+
+        // Electrolyte
+        ctx.fillStyle = '#0a1628';
+        ctx.fillRect(sepaX, 0, sepaW, H);
+        ctx.font = '10px system-ui';
+        ctx.fillStyle = '#334155';
+        ctx.fillText('ELECTROLYTE', sepaX + sepaW/2, H/2);
+
+        // Separator line
+        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(sepaX, 0); ctx.lineTo(sepaX, H); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(anodeX, 0); ctx.lineTo(anodeX, H); ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Anode (graphite)
+        ctx.fillStyle = '#1a1a2e';
+        ctx.fillRect(anodeX, 20, anodeW, H - 40);
+        ctx.fillStyle = '#94a3b8';
+        ctx.textAlign = 'center';
+        ctx.fillText('Graphite', anodeX + anodeW/2, H/2);
+        ctx.fillText('Anode', anodeX + anodeW/2, H/2 + 16);
+        for (let y = 30; y < H - 30; y += 18) {
+          ctx.fillStyle = 'rgba(148,163,184,0.1)';
+          ctx.fillRect(anodeX + 5, y, anodeW - 10, 12);
+        }
+
+        // Animate ions
+        if (!paused) {
+          ions.forEach(ion => {
+            if (mode === 'charge') {
+              // Move from cathode zone toward anode
+              ion.x += ion.speed;
+              if (ion.x > W - 15) {
+                ion.x = Math.random() * (cathodeW - 10) + 5;
+                ion.y = 40 + Math.random() * (H - 80);
+              }
+            } else {
+              // Move from anode toward cathode
+              ion.x -= ion.speed;
+              if (ion.x < 10) {
+                ion.x = W - 15 - Math.random() * (anodeW - 10);
+                ion.y = 40 + Math.random() * (H - 80);
+              }
+            }
+            ion.y += Math.sin(Date.now() * 0.003 + ion.phase) * 0.3;
+          });
+          electrons.forEach(e => {
+            e.t += (mode === 'charge' ? e.speed : -e.speed);
+            if (e.t > 1) e.t -= 1;
+            if (e.t < 0) e.t += 1;
+          });
+        }
+
+        // Draw ions
+        ions.forEach(ion => {
+          ctx.beginPath();
+          ctx.arc(ion.x, ion.y, ion.r, 0, Math.PI * 2);
+          ctx.fillStyle = mode === 'charge' ? '#60a5fa' : '#fbbf24';
+          ctx.fill();
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold 6px system-ui';
+          ctx.textAlign = 'center';
+          ctx.fillText('Li+', ion.x, ion.y + 2);
+        });
+
+        // Draw external circuit electrons
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(2, 2, W - 4, H - 4);
+        electrons.forEach(e => {
+          const pos = getElectronPos(e.t);
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, 4, 0, Math.PI * 2);
+          ctx.fillStyle = '#f87171';
+          ctx.fill();
+          ctx.fillStyle = '#fff';
+          ctx.font = '5px system-ui';
+          ctx.textAlign = 'center';
+          ctx.fillText('e⁻', pos.x, pos.y + 2);
+        });
+
+        // Labels
+        ctx.fillStyle = '#64748b';
+        ctx.font = '9px system-ui';
+        ctx.textAlign = 'center';
+        const modeLabel = mode === 'charge' ? 'Li+ → CATHODE TO ANODE | e⁻ flows in external circuit' : 'Li+ ← ANODE TO CATHODE | e⁻ reverses';
+        ctx.fillStyle = mode === 'charge' ? '#60a5fa' : '#fbbf24';
+        ctx.fillText(modeLabel, W/2, H - 3);
+
+        requestAnimationFrame(draw);
+      }
+      draw();
+    })();
+
+    // ── SEI CANVAS ANIMATION ──────────────────────────────────
+    (function() {
+      const canvas = document.getElementById('sei-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      let cycles = 0, running = false, animId = null;
+
+      function drawCell(cycleNum) {
+        ctx.clearRect(0, 0, W, H);
+        const seiThickness = Math.min(cycleNum / 50, 40);
+        const cap = Math.max(100 - cycleNum * 0.012, 60).toFixed(1);
+        document.getElementById('cycle-display').textContent = 'Cycles: ' + cycleNum;
+        document.getElementById('cap-display').textContent = 'Capacity: ' + cap + '%';
+        document.getElementById('cap-display').style.color = cap > 80 ? '#34d399' : cap > 70 ? '#fbbf24' : '#ef4444';
+
+        // Electrolyte zone
+        ctx.fillStyle = '#0a1628';
+        ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = '#1e3a5f';
+        ctx.fillRect(W*0.3, 0, W*0.4, H);
+        ctx.fillStyle = '#334155';
+        ctx.font = '11px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillText('Electrolyte', W/2, H/2 + 4);
+
+        // Graphite anode
+        ctx.fillStyle = '#1a1a2e';
+        ctx.fillRect(0, 0, W*0.3, H);
+        for (let y = 10; y < H; y += 20) {
+          ctx.fillStyle = 'rgba(148,163,184,0.15)';
+          ctx.fillRect(5, y, W*0.3 - 10, 14);
+        }
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillText('Graphite', W*0.15, H/2 + 4);
+
+        // SEI Layer (grows from anode surface)
+        if (seiThickness > 0) {
+          const sei_x = W*0.3;
+          ctx.fillStyle = `rgba(251,191,36,${Math.min(0.7, 0.1 + seiThickness/60)})`;
+          ctx.fillRect(sei_x, 0, seiThickness, H);
+          if (seiThickness > 5) {
+            ctx.fillStyle = '#fbbf24';
+            ctx.font = 'bold 9px system-ui';
+            ctx.textAlign = 'center';
+            ctx.fillText('SEI', sei_x + seiThickness/2, H/2);
+            ctx.font = '8px system-ui';
+            ctx.fillText(seiThickness.toFixed(0) + 'nm', sei_x + seiThickness/2, H/2 + 12);
+          }
+        }
+
+        // Cathode LFP
+        ctx.fillStyle = '#1a1000';
+        ctx.fillRect(W*0.7, 0, W*0.3, H);
+        for (let y = 10; y < H; y += 20) {
+          ctx.fillStyle = 'rgba(251,191,36,0.15)';
+          ctx.fillRect(W*0.7 + 5, y, W*0.3 - 10, 14);
+        }
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillText('LFP', W*0.85, H/2 + 4);
+
+        // Capacity bar
+        const capFrac = cap / 100;
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(20, H - 22, W - 40, 14);
+        ctx.fillStyle = capFrac > 0.8 ? '#34d399' : capFrac > 0.7 ? '#fbbf24' : '#ef4444';
+        ctx.fillRect(20, H - 22, (W - 40) * capFrac, 14);
+        ctx.fillStyle = '#fff';
+        ctx.font = '9px system-ui';
+        ctx.textAlign = 'left';
+        ctx.fillText('Capacity: ' + cap + '%', 25, H - 11);
+      }
+
+      window.runSEIAnim = function() {
+        if (animId) cancelAnimationFrame(animId);
+        cycles = 0;
+        running = true;
+        function step() {
+          drawCell(cycles);
+          cycles += 8;
+          if (cycles <= 5000) animId = requestAnimationFrame(step);
+          else running = false;
+        }
+        step();
+      };
+
+      drawCell(0);
+    })();
+    </script>
+
     <!-- Chapter Navigation Footer -->
     <div class="chapter-footer">
       <a class="nav-btn" href="chapter1.html">← Chapter 1: The Case for Li-ion</a>
