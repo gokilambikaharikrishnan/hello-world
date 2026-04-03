@@ -944,3 +944,216 @@
       </svg>
     </div>
   </section>
+
+  <!-- ─── AFE LAYER DEEP DIVE ─── -->
+  <section id="s6-2-afe" class="chapter-section" style="border-bottom:none;padding-top:1rem;">
+    <div class="section-inner">
+      <h3 class="subsection-title" style="font-size:1.4rem;margin-top:0;">AFE Layer — Deep Dive</h3>
+      <p style="color:var(--text-muted);font-size:0.95rem;line-height:1.75;max-width:820px;margin-bottom:1.5rem;">
+        The Analog Front End IC is the most safety-critical component in the BMS. It sits between the high-voltage
+        cell stack and the low-voltage MCU, performing differential cell voltage measurement, temperature reading,
+        short-circuit detection, and balancing FET control — all simultaneously, all on every cell, all with
+        galvanic isolation to protect the MCU.
+      </p>
+
+      <!-- AFE internals animated SVG -->
+      <svg viewBox="0 0 860 500" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:860px;display:block;margin:1.5rem auto;border-radius:12px;background:#0d1117;">
+        <defs>
+          <marker id="afe-arrow" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L7,3 z" fill="#a78bfa"/>
+          </marker>
+          <marker id="afe-arrowG" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L7,3 z" fill="#34d399"/>
+          </marker>
+        </defs>
+
+        <text x="430" y="24" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="13" font-weight="bold">AFE IC Internal Architecture</text>
+
+        <!-- Cell inputs (left column) -->
+        <text x="50" y="52" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="10" font-weight="bold">CELL PINS</text>
+        <rect x="10" y="58" width="80" height="18" rx="3" fill="rgba(239,68,68,0.15)" stroke="#ef4444" stroke-width="1"/>
+        <text x="50" y="71" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="9">VC1  3.28V</text>
+        <rect x="10" y="80" width="80" height="18" rx="3" fill="rgba(239,68,68,0.15)" stroke="#ef4444" stroke-width="1"/>
+        <text x="50" y="93" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="9">VC2  3.31V</text>
+        <rect x="10" y="102" width="80" height="18" rx="3" fill="rgba(239,68,68,0.15)" stroke="#ef4444" stroke-width="1"/>
+        <text x="50" y="115" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="9">VC3  3.29V</text>
+        <text x="50" y="137" fill="#64748b" font-family="monospace" font-size="10" text-anchor="middle">⋮</text>
+        <rect x="10" y="143" width="80" height="18" rx="3" fill="rgba(239,68,68,0.15)" stroke="#ef4444" stroke-width="1"/>
+        <text x="50" y="156" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="9">VC16  3.30V</text>
+
+        <!-- Flying capacitor mux block -->
+        <rect x="130" y="42" width="140" height="145" rx="7" fill="rgba(167,139,250,0.1)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="200" y="62" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="11" font-weight="bold">Flying Cap Mux</text>
+        <text x="200" y="78" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Selects one cell pair</text>
+
+        <!-- Flying cap animation -->
+        <rect x="155" y="90" width="30" height="20" rx="3" fill="rgba(167,139,250,0.2)" stroke="#a78bfa" stroke-width="1"/>
+        <text x="170" y="104" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="8">C_fly</text>
+        <!-- Cap moving animation -->
+        <rect x="155" y="90" width="30" height="20" rx="3" fill="rgba(167,139,250,0.4)" stroke="#c4b5fd" stroke-width="1.5">
+          <animateTransform attributeName="transform" type="translate" values="0,0;0,30;0,60;0,30;0,0" dur="4s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.8;0.9;0.8;0.9;0.8" dur="4s" repeatCount="indefinite"/>
+        </rect>
+
+        <text x="200" y="125" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Charge cap from cell N</text>
+        <text x="200" y="140" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Connect cap to ADC</text>
+        <text x="200" y="155" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Isolates high-side cells</text>
+        <text x="200" y="170" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Eliminates common-mode</text>
+
+        <!-- Delta-Sigma ADC -->
+        <rect x="310" y="42" width="130" height="100" rx="7" fill="rgba(52,211,153,0.08)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="375" y="62" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="11" font-weight="bold">Δ-Σ ADC</text>
+        <text x="375" y="78" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">16-bit resolution</text>
+        <text x="375" y="92" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">LSB ≈ 100μV</text>
+        <text x="375" y="106" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Oversampling + decimation</text>
+        <text x="375" y="120" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">~1ms per cell conversion</text>
+        <text x="375" y="134" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">16 cells ≈ 16ms total</text>
+
+        <!-- Arrows flying cap → ADC -->
+        <line x1="270" y1="117" x2="308" y2="92" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#afe-arrow)" stroke-dasharray="4,2">
+          <animate attributeName="stroke-dashoffset" from="6" to="0" dur="0.7s" repeatCount="indefinite"/>
+        </line>
+        <line x1="90" y1="117" x2="128" y2="117" stroke="#ef4444" stroke-width="1.5" marker-end="url(#afe-arrow)" stroke-dasharray="4,2">
+          <animate attributeName="stroke-dashoffset" from="6" to="0" dur="0.7s" repeatCount="indefinite"/>
+        </line>
+
+        <!-- SPI register block -->
+        <rect x="480" y="42" width="130" height="100" rx="7" fill="rgba(0,229,255,0.08)" stroke="#00e5ff" stroke-width="1.5"/>
+        <text x="545" y="62" text-anchor="middle" fill="#00e5ff" font-family="monospace" font-size="11" font-weight="bold">SPI Registers</text>
+        <text x="545" y="78" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">VCELL_0..15 (16-bit each)</text>
+        <text x="545" y="92" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">TEMP_0..5 (NTC reads)</text>
+        <text x="545" y="106" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">STATUS (fault flags)</text>
+        <text x="545" y="120" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">BAL_CTRL (balance bits)</text>
+        <text x="545" y="134" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">PROTECT (threshold regs)</text>
+
+        <line x1="440" y1="92" x2="478" y2="92" stroke="#34d399" stroke-width="1.5" marker-end="url(#afe-arrowG)" stroke-dasharray="4,2">
+          <animate attributeName="stroke-dashoffset" from="6" to="0" dur="0.7s" repeatCount="indefinite"/>
+        </line>
+
+        <!-- SPI output to MCU -->
+        <rect x="660" y="42" width="120" height="100" rx="7" fill="rgba(52,211,153,0.08)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="720" y="62" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="11" font-weight="bold">MCU SPI</text>
+        <text x="720" y="78" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">CS, CLK, MOSI, MISO</text>
+        <text x="720" y="92" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">10 MHz max</text>
+        <text x="720" y="106" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Reads every 10ms</text>
+        <text x="720" y="120" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Full read = ~300μs</text>
+        <line x1="610" y1="92" x2="658" y2="92" stroke="#00e5ff" stroke-width="1.5" marker-end="url(#afe-arrowG)" stroke-dasharray="4,2">
+          <animate attributeName="stroke-dashoffset" from="6" to="0" dur="0.5s" repeatCount="indefinite"/>
+        </line>
+
+        <!-- Bottom row: SCD comparator -->
+        <rect x="130" y="220" width="200" height="80" rx="7" fill="rgba(239,68,68,0.1)" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="230" y="244" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="11" font-weight="bold">SCD Comparator</text>
+        <text x="230" y="260" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Shunt voltage threshold</text>
+        <text x="230" y="274" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Trips if V_shunt &gt; SCD_THR</text>
+        <text x="230" y="288" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Response &lt;500μs — no MCU</text>
+
+        <!-- Balancing driver -->
+        <rect x="380" y="220" width="200" height="80" rx="7" fill="rgba(245,158,11,0.1)" stroke="#f59e0b" stroke-width="1.5"/>
+        <text x="480" y="244" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="11" font-weight="bold">Balance FET Driver</text>
+        <text x="480" y="260" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">MCU writes BAL_CTRL reg</text>
+        <text x="480" y="274" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Drives per-cell bleed FET</text>
+        <text x="480" y="288" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Passive: ~200mA per cell</text>
+
+        <!-- AFE Watchdog -->
+        <rect x="630" y="220" width="200" height="80" rx="7" fill="rgba(167,139,250,0.1)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="730" y="244" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="11" font-weight="bold">AFE Watchdog</text>
+        <text x="730" y="260" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">MCU must pet within 2s</text>
+        <text x="730" y="274" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Write 0xA5 to WDOG reg</text>
+        <text x="730" y="288" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Timeout → OPEN all FETs</text>
+
+        <!-- Watchdog pulse animation -->
+        <circle cx="730" cy="308" r="5" fill="#a78bfa" opacity="0.9">
+          <animate attributeName="r" values="5;9;5" dur="2s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.9;0.3;0.9" dur="2s" repeatCount="indefinite"/>
+        </circle>
+        <text x="748" y="312" fill="#a78bfa" font-family="monospace" font-size="9">Pet every 1s</text>
+
+        <!-- Arrows from SCD to DSG FET output -->
+        <line x1="230" y1="300" x2="230" y2="360" stroke="#ef4444" stroke-width="2" marker-end="url(#afe-arrow)" stroke-dasharray="5,3">
+          <animate attributeName="stroke-dashoffset" from="8" to="0" dur="0.5s" repeatCount="indefinite"/>
+        </line>
+        <rect x="165" y="360" width="130" height="30" rx="5" fill="rgba(239,68,68,0.15)" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="230" y="380" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="10" font-weight="bold">DSG FET OPEN</text>
+
+        <!-- Bottom note -->
+        <text x="430" y="430" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="10">The AFE IC operates entirely in the high-voltage domain — the MCU never sees raw cell voltages</text>
+        <text x="430" y="448" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="10">Isolation barrier between cell stack and digital logic is a fundamental safety requirement</text>
+      </svg>
+
+      <!-- AFE explanation paragraphs -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem;margin:1.5rem 0;">
+        <div class="arch-block">
+          <div class="arch-block-title">Flying Capacitor — Why It's Necessary</div>
+          <div class="arch-block-body">
+            In a 16S pack, cell 16 sits at ~52V above ground while cell 1 sits at ~3.3V. Connecting both directly
+            to a single ADC is impossible — the common-mode voltage would saturate or destroy the input. The flying
+            capacitor multiplexer solves this by charging a small capacitor (C_fly) across each cell differentially,
+            then transferring that charge to the ADC input. The ADC only ever sees a differential voltage of
+            ≤3.65V — never the full stack voltage. This is why AFE ICs are expensive: the flying capacitor
+            architecture requires 16 high-voltage switches inside the IC.
+          </div>
+        </div>
+        <div class="arch-block">
+          <div class="arch-block-title">Delta-Sigma ADC — How It Works</div>
+          <div class="arch-block-body">
+            The Δ-Σ (delta-sigma) ADC does not flash-convert the voltage directly. Instead, it oversamples
+            at a very high rate (1–4 MHz) using a 1-bit comparator, then applies a digital decimation filter
+            to produce a 16-bit result. This architecture is immune to thermal noise because averaging 1000s
+            of 1-bit samples produces a statistically precise result. The tradeoff: each conversion takes
+            ~1ms per cell. For 16 cells, the AFE needs ~16ms per full cycle — which is why the firmware
+            measurement loop runs at 10ms (AFE pipelines the conversions).
+          </div>
+        </div>
+        <div class="arch-block">
+          <div class="arch-block-title">AFE Watchdog — The True Fail-Safe</div>
+          <div class="arch-block-body">
+            The AFE watchdog is the most important safety feature that most engineers overlook. The MCU
+            must write 0xA5 to the AFE's watchdog register every ≤2 seconds. If the MCU crashes (stack
+            overflow, firmware bug, power glitch) and stops writing, the AFE watchdog timer expires and
+            the AFE independently opens all protection FETs. The battery is now safe even with a dead
+            MCU. UL 1973 Phase 5 tests this explicitly: the tester freezes the firmware and watches for
+            the watchdog response. Without this, no UL 1973 certification.
+          </div>
+        </div>
+        <div class="arch-block">
+          <div class="arch-block-title">SPI Daisy Chain for Multi-Pack</div>
+          <div class="arch-block-body">
+            A single BMS may manage 2–4 AFE ICs (for very large packs). TI BQ76952 uses standard SPI,
+            requiring one CS line per IC. ADI LTC6813 uses isoSPI — a differential, isolated version that
+            chains multiple AFEs in a ring topology with a single twisted pair. Each AFE receives commands,
+            acts on its cells, appends its data, and passes the packet downstream. The MCU talks only to
+            the first AFE; the last AFE returns the combined data. This allows 18 cells per AFE ×
+            N AFEs = practically unlimited cell count from one MCU SPI port.
+          </div>
+        </div>
+      </div>
+
+      <!-- AFE comparison table -->
+      <h3 class="subsection-title">AFE IC Comparison: BQ76952 vs LTC6813-1</h3>
+      <div style="overflow-x:auto;">
+      <table class="comp-table">
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>TI BQ76952</th>
+            <th>ADI LTC6813-1</th>
+            <th>Engineering Impact</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Cell count</td><td>3–16 cells</td><td>12–18 cells</td><td>LTC6813 needs fewer ICs for large packs</td></tr>
+          <tr><td>ADC resolution</td><td>16-bit Δ-Σ</td><td>16-bit Δ-Σ</td><td>Both ≈100μV LSB — comparable accuracy</td></tr>
+          <tr><td>Measurement time</td><td>~1ms/cell</td><td>~1ms/cell</td><td>16 cells ≈ 16ms, pipelines to 10ms loop</td></tr>
+          <tr><td>Communication</td><td>SPI / I²C</td><td>isoSPI (isolated)</td><td>isoSPI better for daisy-chain, noise immunity</td></tr>
+          <tr><td>Balance current</td><td>200mA (int FET)</td><td>External FET required</td><td>BQ76952 simpler BOM for passive balancing</td></tr>
+          <tr><td>SCD threshold</td><td>Software configurable</td><td>Software configurable</td><td>Both support hardware SCD path &lt;500μs</td></tr>
+          <tr><td>Package</td><td>TQFP-64</td><td>TQFP-64</td><td>Similar layout; LTC slightly larger BOM</td></tr>
+          <tr><td>Cost (1k qty)</td><td>~$3–5</td><td>~$8–12</td><td>BQ76952 lower cost; LTC for harsh environments</td></tr>
+          <tr><td>Isolation</td><td>External opto required</td><td>Built-in isoSPI</td><td>LTC6813 reduces component count in isolated designs</td></tr>
+          <tr><td>Temperature range</td><td>−40°C to +85°C</td><td>−40°C to +125°C</td><td>LTC for high-temperature industrial applications</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </section>
