@@ -3001,6 +3001,215 @@
         <path id="layerPath" d="M800,320 L800,280 L800,245 L800,215 L800,165 L800,110 L800,50" fill="none" stroke="none"/>
       </svg>
 
+      <!-- ══════ CH6 ANIMATIONS ══════ -->
+      <div style="padding:2rem;background:#060610;border:3px solid #a78bfa;border-radius:8px;margin:2rem 0" id="ch6-animations">
+        <div style="color:#a78bfa;font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.3rem">Interactive Animations</div>
+        <h2 style="color:#a78bfa;font-size:1.6rem;font-weight:800;margin-bottom:1.5rem">Chapter 6 — Visual Explainers</h2>
+
+        <!-- BMS Data Flow Animation -->
+        <div style="margin:1.5rem 0;padding:1.5rem;background:#0a0a18;border:2px solid #1e293b;border-radius:8px">
+          <h3 style="color:#a78bfa;margin-bottom:.5rem;font-size:1.1rem">🔄 BMS Data Flow: Cells → AFE → MCU → CAN → Inverter</h3>
+          <div style="display:flex;gap:.8rem;flex-wrap:wrap;margin-bottom:.8rem">
+            <button onclick="setPacketRate('fast')" style="padding:.4rem 1rem;background:#1a001a;border:2px solid #a78bfa;color:#a78bfa;cursor:pointer;font-family:inherit;border-radius:4px;font-size:.85rem">10ms (Protection)</button>
+            <button onclick="setPacketRate('med')" style="padding:.4rem 1rem;background:#1a001a;border:2px solid #a78bfa;color:#a78bfa;cursor:pointer;font-family:inherit;border-radius:4px;font-size:.85rem">100ms (SOX)</button>
+            <button onclick="setPacketRate('slow')" style="padding:.4rem 1rem;background:#1a001a;border:2px solid #a78bfa;color:#a78bfa;cursor:pointer;font-family:inherit;border-radius:4px;font-size:.85rem">1s (CAN)</button>
+          </div>
+          <canvas id="dataflow-canvas" width="700" height="180" style="width:100%;background:#080814;border-radius:6px;display:block"></canvas>
+        </div>
+
+        <!-- CAN Frame Transmission Animation -->
+        <div style="margin:1.5rem 0;padding:1.5rem;background:#0a0a18;border:2px solid #1e293b;border-radius:8px">
+          <h3 style="color:#a78bfa;margin-bottom:.5rem;font-size:1.1rem">📡 CAN Frame Transmission — 0x355 SoC/SoH Message</h3>
+          <button onclick="sendCANFrame()" style="padding:.4rem 1rem;background:#1a001a;border:2px solid #a78bfa;color:#a78bfa;cursor:pointer;font-family:inherit;border-radius:4px;font-size:.85rem;margin-bottom:1rem">📤 SEND CAN FRAME</button>
+          <svg id="can-svg" viewBox="0 0 700 160" style="width:100%;height:auto">
+            <!-- BMS node -->
+            <rect x="20" y="55" width="100" height="50" rx="6" fill="#0f001a" stroke="#a78bfa" stroke-width="2"/>
+            <text x="70" y="78" text-anchor="middle" fill="#a78bfa" font-size="10" font-weight="700">BMS MCU</text>
+            <text x="70" y="92" text-anchor="middle" fill="#94a3b8" font-size="9">STM32</text>
+            <text x="70" y="105" text-anchor="middle" fill="#64748b" font-size="8">CAN TX</text>
+            <!-- CAN bus line -->
+            <line x1="120" y1="80" x2="580" y2="80" stroke="#334155" stroke-width="4"/>
+            <line x1="120" y1="88" x2="580" y2="88" stroke="#334155" stroke-width="4"/>
+            <text x="350" y="72" text-anchor="middle" fill="#475569" font-size="8">CAN H / CAN L — 250 kbps twisted pair</text>
+            <!-- Frame visualization -->
+            <rect id="can-frame-box" x="130" y="60" width="0" height="40" rx="0" fill="#a78bfa" opacity="0.8"/>
+            <text id="can-frame-txt" x="300" y="83" text-anchor="middle" fill="#fff" font-size="9" opacity="0">ID:0x355 | SoC:73% | SoH:96% | 8 bytes</text>
+            <!-- Inverter node -->
+            <rect x="580" y="55" width="110" height="50" rx="6" fill="#001020" stroke="#60a5fa" stroke-width="2"/>
+            <text x="635" y="78" text-anchor="middle" fill="#60a5fa" font-size="10" font-weight="700">Inverter</text>
+            <text x="635" y="92" text-anchor="middle" fill="#94a3b8" font-size="9">PYLON protocol</text>
+            <text id="inv-receive" x="635" y="140" text-anchor="middle" fill="#34d399" font-size="9" opacity="0">✓ Received SoC</text>
+            <!-- Frame labels at bottom -->
+            <text x="350" y="145" text-anchor="middle" fill="#475569" font-size="8">0x351: ChgV/ChgI | 0x355: SoC/SoH | 0x356: V/I/T | 0x359: Alarm | 0x35C: Req | 0x35E: Mfr</text>
+          </svg>
+        </div>
+
+        <!-- SOX Computation Cycle -->
+        <div style="margin:1.5rem 0;padding:1.5rem;background:#0a0a18;border:2px solid #1e293b;border-radius:8px">
+          <h3 style="color:#a78bfa;margin-bottom:.5rem;font-size:1.1rem">🧮 SOX Computation Cycle — SoC, SoH, SoF, SoP</h3>
+          <svg id="sox-svg" viewBox="0 0 700 200" style="width:100%;height:auto">
+            <defs><marker id="sox-arr" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#a78bfa"/></marker></defs>
+            <!-- 4 computation boxes in a cycle -->
+            <rect id="sox0" x="10" y="70" width="130" height="60" rx="6" fill="#0f001a" stroke="#334155" stroke-width="2"/>
+            <text x="75" y="97" text-anchor="middle" fill="#64748b" font-size="10" font-weight="700">1. SoC</text>
+            <text x="75" y="110" text-anchor="middle" fill="#64748b" font-size="9">CC + OCV + EKF</text>
+            <text x="75" y="123" text-anchor="middle" fill="#64748b" font-size="8">±2% target</text>
+
+            <rect id="sox1" x="190" y="70" width="130" height="60" rx="6" fill="#0f001a" stroke="#334155" stroke-width="2"/>
+            <text x="255" y="97" text-anchor="middle" fill="#64748b" font-size="10" font-weight="700">2. SoH</text>
+            <text x="255" y="110" text-anchor="middle" fill="#64748b" font-size="9">Cycles + Arrhenius</text>
+            <text x="255" y="123" text-anchor="middle" fill="#64748b" font-size="8">SoH = 96%</text>
+
+            <rect id="sox2" x="370" y="70" width="130" height="60" rx="6" fill="#0f001a" stroke="#334155" stroke-width="2"/>
+            <text x="435" y="97" text-anchor="middle" fill="#64748b" font-size="10" font-weight="700">3. SoF</text>
+            <text x="435" y="110" text-anchor="middle" fill="#64748b" font-size="9">SoC × η(T) × SoH</text>
+            <text x="435" y="123" text-anchor="middle" fill="#64748b" font-size="8">SoF = 88%</text>
+
+            <rect id="sox3" x="550" y="70" width="140" height="60" rx="6" fill="#0f001a" stroke="#334155" stroke-width="2"/>
+            <text x="620" y="97" text-anchor="middle" fill="#64748b" font-size="10" font-weight="700">4. SoP</text>
+            <text x="620" y="110" text-anchor="middle" fill="#64748b" font-size="9">I_max × derate(T)</text>
+            <text x="620" y="123" text-anchor="middle" fill="#64748b" font-size="8">→ CAN 0x351</text>
+
+            <!-- Arrows -->
+            <line x1="140" y1="100" x2="190" y2="100" stroke="#334155" stroke-width="1.5" marker-end="url(#sox-arr)" id="sa1"/>
+            <line x1="320" y1="100" x2="370" y2="100" stroke="#334155" stroke-width="1.5" marker-end="url(#sox-arr)" id="sa2"/>
+            <line x1="500" y1="100" x2="550" y2="100" stroke="#334155" stroke-width="1.5" marker-end="url(#sox-arr)" id="sa3"/>
+
+            <!-- Timing labels -->
+            <text x="165" y="88" text-anchor="middle" fill="#475569" font-size="8">10ms</text>
+            <text x="345" y="88" text-anchor="middle" fill="#475569" font-size="8">100ms</text>
+            <text x="525" y="88" text-anchor="middle" fill="#475569" font-size="8">1s</text>
+
+            <!-- Cycle arrow -->
+            <path d="M620,130 Q620,175 350,175 Q80,175 75,130" fill="none" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#sox-arr)"/>
+            <text x="350" y="192" text-anchor="middle" fill="#a78bfa" font-size="8">Continuous loop — next measurement cycle</text>
+          </svg>
+          <button onclick="animateSOX()" style="padding:.4rem 1rem;background:#1a001a;border:2px solid #a78bfa;color:#a78bfa;cursor:pointer;font-family:inherit;border-radius:4px;font-size:.85rem">▶ ANIMATE SOX CYCLE</button>
+        </div>
+      </div>
+
+      <script>
+      // ── DATA FLOW CANVAS ──────────────────────────────────
+      (function() {
+        const canvas = document.getElementById('dataflow-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width, H = canvas.height;
+        let packetSpeed = 3, packetInterval = 40;
+        const nodes = [
+          {x:60, y:H/2, label:'CELLS', sub:'16S LFP', col:'#fbbf24'},
+          {x:200, y:H/2, label:'AFE', sub:'BQ76952', col:'#fb923c'},
+          {x:350, y:H/2, label:'MCU', sub:'STM32', col:'#a78bfa'},
+          {x:500, y:H/2, label:'CAN TX', sub:'250kbps', col:'#60a5fa'},
+          {x:640, y:H/2, label:'INVERTER', sub:'PYLON', col:'#34d399'}
+        ];
+        const segments = nodes.slice(0,-1).map((n,i)=>({x1:n.x+35,y1:H/2,x2:nodes[i+1].x-35,y2:H/2}));
+        const packets = [];
+        const types = [
+          {label:'V_cell',col:'#60a5fa'},{label:'T',col:'#f97316'},
+          {label:'I',col:'#fbbf24'},{label:'SoC',col:'#34d399'},{label:'FLT',col:'#ef4444'}
+        ];
+        let frame = 0, spawnTimer = 0;
+
+        window.setPacketRate = function(rate) {
+          spawnTimer = 0;
+          packetSpeed = rate==='fast'?5:rate==='med'?3:1.5;
+          packetInterval = rate==='fast'?15:rate==='med'?40:100;
+        };
+
+        function draw() {
+          ctx.clearRect(0,0,W,H);
+          // Draw connections
+          segments.forEach(s => {
+            ctx.beginPath(); ctx.moveTo(s.x1,s.y1); ctx.lineTo(s.x2,s.y2);
+            ctx.strokeStyle='#1e293b'; ctx.lineWidth=4; ctx.stroke();
+          });
+          // Draw nodes
+          nodes.forEach(n => {
+            ctx.beginPath(); ctx.arc(n.x,n.y,32,0,Math.PI*2);
+            ctx.fillStyle='#0a0a18'; ctx.fill();
+            ctx.strokeStyle=n.col; ctx.lineWidth=2.5; ctx.stroke();
+            ctx.fillStyle=n.col; ctx.font='bold 10px system-ui'; ctx.textAlign='center';
+            ctx.fillText(n.label,n.x,n.y-4);
+            ctx.fillStyle='#64748b'; ctx.font='8px system-ui';
+            ctx.fillText(n.sub,n.x,n.y+9);
+          });
+          // Spawn packets
+          if (frame % packetInterval === 0) {
+            const type = types[Math.floor(Math.random()*types.length)];
+            packets.push({x:nodes[0].x+35, segIdx:0, prog:0, ...type});
+          }
+          // Move and draw packets
+          for (let i=packets.length-1; i>=0; i--) {
+            const p = packets[i];
+            const seg = segments[p.segIdx];
+            p.prog += packetSpeed;
+            const segLen = seg.x2 - seg.x1;
+            if (p.prog >= segLen) {
+              p.prog = 0; p.segIdx++;
+              if (p.segIdx >= segments.length) { packets.splice(i,1); continue; }
+              p.x = segments[p.segIdx].x1;
+            } else {
+              p.x = seg.x1 + p.prog;
+            }
+            ctx.beginPath(); ctx.arc(p.x, H/2, 7, 0, Math.PI*2);
+            ctx.fillStyle=p.col; ctx.fill();
+            ctx.fillStyle='#fff'; ctx.font='6px system-ui'; ctx.textAlign='center';
+            ctx.fillText(p.label,p.x,H/2+2);
+          }
+          frame++;
+          requestAnimationFrame(draw);
+        }
+        draw();
+      })();
+
+      // ── CAN FRAME ANIMATION ───────────────────────────────
+      window.sendCANFrame = function() {
+        const frame = document.getElementById('can-frame-box');
+        const txt = document.getElementById('can-frame-txt');
+        const inv = document.getElementById('inv-receive');
+        if (!frame) return;
+        frame.setAttribute('width','0');
+        txt.setAttribute('opacity','0');
+        inv.setAttribute('opacity','0');
+        let w = 0;
+        const target = 450;
+        const step = () => {
+          w = Math.min(w + 15, target);
+          frame.setAttribute('width', w);
+          frame.setAttribute('x', 130);
+          if (w < 100) txt.setAttribute('opacity','0');
+          else { txt.setAttribute('opacity','1'); }
+          if (w < target) requestAnimationFrame(step);
+          else setTimeout(() => inv.setAttribute('opacity','1'), 300);
+        };
+        requestAnimationFrame(step);
+      };
+
+      // ── SOX CYCLE ANIMATION ───────────────────────────────
+      window.animateSOX = function() {
+        const boxes = ['sox0','sox1','sox2','sox3'];
+        const arrows = ['sa1','sa2','sa3'];
+        const colors = ['#22d3ee','#34d399','#fbbf24','#a78bfa'];
+        boxes.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) { el.setAttribute('stroke','#334155'); el.setAttribute('fill','#0f001a'); }
+        });
+        boxes.forEach((id,i) => {
+          setTimeout(() => {
+            const el = document.getElementById(id);
+            if (el) { el.setAttribute('stroke', colors[i]); el.setAttribute('fill', colors[i]+'22'); }
+            // also light up text
+            el.querySelectorAll('text').forEach(t => t.setAttribute('fill','#f8fafc'));
+            if (i < arrows.length) {
+              const arr = document.getElementById(arrows[i]);
+              if (arr) arr.setAttribute('stroke', colors[i]);
+            }
+          }, i * 600);
+        });
+      };
+      </script>
+
       <!-- Chapter navigation footer -->
       <div style="display:flex;justify-content:space-between;align-items:center;padding:1.5rem 0;border-top:1px solid var(--border);margin-top:2rem;">
         <a href="chapter5.html" style="color:var(--arch-purple);text-decoration:none;font-family:monospace;font-size:13px;">← Chapter 5: Standards &amp; Compliance</a>
