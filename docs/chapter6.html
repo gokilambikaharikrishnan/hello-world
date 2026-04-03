@@ -2546,3 +2546,110 @@
       </div>
     </div>
   </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 6.5 — COMMUNICATION STACK DEEP DIVE
+  ═══════════════════════════════════════════════════════════════ -->
+  <section id="s6-5" class="chapter-section">
+    <div class="section-inner">
+      <div class="section-label">Section 6.5</div>
+      <h2 class="section-title">Communication Stack Deep Dive</h2>
+      <p class="section-intro">
+        A BMS typically implements three communication interfaces: CAN (inverter/charger host), SMBus
+        (smart battery standard for simple chargers), and UART (debug and field service). Each protocol
+        serves a distinct purpose and no one protocol does everything.
+      </p>
+
+      <!-- SMBus Smart Battery -->
+      <h3 class="subsection-title">SMBus — Smart Battery Data Specification</h3>
+      <p style="color:var(--text-muted);font-size:0.9rem;line-height:1.75;margin-bottom:1rem;">
+        SMBus v1.1 (Smart Battery Data Specification, SBDS) defines a standard I²C-based protocol for
+        battery-to-charger communication. It predates CAN for BMS use, and remains common in UPS
+        and laptop-class applications. Any charger with SMBus support can automatically discover
+        the battery's chemistry, capacity, and charge limits without manual configuration.
+      </p>
+
+      <div style="overflow-x:auto;margin-bottom:1.5rem;">
+      <table class="comp-table">
+        <thead>
+          <tr><th>SMBus Register</th><th>Address</th><th>Data Type</th><th>Example Value</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>ManufacturerAccess</td><td>0x00</td><td>word</td><td>0x0000</td><td>Manufacturer-specific access</td></tr>
+          <tr><td>RemainingCapacityAlarm</td><td>0x01</td><td>word (mAh)</td><td>2800</td><td>Alert when remaining &lt; this</td></tr>
+          <tr><td>BatteryMode</td><td>0x03</td><td>word flags</td><td>0x6001</td><td>Capacity mode (mAh/10mWh), charger broadcast</td></tr>
+          <tr><td>Temperature</td><td>0x08</td><td>word (×0.1K)</td><td>2982 → 25.2°C</td><td>Battery temperature</td></tr>
+          <tr><td>Voltage</td><td>0x09</td><td>word (mV)</td><td>51840</td><td>Pack terminal voltage in mV</td></tr>
+          <tr><td>Current</td><td>0x0A</td><td>signed word (mA)</td><td>−42300</td><td>Signed: positive=charge, negative=discharge</td></tr>
+          <tr><td>RelativeStateOfCharge</td><td>0x0D</td><td>word (%)</td><td>73</td><td>SoC as % of full charge capacity</td></tr>
+          <tr><td>AbsoluteStateOfCharge</td><td>0x0E</td><td>word (%)</td><td>68</td><td>SoC as % of design capacity (lower than RSOC as battery ages)</td></tr>
+          <tr><td>RemainingCapacity</td><td>0x0F</td><td>word (mAh)</td><td>186400</td><td>Remaining energy at current temp</td></tr>
+          <tr><td>FullChargeCapacity</td><td>0x10</td><td>word (mAh)</td><td>255200</td><td>Current full charge capacity (degrades with age)</td></tr>
+          <tr><td>ChargingCurrent</td><td>0x14</td><td>word (mA)</td><td>140000</td><td>Requested charge current — charger must respect</td></tr>
+          <tr><td>ChargingVoltage</td><td>0x15</td><td>word (mV)</td><td>58400</td><td>Requested charge voltage (16×3.65V = 58.4V)</td></tr>
+          <tr><td>BatteryStatus</td><td>0x16</td><td>word flags</td><td>0x00C0</td><td>Bit flags: OVER_TEMP, OVER_CHARGED, TERM_CHARGE_ALARM, etc.</td></tr>
+          <tr><td>CycleCount</td><td>0x17</td><td>word (count)</td><td>342</td><td>Charge cycle count</td></tr>
+          <tr><td>DesignCapacity</td><td>0x18</td><td>word (mAh)</td><td>280000</td><td>As-designed capacity (constant)</td></tr>
+          <tr><td>ManufactureDate</td><td>0x1B</td><td>word (packed)</td><td>0x5D2F</td><td>Bits: year [15:9], month [8:5], day [4:0]</td></tr>
+          <tr><td>SerialNumber</td><td>0x1C</td><td>word</td><td>0x1A4F</td><td>Factory serial number for traceability</td></tr>
+        </tbody>
+      </table>
+      </div>
+
+      <!-- SMBus code -->
+      <h3 class="subsection-title">SMBus Implementation (I²C at 0x0B)</h3>
+      <div class="code-block">
+<span class="code-comment">/* SMBus slave address per SBDS: 0x0B (7-bit) */</span>
+<span class="code-keyword">#define</span> SMBUS_ADDR        <span class="code-num">0x0B</span>
+<span class="code-keyword">#define</span> SMBUS_REG_VOLTAGE <span class="code-num">0x09</span>
+<span class="code-keyword">#define</span> SMBUS_REG_CURRENT <span class="code-num">0x0A</span>
+<span class="code-keyword">#define</span> SMBUS_REG_RSOC    <span class="code-num">0x0D</span>
+<span class="code-keyword">#define</span> SMBUS_REG_STATUS  <span class="code-num">0x16</span>
+
+<span class="code-comment">/* I²C slave callback — called when master reads a register */</span>
+<span class="code-type">uint16_t</span> <span class="code-fn">SMBus_ReadRegister</span>(<span class="code-type">uint8_t</span> reg, <span class="code-type">BMS_State_t</span> *bms) {
+    <span class="code-keyword">switch</span>(reg) {
+        <span class="code-keyword">case</span> <span class="code-num">0x08</span>: <span class="code-keyword">return</span> (<span class="code-type">uint16_t</span>)((bms->temp_avg + <span class="code-num">273.15f</span>) * <span class="code-num">10.0f</span>); <span class="code-comment">/* K × 0.1 */</span>
+        <span class="code-keyword">case</span> <span class="code-num">0x09</span>: <span class="code-keyword">return</span> (<span class="code-type">uint16_t</span>)(bms->pack_voltage * <span class="code-num">1000.0f</span>);     <span class="code-comment">/* mV */</span>
+        <span class="code-keyword">case</span> <span class="code-num">0x0A</span>: <span class="code-keyword">return</span> (<span class="code-type">int16_t</span>)(bms->pack_current * <span class="code-num">1000.0f</span>);      <span class="code-comment">/* mA signed */</span>
+        <span class="code-keyword">case</span> <span class="code-num">0x0D</span>: <span class="code-keyword">return</span> (<span class="code-type">uint16_t</span>)(bms->soc * <span class="code-num">100.0f</span>);             <span class="code-comment">/* 0–100% */</span>
+        <span class="code-keyword">case</span> <span class="code-num">0x10</span>: <span class="code-keyword">return</span> (<span class="code-type">uint16_t</span>)(bms->full_charge_cap_ah * <span class="code-num">1000.0f</span>); <span class="code-comment">/* mAh */</span>
+        <span class="code-keyword">case</span> <span class="code-num">0x14</span>: <span class="code-keyword">return</span> (<span class="code-type">uint16_t</span>)(bms->charge_current_limit * <span class="code-num">1000.0f</span>);
+        <span class="code-keyword">case</span> <span class="code-num">0x15</span>: <span class="code-keyword">return</span> (<span class="code-type">uint16_t</span>)(BMS_MAX_CHARGE_VOLTAGE * <span class="code-num">1000.0f</span>);
+        <span class="code-keyword">case</span> <span class="code-num">0x16</span>: {
+            <span class="code-type">uint16_t</span> status = <span class="code-num">0</span>;
+            <span class="code-keyword">if</span> (bms->fault_flags & FAULT_OVP)  status |= (<span class="code-num">1</span> << <span class="code-num">15</span>); <span class="code-comment">/* OVER_CHARGED */</span>
+            <span class="code-keyword">if</span> (bms->fault_flags & FAULT_OTP)  status |= (<span class="code-num">1</span> << <span class="code-num">12</span>); <span class="code-comment">/* OVER_TEMP */</span>
+            <span class="code-keyword">if</span> (bms->soc < <span class="code-num">0.1f</span>)             status |= (<span class="code-num">1</span> << <span class="code-num">9</span>);  <span class="code-comment">/* REMAINING_CAPACITY_ALARM */</span>
+            <span class="code-keyword">return</span> status;
+        }
+        <span class="code-keyword">case</span> <span class="code-num">0x17</span>: <span class="code-keyword">return</span> (<span class="code-type">uint16_t</span>)bms->cycle_count;
+        <span class="code-keyword">case</span> <span class="code-num">0x18</span>: <span class="code-keyword">return</span> DESIGN_CAPACITY_MAH;
+        <span class="code-keyword">default</span>:   <span class="code-keyword">return</span> <span class="code-num">0</span>;
+    }
+}
+      </div>
+
+      <!-- Protocol comparison -->
+      <h3 class="subsection-title">Protocol Comparison: CAN vs SMBus vs UART</h3>
+      <div style="overflow-x:auto;">
+      <table class="comp-table">
+        <thead>
+          <tr><th>Property</th><th>CAN Bus</th><th>SMBus (I²C)</th><th>UART / Modbus RTU</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Speed</td><td>250–500 kbps</td><td>100 kbps</td><td>9600–115200 baud</td></tr>
+          <tr><td>Cable length</td><td>250m @ 250kbps</td><td>5m max</td><td>1200m @ 9600 baud (RS-485)</td></tr>
+          <tr><td>Topology</td><td>Multi-drop bus</td><td>Multi-drop (master-slave)</td><td>Point-to-point or bus</td></tr>
+          <tr><td>Error detection</td><td>CRC-15 + bit stuffing</td><td>ACK only</td><td>CRC-16 (Modbus)</td></tr>
+          <tr><td>Noise immunity</td><td>Excellent (differential)</td><td>Poor (single-ended)</td><td>Good with RS-485</td></tr>
+          <tr><td>Standard protocol</td><td>ISO 11898</td><td>SBDS 1.1 for battery</td><td>Modbus RTU / proprietary</td></tr>
+          <tr><td>Host support</td><td>Inverters, EMS systems</td><td>UPS chargers, laptop chargers</td><td>SCADA, industrial controllers</td></tr>
+          <tr><td>BMS use case</td><td>Primary host interface</td><td>Legacy charger compatibility</td><td>Field service / monitoring</td></tr>
+          <tr><td>Latency</td><td>1ms (11-bit arbitration)</td><td>10ms (register read)</td><td>10–100ms (poll-response)</td></tr>
+          <tr><td>UL 1973 compliant?</td><td>Yes</td><td>Yes (with timeout)</td><td>Yes (with timeout)</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </section>
