@@ -884,3 +884,270 @@
       </div>
     </div>
   </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       SECTION 5.5 — UN 38.3: TRANSPORT TESTING
+  ═══════════════════════════════════════════════════════════════ -->
+  <section id="s5-5" class="chapter-section">
+    <div class="section-inner">
+      <div class="section-label">Section 5.5</div>
+      <h2 class="section-title">UN 38.3 — Transport Testing</h2>
+      <p class="section-intro">
+        Before any lithium battery can be shipped by air, sea, or road — even a single prototype in a courier
+        package — it must pass UN 38.3. Published by the United Nations Committee of Experts on the Transport
+        of Dangerous Goods, the standard defines 8 tests (T1–T8) that simulate transport hazards from
+        high-altitude cargo holds to warehouse drops. Without a valid UN 38.3 report, carriers (IATA, IMDG, ADR)
+        will refuse shipment.
+      </p>
+
+      <!-- Standard Card -->
+      <div class="std-card" style="margin-bottom:2rem;">
+        <div class="std-card-accent" style="background:#a78bfa;"></div>
+        <div class="std-card-body">
+          <div class="std-card-header">
+            <div class="std-card-logo" style="background:linear-gradient(135deg,#a78bfa,#7c3aed);font-size:10px;">UN</div>
+            <div>
+              <div class="std-card-name">UN 38.3</div>
+              <div class="std-card-full">United Nations Manual of Tests and Criteria — Part III, Section 38.3: Lithium Metal and Lithium-Ion Batteries</div>
+            </div>
+          </div>
+          <div class="std-card-meta">
+            <span class="std-badge" style="border-color:#a78bfa;color:#a78bfa;">UN / IATA / IMDG</span>
+            <span class="std-badge" style="border-color:#a78bfa;color:#a78bfa;">7th Revised Edition 2019 + Amend.1 2021</span>
+            <span class="std-badge" style="border-color:#a78bfa;color:#a78bfa;">Mandatory — all transport modes</span>
+          </div>
+          <p>Tests must be performed on production-representative samples. Lot traceability is required — a test report for one cell design does not cover a different chemistry or capacity. LFP cells in a UPS pack must each have their own UN 38.3 certification or be covered under a system-level report.</p>
+        </div>
+      </div>
+
+      <!-- T1–T8 Test Cards Grid -->
+      <h3 class="subsection-title">The Eight Tests: T1 through T8</h3>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:1.2rem;margin:1.5rem 0;">
+
+        <!-- T1 -->
+        <div style="background:#0f1923;border:1px solid #1e3a5f;border-left:4px solid #a78bfa;border-radius:10px;padding:1.2rem;">
+          <div style="display:flex;align-items:center;gap:0.8rem;margin-bottom:0.8rem;">
+            <div style="background:#a78bfa;color:#0d1117;font-family:monospace;font-weight:bold;font-size:13px;padding:4px 10px;border-radius:5px;">T1</div>
+            <div style="color:#e2e8f0;font-family:monospace;font-weight:bold;font-size:14px;">Altitude Simulation</div>
+          </div>
+          <div style="color:#94a3b8;font-size:13px;line-height:1.6;">
+            <strong style="color:#a78bfa;">Simulates:</strong> Unpressurised cargo hold at 15,000 m altitude.<br>
+            <strong style="color:#a78bfa;">Condition:</strong> 11.6 kPa (≈ 1/9th sea-level pressure) for 6 hours at 20±5°C.<br>
+            <strong style="color:#a78bfa;">SoC:</strong> ≥ 50% charged.<br>
+            <strong style="color:#a78bfa;">Pass criteria:</strong> No leakage, no venting, no disassembly, no rupture, no fire. Mass loss ≤ 0.1 g.<br>
+            <strong style="color:#a78bfa;">BMS relevance:</strong> Seals and vents must hold at reduced pressure. Electrolyte retention is a cell-level pass. BMS isolation resistance checked post-test.
+          </div>
+        </div>
+
+        <!-- T2 -->
+        <div style="background:#0f1923;border:1px solid #1e3a5f;border-left:4px solid #a78bfa;border-radius:10px;padding:1.2rem;">
+          <div style="display:flex;align-items:center;gap:0.8rem;margin-bottom:0.8rem;">
+            <div style="background:#a78bfa;color:#0d1117;font-family:monospace;font-weight:bold;font-size:13px;padding:4px 10px;border-radius:5px;">T2</div>
+            <div style="color:#e2e8f0;font-family:monospace;font-weight:bold;font-size:14px;">Thermal Test</div>
+          </div>
+          <div style="color:#94a3b8;font-size:13px;line-height:1.6;">
+            <strong style="color:#a78bfa;">Simulates:</strong> Temperature extremes during ground transport / storage in hot/cold climates.<br>
+            <strong style="color:#a78bfa;">Condition:</strong> 10 cycles: 72°C for 6 hrs → -40°C for 6 hrs, 30-min transition max. 1-hr rest at ambient between each cycle.<br>
+            <strong style="color:#a78bfa;">Pass criteria:</strong> No leakage, venting, disassembly, rupture, or fire. Open-circuit voltage (OCV) loss ≤ 10%.<br>
+            <strong style="color:#a78bfa;">BMS relevance:</strong> BMS firmware must survive -40°C cold soak. NTC calibration must remain accurate post-cycling.
+          </div>
+        </div>
+
+        <!-- T3 -->
+        <div style="background:#0f1923;border:1px solid #1e3a5f;border-left:4px solid #a78bfa;border-radius:10px;padding:1.2rem;">
+          <div style="display:flex;align-items:center;gap:0.8rem;margin-bottom:0.8rem;">
+            <div style="background:#a78bfa;color:#0d1117;font-family:monospace;font-weight:bold;font-size:13px;padding:4px 10px;border-radius:5px;">T3</div>
+            <div style="color:#e2e8f0;font-family:monospace;font-weight:bold;font-size:14px;">Vibration</div>
+          </div>
+          <div style="color:#94a3b8;font-size:13px;line-height:1.6;">
+            <strong style="color:#a78bfa;">Simulates:</strong> Road / sea transport vibration over long haul.<br>
+            <strong style="color:#a78bfa;">Condition:</strong> Sinusoidal sweep 7–200 Hz, 1g peak, 3 axes, 12 cycles each axis (≈ 3 hrs total).<br>
+            <strong style="color:#a78bfa;">Pass criteria:</strong> No leakage, venting, disassembly, rupture, fire. Capacity retention ≥ 90% pre-test.<br>
+            <strong style="color:#a78bfa;">BMS relevance:</strong> PCB solder joints, connector retention, cell interconnect busbars must survive. BMS housing vibration-mount design matters.
+          </div>
+        </div>
+
+        <!-- T4 -->
+        <div style="background:#0f1923;border:1px solid #1e3a5f;border-left:4px solid #a78bfa;border-radius:10px;padding:1.2rem;">
+          <div style="display:flex;align-items:center;gap:0.8rem;margin-bottom:0.8rem;">
+            <div style="background:#a78bfa;color:#0d1117;font-family:monospace;font-weight:bold;font-size:13px;padding:4px 10px;border-radius:5px;">T4</div>
+            <div style="color:#e2e8f0;font-family:monospace;font-weight:bold;font-size:14px;">Shock</div>
+          </div>
+          <div style="color:#94a3b8;font-size:13px;line-height:1.6;">
+            <strong style="color:#a78bfa;">Simulates:</strong> Drop or impact during loading/unloading operations.<br>
+            <strong style="color:#a78bfa;">Condition:</strong> Half-sine pulse, 150g peak, 6ms duration, 3 shocks per direction × 6 directions = 18 total impacts.<br>
+            <strong style="color:#a78bfa;">Pass criteria:</strong> No leakage, venting, disassembly, rupture, fire. OCV loss ≤ 10%.<br>
+            <strong style="color:#a78bfa;">BMS relevance:</strong> BMS enclosure mechanical integrity. Cell-to-BMS wire harness routing must accommodate shock without disconnection (false fault).
+          </div>
+        </div>
+
+        <!-- T5 -->
+        <div style="background:#0f1923;border:1px solid #1e3a5f;border-left:4px solid #f59e0b;border-radius:10px;padding:1.2rem;">
+          <div style="display:flex;align-items:center;gap:0.8rem;margin-bottom:0.8rem;">
+            <div style="background:#f59e0b;color:#0d1117;font-family:monospace;font-weight:bold;font-size:13px;padding:4px 10px;border-radius:5px;">T5</div>
+            <div style="color:#e2e8f0;font-family:monospace;font-weight:bold;font-size:14px;">External Short Circuit</div>
+          </div>
+          <div style="color:#94a3b8;font-size:13px;line-height:1.6;">
+            <strong style="color:#f59e0b;">Simulates:</strong> Accidental short during handling — wrench across terminals, conductive packaging.<br>
+            <strong style="color:#f59e0b;">Condition:</strong> Short applied via ≤ 0.1Ω external resistance at 57±4°C ambient for 1 hour (or until temperature stabilises).<br>
+            <strong style="color:#f59e0b;">Pass criteria:</strong> No fire, no explosion. Temperature must not exceed 170°C on cell surface.<br>
+            <strong style="color:#f59e0b;">BMS relevance:</strong> For pack-level test, BMS must clear the short within response time. SCD hardware path is validated here. Cell-only test bypasses BMS.
+          </div>
+        </div>
+
+        <!-- T6 -->
+        <div style="background:#0f1923;border:1px solid #1e3a5f;border-left:4px solid #f59e0b;border-radius:10px;padding:1.2rem;">
+          <div style="display:flex;align-items:center;gap:0.8rem;margin-bottom:0.8rem;">
+            <div style="background:#f59e0b;color:#0d1117;font-family:monospace;font-weight:bold;font-size:13px;padding:4px 10px;border-radius:5px;">T6</div>
+            <div style="color:#e2e8f0;font-family:monospace;font-weight:bold;font-size:14px;">Impact / Crush</div>
+          </div>
+          <div style="color:#94a3b8;font-size:13px;line-height:1.6;">
+            <strong style="color:#f59e0b;">Simulates:</strong> Cargo compression — forklift tine, stacking failure, pallet collapse.<br>
+            <strong style="color:#f59e0b;">Condition (cylindrical/pouch):</strong> 15.8mm bar across diameter, crush to 13 kN or 85% original dimension (whichever first).<br>
+            <strong style="color:#f59e0b;">Condition (prismatic):</strong> Impact with 9.1 kg mass dropped 61 cm onto 15.8mm rod placed across cell.<br>
+            <strong style="color:#f59e0b;">Pass criteria:</strong> No fire, no explosion within 6 hours post-test.<br>
+            <strong style="color:#f59e0b;">BMS relevance:</strong> LFP advantage is clear here — NMC cells typically vent aggressively at crush; LFP cells pass more easily due to oxygen-stable cathode.
+          </div>
+        </div>
+
+        <!-- T7 -->
+        <div style="background:#0f1923;border:1px solid #1e3a5f;border-left:4px solid #ef4444;border-radius:10px;padding:1.2rem;">
+          <div style="display:flex;align-items:center;gap:0.8rem;margin-bottom:0.8rem;">
+            <div style="background:#ef4444;color:#fff;font-family:monospace;font-weight:bold;font-size:13px;padding:4px 10px;border-radius:5px;">T7</div>
+            <div style="color:#e2e8f0;font-family:monospace;font-weight:bold;font-size:14px;">Overcharge</div>
+          </div>
+          <div style="color:#94a3b8;font-size:13px;line-height:1.6;">
+            <strong style="color:#ef4444;">Simulates:</strong> Charger malfunction — uncontrolled charge with no upper voltage limit.<br>
+            <strong style="color:#ef4444;">Condition:</strong> Charge at 2× manufacturer's max voltage OR 2× max current (whichever greater) for 24 hours.<br>
+            <strong style="color:#ef4444;">Pass criteria:</strong> No fire, no explosion. (Venting and mass loss are acceptable — the test accepts cell destruction; it just must not propagate to fire.)<br>
+            <strong style="color:#ef4444;">BMS relevance:</strong> This test intentionally bypasses the BMS to test cell intrinsic safety. BMS OVP is not a substitute for cell-level tolerance. LFP passes due to P–O bond stability.
+          </div>
+        </div>
+
+        <!-- T8 -->
+        <div style="background:#0f1923;border:1px solid #1e3a5f;border-left:4px solid #ef4444;border-radius:10px;padding:1.2rem;">
+          <div style="display:flex;align-items:center;gap:0.8rem;margin-bottom:0.8rem;">
+            <div style="background:#ef4444;color:#fff;font-family:monospace;font-weight:bold;font-size:13px;padding:4px 10px;border-radius:5px;">T8</div>
+            <div style="color:#e2e8f0;font-family:monospace;font-weight:bold;font-size:14px;">Forced Discharge</div>
+          </div>
+          <div style="color:#94a3b8;font-size:13px;line-height:1.6;">
+            <strong style="color:#ef4444;">Simulates:</strong> Cell reversal in a series string — weakest cell hits 0V while others continue discharging through it.<br>
+            <strong style="color:#ef4444;">Condition:</strong> Discharge each cell in parallel with external load at 1C rate until forced to 0V, then continue for rated capacity time.<br>
+            <strong style="color:#ef4444;">Pass criteria:</strong> No fire, no explosion.<br>
+            <strong style="color:#ef4444;">BMS relevance:</strong> BMS UVP (2.5V cutoff) is designed to prevent this state. T8 verifies the cell survives even if UVP fails. Copper dissolution at &lt;2.0V is the primary failure mode for Li-ion in reversal.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- UN 38.3 SVG — Test Pass/Fail Map -->
+      <h3 class="subsection-title">LFP vs NMC — UN 38.3 Pass Difficulty</h3>
+      <svg viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:720px;display:block;margin:1.5rem auto;border-radius:12px;background:#0d1117;">
+        <text x="360" y="28" text-anchor="middle" fill="#e2e8f0" font-family="monospace" font-size="13" font-weight="bold">UN 38.3 Test Difficulty — LFP vs NMC (lower = easier)</text>
+
+        <!-- Y-axis label -->
+        <text x="18" y="180" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="10" transform="rotate(-90,18,180)">Relative Difficulty</text>
+
+        <!-- Grid lines -->
+        <line x1="60" y1="50" x2="700" y2="50" stroke="#1e293b" stroke-width="1"/>
+        <line x1="60" y1="90" x2="700" y2="90" stroke="#1e293b" stroke-width="1"/>
+        <line x1="60" y1="130" x2="700" y2="130" stroke="#1e293b" stroke-width="1"/>
+        <line x1="60" y1="170" x2="700" y2="170" stroke="#1e293b" stroke-width="1"/>
+        <line x1="60" y1="210" x2="700" y2="210" stroke="#1e293b" stroke-width="1"/>
+        <line x1="60" y1="50" x2="60" y2="250" stroke="#334155" stroke-width="1"/>
+
+        <!-- Test labels -->
+        <text x="100" y="268" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="11">T1</text>
+        <text x="180" y="268" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="11">T2</text>
+        <text x="260" y="268" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="11">T3</text>
+        <text x="340" y="268" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="11">T4</text>
+        <text x="420" y="268" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="11">T5</text>
+        <text x="500" y="268" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="11">T6</text>
+        <text x="580" y="268" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="11">T7</text>
+        <text x="660" y="268" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="11">T8</text>
+
+        <!-- LFP bars (teal) — difficulty values: T1=2,T2=3,T3=2,T4=2,T5=3,T6=2,T7=1,T8=2 (out of 5) -->
+        <rect x="72" y="170" width="28" height="80" rx="4" fill="#2dd4bf" fill-opacity="0.8">
+          <animate attributeName="height" from="0" to="80" dur="1s" begin="0.1s" fill="freeze"/>
+          <animate attributeName="y" from="250" to="170" dur="1s" begin="0.1s" fill="freeze"/>
+        </rect>
+        <rect x="152" y="130" width="28" height="120" rx="4" fill="#2dd4bf" fill-opacity="0.8">
+          <animate attributeName="height" from="0" to="120" dur="1s" begin="0.2s" fill="freeze"/>
+          <animate attributeName="y" from="250" to="130" dur="1s" begin="0.2s" fill="freeze"/>
+        </rect>
+        <rect x="232" y="170" width="28" height="80" rx="4" fill="#2dd4bf" fill-opacity="0.8">
+          <animate attributeName="height" from="0" to="80" dur="1s" begin="0.3s" fill="freeze"/>
+          <animate attributeName="y" from="250" to="170" dur="1s" begin="0.3s" fill="freeze"/>
+        </rect>
+        <rect x="312" y="170" width="28" height="80" rx="4" fill="#2dd4bf" fill-opacity="0.8">
+          <animate attributeName="height" from="0" to="80" dur="1s" begin="0.4s" fill="freeze"/>
+          <animate attributeName="y" from="250" to="170" dur="1s" begin="0.4s" fill="freeze"/>
+        </rect>
+        <rect x="392" y="130" width="28" height="120" rx="4" fill="#2dd4bf" fill-opacity="0.8">
+          <animate attributeName="height" from="0" to="120" dur="1s" begin="0.5s" fill="freeze"/>
+          <animate attributeName="y" from="250" to="130" dur="1s" begin="0.5s" fill="freeze"/>
+        </rect>
+        <rect x="472" y="170" width="28" height="80" rx="4" fill="#2dd4bf" fill-opacity="0.8">
+          <animate attributeName="height" from="0" to="80" dur="1s" begin="0.6s" fill="freeze"/>
+          <animate attributeName="y" from="250" to="170" dur="1s" begin="0.6s" fill="freeze"/>
+        </rect>
+        <rect x="552" y="210" width="28" height="40" rx="4" fill="#2dd4bf" fill-opacity="0.8">
+          <animate attributeName="height" from="0" to="40" dur="1s" begin="0.7s" fill="freeze"/>
+          <animate attributeName="y" from="250" to="210" dur="1s" begin="0.7s" fill="freeze"/>
+        </rect>
+        <rect x="632" y="170" width="28" height="80" rx="4" fill="#2dd4bf" fill-opacity="0.8">
+          <animate attributeName="height" from="0" to="80" dur="1s" begin="0.8s" fill="freeze"/>
+          <animate attributeName="y" from="250" to="170" dur="1s" begin="0.8s" fill="freeze"/>
+        </rect>
+
+        <!-- NMC bars (orange) offset — difficulty: T1=2,T2=3,T3=2,T4=3,T5=4,T6=4,T7=4,T8=3 -->
+        <rect x="100" y="170" width="28" height="80" rx="4" fill="#f97316" fill-opacity="0.8">
+          <animate attributeName="height" from="0" to="80" dur="1s" begin="0.1s" fill="freeze"/>
+          <animate attributeName="y" from="250" to="170" dur="1s" begin="0.1s" fill="freeze"/>
+        </rect>
+        <rect x="180" y="130" width="28" height="120" rx="4" fill="#f97316" fill-opacity="0.8">
+          <animate attributeName="height" from="0" to="120" dur="1s" begin="0.2s" fill="freeze"/>
+          <animate attributeName="y" from="250" to="130" dur="1s" begin="0.2s" fill="freeze"/>
+        </rect>
+        <rect x="260" y="170" width="28" height="80" rx="4" fill="#f97316" fill-opacity="0.8">
+          <animate attributeName="height" from="0" to="80" dur="1s" begin="0.3s" fill="freeze"/>
+          <animate attributeName="y" from="250" to="170" dur="1s" begin="0.3s" fill="freeze"/>
+        </rect>
+        <rect x="340" y="130" width="28" height="120" rx="4" fill="#f97316" fill-opacity="0.8">
+          <animate attributeName="height" from="0" to="120" dur="1s" begin="0.4s" fill="freeze"/>
+          <animate attributeName="y" from="250" to="130" dur="1s" begin="0.4s" fill="freeze"/>
+        </rect>
+        <rect x="420" y="90" width="28" height="160" rx="4" fill="#f97316" fill-opacity="0.8">
+          <animate attributeName="height" from="0" to="160" dur="1s" begin="0.5s" fill="freeze"/>
+          <animate attributeName="y" from="250" to="90" dur="1s" begin="0.5s" fill="freeze"/>
+        </rect>
+        <rect x="500" y="90" width="28" height="160" rx="4" fill="#f97316" fill-opacity="0.8">
+          <animate attributeName="height" from="0" to="160" dur="1s" begin="0.6s" fill="freeze"/>
+          <animate attributeName="y" from="250" to="90" dur="1s" begin="0.6s" fill="freeze"/>
+        </rect>
+        <rect x="580" y="90" width="28" height="160" rx="4" fill="#f97316" fill-opacity="0.8">
+          <animate attributeName="height" from="0" to="160" dur="1s" begin="0.7s" fill="freeze"/>
+          <animate attributeName="y" from="250" to="90" dur="1s" begin="0.7s" fill="freeze"/>
+        </rect>
+        <rect x="660" y="130" width="28" height="120" rx="4" fill="#f97316" fill-opacity="0.8">
+          <animate attributeName="height" from="0" to="120" dur="1s" begin="0.8s" fill="freeze"/>
+          <animate attributeName="y" from="250" to="130" dur="1s" begin="0.8s" fill="freeze"/>
+        </rect>
+
+        <!-- Legend -->
+        <rect x="250" y="280" width="14" height="10" rx="2" fill="#2dd4bf"/>
+        <text x="268" y="290" fill="#94a3b8" font-family="monospace" font-size="11">LFP</text>
+        <rect x="330" y="280" width="14" height="10" rx="2" fill="#f97316"/>
+        <text x="348" y="290" fill="#94a3b8" font-family="monospace" font-size="11">NMC</text>
+      </svg>
+
+      <div class="callout callout-success">
+        <div class="callout-icon">✓</div>
+        <div class="callout-body">
+          <div class="callout-title">LFP UN 38.3 Advantage: T6 and T7</div>
+          <p>LFP's biggest transport safety advantage is in T6 (crush) and T7 (overcharge). The olivine P–O bond at 544 kJ/mol prevents oxygen release during crush-induced internal shorts, and during overcharge up to 2× rated voltage. NMC cells routinely vent combustible gas in both tests. This makes LFP packs significantly easier to certify for air transport under IATA Dangerous Goods Regulations (DGR) — lower packing instruction tier, lower pilot notification requirements.</p>
+        </div>
+      </div>
+    </div>
+  </section>
