@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LFP BMS Knowledge Base — Complete 7-Chapter Reference</title>
+  <style>
+    :root {
+      --gold: #fbbf24; --amber: #f59e0b; --bg: #0d1117; --surface: #0f1923;
+      --surface-2: #111827; --border: #1e293b; --border-b: #334155;
+      --text: #e2e8f0; --muted: #94a3b8; --dim: #64748b;
+      --ch1: #fbbf24; --ch2: #3b82f6; --ch3: #f97316;
+      --ch4: #06b6d4; --ch5: #10b981; --ch6: #a78bfa; --ch7: #fbbf24;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; }
+    a { color: inherit; text-decoration: none; }
+
+    /* ── Header ─── */
+    .site-header {
+      background: linear-gradient(135deg, #1a0f00 0%, #0a0f1a 50%, #0d1117 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .site-header::before {
+      content: '';
+      position: absolute;
+      top: -100px; right: -100px;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(251,191,36,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 4rem 2rem 3rem;
+    }
+    .header-tag {
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 1rem;
+    }
+    .header-title {
+      font-size: clamp(2.2rem, 6vw, 3.8rem);
+      font-weight: 900;
+      background: linear-gradient(135deg, #fde68a 0%, #fbbf24 50%, #fb923c 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      line-height: 1.1;
+      margin-bottom: 1rem;
+    }
+    .header-subtitle {
+      font-size: 1.1rem;
+      color: var(--muted);
+      max-width: 680px;
+      margin-bottom: 2.5rem;
+      line-height: 1.7;
+    }
+    .header-stats {
+      display: flex;
+      gap: 2.5rem;
+      flex-wrap: wrap;
+    }
+    .h-stat { text-align: center; }
+    .h-stat-num {
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--gold);
+      font-family: 'Courier New', monospace;
+    }
+    .h-stat-label { font-size: 0.78rem; color: var(--dim); text-transform: uppercase; letter-spacing: 0.06em; }
+
+    /* ── Progress bar ─── */
+    .progress-bar-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 2rem 2rem;
+    }
+    .progress-label { font-size: 0.8rem; color: var(--dim); margin-bottom: 0.4rem; font-family: 'Courier New', monospace; }
+    .progress-track {
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #fbbf24, #f59e0b, #fb923c);
+      border-radius: 3px;
+      width: 0%;
+      transition: width 1.5s ease;
+    }
+
+    /* ── Chapter grid ─── */
+    .chapter-grid {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .chapter-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+      display: flex;
+      flex-direction: column;
+    }
+    .chapter-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    }
+    .chapter-card-top {
+      padding: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .chapter-card-top::after {
+      content: '';
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 150px; height: 150px;
+      border-radius: 50%;
+      opacity: 0.08;
+    }
+    .chapter-badge {
+      display: inline-block;
+      font-family: 'Courier New', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 0.8rem;
+    }
+    .ch-complete { background: rgba(74,222,128,0.15); color: #4ade80; }
+    .chapter-num {
+      font-family: 'Courier New', monospace;
+      font-size: 0.75rem;
+      margin-bottom: 0.3rem;
+      opacity: 0.7;
+    }
+    .chapter-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+      line-height: 1.25;
+    }
+    .chapter-tagline {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .chapter-meta {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .meta-item {
+      font-family: 'Courier New', monospace;
+      font-size: 10px;
+      color: var(--dim);
+    }
+    .meta-item span { color: var(--muted); }
+    .chapter-sections {
+      padding: 0.8rem 1.5rem;
+      border-top: 1px solid var(--border);
+      flex: 1;
+    }
+    .section-list { list-style: none; }
+    .section-list li {
+      font-size: 0.78rem;
+      color: var(--dim);
+      padding: 0.2rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .section-list li::before {
+      content: '›';
+      opacity: 0.5;
+      font-size: 0.9rem;
+    }
+    .chapter-cta {
+      padding: 1.2rem 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+    .cta-btn {
+      display: block;
+      text-align: center;
+      padding: 0.7rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .cta-btn:hover { opacity: 0.85; transform: scale(0.99); }
+
+    /* ── Chapter-specific colors ─── */
+    .c1 { border-color: rgba(251,191,36,0.3); }
+    .c1:hover { border-color: #fbbf24; box-shadow: 0 8px 30px rgba(251,191,36,0.15); }
+    .c1 .chapter-card-top::after { background: #fbbf24; }
+    .c1 .chapter-title { color: #fbbf24; }
+    .c1 .cta-btn { background: rgba(251,191,36,0.12); color: #fbbf24; border: 1px solid rgba(251,191,36,0.4); }
+
+    .c2 { border-color: rgba(59,130,246,0.3); }
+    .c2:hover { border-color: #3b82f6; box-shadow: 0 8px 30px rgba(59,130,246,0.15); }
+    .c2 .chapter-card-top::after { background: #3b82f6; }
+    .c2 .chapter-title { color: #60a5fa; }
+    .c2 .cta-btn { background: rgba(59,130,246,0.12); color: #60a5fa; border: 1px solid rgba(59,130,246,0.4); }
+
+    .c3 { border-color: rgba(249,115,22,0.3); }
+    .c3:hover { border-color: #f97316; box-shadow: 0 8px 30px rgba(249,115,22,0.15); }
+    .c3 .chapter-card-top::after { background: #f97316; }
+    .c3 .chapter-title { color: #fb923c; }
+    .c3 .cta-btn { background: rgba(249,115,22,0.12); color: #fb923c; border: 1px solid rgba(249,115,22,0.4); }
+
+    .c4 { border-color: rgba(6,182,212,0.3); }
+    .c4:hover { border-color: #06b6d4; box-shadow: 0 8px 30px rgba(6,182,212,0.15); }
+    .c4 .chapter-card-top::after { background: #06b6d4; }
+    .c4 .chapter-title { color: #22d3ee; }
+    .c4 .cta-btn { background: rgba(6,182,212,0.12); color: #22d3ee; border: 1px solid rgba(6,182,212,0.4); }
+
+    .c5 { border-color: rgba(16,185,129,0.3); }
+    .c5:hover { border-color: #10b981; box-shadow: 0 8px 30px rgba(16,185,129,0.15); }
+    .c5 .chapter-card-top::after { background: #10b981; }
+    .c5 .chapter-title { color: #34d399; }
+    .c5 .cta-btn { background: rgba(16,185,129,0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.4); }
+
+    .c6 { border-color: rgba(167,139,250,0.3); }
+    .c6:hover { border-color: #a78bfa; box-shadow: 0 8px 30px rgba(167,139,250,0.15); }
+    .c6 .chapter-card-top::after { background: #a78bfa; }
+    .c6 .chapter-title { color: #c4b5fd; }
+    .c6 .cta-btn { background: rgba(167,139,250,0.12); color: #c4b5fd; border: 1px solid rgba(167,139,250,0.4); }
+
+    .c7 { border-color: rgba(251,191,36,0.4); border-width: 2px; }
+    .c7:hover { border-color: #fbbf24; box-shadow: 0 8px 40px rgba(251,191,36,0.2); }
+    .c7 .chapter-card-top::after { background: #fbbf24; }
+    .c7 .chapter-title { color: #fde68a; }
+    .c7 .cta-btn { background: rgba(251,191,36,0.18); color: #fbbf24; border: 1px solid rgba(251,191,36,0.5); }
+    .c7 .chapter-num { color: var(--gold); }
+
+    /* ── Knowledge map section ─── */
+    .knowledge-map {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 2rem 4rem;
+    }
+    .km-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--gold);
+      margin-bottom: 0.5rem;
+    }
+    .km-subtitle { color: var(--muted); margin-bottom: 2rem; font-size: 0.9rem; }
+
+    /* ── Tech stack footer ─── */
+    .site-footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 2rem;
+      text-align: center;
+    }
+    .footer-logo { font-family: 'Courier New', monospace; font-size: 0.9rem; color: var(--gold); margin-bottom: 0.5rem; }
+    .footer-sub { font-size: 0.75rem; color: var(--dim); }
+
+    /* ── Responsive ─── */
+    @media (max-width: 640px) {
+      .chapter-grid { grid-template-columns: 1fr; padding: 2rem 1rem; }
+      .header-inner { padding: 2.5rem 1rem 2rem; }
+      .header-stats { gap: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-tag">📚 Technical Reference Series</div>
+    <h1 class="header-title">LFP BMS Knowledge Base</h1>
+    <p class="header-subtitle">A complete 7-chapter technical reference for engineers designing Battery Management Systems for lithium iron phosphate (LFP/LiFePO₄) cells. Covers chemistry, cell physics, thermal management, protection circuits, standards compliance, firmware architecture, and real-world application in UPS and home energy storage systems.</p>
+    <div class="header-stats">
+      <div class="h-stat">
+        <div class="h-stat-num">7</div>
+        <div class="h-stat-label">Chapters</div>
+      </div>
+      <div class="h-stat">
+        <div class="h-stat-num" id="totalLines">~18K</div>
+        <div class="h-stat-label">Lines of HTML</div>
+      </div>
+      <div class="h-stat">
+        <div class="h-stat-num">40+</div>
+        <div class="h-stat-label">SVG Diagrams</div>
+      </div>
+      <div class="h-stat">
+        <div class="h-stat-num">100%</div>
+        <div class="h-stat-label">Complete</div>
+      </div>
+    </div>
+  </div>
+  <div class="progress-bar-container">
+    <div class="progress-label">// Knowledge Base Completion Status</div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══ CHAPTER GRID ═══ -->
+<main>
+  <div class="chapter-grid">
+
+    <!-- Chapter 1 -->
+    <a href="chapter1.html" class="chapter-card c1">
+      <div class="chapter-card-top">
+        <span class="chapter-badge ch-complete">✓ Complete</span>
+        <div class="chapter-num">// chapter_01.html · 3,084 lines · ~165 KB</div>
+        <div class="chapter-title">Chemistry &amp; Why LFP</div>
+        <div class="chapter-tagline">From Volta's pile to olivine structure — the 200-year story that explains why LFP is the right chemistry for stationary storage.</div>
+      </div>
+      <div class="chapter-meta">
+        <div class="meta-item">Lines: <span>3,084</span></div>
+        <div class="meta-item">Theme: <span>Amber</span></div>
+        <div class="meta-item">Sections: <span>3 + deep dives</span></div>
+      </div>
+      <div class="chapter-sections">
+        <ul class="section-list">
+          <li>1.1 Battery Technology Evolution (Voltaic → Lead-Acid → LFP)</li>
+          <li>1.2 Why LFP for UPS &amp; Home ESS</li>
+          <li>1.3 Li-ion Weaknesses → BMS Requirements</li>
+          <li>Deep Dive: OCV curve, olivine SVG animation</li>
+          <li>Interactive energy density bar chart</li>
+          <li>Standards reference + key equations</li>
+        </ul>
+      </div>
+      <div class="chapter-cta">
+        <div class="cta-btn">Read Chapter 1 →</div>
+      </div>
+    </a>
+
+    <!-- Chapter 2 -->
+    <a href="chapter2.html" class="chapter-card c2">
+      <div class="chapter-card-top">
+        <span class="chapter-badge ch-complete">✓ Complete</span>
+        <div class="chapter-num">// chapter_02.html · 4,004 lines · ~210 KB</div>
+        <div class="chapter-title">Cell Physics &amp; SoX</div>
+        <div class="chapter-tagline">Intercalation electrochemistry, Nernst equation, ECM modelling, EKF SoC estimation, Arrhenius calendar aging, and 9 worked numerical examples.</div>
+      </div>
+      <div class="chapter-meta">
+        <div class="meta-item">Lines: <span>4,004</span></div>
+        <div class="meta-item">Theme: <span>Blue</span></div>
+        <div class="meta-item">Sections: <span>14 + reference</span></div>
+      </div>
+      <div class="chapter-sections">
+        <ul class="section-list">
+          <li>2.1–2.3 First principles, LFP specifics, cell formats</li>
+          <li>2.4–2.6 OCV behaviour, capacity, SoC estimation (5 methods)</li>
+          <li>2.7 SoH and aging — SEI growth, capacity fade SVG</li>
+          <li>2.8–2.9 Temperature effects, worked numerical examples</li>
+          <li>2.10–2.12 Commissioning, SoH trending, second-life</li>
+          <li>ECM HPPC parameter identification + OCV-SoC table</li>
+        </ul>
+      </div>
+      <div class="chapter-cta">
+        <div class="cta-btn">Read Chapter 2 →</div>
+      </div>
+    </a>
+
+    <!-- Chapter 3 -->
+    <a href="chapter3.html" class="chapter-card c3">
+      <div class="chapter-card-top">
+        <span class="chapter-badge ch-complete">✓ Complete</span>
+        <div class="chapter-num">// chapter_03.html · 2,575 lines · ~145 KB</div>
+        <div class="chapter-title">Thermal Management</div>
+        <div class="chapter-tagline">Joule heating, entropic heat, 5-stage thermal runaway cascade, LFP vs NMC propagation, NTC placement, dT/dt firmware, derating curves.</div>
+      </div>
+      <div class="chapter-meta">
+        <div class="meta-item">Lines: <span>2,575</span></div>
+        <div class="meta-item">Theme: <span>Orange</span></div>
+        <div class="meta-item">Sections: <span>5 + summary</span></div>
+      </div>
+      <div class="chapter-sections">
+        <ul class="section-list">
+          <li>3.1 Heat generation — I²R, reaction, entropic sources</li>
+          <li>3.2 Thermal runaway — animated 5-stage cascade SVG</li>
+          <li>3.3 Thermal management — Arrhenius, passive vs active cooling</li>
+          <li>3.4 Mechanical — LFP swelling (2%), compression fixtures</li>
+          <li>3.5 BMS features — OT/UT cutoffs, dT/dt firmware (C code)</li>
+        </ul>
+      </div>
+      <div class="chapter-cta">
+        <div class="cta-btn">Read Chapter 3 →</div>
+      </div>
+    </a>
+
+    <!-- Chapter 4 -->
+    <a href="chapter4.html" class="chapter-card c4">
+      <div class="chapter-card-top">
+        <span class="chapter-badge ch-complete">✓ Complete</span>
+        <div class="chapter-num">// chapter_04.html · 1,779 lines · ~95 KB</div>
+        <div class="chapter-title">Protection &amp; AFE</div>
+        <div class="chapter-tagline">OVP/UVP/OCP/SCP response hierarchy, back-to-back MOSFET topology, pre-charge sequencing, flying-capacitor AFE, BQ76952 vs LTC6813.</div>
+      </div>
+      <div class="chapter-meta">
+        <div class="meta-item">Lines: <span>1,779</span></div>
+        <div class="meta-item">Theme: <span>Cyan</span></div>
+        <div class="meta-item">Sections: <span>5 + reference</span></div>
+      </div>
+      <div class="chapter-sections">
+        <ul class="section-list">
+          <li>4.1 Voltage protection — per-cell monitoring, OVP timeline</li>
+          <li>4.2 Current protection — SCD &lt;500μs hardware path</li>
+          <li>4.3 Cell balancing — passive vs active, LFP plateau problem</li>
+          <li>4.4 MOSFET switching — RDS(on), pre-charge 4-phase SVG</li>
+          <li>4.5 AFE architecture — Δ-Σ ADC, SPI daisy chain code</li>
+        </ul>
+      </div>
+      <div class="chapter-cta">
+        <div class="cta-btn">Read Chapter 4 →</div>
+      </div>
+    </a>
+
+    <!-- Chapter 5 -->
+    <a href="chapter5.html" class="chapter-card c5">
+      <div class="chapter-card-top">
+        <span class="chapter-badge ch-complete">✓ Complete</span>
+        <div class="chapter-num">// chapter_05.html · 1,725 lines · ~95 KB</div>
+        <div class="chapter-title">Standards &amp; Compliance</div>
+        <div class="chapter-tagline">IEC 62133, IEC 61960, UL 1973, UN 38.3 — test requirements, BMS mandatory features, filterable compliance matrix across 14 BMS functions × 6 standards.</div>
+      </div>
+      <div class="chapter-meta">
+        <div class="meta-item">Lines: <span>1,725</span></div>
+        <div class="meta-item">Theme: <span>Emerald</span></div>
+        <div class="meta-item">Sections: <span>6 + matrix</span></div>
+      </div>
+      <div class="chapter-sections">
+        <ul class="section-list">
+          <li>5.1 Why standards exist — incident timeline 2006–2019</li>
+          <li>5.2–5.3 IEC 62133, IEC 61960 test cards</li>
+          <li>5.4 UL 1973 — 3-tier hierarchy, 8 mandatory BMS features</li>
+          <li>5.5 UN 38.3 — T1–T8 all 8 transport tests</li>
+          <li>5.6 Filterable BMS compliance matrix</li>
+        </ul>
+      </div>
+      <div class="chapter-cta">
+        <div class="cta-btn">Read Chapter 5 →</div>
+      </div>
+    </a>
+
+    <!-- Chapter 6 -->
+    <a href="chapter6.html" class="chapter-card c6">
+      <div class="chapter-card-top">
+        <span class="chapter-badge ch-complete">✓ Complete</span>
+        <div class="chapter-num">// chapter_06.html · 3,244 lines · ~185 KB</div>
+        <div class="chapter-title">BMS Architecture</div>
+        <div class="chapter-tagline">Full hardware design: AFE (BQ76952/LTC6813), MCU peripherals, CAN bus, NVM wear leveling, backup SRAM. 11-state interactive firmware machine. Tesla/BYD/CATL teardown.</div>
+      </div>
+      <div class="chapter-meta">
+        <div class="meta-item">Lines: <span>3,244</span></div>
+        <div class="meta-item">Theme: <span>Purple</span></div>
+        <div class="meta-item">Sections: <span>6 + reference</span></div>
+      </div>
+      <div class="chapter-sections">
+        <ul class="section-list">
+          <li>6.2 Hardware — AFE, MCU, CAN 0x351–0x380, NVM, RTC, event log</li>
+          <li>6.3 Firmware — 11-state interactive machine (click for detail)</li>
+          <li>6.4 World-class BMS — Tesla / BYD / CATL architecture</li>
+          <li>6.5 Communication — SMBus registers + I²C/CAN/UART code</li>
+          <li>6.6 SOX complete — SoC+SoH+SoF+SoP unified update loop</li>
+        </ul>
+      </div>
+      <div class="chapter-cta">
+        <div class="cta-btn">Read Chapter 6 →</div>
+      </div>
+    </a>
+
+    <!-- Chapter 7 -->
+    <a href="chapter7.html" class="chapter-card c7">
+      <div class="chapter-card-top">
+        <span class="chapter-badge ch-complete">✓ Complete</span>
+        <div class="chapter-num">// chapter_07.html · 2,048 lines · ~115 KB</div>
+        <div class="chapter-title">Application: UPS &amp; Home ESS</div>
+        <div class="chapter-tagline">Everything from chapters 1–6 applied to real products. Float charging physics, backup time formulas, ESS vs EV BMS, NFPA 855 indoor installation, full system energy flow.</div>
+      </div>
+      <div class="chapter-meta">
+        <div class="meta-item">Lines: <span>2,048</span></div>
+        <div class="meta-item">Theme: <span>Amber/Gold</span></div>
+        <div class="meta-item">Sections: <span>5 + reference</span></div>
+      </div>
+      <div class="chapter-sections">
+        <ul class="section-list">
+          <li>7.1 UPS requirements — float 3.39V, &lt;10ms switchover, deep recovery</li>
+          <li>7.2 Home ESS requirements — 20–90% window, NFPA 855, TOU</li>
+          <li>7.3 Why LFP fits — 7-property match SVG, alternatives table</li>
+          <li>7.4 EV vs ESS BMS — C-rate, balancing, comms, regulatory path</li>
+          <li>7.5 Full system view — energy flow SVG, 7-chapter integration</li>
+        </ul>
+      </div>
+      <div class="chapter-cta">
+        <div class="cta-btn">Read Chapter 7 →</div>
+      </div>
+    </a>
+
+  </div><!-- /chapter-grid -->
+
+  <!-- ═══ KNOWLEDGE MAP ═══ -->
+  <div class="knowledge-map">
+    <div class="km-title">Knowledge Architecture</div>
+    <div class="km-subtitle">How the 7 chapters build on each other — from material science to shipping product.</div>
+
+    <svg viewBox="0 0 900 200" style="width:100%;height:auto;background:var(--surface);border-radius:12px;padding:1rem;border:1px solid var(--border);">
+      <defs>
+        <marker id="idxArrow" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L7,3 z" fill="#475569"/>
+        </marker>
+      </defs>
+      <!-- Layer labels -->
+      <text x="20" y="30" fill="#64748b" font-size="9" font-family="Courier New">LAYER 1: FOUNDATION</text>
+      <text x="20" y="95" fill="#64748b" font-size="9" font-family="Courier New">LAYER 2: HARDWARE</text>
+      <text x="20" y="160" fill="#64748b" font-size="9" font-family="Courier New">LAYER 3: APPLICATION</text>
+
+      <!-- Layer 1 boxes -->
+      <rect x="160" y="15" width="110" height="40" rx="7" fill="#1e293b" stroke="#fbbf24" stroke-width="1.5"/>
+      <text x="215" y="33" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="700">Chapter 1</text>
+      <text x="215" y="47" text-anchor="middle" fill="#94a3b8" font-size="9">Chemistry</text>
+
+      <rect x="310" y="15" width="110" height="40" rx="7" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="365" y="33" text-anchor="middle" fill="#60a5fa" font-size="11" font-weight="700">Chapter 2</text>
+      <text x="365" y="47" text-anchor="middle" fill="#94a3b8" font-size="9">Cell Physics</text>
+
+      <rect x="460" y="15" width="110" height="40" rx="7" fill="#1e293b" stroke="#f97316" stroke-width="1.5"/>
+      <text x="515" y="33" text-anchor="middle" fill="#fb923c" font-size="11" font-weight="700">Chapter 3</text>
+      <text x="515" y="47" text-anchor="middle" fill="#94a3b8" font-size="9">Thermal</text>
+
+      <!-- Layer 2 boxes -->
+      <rect x="235" y="80" width="110" height="40" rx="7" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/>
+      <text x="290" y="98" text-anchor="middle" fill="#22d3ee" font-size="11" font-weight="700">Chapter 4</text>
+      <text x="290" y="112" text-anchor="middle" fill="#94a3b8" font-size="9">Protection</text>
+
+      <rect x="385" y="80" width="110" height="40" rx="7" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/>
+      <text x="440" y="98" text-anchor="middle" fill="#34d399" font-size="11" font-weight="700">Chapter 5</text>
+      <text x="440" y="112" text-anchor="middle" fill="#94a3b8" font-size="9">Standards</text>
+
+      <rect x="535" y="80" width="110" height="40" rx="7" fill="#1e293b" stroke="#a78bfa" stroke-width="1.5"/>
+      <text x="590" y="98" text-anchor="middle" fill="#c4b5fd" font-size="11" font-weight="700">Chapter 6</text>
+      <text x="590" y="112" text-anchor="middle" fill="#94a3b8" font-size="9">Architecture</text>
+
+      <!-- Layer 3 -->
+      <rect x="345" y="145" width="210" height="40" rx="7" fill="#1e293b" stroke="#fbbf24" stroke-width="2"/>
+      <text x="450" y="163" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="700">Chapter 7 — Application</text>
+      <text x="450" y="177" text-anchor="middle" fill="#94a3b8" font-size="9">UPS + Home ESS — All chapters converge</text>
+      <rect x="345" y="145" width="210" height="40" rx="7" fill="none" stroke="#fbbf24" stroke-width="1">
+        <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/>
+      </rect>
+
+      <!-- Arrows -->
+      <line x1="215" y1="55" x2="270" y2="80" stroke="#475569" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#idxArrow)"/>
+      <line x1="365" y1="55" x2="320" y2="80" stroke="#475569" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#idxArrow)"/>
+      <line x1="365" y1="55" x2="430" y2="80" stroke="#475569" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#idxArrow)"/>
+      <line x1="515" y1="55" x2="470" y2="80" stroke="#475569" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#idxArrow)"/>
+      <line x1="515" y1="55" x2="570" y2="80" stroke="#475569" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#idxArrow)"/>
+      <line x1="290" y1="120" x2="400" y2="145" stroke="#475569" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#idxArrow)"/>
+      <line x1="440" y1="120" x2="450" y2="145" stroke="#475569" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#idxArrow)"/>
+      <line x1="590" y1="120" x2="510" y2="145" stroke="#475569" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#idxArrow)"/>
+
+      <!-- Animated pulse on ch7 -->
+      <circle cx="450" cy="165" r="120" fill="none" stroke="#fbbf24" stroke-width="0.5">
+        <animate attributeName="r" values="100;115;100" dur="3s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.2;0;0.2" dur="3s" repeatCount="indefinite"/>
+      </circle>
+    </svg>
+
+    <!-- Target audience -->
+    <div style="margin-top:2.5rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.2rem;">
+        <div style="color:var(--gold);font-weight:700;margin-bottom:0.4rem;">🎯 Target Audience</div>
+        <div style="color:var(--muted);font-size:0.85rem;line-height:1.6;">Power electronics engineers designing UPS or home ESS products. Firmware engineers implementing BMS state machines. System architects selecting chemistry and specifying protection parameters.</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.2rem;">
+        <div style="color:var(--gold);font-weight:700;margin-bottom:0.4rem;">⚡ Reference Design</div>
+        <div style="color:var(--muted);font-size:0.85rem;line-height:1.6;">All numerical examples use a 16S1P 280Ah LFP pack (51.2V nominal, ~14.3 kWh). This reference design runs through all 7 chapters as a consistent thread.</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.2rem;">
+        <div style="color:var(--gold);font-weight:700;margin-bottom:0.4rem;">📐 What's Included</div>
+        <div style="color:var(--muted);font-size:0.85rem;line-height:1.6;">40+ animated SVG diagrams, 15+ C code snippets, 30+ reference tables, 10 interactive JavaScript elements, and 7 complete quick-reference sections with all key formulas.</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ═══ FOOTER ═══ -->
+<footer class="site-footer">
+  <div class="footer-logo">LFP BMS Knowledge Base — v2</div>
+  <div class="footer-sub">7 chapters · 18,459+ lines · IEC 62619 · UL 1973 · NFPA 855 · IEC 62040-3</div>
+</footer>
+
+<script>
+  // Animate progress bar to 100%
+  window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      const fill = document.getElementById('progressFill');
+      if (fill) fill.style.width = '100%';
+    }, 300);
+  });
+</script>
+
+</body>
+</html>
