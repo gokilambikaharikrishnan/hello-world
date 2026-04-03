@@ -1760,3 +1760,192 @@
       </div>
     </div>
   </section>
+
+  <!-- ─── RTC & TIMESTAMPING ─── -->
+  <section id="s6-2-rtc" class="chapter-section" style="border-bottom:none;padding-top:1.5rem;">
+    <div class="section-inner">
+      <h3 class="subsection-title" style="font-size:1.4rem;margin-top:0;">RTC &amp; Timestamping</h3>
+      <p style="color:var(--text-muted);font-size:0.95rem;line-height:1.75;max-width:820px;margin-bottom:1.5rem;">
+        A Real-Time Clock (RTC) is not optional in a production BMS — it is the foundation of calendar
+        aging calculations, fault event auditing, and SoH trending. Without accurate time, you cannot
+        answer the most important service question: <em>"When exactly did this fault happen, and what
+        was the battery doing for the 30 minutes before?"</em>
+      </p>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1rem;margin:1.5rem 0;">
+        <div class="arch-block">
+          <div class="arch-block-title">Why RTC in BMS?</div>
+          <div class="arch-block-body">
+            <strong style="color:var(--arch-violet);">Calendar aging:</strong> The Arrhenius aging model requires
+            total time spent at high temperature. Without RTC, you can only count operational hours — not
+            hours at elevated temperature (which matters much more). A pack left at 40°C for 6 months
+            ages twice as fast as one at 25°C — the BMS must know calendar time to predict this.<br><br>
+            <strong style="color:var(--arch-violet);">Fault timestamps:</strong> "Cell 8 hit 3.67V" is useful.
+            "Cell 8 hit 3.67V on 2025-03-15 at 14:32:07" is actionable for warranty and field diagnosis.
+          </div>
+        </div>
+        <div class="arch-block">
+          <div class="arch-block-title">RTC Backup Power</div>
+          <div class="arch-block-body">
+            The STM32 RTC runs in the backup power domain (VBAT pin), fed by a CR1225 coin cell
+            (3V, 48mAh). At ~0.5μA RTC current draw, a single coin cell runs the RTC for
+            48000 / 0.5 = 96,000 hours = <strong style="color:var(--arch-violet);">~11 years</strong>.
+            The backup domain also powers the 4KB backup SRAM, adding ~1μA — still 7+ years total.
+            This means a BMS retains accurate time and last-known SoC even after the main battery
+            is fully discharged and the power supply is disconnected.
+          </div>
+        </div>
+        <div class="arch-block">
+          <div class="arch-block-title">Unix Timestamp Format</div>
+          <div class="arch-block-body">
+            Store timestamps as <strong style="color:var(--arch-violet);">uint32_t Unix seconds</strong>
+            (seconds since 1970-01-01 00:00:00 UTC). This handles all time arithmetic as simple
+            integer subtraction — no calendar math needed in the BMS. Overflow: uint32_t wraps in
+            year 2106 — not a problem for current designs. For event logs, store timestamp + event type
+            in 6 bytes: 4B timestamp + 1B event type + 1B event data. A 256-entry circular log
+            uses 256 × 6 = 1536 bytes — fits comfortably in EEPROM.
+          </div>
+        </div>
+        <div class="arch-block">
+          <div class="arch-block-title">Calendar Aging via RTC</div>
+          <div class="arch-block-body">
+            The BMS logs temperature samples (every 60s) and accumulates time-at-temperature bins.
+            At each SoH update (hourly), the Arrhenius factor is applied:
+            <strong style="color:var(--arch-violet);">k_age = A × exp(−Ea / R·T)</strong>.
+            The integral of k_age over calendar time gives the total calendar aging contribution.
+            This is added to cycle aging (from cycle counting) to give total SoH degradation.
+            Without RTC, only cycle aging is tracked — calendar aging (significant for storage)
+            is completely invisible.
+          </div>
+        </div>
+      </div>
+
+      <!-- RTC code -->
+      <h3 class="subsection-title">RTC Initialisation and Timestamp Code</h3>
+      <div class="code-block">
+<span class="code-comment">/* RTC initialisation — STM32 HAL */</span>
+<span class="code-type">void</span> <span class="code-fn">BMS_RTC_Init</span>(<span class="code-type">void</span>) {
+    hrtc.Instance            = RTC;
+    hrtc.Init.HourFormat     = RTC_HOURFORMAT_24;
+    hrtc.Init.AsynchPrediv   = <span class="code-num">127</span>;   <span class="code-comment">/* 32768Hz / (127+1) = 256Hz */</span>
+    hrtc.Init.SynchPrediv    = <span class="code-num">255</span>;   <span class="code-comment">/* 256Hz / (255+1) = 1Hz */</span>
+    hrtc.Init.OutPut         = RTC_OUTPUT_DISABLE;
+    HAL_RTC_Init(&hrtc);
+}
+
+<span class="code-comment">/* Get Unix timestamp from RTC calendar */</span>
+<span class="code-type">uint32_t</span> <span class="code-fn">RTC_GetUnixTimestamp</span>(<span class="code-type">void</span>) {
+    RTC_TimeTypeDef sTime;
+    RTC_DateTypeDef sDate;
+    HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+    HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+
+    <span class="code-comment">/* Convert calendar to Unix epoch (simplified — ignores leap seconds) */</span>
+    <span class="code-type">struct</span> tm t = {
+        .tm_sec  = sTime.Seconds,
+        .tm_min  = sTime.Minutes,
+        .tm_hour = sTime.Hours,
+        .tm_mday = sDate.Date,
+        .tm_mon  = sDate.Month - <span class="code-num">1</span>,
+        .tm_year = sDate.Year + <span class="code-num">100</span>   <span class="code-comment">/* STM32 year is offset from 2000 */</span>
+    };
+    <span class="code-keyword">return</span> (<span class="code-type">uint32_t</span>)mktime(&t);
+}
+
+<span class="code-comment">/* Calendar aging accumulator — called every 60s */</span>
+<span class="code-type">void</span> <span class="code-fn">BMS_AccumulateCalendarAging</span>(<span class="code-type">BMS_State_t</span> *bms, <span class="code-type">float</span> T_kelvin) {
+    <span class="code-keyword">const float</span> Ea_J  = <span class="code-num">0.57e-19f</span>;  <span class="code-comment">/* activation energy for LFP SEI, ~0.35 eV */</span>
+    <span class="code-keyword">const float</span> R_Jmol = <span class="code-num">1.38e-23f</span>; <span class="code-comment">/* Boltzmann constant */</span>
+    <span class="code-keyword">const float</span> T_ref  = <span class="code-num">298.15f</span>;   <span class="code-comment">/* 25°C reference */</span>
+
+    <span class="code-type">float</span> k_age = expf(-Ea_J / (R_Jmol * T_kelvin)) /
+                  expf(-Ea_J / (R_Jmol * T_ref));
+    bms->calendar_aging_integral += k_age * (<span class="code-num">60.0f</span> / <span class="code-num">3600.0f</span>); <span class="code-comment">/* hours */</span>
+}
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── EVENT LOGGING ─── -->
+  <section id="s6-2-log" class="chapter-section" style="border-bottom:none;padding-top:1.5rem;">
+    <div class="section-inner">
+      <h3 class="subsection-title" style="font-size:1.4rem;margin-top:0;">Event Logging System</h3>
+      <p style="color:var(--text-muted);font-size:0.95rem;line-height:1.75;max-width:820px;margin-bottom:1.5rem;">
+        A production BMS must answer the question any field engineer or warranty analyst will ask:
+        <em>"What happened, exactly, in the 30 minutes before this pack failed?"</em> The event log
+        is how you answer it. Without it, field failures are undiagnosable and warranty costs are
+        uncontrollable.
+      </p>
+
+      <!-- What gets logged -->
+      <h3 class="subsection-title">What Gets Logged</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.8rem;margin:1rem 0;">
+        <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:3px solid #ef4444;border-radius:8px;padding:0.9rem;">
+          <div style="color:#ef4444;font-family:monospace;font-size:11px;font-weight:bold;margin-bottom:0.4rem;">FAULT (Priority 3)</div>
+          <div style="color:var(--text-muted);font-size:12px;line-height:1.5;">OVP / UVP trigger<br>OCP / SCP trigger<br>OTP / UTP trigger<br>Watchdog timeout<br>NVM corruption</div>
+        </div>
+        <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:3px solid #f59e0b;border-radius:8px;padding:0.9rem;">
+          <div style="color:#f59e0b;font-family:monospace;font-size:11px;font-weight:bold;margin-bottom:0.4rem;">WARN (Priority 2)</div>
+          <div style="color:var(--text-muted);font-size:12px;line-height:1.5;">High cell ΔV (>50mV)<br>Temp approaching limit<br>SoC &lt;10% or >95%<br>dT/dt alarm<br>CAN timeout</div>
+        </div>
+        <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:3px solid #818cf8;border-radius:8px;padding:0.9rem;">
+          <div style="color:#818cf8;font-family:monospace;font-size:11px;font-weight:bold;margin-bottom:0.4rem;">INFO (Priority 1)</div>
+          <div style="color:var(--text-muted);font-size:12px;line-height:1.5;">Power on/off events<br>Charge cycle complete<br>Daily SoH snapshot<br>Balancing start/stop<br>Cell Vmax/Vmin daily</div>
+        </div>
+        <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:3px solid #34d399;border-radius:8px;padding:0.9rem;">
+          <div style="color:#34d399;font-family:monospace;font-size:11px;font-weight:bold;margin-bottom:0.4rem;">PERIODIC (P0)</div>
+          <div style="color:var(--text-muted);font-size:12px;line-height:1.5;">SoC snapshot (60s)<br>SoH snapshot (1hr)<br>Peak temp (daily)<br>Peak current (daily)<br>Cycle count update</div>
+        </div>
+      </div>
+
+      <!-- Event log circular buffer code -->
+      <h3 class="subsection-title">Circular Buffer Event Log</h3>
+      <div class="code-block">
+<span class="code-keyword">#define</span> LOG_MAX_ENTRIES   <span class="code-num">256</span>
+<span class="code-keyword">typedef enum</span> { LOG_INFO=<span class="code-num">1</span>, LOG_WARN=<span class="code-num">2</span>, LOG_FAULT=<span class="code-num">3</span> } LogLevel_t;
+
+<span class="code-keyword">typedef struct</span> {
+    <span class="code-type">uint32_t</span>    timestamp;   <span class="code-comment">/* Unix seconds */</span>
+    <span class="code-type">uint8_t</span>     level;       <span class="code-comment">/* LOG_INFO / WARN / FAULT */</span>
+    <span class="code-type">uint8_t</span>     event_id;    <span class="code-comment">/* event code */</span>
+    <span class="code-type">int16_t</span>     value;       <span class="code-comment">/* context value (mV, mA, °C×10) */</span>
+    <span class="code-type">uint8_t</span>     cell_idx;    <span class="code-comment">/* which cell (0xFF = pack-level) */</span>
+    <span class="code-type">uint8_t</span>     reserved;
+} LogEntry_t;  <span class="code-comment">/* 10 bytes per entry — 256 entries = 2560 bytes */</span>
+
+<span class="code-keyword">static</span> <span class="code-type">uint16_t</span> log_head = <span class="code-num">0</span>;   <span class="code-comment">/* next write position */</span>
+<span class="code-keyword">static</span> <span class="code-type">uint16_t</span> log_count = <span class="code-num">0</span>;  <span class="code-comment">/* total entries written */</span>
+
+<span class="code-type">void</span> <span class="code-fn">Log_Write</span>(<span class="code-type">LogLevel_t</span> level, <span class="code-type">uint8_t</span> event_id, <span class="code-type">int16_t</span> value, <span class="code-type">uint8_t</span> cell) {
+    LogEntry_t e;
+    e.timestamp = RTC_GetUnixTimestamp();
+    e.level     = level;
+    e.event_id  = event_id;
+    e.value     = value;
+    e.cell_idx  = cell;
+    e.reserved  = <span class="code-num">0</span>;
+
+    <span class="code-comment">/* Write to EEPROM at circular position */</span>
+    <span class="code-type">uint32_t</span> addr = LOG_BASE_ADDR + (log_head % LOG_MAX_ENTRIES) * <span class="code-keyword">sizeof</span>(LogEntry_t);
+    EEPROM_Write(addr, (<span class="code-type">uint8_t</span>*)&e, <span class="code-keyword">sizeof</span>(e));
+    log_head = (log_head + <span class="code-num">1</span>) % LOG_MAX_ENTRIES;
+    log_count++;
+}
+
+<span class="code-comment">/* Event IDs */</span>
+<span class="code-keyword">#define</span> EVT_OVP_TRIGGER      <span class="code-num">0x01</span>
+<span class="code-keyword">#define</span> EVT_UVP_TRIGGER      <span class="code-num">0x02</span>
+<span class="code-keyword">#define</span> EVT_SCP_TRIGGER      <span class="code-num">0x03</span>
+<span class="code-keyword">#define</span> EVT_OTP_TRIGGER      <span class="code-num">0x04</span>
+<span class="code-keyword">#define</span> EVT_WATCHDOG_EXPIRE  <span class="code-num">0x10</span>
+<span class="code-keyword">#define</span> EVT_POWER_ON         <span class="code-num">0x20</span>
+<span class="code-keyword">#define</span> EVT_POWER_OFF        <span class="code-num">0x21</span>
+<span class="code-keyword">#define</span> EVT_CHARGE_COMPLETE  <span class="code-num">0x30</span>
+<span class="code-keyword">#define</span> EVT_SOH_UPDATE       <span class="code-num">0x40</span>
+<span class="code-keyword">#define</span> EVT_NVM_CORRUPT      <span class="code-num">0xF0</span>
+
+<span class="code-comment">/* Usage: log an OVP fault on cell 5 at 3672mV */</span>
+<span class="code-comment">/* Log_Write(LOG_FAULT, EVT_OVP_TRIGGER, 3672, 5); */</span>
+      </div>
+    </div>
+  </section>
