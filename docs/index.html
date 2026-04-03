@@ -391,3 +391,112 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;backgr
     <a href="chapter7.html" style="color:var(--muted);font-size:.8rem;text-decoration:none">Ch7</a>
   </div>
 </footer>
+
+<script>
+// ── SCROLL PROGRESS ──────────────────────────────────────────
+const prog = document.getElementById('scroll-progress');
+window.addEventListener('scroll', () => {
+  const s = document.documentElement.scrollTop;
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  prog.style.width = (s / h * 100) + '%';
+});
+
+// ── BACK TO TOP ───────────────────────────────────────────────
+const btt = document.getElementById('back-to-top');
+window.addEventListener('scroll', () => {
+  btt.classList.toggle('visible', window.scrollY > 400);
+});
+btt.addEventListener('click', () => window.scrollTo({top: 0, behavior: 'smooth'}));
+
+// ── PARTICLES ─────────────────────────────────────────────────
+const pc = document.getElementById('particles');
+const colors = ['#ff006e','#00f5ff','#aaff00','#b44eff','#fbbf24','#fff'];
+for (let i = 0; i < 35; i++) {
+  const p = document.createElement('div');
+  p.className = 'particle';
+  const size = Math.random() * 5 + 2;
+  p.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;background:${colors[Math.floor(Math.random()*colors.length)]};animation-duration:${Math.random()*15+10}s;animation-delay:${Math.random()*10}s;opacity:${Math.random()*.6+.1}`;
+  pc.appendChild(p);
+}
+
+// ── SPEED LINES ───────────────────────────────────────────────
+const sl = document.getElementById('speed-lines');
+for (let i = 0; i < 16; i++) {
+  const line = document.createElement('div');
+  line.className = 'speed-line';
+  const angle = (i / 16) * 360;
+  line.style.cssText = `transform:rotate(${angle}deg);animation-delay:${i*0.08}s;background:rgba(${Math.random()>0.5?'0,245,255':'255,0,110'},.2);height:${Math.random()*2+1}px`;
+  sl.appendChild(line);
+}
+
+// ── COUNTER ANIMATION ─────────────────────────────────────────
+function animateCounter(el) {
+  const target = parseInt(el.dataset.target);
+  const suffix = el.dataset.suffix || '';
+  let current = 0;
+  const step = target / 60;
+  const timer = setInterval(() => {
+    current = Math.min(current + step, target);
+    el.textContent = Math.floor(current) + suffix;
+    if (current >= target) clearInterval(timer);
+  }, 20);
+}
+setTimeout(() => {
+  document.querySelectorAll('.stat-num[data-target]').forEach(el => animateCounter(el));
+}, 500);
+
+// ── PROGRESS BAR ──────────────────────────────────────────────
+setTimeout(() => {
+  const pf = document.getElementById('main-progress');
+  if (pf) pf.style.width = '100%';
+}, 600);
+
+// ── REVEAL ON SCROLL ──────────────────────────────────────────
+const revealObs = new IntersectionObserver((entries) => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('visible'), i * 80);
+      revealObs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+
+// ── SEARCH ────────────────────────────────────────────────────
+const searchTopics = {
+  'chapter1.html': 'chemistry lfp olivine thermal runaway cycle life p-o bond calendar aging cobalt cost nmc nca lead acid',
+  'chapter2.html': 'soc soh cell physics intercalation nernst ecm ekf hppc ocv curve peukert arrhenius sei capacity fade coulomb counting',
+  'chapter3.html': 'thermal heat joule i2r runaway cascade ntc derating dtemp ott utp cooling heatmap gradient',
+  'chapter4.html': 'protection ovp uvp ocp scp mosfet afe bq76952 ltc6813 balancing pre-charge flying capacitor',
+  'chapter5.html': 'standards iec 62619 ul 1973 un 38.3 nfpa 855 compliance certification matrix',
+  'chapter6.html': 'architecture bms state machine can pylon 0x351 nvm sram rtc event log tesla byd catl sox',
+  'chapter7.html': 'ups ess float 3.39v switchover 10ms home solar tou nfpa ev bms backup time'
+};
+
+document.getElementById('search').addEventListener('input', function() {
+  const q = this.value.toLowerCase().trim();
+  document.querySelectorAll('.chapter-card').forEach(card => {
+    const href = card.getAttribute('href');
+    const topics = searchTopics[href] || '';
+    const title = card.querySelector('.card-title')?.textContent.toLowerCase() || '';
+    const chips = card.querySelector('.card-topics')?.textContent.toLowerCase() || '';
+    const match = !q || topics.includes(q) || title.includes(q) || chips.includes(q);
+    card.classList.toggle('hidden', !match);
+  });
+});
+
+// ── CARD TILT EFFECT ──────────────────────────────────────────
+document.querySelectorAll('.chapter-card').forEach(card => {
+  card.addEventListener('mousemove', e => {
+    const r = card.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width - 0.5;
+    const y = (e.clientY - r.top) / r.height - 0.5;
+    card.style.transform = `translate(-4px,-4px) rotate(-0.5deg) rotateX(${-y*6}deg) rotateY(${x*6}deg)`;
+  });
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = '';
+  });
+});
+</script>
+</body>
+</html>
