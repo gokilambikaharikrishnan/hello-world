@@ -1830,3 +1830,219 @@
       </div>
     </div>
   </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ QUICK REFERENCE -->
+  <section id="reference" class="section">
+    <div class="container">
+      <div class="section-label">Quick Reference</div>
+      <h2 class="section-title">Chapter 7 Reference</h2>
+      <p class="section-subtitle">Key parameters, formulas, and thresholds for UPS and Home ESS BMS engineering.</p>
+
+      <!-- Formula grid -->
+      <h3 style="color:var(--app-gold);margin:1.5rem 0 1rem;">Key Formulas</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:1rem;margin:1rem 0 2rem;">
+
+        <div style="background:var(--surface-2);border:1px solid #334155;border-top:3px solid var(--app-gold);border-radius:8px;padding:1.1rem;">
+          <div style="color:var(--app-gold);font-size:0.8rem;font-weight:600;margin-bottom:0.6rem;text-transform:uppercase;letter-spacing:.05em;">Backup Time (UPS)</div>
+          <div style="font-family:monospace;color:#f8fafc;font-size:1rem;margin-bottom:0.5rem;">t = (SoC × C_full × V_nom × η_inv) / P_load</div>
+          <div style="color:#64748b;font-size:0.8rem;">η_inv ≈ 0.92–0.96; V_nom = 3.2V/cell × N_series; C_full in Ah</div>
+        </div>
+
+        <div style="background:var(--surface-2);border:1px solid #334155;border-top:3px solid var(--app-gold);border-radius:8px;padding:1.1rem;">
+          <div style="color:var(--app-gold);font-size:0.8rem;font-weight:600;margin-bottom:0.6rem;text-transform:uppercase;letter-spacing:.05em;">Temperature Derating</div>
+          <div style="font-family:monospace;color:#f8fafc;font-size:1rem;margin-bottom:0.5rem;">η(T) = 1 − 0.009 × (25 − T_celsius)</div>
+          <div style="color:#64748b;font-size:0.8rem;">Valid for T = 0°C to 45°C. η(0°C) ≈ 0.775; η(45°C) ≈ 1.18 → cap at 1.0</div>
+        </div>
+
+        <div style="background:var(--surface-2);border:1px solid #334155;border-top:3px solid var(--app-gold);border-radius:8px;padding:1.1rem;">
+          <div style="color:var(--app-gold);font-size:0.8rem;font-weight:600;margin-bottom:0.6rem;text-transform:uppercase;letter-spacing:.05em;">Peukert Correction</div>
+          <div style="font-family:monospace;color:#f8fafc;font-size:1rem;margin-bottom:0.5rem;">C_eff = C_rated × (I_rated / I_actual)^(k−1)</div>
+          <div style="color:#64748b;font-size:0.8rem;">k ≈ 1.05 for LFP (nearly ideal); minimal effect at low ESS C-rates</div>
+        </div>
+
+        <div style="background:var(--surface-2);border:1px solid #334155;border-top:3px solid var(--app-gold);border-radius:8px;padding:1.1rem;">
+          <div style="color:var(--app-gold);font-size:0.8rem;font-weight:600;margin-bottom:0.6rem;text-transform:uppercase;letter-spacing:.05em;">Partial Cycle Counting</div>
+          <div style="font-family:monospace;color:#f8fafc;font-size:1rem;margin-bottom:0.5rem;">N_equiv += ΔAh / (2 × C_full)</div>
+          <div style="color:#64748b;font-size:0.8rem;">Accumulate per charge and discharge event; sum = total equivalent full cycles</div>
+        </div>
+
+        <div style="background:var(--surface-2);border:1px solid #334155;border-top:3px solid var(--app-gold);border-radius:8px;padding:1.1rem;">
+          <div style="color:var(--app-gold);font-size:0.8rem;font-weight:600;margin-bottom:0.6rem;text-transform:uppercase;letter-spacing:.05em;">Float Trickle Current Check</div>
+          <div style="font-family:monospace;color:#f8fafc;font-size:1rem;margin-bottom:0.5rem;">I_trickle = (V_float − OCV) / R_internal</div>
+          <div style="color:#64748b;font-size:0.8rem;">Normal: 50–200mA. Warning: &gt;500mA indicates degraded cell or internal leakage</div>
+        </div>
+
+        <div style="background:var(--surface-2);border:1px solid #334155;border-top:3px solid var(--app-gold);border-radius:8px;padding:1.1rem;">
+          <div style="color:var(--app-gold);font-size:0.8rem;font-weight:600;margin-bottom:0.6rem;text-transform:uppercase;letter-spacing:.05em;">Calendar Aging (Arrhenius)</div>
+          <div style="font-family:monospace;color:#f8fafc;font-size:1rem;margin-bottom:0.5rem;">k_age = exp(−Eₐ/kT) / exp(−Eₐ/kT_ref)</div>
+          <div style="color:#64748b;font-size:0.8rem;">Eₐ ≈ 0.35 eV LFP; T_ref = 298.15K (25°C); every +10°C doubles aging rate</div>
+        </div>
+
+      </div>
+
+      <!-- UPS vs ESS parameter table -->
+      <h3 style="color:var(--app-gold);margin:1.5rem 0 1rem;">Application Parameter Reference: 16S LFP Pack</h3>
+      <div style="overflow-x:auto;margin:1rem 0 2rem;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.82rem;">
+          <thead>
+            <tr style="background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#111;">
+              <th style="padding:10px 12px;text-align:left;">Parameter</th>
+              <th style="padding:10px 12px;text-align:center;">UPS Application</th>
+              <th style="padding:10px 12px;text-align:center;">Home ESS Application</th>
+              <th style="padding:10px 12px;text-align:left;">Rationale</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="background:var(--surface-2);">
+              <td style="padding:9px 12px;color:#f8fafc;font-weight:600;">Float / Max charge voltage</td>
+              <td style="padding:9px 12px;text-align:center;color:#fbbf24;font-family:monospace;">54.24V (3.390V/cell)</td>
+              <td style="padding:9px 12px;text-align:center;color:#fbbf24;font-family:monospace;">58.40V (3.650V/cell)</td>
+              <td style="padding:9px 12px;color:#94a3b8;font-size:0.8rem;">UPS stays in float; ESS charges fully for max energy</td>
+            </tr>
+            <tr>
+              <td style="padding:9px 12px;color:#f8fafc;font-weight:600;">Usable SoC window</td>
+              <td style="padding:9px 12px;text-align:center;color:#4ade80;font-family:monospace;">90–100% (standby)</td>
+              <td style="padding:9px 12px;text-align:center;color:#4ade80;font-family:monospace;">20–90% (cycling)</td>
+              <td style="padding:9px 12px;color:#94a3b8;font-size:0.8rem;">UPS must be ready; ESS optimises cycle life</td>
+            </tr>
+            <tr style="background:var(--surface-2);">
+              <td style="padding:9px 12px;color:#f8fafc;font-weight:600;">OVP cutoff (per cell)</td>
+              <td style="padding:9px 12px;text-align:center;color:#f87171;font-family:monospace;">3.650V</td>
+              <td style="padding:9px 12px;text-align:center;color:#f87171;font-family:monospace;">3.650V</td>
+              <td style="padding:9px 12px;color:#94a3b8;font-size:0.8rem;">Safety threshold, same for both applications</td>
+            </tr>
+            <tr>
+              <td style="padding:9px 12px;color:#f8fafc;font-weight:600;">UVP cutoff (per cell)</td>
+              <td style="padding:9px 12px;text-align:center;color:#f87171;font-family:monospace;">2.500V</td>
+              <td style="padding:9px 12px;text-align:center;color:#f87171;font-family:monospace;">2.800V</td>
+              <td style="padding:9px 12px;color:#94a3b8;font-size:0.8rem;">ESS can set higher floor for cycle life; UPS uses full range</td>
+            </tr>
+            <tr style="background:var(--surface-2);">
+              <td style="padding:9px 12px;color:#f8fafc;font-weight:600;">Charge current max</td>
+              <td style="padding:9px 12px;text-align:center;color:#fbbf24;font-family:monospace;">0.5C (140A for 280Ah)</td>
+              <td style="padding:9px 12px;text-align:center;color:#fbbf24;font-family:monospace;">0.3C (84A for 280Ah)</td>
+              <td style="padding:9px 12px;color:#94a3b8;font-size:0.8rem;">Solar MPPT rate; lower C = longer cycle life</td>
+            </tr>
+            <tr>
+              <td style="padding:9px 12px;color:#f8fafc;font-weight:600;">Discharge current max</td>
+              <td style="padding:9px 12px;text-align:center;color:#fbbf24;font-family:monospace;">1C (280A)</td>
+              <td style="padding:9px 12px;text-align:center;color:#fbbf24;font-family:monospace;">0.5C (140A)</td>
+              <td style="padding:9px 12px;color:#94a3b8;font-size:0.8rem;">UPS must supply full load instantly; ESS has gradual demand</td>
+            </tr>
+            <tr style="background:var(--surface-2);">
+              <td style="padding:9px 12px;color:#f8fafc;font-weight:600;">OTP charge cutoff</td>
+              <td style="padding:9px 12px;text-align:center;color:#f97316;font-family:monospace;">45°C</td>
+              <td style="padding:9px 12px;text-align:center;color:#f97316;font-family:monospace;">45°C</td>
+              <td style="padding:9px 12px;color:#94a3b8;font-size:0.8rem;">Same; LFP safe to 60°C but aging accelerates above 45°C</td>
+            </tr>
+            <tr>
+              <td style="padding:9px 12px;color:#f8fafc;font-weight:600;">UTP charge cutoff</td>
+              <td style="padding:9px 12px;text-align:center;color:#60a5fa;font-family:monospace;">0°C</td>
+              <td style="padding:9px 12px;text-align:center;color:#60a5fa;font-family:monospace;">5°C (outdoor install)</td>
+              <td style="padding:9px 12px;color:#94a3b8;font-size:0.8rem;">Lithium plating prevention; outdoor ESS adds safety margin</td>
+            </tr>
+            <tr style="background:var(--surface-2);">
+              <td style="padding:9px 12px;color:#f8fafc;font-weight:600;">Pre-charge recovery threshold</td>
+              <td style="padding:9px 12px;text-align:center;color:#a78bfa;font-family:monospace;">2.800V/cell → normal</td>
+              <td style="padding:9px 12px;text-align:center;color:#a78bfa;font-family:monospace;">2.800V/cell → normal</td>
+              <td style="padding:9px 12px;color:#94a3b8;font-size:0.8rem;">0.05C pre-charge below this; both applications same</td>
+            </tr>
+            <tr>
+              <td style="padding:9px 12px;color:#f8fafc;font-weight:600;">CAN protocol</td>
+              <td style="padding:9px 12px;text-align:center;color:#fbbf24;font-family:monospace;">SMBus / BMS CAN</td>
+              <td style="padding:9px 12px;text-align:center;color:#fbbf24;font-family:monospace;">PYLON CAN / Modbus RTU</td>
+              <td style="padding:9px 12px;color:#94a3b8;font-size:0.8rem;">UPS: SMBus for rack BMS; ESS: inverter ecosystem protocol</td>
+            </tr>
+            <tr style="background:var(--surface-2);">
+              <td style="padding:9px 12px;color:#f8fafc;font-weight:600;">Design life target</td>
+              <td style="padding:9px 12px;text-align:center;color:#4ade80;font-family:monospace;">10 years / &lt;500 cycles</td>
+              <td style="padding:9px 12px;text-align:center;color:#4ade80;font-family:monospace;">15 years / 5,000+ cycles</td>
+              <td style="padding:9px 12px;color:#94a3b8;font-size:0.8rem;">UPS: calendar-limited; ESS: cycle-limited</td>
+            </tr>
+            <tr>
+              <td style="padding:9px 12px;color:#f8fafc;font-weight:600;">SoC accuracy required</td>
+              <td style="padding:9px 12px;text-align:center;color:#4ade80;font-family:monospace;">±1% (runtime display)</td>
+              <td style="padding:9px 12px;text-align:center;color:#4ade80;font-family:monospace;">±2–3% (energy trading)</td>
+              <td style="padding:9px 12px;color:#94a3b8;font-size:0.8rem;">UPS tighter: backup time accuracy is critical</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Standards quick reference -->
+      <h3 style="color:var(--app-gold);margin:1.5rem 0 1rem;">Applicable Standards Summary</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:0.8rem;margin:1rem 0 2rem;">
+        <div style="background:var(--surface-2);border-radius:8px;padding:1rem;border-left:3px solid #10b981;">
+          <div style="color:#34d399;font-weight:700;font-size:0.9rem;margin-bottom:0.3rem;">IEC 62619</div>
+          <div style="color:#94a3b8;font-size:0.8rem;">Safety for stationary Li-ion; BMS required; over/under protection mandatory</div>
+        </div>
+        <div style="background:var(--surface-2);border-radius:8px;padding:1rem;border-left:3px solid #10b981;">
+          <div style="color:#34d399;font-weight:700;font-size:0.9rem;margin-bottom:0.3rem;">IEC 62040-3</div>
+          <div style="color:#94a3b8;font-size:0.8rem;">UPS performance; Class 3 = &lt;10ms switchover; battery + BMS response time critical</div>
+        </div>
+        <div style="background:var(--surface-2);border-radius:8px;padding:1rem;border-left:3px solid #10b981;">
+          <div style="color:#34d399;font-weight:700;font-size:0.9rem;margin-bottom:0.3rem;">UL 1973</div>
+          <div style="color:#94a3b8;font-size:0.8rem;">Stationary BMS standard; 3-tier protection hierarchy; mandatory cell monitoring requirements</div>
+        </div>
+        <div style="background:var(--surface-2);border-radius:8px;padding:1rem;border-left:3px solid #10b981;">
+          <div style="color:#34d399;font-weight:700;font-size:0.9rem;margin-bottom:0.3rem;">UL 9540A</div>
+          <div style="color:#94a3b8;font-size:0.8rem;">Thermal runaway propagation test; LFP + cell-level fusing typically achieves no-propagation rating</div>
+        </div>
+        <div style="background:var(--surface-2);border-radius:8px;padding:1rem;border-left:3px solid #10b981;">
+          <div style="color:#34d399;font-weight:700;font-size:0.9rem;margin-bottom:0.3rem;">NFPA 855</div>
+          <div style="color:#94a3b8;font-size:0.8rem;">ESS installation standard; §15.3 allows LFP reduced clearances with BMS-to-fire-alarm integration</div>
+        </div>
+        <div style="background:var(--surface-2);border-radius:8px;padding:1rem;border-left:3px solid #10b981;">
+          <div style="color:#34d399;font-weight:700;font-size:0.9rem;margin-bottom:0.3rem;">IEC 62933</div>
+          <div style="color:#94a3b8;font-size:0.8rem;">Grid-connected ESS performance; energy efficiency, cycle life testing methodology</div>
+        </div>
+      </div>
+
+      <!-- Navigation footer -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin:3rem 0 1rem;padding:1.5rem;background:var(--surface-2);border-radius:10px;flex-wrap:wrap;gap:1rem;">
+        <a href="chapter6.html" style="color:var(--app-gold);text-decoration:none;font-weight:600;padding:0.6rem 1.2rem;border:1px solid var(--app-gold);border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='rgba(251,191,36,0.1)'" onmouseout="this.style.background='transparent'">← Chapter 6: BMS Architecture</a>
+        <div style="text-align:center;">
+          <div style="color:#64748b;font-size:0.8rem;">LFP BMS Knowledge Base</div>
+          <div style="color:#94a3b8;font-size:0.9rem;font-weight:600;">Chapter 7 of 7 Complete</div>
+        </div>
+        <a href="index.html" style="color:var(--app-gold);text-decoration:none;font-weight:600;padding:0.6rem 1.2rem;border:1px solid var(--app-gold);border-radius:6px;background:rgba(251,191,36,0.1);">📚 Full Knowledge Base Index →</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ═══════════════════════════════════════════════════════════ SCRIPTS -->
+<script>
+  // Sidebar active section highlighting
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.sidebar-nav a');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.getAttribute('id');
+        navLinks.forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('href') === '#' + id) {
+            link.classList.add('active');
+          }
+        });
+      }
+    });
+  }, { rootMargin: '-30% 0px -60% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+
+  // Mobile sidebar toggle
+  const menuBtn = document.getElementById('menu-toggle');
+  const sidebar = document.querySelector('.sidebar');
+  if (menuBtn && sidebar) {
+    menuBtn.addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+    });
+  }
+</script>
+
+</body>
+</html>
