@@ -180,3 +180,106 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;backgr
     <div style="font-size:2rem;color:var(--muted)">↓</div>
   </div>
 </section>
+
+<!-- ══════ CHAPTERS ══════ -->
+<div class="container">
+  <div class="section-header reveal">
+    <div class="section-tag">// THE CURRICULUM</div>
+    <h2 style="background:linear-gradient(135deg,var(--pink),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent">7 CHAPTERS. ONE MISSION.</h2>
+    <div class="zigzag"></div>
+  </div>
+
+  <div class="progress-section reveal">
+    <div class="progress-label"><span>Overall Progress</span><span>100% ■■■■■■■■■■</span></div>
+    <div class="progress-track"><div class="progress-fill" id="main-progress"></div></div>
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:.5rem">
+      <span style="font-size:.75rem;color:var(--lime)">✓ Ch1</span><span style="font-size:.75rem;color:var(--lime)">✓ Ch2</span><span style="font-size:.75rem;color:var(--lime)">✓ Ch3</span><span style="font-size:.75rem;color:var(--lime)">✓ Ch4</span><span style="font-size:.75rem;color:var(--lime)">✓ Ch5</span><span style="font-size:.75rem;color:var(--lime)">✓ Ch6</span><span style="font-size:.75rem;color:var(--lime)">✓ Ch7</span>
+    </div>
+  </div>
+
+  <div class="chapters-grid">
+    <a href="chapter1.html" class="chapter-card ch1 reveal">
+      <div class="card-top"><div class="card-num">01</div>
+        <div class="card-badge">~20 min read</div>
+        <div class="card-title">Chemistry & Why LFP</div>
+        <div class="card-tagline">From Volta's pile to olivine olivine crystal — why LFP is the superior choice for stationary storage. P–O bond physics, thermal runaway threshold 270°C, cycle life mechanisms.</div>
+      </div>
+      <div class="card-topics"><ul class="topic-list">
+        <li class="topic-chip">Olivine structure</li><li class="topic-chip">P–O bond 544 kJ/mol</li><li class="topic-chip">3000–5000 cycles</li><li class="topic-chip">6.8% volume change</li><li class="topic-chip">Calendar aging</li><li class="topic-chip">LFP vs NMC</li>
+      </ul></div>
+      <div class="card-footer"><span class="read-time">⏱ ~20 min · 3,092 lines</span><span class="cta" style="color:#fbbf24;border-color:#fbbf24">READ →</span></div>
+    </a>
+
+    <a href="chapter2.html" class="chapter-card ch2 reveal">
+      <div class="card-top"><div class="card-num">02</div>
+        <div class="card-badge">~25 min read</div>
+        <div class="card-title">Cell Physics & SoX</div>
+        <div class="card-tagline">Intercalation electrochemistry, Nernst equation, ECM modelling, EKF SoC estimation, Arrhenius calendar aging. 9 worked numerical examples with full calculations.</div>
+      </div>
+      <div class="card-topics"><ul class="topic-list">
+        <li class="topic-chip">Li+ intercalation</li><li class="topic-chip">Nernst equation</li><li class="topic-chip">EKF SoC</li><li class="topic-chip">Arrhenius aging</li><li class="topic-chip">ECM HPPC</li><li class="topic-chip">OCV curve</li>
+      </ul></div>
+      <div class="card-footer"><span class="read-time">⏱ ~25 min · 4,012 lines</span><span class="cta" style="color:#60a5fa;border-color:#60a5fa">READ →</span></div>
+    </a>
+
+    <a href="chapter3.html" class="chapter-card ch3 reveal">
+      <div class="card-top"><div class="card-num">03</div>
+        <div class="card-badge">~18 min read</div>
+        <div class="card-title">Thermal Management</div>
+        <div class="card-tagline">Joule heating, entropic heat, 5-stage thermal runaway cascade, LFP vs NMC propagation, NTC placement, dT/dt firmware logic with derating curves.</div>
+      </div>
+      <div class="card-topics"><ul class="topic-list">
+        <li class="topic-chip">I²R heat generation</li><li class="topic-chip">Thermal runaway</li><li class="topic-chip">dT/dt firmware</li><li class="topic-chip">NTC placement</li><li class="topic-chip">Derating curves</li><li class="topic-chip">OT/UT cutoffs</li>
+      </ul></div>
+      <div class="card-footer"><span class="read-time">⏱ ~18 min · 2,579 lines</span><span class="cta" style="color:#fb923c;border-color:#fb923c">READ →</span></div>
+    </a>
+
+    <a href="chapter4.html" class="chapter-card ch4 reveal">
+      <div class="card-top"><div class="card-num">04</div>
+        <div class="card-badge">~15 min read</div>
+        <div class="card-title">Protection & AFE</div>
+        <div class="card-tagline">OVP/UVP/OCP/SCP response hierarchy, back-to-back MOSFET topology, pre-charge sequencing, flying-capacitor AFE internals. BQ76952 vs LTC6813.</div>
+      </div>
+      <div class="card-topics"><ul class="topic-list">
+        <li class="topic-chip">SCD &lt;500μs</li><li class="topic-chip">MOSFET topology</li><li class="topic-chip">Pre-charge 4-phase</li><li class="topic-chip">Flying capacitor</li><li class="topic-chip">BQ76952</li><li class="topic-chip">Cell balancing</li>
+      </ul></div>
+      <div class="card-footer"><span class="read-time">⏱ ~15 min · 1,782 lines</span><span class="cta" style="color:#22d3ee;border-color:#22d3ee">READ →</span></div>
+    </a>
+
+    <a href="chapter5.html" class="chapter-card ch5 reveal">
+      <div class="card-top"><div class="card-num">05</div>
+        <div class="card-badge">~15 min read</div>
+        <div class="card-title">Standards & Compliance</div>
+        <div class="card-tagline">IEC 62133, IEC 61960, UL 1973, UN 38.3 — test requirements, mandatory BMS features, filterable compliance matrix across 14 BMS functions × 6 standards.</div>
+      </div>
+      <div class="card-topics"><ul class="topic-list">
+        <li class="topic-chip">IEC 62619</li><li class="topic-chip">UL 1973</li><li class="topic-chip">UN 38.3 T1–T8</li><li class="topic-chip">NFPA 855</li><li class="topic-chip">Compliance matrix</li><li class="topic-chip">Certification path</li>
+      </ul></div>
+      <div class="card-footer"><span class="read-time">⏱ ~15 min · 1,727 lines</span><span class="cta" style="color:#34d399;border-color:#34d399">READ →</span></div>
+    </a>
+
+    <a href="chapter6.html" class="chapter-card ch6 reveal">
+      <div class="card-top"><div class="card-num">06</div>
+        <div class="card-badge">~22 min read</div>
+        <div class="card-title">BMS Architecture</div>
+        <div class="card-tagline">Full hardware design: AFE, MCU peripherals, CAN bus (0x351–0x380), NVM wear-leveling, backup SRAM. 11-state interactive firmware machine. Tesla/BYD/CATL teardown.</div>
+      </div>
+      <div class="card-topics"><ul class="topic-list">
+        <li class="topic-chip">BQ76952 AFE</li><li class="topic-chip">STM32 MCU</li><li class="topic-chip">PYLON CAN</li><li class="topic-chip">NVM wear leveling</li><li class="topic-chip">11-state machine</li><li class="topic-chip">SOX complete</li>
+      </ul></div>
+      <div class="card-footer"><span class="read-time">⏱ ~22 min · 3,245 lines</span><span class="cta" style="color:#c4b5fd;border-color:#c4b5fd">READ →</span></div>
+    </a>
+
+    <a href="chapter7.html" class="chapter-card ch7 reveal">
+      <div class="card-top"><div class="card-num">07</div>
+        <div class="card-badge" style="background:var(--gold);color:#000;border:none">★ FINAL CHAPTER</div>
+        <div class="card-title">UPS & Home ESS</div>
+        <div class="card-tagline">Everything applied to real products. Float charging physics (3.39V/cell), backup time formulas, ESS vs EV BMS differences, NFPA 855 indoor installation, full system energy flow.</div>
+      </div>
+      <div class="card-topics"><ul class="topic-list">
+        <li class="topic-chip">Float 3.39V/cell</li><li class="topic-chip">&lt;10ms switchover</li><li class="topic-chip">20–90% SoC window</li><li class="topic-chip">NFPA 855</li><li class="topic-chip">EV vs ESS BMS</li><li class="topic-chip">System energy flow</li>
+      </ul></div>
+      <div class="card-footer"><span class="read-time">⏱ ~20 min · 2,048 lines</span><span class="cta" style="color:#fde68a;border-color:#fde68a">READ →</span></div>
+    </a>
+  </div><!-- /chapters-grid -->
+</div>
