@@ -1151,3 +1151,305 @@
       </div>
     </div>
   </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       SECTION 5.6 — BMS TO STANDARD COMPLIANCE MATRIX
+  ═══════════════════════════════════════════════════════════════ -->
+  <section id="s5-6" class="chapter-section">
+    <div class="section-inner">
+      <div class="section-label">Section 5.6</div>
+      <h2 class="section-title">BMS-to-Standard Compliance Matrix</h2>
+      <p class="section-intro">
+        Every BMS feature introduced in Chapters 2–4 traces back to at least one mandatory standard requirement.
+        This matrix is the practical tool engineers use during design reviews: for each BMS function, identify
+        which standards require it, what the specific requirement is, and what test verifies compliance.
+        Gaps in this matrix are certification blockers — discover them in design, not on the test floor.
+      </p>
+
+      <!-- Matrix filter bar -->
+      <div style="display:flex;gap:0.6rem;flex-wrap:wrap;margin-bottom:1.2rem;">
+        <button class="matrix-filter active" onclick="filterMatrix('all',this)">All Standards</button>
+        <button class="matrix-filter" onclick="filterMatrix('iec62133',this)">IEC 62133</button>
+        <button class="matrix-filter" onclick="filterMatrix('iec61960',this)">IEC 61960</button>
+        <button class="matrix-filter" onclick="filterMatrix('iec62619',this)">IEC 62619</button>
+        <button class="matrix-filter" onclick="filterMatrix('ul1973',this)">UL 1973</button>
+        <button class="matrix-filter" onclick="filterMatrix('un383',this)">UN 38.3</button>
+        <button class="matrix-filter" onclick="filterMatrix('nfpa',this)">NFPA 855</button>
+      </div>
+
+      <style>
+        .matrix-filter {
+          background: #0f1923;
+          border: 1px solid #334155;
+          color: #94a3b8;
+          padding: 6px 14px;
+          border-radius: 20px;
+          font-family: monospace;
+          font-size: 12px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .matrix-filter.active, .matrix-filter:hover {
+          background: var(--std-green);
+          border-color: var(--std-green);
+          color: #0d1117;
+          font-weight: bold;
+        }
+        .matrix-table { width:100%; border-collapse:collapse; font-family:monospace; font-size:12px; margin-bottom:2rem; }
+        .matrix-table th { background:#0f1923; color:#2dd4bf; padding:10px 12px; text-align:left; border-bottom:2px solid #1e3a5f; position:sticky;top:0; }
+        .matrix-table td { padding:9px 12px; border-bottom:1px solid #1a2332; color:#94a3b8; vertical-align:top; }
+        .matrix-table tr:hover td { background:#0f1923; }
+        .matrix-table tr.hidden { display:none; }
+        .mtx-feature { color:#e2e8f0; font-weight:bold; }
+        .mtx-tick { color:#34d399; font-size:15px; }
+        .mtx-cross { color:#334155; font-size:15px; }
+        .mtx-part  { color:#f59e0b; font-size:13px; }
+        .mtx-std-tag { display:inline-block; background:#1e3a5f; color:#2dd4bf; border-radius:4px; padding:1px 6px; margin:1px; font-size:10px; }
+        .mtx-std-tag.ul { background:#1a2e1a; color:#34d399; }
+        .mtx-std-tag.un { background:#2a1a3a; color:#a78bfa; }
+        .mtx-std-tag.nfpa { background:#2a1a1a; color:#f87171; }
+      </style>
+
+      <div style="overflow-x:auto;">
+      <table class="matrix-table" id="matrixTable">
+        <thead>
+          <tr>
+            <th style="min-width:180px;">BMS Feature</th>
+            <th style="min-width:90px;">IEC 62133</th>
+            <th style="min-width:90px;">IEC 61960</th>
+            <th style="min-width:90px;">IEC 62619</th>
+            <th style="min-width:90px;">UL 1973</th>
+            <th style="min-width:90px;">UN 38.3</th>
+            <th style="min-width:90px;">NFPA 855</th>
+            <th style="min-width:280px;">Key Requirement / Test</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <!-- OVP -->
+          <tr data-tags="iec62133 iec62619 ul1973 un383">
+            <td class="mtx-feature">Over-Voltage Protection (OVP)</td>
+            <td><span class="mtx-tick">✔</span> §7.3.2</td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-tick">✔</span> §6.2</td>
+            <td><span class="mtx-tick">✔</span> §7.4.1</td>
+            <td><span class="mtx-part">◑</span> T7 bypass</td>
+            <td><span class="mtx-cross">—</span></td>
+            <td>Must disconnect within 1 s of exceeding 3.65 V/cell (LFP). Verified by overcharge abuse test. BMS OVP cannot substitute for cell-level T7 pass.</td>
+          </tr>
+
+          <!-- UVP -->
+          <tr data-tags="iec62133 iec62619 ul1973 un383">
+            <td class="mtx-feature">Under-Voltage Protection (UVP)</td>
+            <td><span class="mtx-tick">✔</span> §7.3.3</td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-tick">✔</span> §6.3</td>
+            <td><span class="mtx-tick">✔</span> §7.4.1</td>
+            <td><span class="mtx-part">◑</span> T8 bypass</td>
+            <td><span class="mtx-cross">—</span></td>
+            <td>Cutoff at 2.5 V/cell (LFP). Prevents copper dissolution (Cu → Cu²⁺ below 2.0 V). T8 forced-discharge deliberately bypasses BMS to test cell intrinsic tolerance.</td>
+          </tr>
+
+          <!-- OCP / SCP -->
+          <tr data-tags="iec62133 iec62619 ul1973 un383">
+            <td class="mtx-feature">Over-Current / Short-Circuit Protection</td>
+            <td><span class="mtx-tick">✔</span> §7.3.1</td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-tick">✔</span> §6.4</td>
+            <td><span class="mtx-tick">✔</span> §7.4.3</td>
+            <td><span class="mtx-tick">✔</span> T5</td>
+            <td><span class="mtx-cross">—</span></td>
+            <td>SCD: hardware path response ≤500 μs. OCD: software path ≤5 s. T5 applies 100 mΩ short at 57°C — pack-level test validates BMS SCD clears fault before cell temperature exceeds 170°C.</td>
+          </tr>
+
+          <!-- OTP / UTP -->
+          <tr data-tags="iec62133 iec62619 ul1973 nfpa">
+            <td class="mtx-feature">Over/Under-Temperature Protection</td>
+            <td><span class="mtx-tick">✔</span> §7.3.5</td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-tick">✔</span> §6.5</td>
+            <td><span class="mtx-tick">✔</span> §7.4.2</td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-tick">✔</span> §15.5</td>
+            <td>Charge cutoff ≥55°C / ≤−20°C (LFP). NFPA 855 §15.5 requires thermal management to maintain cells within manufacturer spec. Sensor redundancy (2-of-N voting) is best practice under UL 1973.</td>
+          </tr>
+
+          <!-- Cell Balancing -->
+          <tr data-tags="iec62619 ul1973">
+            <td class="mtx-feature">Cell Balancing</td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-tick">✔</span> §6.6</td>
+            <td><span class="mtx-tick">✔</span> §7.4.4</td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-cross">—</span></td>
+            <td>IEC 62619 requires ΔV between cells kept within manufacturer's specified limit during normal operation. UL 1973 ties this to SoC accuracy requirement (±5%) — imbalanced packs produce SoC errors.</td>
+          </tr>
+
+          <!-- SoC Estimation -->
+          <tr data-tags="iec61960 iec62619 ul1973">
+            <td class="mtx-feature">SoC Estimation & Reporting</td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-tick">✔</span> §7.2</td>
+            <td><span class="mtx-tick">✔</span> §6.7</td>
+            <td><span class="mtx-tick">✔</span> §7.4.4</td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-cross">—</span></td>
+            <td>IEC 61960 capacity must be measured at C/10, 20°C, 100% DoD. UL 1973 requires SoC reported to host via communication bus, accuracy ±5%. Algorithm: minimum coulomb counting + OCV correction.</td>
+          </tr>
+
+          <!-- SoH Estimation -->
+          <tr data-tags="iec61960 iec62619 ul1973">
+            <td class="mtx-feature">SoH / Capacity Fade Tracking</td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-tick">✔</span> §7.3</td>
+            <td><span class="mtx-part">◑</span> recommended</td>
+            <td><span class="mtx-tick">✔</span> §7.4.4</td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-cross">—</span></td>
+            <td>IEC 61960 cycle life test verifies capacity &gt;80% after rated cycles. UL 1973 requires SoH reported to host. SoH &lt;80% should trigger replacement recommendation via communication interface.</td>
+          </tr>
+
+          <!-- Communication Interface -->
+          <tr data-tags="iec62619 ul1973 nfpa">
+            <td class="mtx-feature">Communication Interface (CAN/Modbus/SMBus)</td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-tick">✔</span> §6.8</td>
+            <td><span class="mtx-tick">✔</span> §7.4.5</td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-tick">✔</span> §15.3</td>
+            <td>UL 1973: host must detect BMS silence within 5 s. NFPA 855 §15.3: ESS must communicate fault status to building fire alarm system. CAN/Modbus/SMBus all accepted; protocol must be documented in user manual.</td>
+          </tr>
+
+          <!-- Fault Logging -->
+          <tr data-tags="ul1973 nfpa">
+            <td class="mtx-feature">Non-Volatile Fault Log</td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-tick">✔</span> §7.4.6</td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-tick">✔</span> §15.6</td>
+            <td>Minimum last 10 fault events with timestamp. Must survive power loss (EEPROM or Flash). NFPA 855 requires fault history accessible to fire marshal post-incident. Enables warranty root-cause analysis.</td>
+          </tr>
+
+          <!-- Isolation Monitoring -->
+          <tr data-tags="iec62619 ul1973 nfpa">
+            <td class="mtx-feature">Isolation / Ground Fault Detection</td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-tick">✔</span> §6.9</td>
+            <td><span class="mtx-tick">✔</span> §7.5</td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-tick">✔</span> §15.4</td>
+            <td>Pack-to-chassis isolation ≥500 V DC. Insulation resistance ≥100 Ω/V. Ground fault detection required for systems &gt;60 V (UL 1973 §7.5.3). Verified by hi-pot test at 1.5× nominal voltage.</td>
+          </tr>
+
+          <!-- Watchdog -->
+          <tr data-tags="iec62619 ul1973">
+            <td class="mtx-feature">Hardware Watchdog / Fail-Safe</td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-tick">✔</span> §6.10</td>
+            <td><span class="mtx-tick">✔</span> §7.6</td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-cross">—</span></td>
+            <td>If BMS MCU halts (firmware crash, RTOS lockup), HW watchdog must open discharge FET ≤2 s. Independent of firmware. UL 1973 Phase 5 fault-injection test verifies this explicitly — BMS firmware is deliberately frozen by tester.</td>
+          </tr>
+
+          <!-- Thermal Management -->
+          <tr data-tags="iec62619 ul1973 nfpa">
+            <td class="mtx-feature">Thermal Management System Interface</td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-tick">✔</span> §6.5</td>
+            <td><span class="mtx-tick">✔</span> §7.4.2</td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-tick">✔</span> §15.5</td>
+            <td>BMS must control or interface with cooling system. Temperature derating curves required. NFPA 855 §15.5: thermal management must maintain cells within manufacturer's operating temperature range at all times during operation.</td>
+          </tr>
+
+          <!-- Pre-charge -->
+          <tr data-tags="iec62619 ul1973">
+            <td class="mtx-feature">Pre-Charge Circuit</td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-part">◑</span> implied</td>
+            <td><span class="mtx-tick">✔</span> §7.4.3</td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-cross">—</span></td>
+            <td>UL 1973 §7.4.3 requires inrush current to be controlled on connection. Pre-charge resistor limits I_inrush = V_pack / R_pchg. Typical: R=100Ω, τ=60ms for 600μF inverter capacitance. FET SOA protection.</td>
+          </tr>
+
+          <!-- Reverse polarity -->
+          <tr data-tags="iec62133 iec62619">
+            <td class="mtx-feature">Reverse Polarity Protection</td>
+            <td><span class="mtx-tick">✔</span> §7.3.6</td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-tick">✔</span> §6.4</td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-cross">—</span></td>
+            <td>IEC 62133 §7.3.6 reverse polarity test: connect charger reversed for 1 hour. BMS body diode in back-to-back MOSFET topology must block reverse current. Fuse as final backstop if FET fails.</td>
+          </tr>
+
+          <!-- Cell-level qualification -->
+          <tr data-tags="iec62133 un383">
+            <td class="mtx-feature">Cell Qualification (UL 1642 / IEC 62133)</td>
+            <td><span class="mtx-tick">✔</span> core</td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-cross">—</span></td>
+            <td><span class="mtx-part">◑</span> prerequisite</td>
+            <td><span class="mtx-tick">✔</span> prerequisite</td>
+            <td><span class="mtx-cross">—</span></td>
+            <td>All cell chemistry tests in UN 38.3 (T1–T8) and UL 1973 presuppose cell-level qualification. UL 1973 requires UL 1642 cert for cells used. Swapping to uncertified cells voids system certification.</td>
+          </tr>
+
+        </tbody>
+      </table>
+      </div>
+
+      <!-- Legend -->
+      <div style="display:flex;gap:1.5rem;flex-wrap:wrap;margin-bottom:2rem;font-family:monospace;font-size:12px;color:#94a3b8;">
+        <span><span class="mtx-tick">✔</span> Mandatory requirement with specific clause</span>
+        <span><span class="mtx-part">◑</span> Partially required / recommended / implied</span>
+        <span><span class="mtx-cross">—</span> Not covered by this standard</span>
+      </div>
+
+      <!-- Gap Analysis -->
+      <h3 class="subsection-title">Gap Analysis: What Standards Don't Cover</h3>
+      <p>Standards set the floor, not the ceiling. Several critical BMS features that engineers implement in production are not explicitly mandated by any current standard — they represent best practice beyond compliance.</p>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem;margin:1.5rem 0;">
+        <div class="callout callout-warning" style="margin:0;">
+          <div class="callout-icon">⚠</div>
+          <div class="callout-body">
+            <div class="callout-title">Active Balancing — No Mandate</div>
+            <p>Standards require balancing to maintain ΔV within spec, but none mandate active (inductor/capacitor) balancing over passive (resistor) balancing. Active balancing improves range by 3–8% and extends cycle life — a business case, not a compliance requirement.</p>
+          </div>
+        </div>
+        <div class="callout callout-warning" style="margin:0;">
+          <div class="callout-icon">⚠</div>
+          <div class="callout-body">
+            <div class="callout-title">EKF / AI SoC Algorithms — No Mandate</div>
+            <p>UL 1973 requires SoC accuracy ±5% but says nothing about the algorithm. Coulomb counting + OCV lookup is the minimum. Extended Kalman Filter, Gaussian Process Regression, or neural network approaches exceed the standard but dramatically improve accuracy in dynamic loads.</p>
+          </div>
+        </div>
+        <div class="callout callout-warning" style="margin:0;">
+          <div class="callout-icon">⚠</div>
+          <div class="callout-body">
+            <div class="callout-title">Cloud Telemetry — No Standard</div>
+            <p>No current standard requires remote monitoring or cloud logging. Yet fleet operators of UPS or home ESS increasingly demand 24/7 telemetry for predictive maintenance. This remains a manufacturer-defined interface until IEC 63166 (smart energy storage management) matures.</p>
+          </div>
+        </div>
+        <div class="callout callout-warning" style="margin:0;">
+          <div class="callout-icon">⚠</div>
+          <div class="callout-body">
+            <div class="callout-title">Second-Life Re-Certification Gap</div>
+            <p>When a battery pack is repurposed (EV→stationary ESS), no existing standard provides a clear path for re-certification with updated SoH parameters. IEC 62933-4-4 is under development. Current practice: treat second-life as a new design and run full UL 1973 again.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
