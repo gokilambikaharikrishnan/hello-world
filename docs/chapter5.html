@@ -623,3 +623,264 @@
     </div>
   </section>
 
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       SECTION 5.4 — UL 1973: STATIONARY ENERGY STORAGE SYSTEMS
+  ═══════════════════════════════════════════════════════════════ -->
+  <section id="s5-4" class="chapter-section">
+    <div class="section-inner">
+      <div class="section-label">Section 5.4</div>
+      <h2 class="section-title">UL 1973 — Stationary ESS</h2>
+      <p class="section-intro">
+        UL 1973 is the dominant safety standard for stationary battery energy storage systems in North America.
+        Unlike IEC 62133 (portable) or IEC 62619 (general industrial), UL 1973 was written specifically for
+        grid-tied ESS, UPS, and home energy storage — exactly where LFP BMS systems live. Compliance is mandatory
+        for utility interconnection in most US states, and increasingly required by homeowners' insurance.
+      </p>
+
+      <!-- Standard Card -->
+      <div class="std-card" style="margin-bottom:2rem;">
+        <div class="std-card-accent" style="background:var(--std-green);"></div>
+        <div class="std-card-body">
+          <div class="std-card-header">
+            <div class="std-card-logo">UL</div>
+            <div>
+              <div class="std-card-name">UL 1973</div>
+              <div class="std-card-full">Standard for Batteries for Use in Stationary, Vehicle Auxiliary Power and Light Electric Rail (LER) Applications</div>
+            </div>
+          </div>
+          <div class="std-card-meta">
+            <span class="std-badge">UL (USA/Canada)</span>
+            <span class="std-badge">3rd Edition 2022</span>
+            <span class="std-badge">Mandatory — US utility interconnect</span>
+            <span class="std-badge">IEC 62619 harmonised</span>
+          </div>
+          <p>Covers cell, module, and system-level requirements for stationary battery systems from small UPS to grid-scale storage. Requires component-level qualification plus system integration testing. The BMS is specifically addressed as a required safety subsystem.</p>
+        </div>
+      </div>
+
+      <!-- 3-Tier Protection Hierarchy SVG -->
+      <h3 class="subsection-title">Three-Tier Protection Hierarchy</h3>
+      <p>UL 1973 mandates that protection be independent at three levels. No single point of failure can result in an unsafe condition. The BMS must implement all three tiers.</p>
+
+      <svg viewBox="0 0 800 480" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:800px;display:block;margin:1.5rem auto;border-radius:12px;background:#0d1117;">
+        <defs>
+          <linearGradient id="tier1grad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#2dd4bf" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="#2dd4bf" stop-opacity="0.05"/>
+          </linearGradient>
+          <linearGradient id="tier2grad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.05"/>
+          </linearGradient>
+          <linearGradient id="tier3grad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#ef4444" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="#ef4444" stop-opacity="0.05"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Title -->
+        <text x="400" y="30" text-anchor="middle" fill="#e2e8f0" font-family="monospace" font-size="14" font-weight="bold">UL 1973 — Three-Tier Protection Architecture</text>
+
+        <!-- TIER 1 — Cell Level -->
+        <rect x="30" y="50" width="740" height="120" rx="10" fill="url(#tier1grad)" stroke="#2dd4bf" stroke-width="1.5"/>
+        <text x="55" y="80" fill="#2dd4bf" font-family="monospace" font-size="13" font-weight="bold">TIER 1 — Cell Level</text>
+        <text x="55" y="100" fill="#94a3b8" font-family="monospace" font-size="11">Intrinsic cell safety — chemistry + manufacturing</text>
+
+        <!-- Tier 1 boxes -->
+        <rect x="55" y="110" width="140" height="45" rx="6" fill="#2dd4bf" fill-opacity="0.15" stroke="#2dd4bf" stroke-width="1"/>
+        <text x="125" y="130" text-anchor="middle" fill="#2dd4bf" font-family="monospace" font-size="10">LFP Chemistry</text>
+        <text x="125" y="145" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Stable P-O bonds</text>
+
+        <rect x="215" y="110" width="140" height="45" rx="6" fill="#2dd4bf" fill-opacity="0.15" stroke="#2dd4bf" stroke-width="1"/>
+        <text x="285" y="130" text-anchor="middle" fill="#2dd4bf" font-family="monospace" font-size="10">CID / PTC / CCV</text>
+        <text x="285" y="145" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Cell-internal devices</text>
+
+        <rect x="375" y="110" width="140" height="45" rx="6" fill="#2dd4bf" fill-opacity="0.15" stroke="#2dd4bf" stroke-width="1"/>
+        <text x="445" y="130" text-anchor="middle" fill="#2dd4bf" font-family="monospace" font-size="10">Separator</text>
+        <text x="445" y="145" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Thermal shutdown layer</text>
+
+        <rect x="535" y="110" width="140" height="45" rx="6" fill="#2dd4bf" fill-opacity="0.15" stroke="#2dd4bf" stroke-width="1"/>
+        <text x="605" y="130" text-anchor="middle" fill="#2dd4bf" font-family="monospace" font-size="10">Cell Qualification</text>
+        <text x="605" y="145" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">UL 1642 / IEC 62133</text>
+
+        <!-- TIER 2 — Module/Pack Level -->
+        <rect x="30" y="185" width="740" height="130" rx="10" fill="url(#tier2grad)" stroke="#f59e0b" stroke-width="1.5"/>
+        <text x="55" y="213" fill="#f59e0b" font-family="monospace" font-size="13" font-weight="bold">TIER 2 — Module / Pack Level  (BMS Primary)</text>
+        <text x="55" y="233" fill="#94a3b8" font-family="monospace" font-size="11">Active BMS protection — firmware + hardware</text>
+
+        <rect x="55" y="245" width="130" height="55" rx="6" fill="#f59e0b" fill-opacity="0.15" stroke="#f59e0b" stroke-width="1"/>
+        <text x="120" y="265" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="10">OVP / UVP</text>
+        <text x="120" y="278" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">3.65V / 2.5V per cell</text>
+        <text x="120" y="291" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">FET open &lt;100ms</text>
+
+        <rect x="200" y="245" width="130" height="55" rx="6" fill="#f59e0b" fill-opacity="0.15" stroke="#f59e0b" stroke-width="1"/>
+        <text x="265" y="265" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="10">OCP / SCP</text>
+        <text x="265" y="278" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">SCD &lt;500μs HW path</text>
+        <text x="265" y="291" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">OCD &lt;5s SW path</text>
+
+        <rect x="345" y="245" width="130" height="55" rx="6" fill="#f59e0b" fill-opacity="0.15" stroke="#f59e0b" stroke-width="1"/>
+        <text x="410" y="265" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="10">OTP / UTP</text>
+        <text x="410" y="278" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">+55°C / -20°C charge</text>
+        <text x="410" y="291" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">NTC + voting logic</text>
+
+        <rect x="490" y="245" width="130" height="55" rx="6" fill="#f59e0b" fill-opacity="0.15" stroke="#f59e0b" stroke-width="1"/>
+        <text x="555" y="265" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="10">Cell Balancing</text>
+        <text x="555" y="278" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">ΔV &lt;20mV steady-state</text>
+        <text x="555" y="291" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Passive or active</text>
+
+        <rect x="635" y="245" width="120" height="55" rx="6" fill="#f59e0b" fill-opacity="0.15" stroke="#f59e0b" stroke-width="1"/>
+        <text x="695" y="265" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="10">SoC / SoH</text>
+        <text x="695" y="278" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Reported via comms</text>
+        <text x="695" y="291" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Accuracy ±5%</text>
+
+        <!-- TIER 3 — System Level -->
+        <rect x="30" y="330" width="740" height="120" rx="10" fill="url(#tier3grad)" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="55" y="358" fill="#ef4444" font-family="monospace" font-size="13" font-weight="bold">TIER 3 — System Level  (Redundant / Independent)</text>
+        <text x="55" y="376" fill="#94a3b8" font-family="monospace" font-size="11">Hardware fuses + external contactors + fire suppression — independent of BMS firmware</text>
+
+        <rect x="55" y="388" width="150" height="48" rx="6" fill="#ef4444" fill-opacity="0.15" stroke="#ef4444" stroke-width="1"/>
+        <text x="130" y="408" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="10">Fuse (HRC)</text>
+        <text x="130" y="423" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">HW short protection</text>
+
+        <rect x="220" y="388" width="150" height="48" rx="6" fill="#ef4444" fill-opacity="0.15" stroke="#ef4444" stroke-width="1"/>
+        <text x="295" y="408" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="10">External Contactor</text>
+        <text x="295" y="423" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Relay, BMS-independent</text>
+
+        <rect x="385" y="388" width="150" height="48" rx="6" fill="#ef4444" fill-opacity="0.15" stroke="#ef4444" stroke-width="1"/>
+        <text x="460" y="408" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="10">Enclosure / Venting</text>
+        <text x="460" y="423" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Gas exhaust path (NFPA 855)</text>
+
+        <rect x="550" y="388" width="200" height="48" rx="6" fill="#ef4444" fill-opacity="0.15" stroke="#ef4444" stroke-width="1"/>
+        <text x="650" y="408" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="10">Fire Suppression / Smoke</text>
+        <text x="650" y="423" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">UL 300A / NFPA 855 §15</text>
+
+        <!-- Animated arrows between tiers -->
+        <line x1="400" y1="170" x2="400" y2="183" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3">
+          <animate attributeName="stroke-dashoffset" from="7" to="0" dur="1.2s" repeatCount="indefinite"/>
+        </line>
+        <polygon points="395,183 405,183 400,191" fill="#94a3b8"/>
+        <line x1="400" y1="315" x2="400" y2="328" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3">
+          <animate attributeName="stroke-dashoffset" from="7" to="0" dur="1.2s" repeatCount="indefinite"/>
+        </line>
+        <polygon points="395,328 405,328 400,336" fill="#94a3b8"/>
+
+        <!-- "Independent" annotation -->
+        <text x="770" y="395" text-anchor="end" fill="#ef4444" font-family="monospace" font-size="10" font-style="italic">Independent</text>
+        <text x="770" y="408" text-anchor="end" fill="#ef4444" font-family="monospace" font-size="10" font-style="italic">of Tier 2</text>
+
+        <!-- Legend note -->
+        <text x="400" y="470" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="10">UL 1973 §7.4 — No single fault in any tier shall result in a hazardous condition</text>
+      </svg>
+
+      <!-- BMS Mandatory Requirements under UL 1973 -->
+      <h3 class="subsection-title">BMS Mandatory Requirements</h3>
+      <p>UL 1973 Section 7 explicitly lists BMS functions that must be present and verified by test. These are not recommendations — they are pass/fail criteria for certification.</p>
+
+      <div class="test-grid" style="margin:1.5rem 0;">
+        <div class="test-card">
+          <div class="test-card-id">§7.4.1</div>
+          <div class="test-card-name">Cell Voltage Monitoring</div>
+          <div class="test-card-desc">Each cell (or parallel group) monitored continuously. OVP: disconnect within 1 second. UVP: disconnect within 1 second. ADC resolution ≥ 1mV. No blind spots.</div>
+        </div>
+        <div class="test-card">
+          <div class="test-card-id">§7.4.2</div>
+          <div class="test-card-name">Temperature Monitoring</div>
+          <div class="test-card-desc">Minimum one sensor per module; one per 10 cells recommended. OTP: charge cutoff ≥55°C (LFP). UTP: charge cutoff ≤-20°C. Sensor accuracy ±2°C. Redundant voting preferred.</div>
+        </div>
+        <div class="test-card">
+          <div class="test-card-id">§7.4.3</div>
+          <div class="test-card-name">Current Monitoring</div>
+          <div class="test-card-desc">Continuous pack current measurement. SCD response ≤500ms (hardware path). OCD response configurable. Accuracy ±1% full scale. Shunt or Hall-effect both accepted.</div>
+        </div>
+        <div class="test-card">
+          <div class="test-card-id">§7.4.4</div>
+          <div class="test-card-name">SoC Reporting</div>
+          <div class="test-card-desc">State of Charge reported to host system. Accuracy ±5% under standard conditions. Must account for temperature derating. Algorithm: coulomb counting + OCV correction minimum.</div>
+        </div>
+        <div class="test-card">
+          <div class="test-card-id">§7.4.5</div>
+          <div class="test-card-name">Communication Interface</div>
+          <div class="test-card-desc">BMS must communicate faults, SoC, SoH, and temperature to the host. CAN bus, Modbus RTU, or SMBus all acceptable. Timeout: host must detect BMS silence within 5 seconds.</div>
+        </div>
+        <div class="test-card">
+          <div class="test-card-id">§7.4.6</div>
+          <div class="test-card-name">Fault Logging</div>
+          <div class="test-card-desc">Non-volatile fault log required. Minimum last 10 fault events with timestamp and severity. Must be accessible via service interface. Powers field investigation and warranty claims.</div>
+        </div>
+        <div class="test-card">
+          <div class="test-card-id">§7.5</div>
+          <div class="test-card-name">Isolation / Dielectric</div>
+          <div class="test-card-desc">Pack isolation from chassis ≥ 500V DC. Insulation resistance ≥ 100Ω/V. High-potential test at 1.5× nominal voltage. Ground fault detection required for systems &gt;60V.</div>
+        </div>
+        <div class="test-card">
+          <div class="test-card-id">§7.6</div>
+          <div class="test-card-name">Watchdog / Fail-Safe</div>
+          <div class="test-card-desc">If BMS firmware halts, hardware watchdog must open discharge FET within 2 seconds. Independent of MCU. Prevents zombie-state where battery is connected but unmonitored.</div>
+        </div>
+      </div>
+
+      <!-- UL 1973 Test Flow -->
+      <h3 class="subsection-title">UL 1973 Certification Test Sequence</h3>
+      <p>Certification requires subjecting the full system — not just the cell — to a defined test sequence. Tests are performed in order; failure at any stage halts the sequence.</p>
+
+      <div class="incident-timeline" style="margin:1.5rem 0;">
+        <div class="incident-item">
+          <div class="incident-dot" style="background:#2dd4bf;"></div>
+          <div class="incident-year">Phase 1</div>
+          <div class="incident-body">
+            <div class="incident-title">Documentation Review</div>
+            <div class="incident-text">UL evaluates schematic, BOM, firmware architecture, protection thresholds, and FMEA. Cell datasheet and UL 1642 cert required. BMS threshold justification document submitted.</div>
+          </div>
+        </div>
+        <div class="incident-item">
+          <div class="incident-dot" style="background:#2dd4bf;"></div>
+          <div class="incident-year">Phase 2</div>
+          <div class="incident-body">
+            <div class="incident-title">Component Investigation</div>
+            <div class="incident-text">Critical components (FETs, fuses, contactors, sensors) individually verified. MOSFETs: V_DS rating, SOA, RDS(on). Fuses: interrupt capacity ≥ prospective short-circuit current. Each must be UL-recognized or equivalent.</div>
+          </div>
+        </div>
+        <div class="incident-item">
+          <div class="incident-dot" style="background:#f59e0b;"></div>
+          <div class="incident-year">Phase 3</div>
+          <div class="incident-body">
+            <div class="incident-title">Environmental Tests</div>
+            <div class="incident-text">Temperature cycling (-40°C to +85°C, 10 cycles). Humidity exposure (95% RH at 40°C, 48 hours). Vibration and shock per UN 38.3 profiles (often cross-credited). Altitude simulation for sealed enclosures.</div>
+          </div>
+        </div>
+        <div class="incident-item">
+          <div class="incident-dot" style="background:#f59e0b;"></div>
+          <div class="incident-year">Phase 4</div>
+          <div class="incident-body">
+            <div class="incident-title">Electrical Abuse Tests</div>
+            <div class="incident-text">Overcharge: charge at 1.2× max voltage for 1 hour. Over-discharge: discharge to 0V through external resistor. External short circuit: 100mΩ fault applied, BMS must isolate. Each test: no fire, no explosion, no electrolyte leakage.</div>
+          </div>
+        </div>
+        <div class="incident-item">
+          <div class="incident-dot" style="background:#ef4444;"></div>
+          <div class="incident-year">Phase 5</div>
+          <div class="incident-body">
+            <div class="incident-title">BMS Fault Injection</div>
+            <div class="incident-text">UL deliberately defeats the BMS firmware (simulates MCU freeze) and verifies the hardware watchdog opens the FETs. Communication timeout is tested. Sensor failure modes (open-circuit NTC, shorted sensor) are injected to verify fail-safe behavior.</div>
+          </div>
+        </div>
+        <div class="incident-item">
+          <div class="incident-dot" style="background:#34d399;"></div>
+          <div class="incident-year">Phase 6</div>
+          <div class="incident-body">
+            <div class="incident-title">Marking and Follow-Up</div>
+            <div class="incident-text">UL mark applied. Annual factory inspections. Any BMS firmware change requires change notice (CN) — UL must review. Hardware changes require re-investigation. Counterfeit cells void certification.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-icon">ℹ</div>
+        <div class="callout-body">
+          <div class="callout-title">UL 1973 vs IEC 62619 Harmonisation</div>
+          <p>Since 2020, UL 1973 has been technically harmonised with IEC 62619 via a bi-national standard (UL/CSA). A system tested to IEC 62619 can receive recognition credit for many UL 1973 requirements, reducing the duplicate testing burden for manufacturers targeting both North American and international markets.</p>
+        </div>
+      </div>
+    </div>
+  </section>
