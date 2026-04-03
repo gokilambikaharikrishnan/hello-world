@@ -2476,6 +2476,292 @@ T_min (°C)  | Max I_charge | Reason
       </div>
     </div>
 
+    <!-- ══════ CH3 ANIMATIONS ══════ -->
+    <section class="section" id="ch3-animations" style="background:#060610;border-top:3px solid #fb923c">
+      <div class="section-number" style="color:#fb923c">Interactive Animations</div>
+      <h2 class="section-title" style="color:#fb923c">Chapter 3 — Visual Explainers</h2>
+
+      <!-- Heat Generation Visualizer -->
+      <div style="margin:2rem 0;padding:1.5rem;background:#0a0a18;border:2px solid #1e293b;border-radius:8px">
+        <h3 style="color:#fb923c;margin-bottom:.5rem;font-size:1.1rem">🔥 Heat Generation Visualizer — P = I²R</h3>
+        <p style="color:#64748b;font-size:.85rem;margin-bottom:1rem">Drag the slider to increase current. Watch the cell heat up. Heat scales as I² — doubling current = 4× heat.</p>
+        <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:.8rem">
+          <label style="color:#94a3b8;font-size:.9rem">C-Rate: <span id="crate-label">0.5C</span></label>
+          <input type="range" id="crate-slider" min="1" max="50" value="5" style="flex:1;min-width:150px" oninput="updateHeat()">
+          <span id="heat-display" style="font-family:monospace;color:#fb923c;font-size:1rem">Heat: 0.25W</span>
+        </div>
+        <canvas id="heat-canvas" width="700" height="220" style="width:100%;background:#080814;border-radius:6px;display:block"></canvas>
+      </div>
+
+      <!-- Thermal Runaway Cascade -->
+      <div style="margin:2rem 0;padding:1.5rem;background:#0a0a18;border:2px solid #1e293b;border-radius:8px">
+        <h3 style="color:#fb923c;margin-bottom:.5rem;font-size:1.1rem">💥 Thermal Runaway Cascade — Stage by Stage</h3>
+        <p style="color:#64748b;font-size:.85rem;margin-bottom:1rem">Click START to trigger the cascade. LFP stops at Stage 1. NMC/NCA continues to Stage 3B.</p>
+        <div style="display:flex;gap:.8rem;margin-bottom:1rem;flex-wrap:wrap">
+          <button onclick="startRunaway()" style="padding:.5rem 1.2rem;background:#3b0000;border:2px solid #ef4444;color:#ef4444;cursor:pointer;font-weight:700;font-family:inherit;border-radius:4px">🔥 START RUNAWAY</button>
+          <button onclick="resetRunaway()" style="padding:.5rem 1.2rem;background:#1a1a2e;border:2px solid #475569;color:#94a3b8;cursor:pointer;font-family:inherit;border-radius:4px">↺ RESET</button>
+          <span id="temp-display" style="font-family:monospace;color:#fb923c;font-size:1rem">Temp: 25°C</span>
+        </div>
+        <svg id="runaway-svg" viewBox="0 0 700 260" style="width:100%;height:auto">
+          <defs><filter id="glow-r"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+          <!-- Stage boxes -->
+          <rect id="r0" x="10" y="60" width="110" height="140" rx="6" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+          <text x="65" y="100" text-anchor="middle" fill="#64748b" font-size="11" font-weight="700">STAGE 0</text>
+          <text x="65" y="115" text-anchor="middle" fill="#64748b" font-size="9">Normal</text>
+          <text x="65" y="128" text-anchor="middle" fill="#64748b" font-size="9">Operation</text>
+          <text x="65" y="145" text-anchor="middle" fill="#64748b" font-size="8">25°C</text>
+
+          <rect id="r1" x="140" y="60" width="110" height="140" rx="6" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+          <text x="195" y="100" text-anchor="middle" fill="#64748b" font-size="11" font-weight="700">STAGE 1</text>
+          <text x="195" y="115" text-anchor="middle" fill="#64748b" font-size="9">SEI Decomp.</text>
+          <text x="195" y="128" text-anchor="middle" fill="#64748b" font-size="9">~100–130°C</text>
+          <text id="lfp-label" x="195" y="165" text-anchor="middle" fill="#34d399" font-size="8" opacity="0">✓ LFP STOPS</text>
+          <text id="lfp-label2" x="195" y="178" text-anchor="middle" fill="#34d399" font-size="8" opacity="0">HERE — SAFE</text>
+
+          <rect id="r2" x="270" y="60" width="110" height="140" rx="6" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+          <text x="325" y="100" text-anchor="middle" fill="#64748b" font-size="11" font-weight="700">STAGE 2</text>
+          <text x="325" y="115" text-anchor="middle" fill="#64748b" font-size="9">Electrolyte</text>
+          <text x="325" y="128" text-anchor="middle" fill="#64748b" font-size="9">Decomp. 150°C</text>
+
+          <rect id="r3" x="400" y="60" width="110" height="140" rx="6" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+          <text x="455" y="100" text-anchor="middle" fill="#64748b" font-size="11" font-weight="700">STAGE 3A</text>
+          <text x="455" y="115" text-anchor="middle" fill="#64748b" font-size="9">O₂ Release</text>
+          <text x="455" y="128" text-anchor="middle" fill="#64748b" font-size="9">200–270°C</text>
+
+          <rect id="r4" x="530" y="60" width="160" height="140" rx="6" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+          <text x="610" y="100" text-anchor="middle" fill="#64748b" font-size="11" font-weight="700">STAGE 3B</text>
+          <text x="610" y="115" text-anchor="middle" fill="#64748b" font-size="9">Propagation</text>
+          <text x="610" y="128" text-anchor="middle" fill="#64748b" font-size="9">Adjacent Cells</text>
+
+          <!-- Temperature gauge -->
+          <rect x="10" y="215" width="680" height="16" rx="4" fill="#1e293b"/>
+          <rect id="temp-bar" x="10" y="215" width="0" height="16" rx="4" fill="#22c55e"/>
+          <text x="350" y="227" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">TEMPERATURE</text>
+
+          <!-- Arrows -->
+          <text x="127" y="133" fill="#475569" font-size="20">→</text>
+          <text x="257" y="133" fill="#475569" font-size="20">→</text>
+          <text x="387" y="133" fill="#475569" font-size="20">→</text>
+          <text x="517" y="133" fill="#475569" font-size="20">→</text>
+        </svg>
+      </div>
+
+      <!-- Pack Heatmap -->
+      <div style="margin:2rem 0;padding:1.5rem;background:#0a0a18;border:2px solid #1e293b;border-radius:8px">
+        <h3 style="color:#fb923c;margin-bottom:.5rem;font-size:1.1rem">🗺️ Pack Temperature Heatmap — 16 Cells</h3>
+        <p style="color:#64748b;font-size:.85rem;margin-bottom:1rem">Center cells run hotter due to lower surface area. NTC sensor positions shown as white dots.</p>
+        <canvas id="heatmap-canvas" width="700" height="220" style="width:100%;background:#080814;border-radius:6px;display:block"></canvas>
+      </div>
+    </section>
+
+    <script>
+    // ── HEAT VISUALIZER ───────────────────────────────────────
+    (function() {
+      const canvas = document.getElementById('heat-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      let cRate = 0.5, heatW = 0;
+
+      window.updateHeat = function() {
+        const slider = document.getElementById('crate-slider');
+        cRate = slider.value / 10;
+        document.getElementById('crate-label').textContent = cRate.toFixed(1) + 'C';
+        const heat = (cRate * cRate * 0.1).toFixed(2);
+        document.getElementById('heat-display').textContent = 'Heat: ' + heat + 'W';
+        heatW = parseFloat(heat);
+      };
+
+      function draw() {
+        ctx.clearRect(0, 0, W, H);
+        const norm = Math.min(cRate / 5, 1);
+        // Cell color
+        const r = Math.floor(norm * 239 + (1-norm)*30);
+        const g = Math.floor((1-norm) * 180 + (norm > 0.5 ? 0 : (0.5-norm)*200));
+        const b = Math.floor((1-norm) * 200);
+        ctx.fillStyle = `rgb(${r},${g},${b})`;
+        ctx.fillRect(W/2-60, H/2-70, 120, 140);
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(W/2-60, H/2-70, 120, 140);
+
+        // Heat waves
+        if (norm > 0.3) {
+          const t = Date.now() * 0.002;
+          for (let i = 0; i < 5; i++) {
+            const wy = H/2 - 80 - (i+1)*20 + Math.sin(t + i) * 5;
+            ctx.beginPath();
+            ctx.moveTo(W/2 - 40, wy);
+            ctx.quadraticCurveTo(W/2 - 20, wy - 10, W/2, wy);
+            ctx.quadraticCurveTo(W/2 + 20, wy + 10, W/2 + 40, wy);
+            ctx.strokeStyle = `rgba(${r},${Math.floor(g/2)},0,${norm * 0.6})`;
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+          }
+        }
+
+        // Labels
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 12px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillText('LFP Cell', W/2, H/2 + 5);
+        ctx.font = '10px system-ui';
+        ctx.fillStyle = norm > 0.7 ? '#fff' : '#94a3b8';
+        ctx.fillText(heatW.toFixed(2) + 'W heat loss', W/2, H/2 + 20);
+
+        // I²R label
+        ctx.fillStyle = '#fb923c';
+        ctx.font = '11px system-ui';
+        ctx.textAlign = 'left';
+        ctx.fillText('P = I² × R = (' + cRate + 'C × 280A)² × 1mΩ', 20, 25);
+        ctx.fillText('I²R scales quadratically — 5C = 25× more heat than 1C', 20, 42);
+
+        // C-rate bar
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(20, H - 30, W - 40, 16);
+        ctx.fillStyle = `rgb(${r},${Math.floor(g*0.7)},0)`;
+        ctx.fillRect(20, H - 30, (W - 40) * norm, 16);
+        ctx.fillStyle = '#fff';
+        ctx.font = '9px system-ui';
+        ctx.fillText('C-Rate: ' + cRate.toFixed(1) + 'C', 25, H - 18);
+
+        requestAnimationFrame(draw);
+      }
+      updateHeat();
+      draw();
+    })();
+
+    // ── THERMAL RUNAWAY ───────────────────────────────────────
+    let runawaystage = -1, runawayTimer = null;
+    const stageColors = ['#22c55e','#f97316','#ef4444','#dc2626','#7f1d1d'];
+    const stageTemps = [25, 120, 160, 240, 350];
+
+    function setStage(n) {
+      const ids = ['r0','r1','r2','r3','r4'];
+      const bar = document.getElementById('temp-bar');
+      for (let i = 0; i <= n && i < ids.length; i++) {
+        const el = document.getElementById(ids[i]);
+        if (el) {
+          el.setAttribute('fill', stageColors[i] + '33');
+          el.setAttribute('stroke', stageColors[i]);
+          el.setAttribute('stroke-width', '3');
+        }
+      }
+      const temp = stageTemps[Math.min(n, stageTemps.length-1)];
+      document.getElementById('temp-display').textContent = 'Temp: ' + temp + '°C';
+      const tempNorm = (temp - 25) / 350;
+      if (bar) {
+        bar.setAttribute('width', Math.floor(680 * tempNorm));
+        bar.setAttribute('fill', stageColors[Math.min(n,4)]);
+      }
+      if (n >= 1) {
+        const l1 = document.getElementById('lfp-label');
+        const l2 = document.getElementById('lfp-label2');
+        if (l1) l1.setAttribute('opacity','1');
+        if (l2) l2.setAttribute('opacity','1');
+      }
+    }
+
+    window.startRunaway = function() {
+      resetRunaway();
+      let s = 0;
+      function nextStage() {
+        setStage(s);
+        runawaystage = s;
+        s++;
+        if (s < 5) runawayTimer = setTimeout(nextStage, 1200);
+      }
+      nextStage();
+    };
+
+    window.resetRunaway = function() {
+      clearTimeout(runawayTimer);
+      runawaystage = -1;
+      ['r0','r1','r2','r3','r4'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.setAttribute('fill','#1e293b'); el.setAttribute('stroke','#334155'); el.setAttribute('stroke-width','2'); }
+      });
+      document.getElementById('temp-display').textContent = 'Temp: 25°C';
+      const bar = document.getElementById('temp-bar');
+      if (bar) { bar.setAttribute('width','0'); bar.setAttribute('fill','#22c55e'); }
+      const l1 = document.getElementById('lfp-label');
+      const l2 = document.getElementById('lfp-label2');
+      if (l1) l1.setAttribute('opacity','0');
+      if (l2) l2.setAttribute('opacity','0');
+    };
+
+    // ── PACK HEATMAP ──────────────────────────────────────────
+    (function() {
+      const canvas = document.getElementById('heatmap-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      // 4×4 grid of cells
+      const cols = 4, rows = 4;
+      const cw = 120, ch = 44;
+      const startX = (W - cols*cw) / 2;
+      const startY = (H - rows*ch) / 2;
+      // Center cells hotter
+      const baseTemps = [
+        [28,32,32,28],
+        [32,38,38,32],
+        [32,38,38,32],
+        [28,32,32,28]
+      ];
+      const ntcPositions = [[0,0],[1,1],[1,2],[3,3]]; // NTC sensor cells
+
+      function tempToColor(t) {
+        const norm = (t - 25) / 25;
+        const r = Math.floor(norm * 239 + (1-norm)*34);
+        const g = Math.floor((1-norm) * 197 + (norm > 0.5 ? 0 : 100));
+        const b = Math.floor((1-norm) * 94);
+        return `rgb(${r},${g},${b})`;
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, W, H);
+        const t = Date.now() * 0.001;
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const x = startX + c * cw;
+            const y = startY + r * ch;
+            const temp = baseTemps[r][c] + Math.sin(t + r*0.7 + c*0.5) * 2;
+            ctx.fillStyle = tempToColor(temp);
+            ctx.fillRect(x+3, y+3, cw-6, ch-6);
+            ctx.strokeStyle = '#0a0a18';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x+3, y+3, cw-6, ch-6);
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 10px system-ui';
+            ctx.textAlign = 'center';
+            ctx.fillText('Cell ' + (r*cols+c+1), x+cw/2, y+ch/2-3);
+            ctx.font = '9px system-ui';
+            ctx.fillText(temp.toFixed(1) + '°C', x+cw/2, y+ch/2+10);
+          }
+        }
+        // NTC sensors
+        ntcPositions.forEach(([r,c]) => {
+          const x = startX + c*cw + cw/2;
+          const y = startY + r*ch + ch/2;
+          ctx.beginPath();
+          ctx.arc(x+40, y-12, 6, 0, Math.PI*2);
+          ctx.fillStyle = '#fff';
+          ctx.fill();
+          ctx.fillStyle = '#000';
+          ctx.font = 'bold 7px system-ui';
+          ctx.textAlign = 'center';
+          ctx.fillText('T', x+40, y-9);
+        });
+        ctx.fillStyle = '#64748b';
+        ctx.font = '9px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillText('● White dot = NTC sensor  |  Center cells 10°C warmer than edges', W/2, H - 8);
+        requestAnimationFrame(draw);
+      }
+      draw();
+    })();
+    </script>
+
     <!-- Chapter Navigation Footer -->
     <div class="chapter-footer">
       <a class="nav-btn" href="chapter2.html">← Chapter 2: Cell Behaviour</a>
