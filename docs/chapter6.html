@@ -2884,3 +2884,127 @@
       </div>
     </div>
   </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       CHAPTER SUMMARY
+  ═══════════════════════════════════════════════════════════════ -->
+  <section id="s6-summary" class="chapter-section">
+    <div class="section-inner">
+      <div class="section-label">Chapter Summary</div>
+      <h2 class="section-title">Twelve Principles of BMS Architecture</h2>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem;margin:1.5rem 0;">
+
+        <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--arch-purple);border-radius:var(--radius);padding:1.2rem;">
+          <div style="color:var(--arch-purple);font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">① Physics Drives Architecture</div>
+          <div style="color:var(--text-muted);font-size:13px;line-height:1.6;">Every BMS module exists because a battery physics problem requires it. Remove the physics chain, and the architecture becomes arbitrary. Start with the traceability matrix, not the BOM.</div>
+        </div>
+
+        <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--arch-purple);border-radius:var(--radius);padding:1.2rem;">
+          <div style="color:var(--arch-purple);font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">② The AFE is the Safety Core</div>
+          <div style="color:var(--text-muted);font-size:13px;line-height:1.6;">The AFE IC — not the MCU — is the primary safety device. Its hardware SCD comparator operates in microseconds; its watchdog operates independently of firmware. Never design a BMS where the MCU is the only protection path.</div>
+        </div>
+
+        <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--arch-purple);border-radius:var(--radius);padding:1.2rem;">
+          <div style="color:var(--arch-purple);font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">③ Dedicated MCU, Always</div>
+          <div style="color:var(--text-muted);font-size:13px;line-height:1.6;">Sharing an MCU between BMS and inverter creates priority conflicts that can delay safety-critical measurements. A $2 dedicated MCU is cheap insurance against a $200 warranty claim.</div>
+        </div>
+
+        <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--arch-purple);border-radius:var(--radius);padding:1.2rem;">
+          <div style="color:var(--arch-purple);font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">④ CAN is the Language of ESS</div>
+          <div style="color:var(--text-muted);font-size:13px;line-height:1.6;">250 kbps CAN with PYLON-compatible message set (0x351–0x380) is the de-facto standard for stationary ESS. Learn it, implement it correctly, add bus-off recovery, and your BMS will work with every major inverter brand.</div>
+        </div>
+
+        <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--arch-purple);border-radius:var(--radius);padding:1.2rem;">
+          <div style="color:var(--arch-purple);font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">⑤ SoC Must Never Be Lost</div>
+          <div style="color:var(--text-muted);font-size:13px;line-height:1.6;">Three-tier persistence: backup SRAM (1s resolution, instantaneous recovery), NVM checkpoint (60s resolution), OCV re-init (fallback, inaccurate on LFP plateau). Without BSRAM, every power cycle degrades SoC accuracy.</div>
+        </div>
+
+        <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--arch-purple);border-radius:var(--radius);padding:1.2rem;">
+          <div style="color:var(--arch-purple);font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">⑥ NVM Requires Wear Leveling</div>
+          <div style="color:var(--text-muted);font-size:13px;line-height:1.6;">60s SoC writes × 10 years = 5.25M writes. Without wear leveling, a single EEPROM address wears out in 5 years. Rotate across 16+ pages, protect every record with CRC-16, always validate on startup.</div>
+        </div>
+
+        <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--arch-purple);border-radius:var(--radius);padding:1.2rem;">
+          <div style="color:var(--arch-purple);font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">⑦ RTC Enables Aging Intelligence</div>
+          <div style="color:var(--text-muted);font-size:13px;line-height:1.6;">Calendar aging (Arrhenius) doubles every 10°C. Without an RTC, you cannot track time-at-temperature. Calendar aging is the dominant SoH degradation mechanism for storage applications. A coin cell keeps the RTC running for 11+ years.</div>
+        </div>
+
+        <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--arch-purple);border-radius:var(--radius);padding:1.2rem;">
+          <div style="color:var(--arch-purple);font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">⑧ Log Everything, Always</div>
+          <div style="color:var(--text-muted);font-size:13px;line-height:1.6;">A 256-entry circular event log with RTC timestamps costs 2.5KB of EEPROM. It enables remote fault diagnosis, warranty root-cause analysis, and field upgrade planning. Without logs, failed packs are undiagnosable. Always log first, question storage size second.</div>
+        </div>
+
+        <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--arch-purple);border-radius:var(--radius);padding:1.2rem;">
+          <div style="color:var(--arch-purple);font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">⑨ State Machine Prevents Undefined Behaviour</div>
+          <div style="color:var(--text-muted);font-size:13px;line-height:1.6;">A BMS without a formal state machine will eventually reach an undefined state — charge and discharge FETs both open, or both closed, under race conditions. The state machine with formal transition guards is the only way to guarantee deterministic behaviour.</div>
+        </div>
+
+        <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--arch-purple);border-radius:var(--radius);padding:1.2rem;">
+          <div style="color:var(--arch-purple);font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">⑩ SOX is a System, Not Four Numbers</div>
+          <div style="color:var(--text-muted);font-size:13px;line-height:1.6;">SoC, SoH, SoF, SoP feed each other. SoP depends on SoC × T-derating. SoF depends on SoC × SoH × η(T). The host inverter adapts its power strategy every 100ms based on SoP — getting this wrong costs energy efficiency and causes premature cell damage.</div>
+        </div>
+
+        <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--arch-purple);border-radius:var(--radius);padding:1.2rem;">
+          <div style="color:var(--arch-purple);font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">⑪ World-Class = Hardware Fail-Safe + Persistent State + Adaptive Algorithms</div>
+          <div style="color:var(--text-muted);font-size:13px;line-height:1.6;">Tesla, BYD, CATL all converge on the same architecture. Cell-level fusing. Distributed BMS. OTA-updatable firmware. Cloud-calibrated SoH. The $2000 gap between budget and world-class BMS is almost entirely firmware intelligence, not hardware cost.</div>
+        </div>
+
+        <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--arch-purple);border-radius:var(--radius);padding:1.2rem;">
+          <div style="color:var(--arch-purple);font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">⑫ Timing is Physics</div>
+          <div style="color:var(--text-muted);font-size:13px;line-height:1.6;">&lt;500μs for SCD (copper melts in ms). 10ms for OVP (Li plating starts in seconds). 100ms for SoC (load step response). 1s for balancing. 60s for NVM. 1hr for SoH. Each timing layer is set by the physics of the failure it prevents.</div>
+        </div>
+
+      </div>
+
+      <!-- Final traceability SVG -->
+      <h3 class="subsection-title">Architecture Layers — Complete Picture</h3>
+      <svg viewBox="0 0 820 360" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:820px;display:block;margin:1.5rem auto;border-radius:12px;background:#0d1117;">
+
+        <!-- Layer bars (bottom to top) -->
+        <rect x="20" y="300" width="780" height="40" rx="7" fill="rgba(239,68,68,0.12)" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="410" y="318" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="11" font-weight="bold">PHYSICS LAYER — Battery chemistry, electrochemistry, thermodynamics</text>
+        <text x="410" y="333" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">LFP: V=2.5–3.65V, T=−20 to +60°C, Flat OCV, Stable P-O bond, Calendar aging via Arrhenius</text>
+
+        <rect x="20" y="245" width="780" height="48" rx="7" fill="rgba(167,139,250,0.1)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="410" y="265" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="11" font-weight="bold">HARDWARE LAYER — AFE IC + MCU + Power electronics</text>
+        <text x="410" y="281" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Δ-Σ ADC, Flying cap mux, HW comparator, Balancing FETs, SPI, CAN transceiver, NVM, RTC, BSRAM</text>
+        <text x="410" y="290" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="8">AFE watchdog and hardware fuse are independent of all software</text>
+
+        <rect x="20" y="185" width="780" height="53" rx="7" fill="rgba(52,211,153,0.08)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="410" y="205" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="11" font-weight="bold">FIRMWARE LAYER — Real-time embedded software</text>
+        <text x="410" y="221" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">10ms measurement+protection | 100ms SOX | 1s CAN+balance+BSRAM | 60s NVM | 1hr SoH</text>
+        <text x="410" y="233" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="8">State machine coordinates all modules — FAULT state always reachable from any state</text>
+
+        <rect x="20" y="130" width="780" height="48" rx="7" fill="rgba(0,229,255,0.08)" stroke="#00e5ff" stroke-width="1.5"/>
+        <text x="410" y="150" text-anchor="middle" fill="#00e5ff" font-family="monospace" font-size="11" font-weight="bold">COMMUNICATION LAYER — CAN, SMBus, UART</text>
+        <text x="410" y="166" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">CAN 0x351-0x380: SoC, SoH, SoP → Inverter/Charger | SMBus 0x0B: SBDS registers → Legacy UPS</text>
+        <text x="410" y="178" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="8">UL 1973: host must detect BMS silence within 5s | CAN bus-off recovery mandatory</text>
+
+        <rect x="20" y="75" width="780" height="48" rx="7" fill="rgba(245,158,11,0.08)" stroke="#f59e0b" stroke-width="1.5"/>
+        <text x="410" y="95" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="11" font-weight="bold">SYSTEM LAYER — Host, Inverter, Cloud</text>
+        <text x="410" y="111" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Inverter uses SoP to adapt charge/discharge power | Cloud uses SoH for predictive replacement</text>
+        <text x="410" y="123" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="8">NFPA 855: BMS communicates faults to building fire alarm system</text>
+
+        <rect x="20" y="25" width="780" height="43" rx="7" fill="rgba(52,211,153,0.06)" stroke="#34d399" stroke-width="1"/>
+        <text x="410" y="45" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="11" font-weight="bold">USER LAYER — Operator, Field Engineer, Standards Auditor</text>
+        <text x="410" y="61" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Display: SoC %, kWh remaining | Service: event log download | Compliance: UL 1973 / IEC 62619 audit</text>
+
+        <!-- Animated pulse going up the layers -->
+        <circle cx="800" cy="320" r="4" fill="#a78bfa" opacity="0.9">
+          <animateMotion dur="4s" repeatCount="indefinite">
+            <mpath href="#layerPath"/>
+          </animateMotion>
+          <animate attributeName="opacity" values="0.9;0.3;0.9" dur="0.8s" repeatCount="indefinite"/>
+        </circle>
+        <path id="layerPath" d="M800,320 L800,280 L800,245 L800,215 L800,165 L800,110 L800,50" fill="none" stroke="none"/>
+      </svg>
+
+      <!-- Chapter navigation footer -->
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:1.5rem 0;border-top:1px solid var(--border);margin-top:2rem;">
+        <a href="chapter5.html" style="color:var(--arch-purple);text-decoration:none;font-family:monospace;font-size:13px;">← Chapter 5: Standards &amp; Compliance</a>
+        <span style="color:var(--text-dim);font-family:monospace;font-size:12px;">Chapter 6 of 7</span>
+        <a href="chapter7.html" style="color:var(--arch-purple);text-decoration:none;font-family:monospace;font-size:13px;">Chapter 7: Advanced Topics →</a>
+      </div>
+    </div>
+  </section>
