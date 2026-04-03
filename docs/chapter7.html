@@ -612,3 +612,229 @@
       </div>
     </div>
   </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 7.2 — HOME ESS REQUIREMENTS
+  ═══════════════════════════════════════════════════════════════ -->
+  <section id="s7-2" class="chapter-section">
+    <div class="section-inner">
+      <div class="section-label">Section 7.2</div>
+      <h2 class="section-title">Home ESS Requirements</h2>
+      <p class="section-intro">
+        A home energy storage system sits in a garage or utility room, cycling once per day for
+        ten to fifteen years, under the critical eye of a homeowner who does not have engineering
+        training but has paid $8,000 for the system. The requirements are fundamentally different
+        from UPS: maximise calendar life, guarantee indoor safety, enable accurate user-visible SoC,
+        and integrate seamlessly with solar and grid tariffs.
+      </p>
+
+      <!-- UPS vs ESS comparison SVG -->
+      <svg viewBox="0 0 840 380" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:840px;display:block;margin:1.5rem auto;border-radius:12px;background:#0d1117;">
+        <defs>
+          <linearGradient id="upsGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#00e5ff" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="#00e5ff" stop-opacity="0.05"/>
+          </linearGradient>
+          <linearGradient id="essGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="#fbbf24" stop-opacity="0.05"/>
+          </linearGradient>
+        </defs>
+        <text x="420" y="24" text-anchor="middle" fill="#e2e8f0" font-family="monospace" font-size="13" font-weight="bold">UPS vs Home ESS — Design Priority Comparison</text>
+
+        <!-- UPS column -->
+        <rect x="20" y="38" width="380" height="320" rx="10" fill="url(#upsGrad)" stroke="#00e5ff" stroke-width="1.5"/>
+        <text x="210" y="60" text-anchor="middle" fill="#00e5ff" font-family="monospace" font-size="13" font-weight="bold">UPS Application</text>
+        <text x="210" y="76" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="9">Critical infrastructure — data center, hospital</text>
+
+        <!-- ESS column -->
+        <rect x="440" y="38" width="380" height="320" rx="10" fill="url(#essGrad)" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="630" y="60" text-anchor="middle" fill="#fbbf24" font-family="monospace" font-size="13" font-weight="bold">Home ESS Application</text>
+        <text x="630" y="76" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="9">Residential — garage, utility room</text>
+
+        <!-- Priority rows -->
+        <!-- Row 1: Availability -->
+        <text x="35" y="106" fill="#00e5ff" font-family="monospace" font-size="10" font-weight="bold">Availability</text>
+        <text x="35" y="122" fill="#94a3b8" font-family="monospace" font-size="9">100% SoC at all times. Float state.</text>
+        <text x="35" y="135" fill="#94a3b8" font-family="monospace" font-size="9">Battery ready within milliseconds.</text>
+        <text x="455" y="106" fill="#fbbf24" font-family="monospace" font-size="10" font-weight="bold">Daily Cycling</text>
+        <text x="455" y="122" fill="#94a3b8" font-family="monospace" font-size="9">Charge from solar during day.</text>
+        <text x="455" y="135" fill="#94a3b8" font-family="monospace" font-size="9">Discharge to home loads at night.</text>
+
+        <!-- Row 2: Response time -->
+        <text x="35" y="165" fill="#00e5ff" font-family="monospace" font-size="10" font-weight="bold">Response Time</text>
+        <text x="35" y="181" fill="#94a3b8" font-family="monospace" font-size="9">&lt;10ms. DSG FET always closed.</text>
+        <text x="35" y="194" fill="#94a3b8" font-family="monospace" font-size="9">BMS not on critical path.</text>
+        <text x="455" y="165" fill="#fbbf24" font-family="monospace" font-size="10" font-weight="bold">Response Time</text>
+        <text x="455" y="181" fill="#94a3b8" font-family="monospace" font-size="9">&lt;100ms. Soft switchover OK.</text>
+        <text x="455" y="194" fill="#94a3b8" font-family="monospace" font-size="9">BMS negotiates with inverter.</text>
+
+        <!-- Row 3: Life target -->
+        <text x="35" y="224" fill="#00e5ff" font-family="monospace" font-size="10" font-weight="bold">Life Target</text>
+        <text x="35" y="240" fill="#94a3b8" font-family="monospace" font-size="9">5–10 years (data center refresh cycle).</text>
+        <text x="35" y="253" fill="#94a3b8" font-family="monospace" font-size="9">Float reduces cycling — life ↑.</text>
+        <text x="455" y="224" fill="#fbbf24" font-family="monospace" font-size="10" font-weight="bold">Life Target</text>
+        <text x="455" y="240" fill="#94a3b8" font-family="monospace" font-size="9">10–15 years (mortgage/solar payback).</text>
+        <text x="455" y="253" fill="#94a3b8" font-family="monospace" font-size="9">365 cycles/year × 15yr = 5,475 cycles.</text>
+
+        <!-- Row 4: Safety -->
+        <text x="35" y="283" fill="#00e5ff" font-family="monospace" font-size="10" font-weight="bold">Safety Context</text>
+        <text x="35" y="299" fill="#94a3b8" font-family="monospace" font-size="9">Dedicated battery room, trained staff.</text>
+        <text x="35" y="312" fill="#94a3b8" font-family="monospace" font-size="9">NFPA 855 industrial installation.</text>
+        <text x="455" y="283" fill="#fbbf24" font-family="monospace" font-size="10" font-weight="bold">Safety Context</text>
+        <text x="455" y="299" fill="#94a3b8" font-family="monospace" font-size="9">Family home. Children present.</text>
+        <text x="455" y="312" fill="#94a3b8" font-family="monospace" font-size="9">Zero toxicity, zero smoke tolerance.</text>
+
+        <!-- Row 5: Cost -->
+        <text x="35" y="342" fill="#00e5ff" font-family="monospace" font-size="10" font-weight="bold">Economics</text>
+        <text x="35" y="355" fill="#94a3b8" font-family="monospace" font-size="9">TCO per kVA·hr protected.</text>
+        <text x="455" y="342" fill="#fbbf24" font-family="monospace" font-size="10" font-weight="bold">Economics</text>
+        <text x="455" y="355" fill="#94a3b8" font-family="monospace" font-size="9">$/kWh stored per cycle × 5000 cycles.</text>
+
+        <!-- Centre divider -->
+        <line x1="420" y1="38" x2="420" y2="358" stroke="#334155" stroke-width="1" stroke-dasharray="4,3"/>
+      </svg>
+
+      <!-- Daily cycling profile -->
+      <h3 class="subsection-title" id="s7-2-daily">Daily Cycling Profile</h3>
+
+      <svg viewBox="0 0 800 280" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:800px;display:block;margin:1.5rem auto;border-radius:12px;background:#0d1117;">
+        <text x="400" y="24" text-anchor="middle" fill="#e2e8f0" font-family="monospace" font-size="13" font-weight="bold">Typical Home ESS Daily Cycle — Solar + Load Profile</text>
+
+        <!-- Time axis -->
+        <line x1="50" y1="230" x2="780" y2="230" stroke="#334155" stroke-width="1"/>
+        <text x="50" y="248" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="9">00:00</text>
+        <text x="146" y="248" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="9">04:00</text>
+        <text x="242" y="248" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="9">08:00</text>
+        <text x="338" y="248" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="9">12:00</text>
+        <text x="434" y="248" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="9">16:00</text>
+        <text x="530" y="248" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="9">20:00</text>
+        <text x="626" y="248" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="9">24:00</text>
+
+        <!-- SoC curve (amber) -->
+        <!-- Night: discharge 80%→20%, solar: charge 20%→95%, evening: discharge 95%→25% -->
+        <polyline points="50,60 146,180 220,180 260,165 300,130 338,90 380,60 420,58 450,85 480,130 530,165 626,190 780,195" fill="none" stroke="#fbbf24" stroke-width="2.5"/>
+        <text x="60" y="55" fill="#fbbf24" font-family="monospace" font-size="9">SoC 90%</text>
+        <text x="60" y="185" fill="#fbbf24" font-family="monospace" font-size="9">SoC 20%</text>
+
+        <!-- Solar generation area (green fill) -->
+        <polygon points="242,230 260,210 300,165 338,130 380,100 420,90 450,105 480,160 530,210 530,230" fill="rgba(52,211,153,0.15)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="390" y="152" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="10">Solar ☀</text>
+        <text x="390" y="166" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="9">Charging battery</text>
+
+        <!-- Night discharge label -->
+        <text x="98" y="200" text-anchor="middle" fill="#f97316" font-family="monospace" font-size="9">Night discharge</text>
+        <text x="98" y="213" text-anchor="middle" fill="#f97316" font-family="monospace" font-size="9">Home loads</text>
+
+        <!-- Evening discharge label -->
+        <text x="680" y="175" text-anchor="middle" fill="#f97316" font-family="monospace" font-size="9">Evening</text>
+        <text x="680" y="188" text-anchor="middle" fill="#f97316" font-family="monospace" font-size="9">discharge</text>
+
+        <!-- SoC axis -->
+        <line x1="50" y1="50" x2="50" y2="230" stroke="#334155" stroke-width="1"/>
+        <text x="44" y="58" text-anchor="end" fill="#64748b" font-family="monospace" font-size="9">100%</text>
+        <text x="44" y="130" text-anchor="end" fill="#64748b" font-family="monospace" font-size="9">50%</text>
+        <text x="44" y="230" text-anchor="end" fill="#64748b" font-family="monospace" font-size="9">0%</text>
+
+        <!-- DoD annotation -->
+        <line x1="50" y1="62" x2="50" y2="180" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="2,2"/>
+        <text x="20" y="122" text-anchor="middle" fill="#fbbf24" font-family="monospace" font-size="9" transform="rotate(-90,20,122)">DoD ~70%</text>
+        <text x="400" y="265" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="9">Partial charge/discharge is normal and healthier than 100% DoD cycles for long calendar life</text>
+      </svg>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;margin:1.5rem 0;">
+        <div class="req-card">
+          <div class="req-card-title">Partial Cycles and SoH</div>
+          <div class="req-card-body">
+            Most home ESS cycles are partial: charge to 80–90% (avoiding Li plating risk at 100%),
+            discharge to 20–30% (protecting against UVP events). A 60–70% DoD cycle causes less
+            stress than 100% DoD. The BMS tracks cycle count as full-cycle-equivalents:
+            N_equiv += ΔAh / (2 × C_full). This means partial cycles accumulate fractionally —
+            a 50% DoD cycle counts as 0.5 full cycles. Result: an ESS doing 1.5 daily
+            partial cycles accumulates ~550 full equivalent cycles per year.
+          </div>
+        </div>
+        <div class="req-card">
+          <div class="req-card-title">SoC Window Optimisation</div>
+          <div class="req-card-body">
+            For maximum calendar life in ESS, the optimal SoC window is 20–90%. Never charging
+            to 100% reduces the time spent at high SoC (high-stress state for SEI growth). The BMS
+            can offer a "calendar life mode" that caps charge at 90% SoC — communicated to the
+            inverter as a reduced CVL in CAN 0x351. Homeowners trade ~10% capacity for ~20% longer
+            battery life — a compelling option for systems targeting 15-year operation.
+          </div>
+        </div>
+        <div class="req-card">
+          <div class="req-card-title">Silent Operation Requirement</div>
+          <div class="req-card-body">
+            Unlike UPS systems in server rooms, home ESS is in a living space. The BMS and associated
+            hardware must be silent: no cooling fans, no contactor click during normal operation.
+            This means: passive cooling (design for &lt;45°C pack temperature at 0.5C), solid-state
+            FET switching (no relay sound), and charge/discharge transitions smooth enough not to
+            create audible inverter artifacts. The BMS derating curve (Chapter 3) must be aggressive
+            enough to never need emergency fan-cooling.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── INDOOR SAFETY ─── -->
+  <section id="s7-2-safety" class="chapter-section" style="border-bottom:none;padding-top:1.5rem;">
+    <div class="section-inner">
+      <h3 class="subsection-title" style="font-size:1.4rem;margin-top:0;">Safety for Indoor Home Installation</h3>
+      <p style="color:var(--text-muted);font-size:0.95rem;line-height:1.75;max-width:820px;margin-bottom:1.5rem;">
+        Home energy storage is one of the most safety-critical consumer applications ever deployed at scale.
+        A battery failure in a garage adjacent to a bedroom is a life-threatening event. LFP chemistry
+        provides the first line of defence — but the BMS provides the intelligent second line.
+      </p>
+
+      <!-- Safety comparison table LFP vs NMC for home -->
+      <div style="overflow-x:auto;margin:1.5rem 0;">
+      <table class="comp-table">
+        <thead>
+          <tr><th>Safety Property</th><th>LFP for Home</th><th>NMC for Home</th><th>BMS Role</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Thermal runaway threshold</td><td style="color:#34d399;">270°C+ ✓</td><td style="color:#ef4444;">180°C — easier to trigger</td><td>OTP at 55°C prevents NMC threshold approach</td></tr>
+          <tr><td>Gas emission on abuse</td><td style="color:#34d399;">CO₂, no O₂ ✓</td><td style="color:#ef4444;">CO₂ + flammable gas + O₂</td><td>dT/dt alarm triggers fire suppression output</td></tr>
+          <tr><td>Nail penetration</td><td style="color:#34d399;">No fire (BYD test) ✓</td><td style="color:#ef4444;">Immediate venting/fire</td><td>N/A — cell-level intrinsic safety</td></tr>
+          <tr><td>Overcharge tolerance</td><td style="color:#34d399;">Stable to 2× Vmax ✓</td><td style="color:#ef4444;">Exothermic above 4.2V</td><td>OVP at 3.65V/cell; BMS is first line</td></tr>
+          <tr><td>Cell-to-cell propagation</td><td style="color:#34d399;">Slow, stoppable ✓</td><td style="color:#ef4444;">Rapid chain reaction</td><td>Thermal runaway detection (dT/dt &gt;2°C/s)</td></tr>
+          <tr><td>Installation clearance</td><td style="color:#34d399;">NFPA 855: 3ft reduced ✓</td><td style="color:#f59e0b;">NFPA 855: full clearance</td><td>BMS comm to fire alarm reduces clearance req</td></tr>
+          <tr><td>Flammable gas emission</td><td style="color:#34d399;">Minimal ✓</td><td style="color:#ef4444;">Significant at cell failure</td><td>Gas sensor integration (optional, BMS GPIO)</td></tr>
+          <tr><td>Insurance classification</td><td style="color:#34d399;">Lower risk class ✓</td><td style="color:#f59e0b;">Higher premium risk</td><td>UL 9540A test result affects insurance</td></tr>
+        </tbody>
+      </table>
+      </div>
+
+      <div class="callout callout-success">
+        <div class="callout-icon">✓</div>
+        <div class="callout-body">
+          <div class="callout-title">LFP Indoor Safety — The NFPA 855 Advantage</div>
+          <p>NFPA 855 §15.3 allows reduced installation clearances for ESS that: (1) use LFP chemistry, (2) have a UL 9540A-tested propagation rating, (3) communicate fault status to the building fire alarm system via BMS CAN/Modbus. A standard NMC system requires 3-foot clearances from walls and openings. A BMS-equipped LFP system with fire alarm integration can be wall-mounted with reduced clearances — enabling installations that NMC systems physically cannot achieve in typical garages.</p>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;margin:1.5rem 0;">
+        <div class="req-card">
+          <div class="req-card-title">BMS Fault Response for Home ESS</div>
+          <div class="req-card-body">
+            A home ESS fault response must be: (1) silent initially — no immediate alarm that frightens the family, (2) logged immediately with full context, (3) escalated via CAN to the inverter/gateway which then notifies the homeowner via app push notification, (4) require a deliberate reset action (not automatic). A BMS that cries wolf with false alarms that wake homeowners at 3am gets switched off — creating a more dangerous unmonitored state.
+          </div>
+        </div>
+        <div class="req-card">
+          <div class="req-card-title">User-Visible SoC Accuracy</div>
+          <div class="req-card-body">
+            Homeowners look at the app display and see "73% charged." They do not understand that LFP's flat OCV curve makes SoC estimation difficult between 20–80%. The BMS must provide ±5% accuracy visible to the user — achieved by: frequent OCV corrections at end of charge/discharge, coulomb counting with temperature correction, and clamping display SoC to 0% only when discharge FET opens (not at 5% estimated SoC). Never show "0%" while the pack can still deliver power.
+          </div>
+        </div>
+        <div class="req-card">
+          <div class="req-card-title">Dynamic Power Management</div>
+          <div class="req-card-body">
+            A solar + ESS home system has time-of-use (TOU) tariffs: charge during cheap solar hours, discharge during expensive evening peak. The BMS must work with the inverter's power management algorithm: accept charge current setpoint commands via CAN, enforce cell-level limits that override setpoint (never exceed OVP/OCP even if inverter requests it), and provide SoP to the inverter so it can correctly plan how much solar excess to store vs export.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
