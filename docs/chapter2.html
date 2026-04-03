@@ -601,6 +601,199 @@
         </div>
       </div><!-- end intercalation -->
 
+      <!-- ══════ BATTERY INTERNALS VISUAL (Task 2) ══════ -->
+      <div style="margin:2rem 0;padding:2rem;background:#06060f;border:3px solid #60a5fa;border-radius:8px" id="battery-internals">
+        <div style="color:#60a5fa;font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.3rem">Deep Visual</div>
+        <h3 style="color:#60a5fa;font-size:1.4rem;font-weight:800;margin-bottom:1.5rem">LFP Cell Internal Anatomy — Animated Cross-Section</h3>
+
+        <!-- Animated cross-section SVG -->
+        <div style="margin-bottom:2rem;padding:1rem;background:#0a0a18;border:2px solid #1e293b;border-radius:8px">
+          <h4 style="color:#60a5fa;margin-bottom:.8rem;font-size:1rem">🔬 Cell Layer Stack — Anode / Separator / Cathode</h4>
+          <svg viewBox="0 0 700 320" style="width:100%;height:auto;font-family:system-ui,sans-serif">
+            <defs>
+              <linearGradient id="anodeGrad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#1a1a2e"/>
+                <stop offset="100%" stop-color="#2d2d4e"/>
+              </linearGradient>
+              <linearGradient id="catGrad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#1a0f00"/>
+                <stop offset="100%" stop-color="#2d1a00"/>
+              </linearGradient>
+              <filter id="cell-glow"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            </defs>
+
+            <!-- Current collectors -->
+            <rect x="10" y="30" width="18" height="260" rx="2" fill="#94a3b8" opacity="0.9"/>
+            <text x="19" y="22" text-anchor="middle" fill="#94a3b8" font-size="9">Cu foil</text>
+            <rect x="672" y="30" width="18" height="260" rx="2" fill="#fbbf24" opacity="0.8"/>
+            <text x="681" y="22" text-anchor="middle" fill="#fbbf24" font-size="9">Al foil</text>
+
+            <!-- Anode (graphite) -->
+            <rect x="28" y="30" width="140" height="260" rx="0" fill="url(#anodeGrad)"/>
+            <text x="98" y="155" text-anchor="middle" fill="#94a3b8" font-size="13" font-weight="700">ANODE</text>
+            <text x="98" y="172" text-anchor="middle" fill="#64748b" font-size="10">Graphite (C₆)</text>
+            <text x="98" y="186" text-anchor="middle" fill="#64748b" font-size="9">Li slots: 6C per Li</text>
+            <!-- Graphite layers -->
+            <line x1="30" y1="60" x2="166" y2="60" stroke="#334155" stroke-width="1" stroke-dasharray="3,2"/>
+            <line x1="30" y1="90" x2="166" y2="90" stroke="#334155" stroke-width="1" stroke-dasharray="3,2"/>
+            <line x1="30" y1="120" x2="166" y2="120" stroke="#334155" stroke-width="1" stroke-dasharray="3,2"/>
+            <line x1="30" y1="210" x2="166" y2="210" stroke="#334155" stroke-width="1" stroke-dasharray="3,2"/>
+            <line x1="30" y1="240" x2="166" y2="240" stroke="#334155" stroke-width="1" stroke-dasharray="3,2"/>
+            <line x1="30" y1="270" x2="166" y2="270" stroke="#334155" stroke-width="1" stroke-dasharray="3,2"/>
+
+            <!-- SEI layer -->
+            <rect x="166" y="30" width="14" height="260" rx="0" fill="#fbbf24" opacity="0.25"/>
+            <text x="173" y="165" text-anchor="middle" fill="#fbbf24" font-size="8" font-weight="700" transform="rotate(-90 173 165)">SEI</text>
+
+            <!-- Separator -->
+            <rect x="180" y="30" width="40" height="260" rx="0" fill="#0f1a2e" stroke="#1e3a5f" stroke-width="1"/>
+            <text x="200" y="155" text-anchor="middle" fill="#1e3a5f" font-size="10" font-weight="700" transform="rotate(-90 200 155)">SEPARATOR</text>
+            <text x="200" y="172" text-anchor="middle" fill="#1e293b" font-size="8" transform="rotate(-90 200 172)">Porous PE 25μm</text>
+            <!-- Pores -->
+            <circle cx="192" cy="60" r="2" fill="#1e3a5f" opacity="0.5"/>
+            <circle cx="208" cy="80" r="2" fill="#1e3a5f" opacity="0.5"/>
+            <circle cx="195" cy="110" r="2" fill="#1e3a5f" opacity="0.5"/>
+            <circle cx="205" cy="140" r="2" fill="#1e3a5f" opacity="0.5"/>
+            <circle cx="192" cy="170" r="2" fill="#1e3a5f" opacity="0.5"/>
+            <circle cx="210" cy="200" r="2" fill="#1e3a5f" opacity="0.5"/>
+            <circle cx="196" cy="230" r="2" fill="#1e3a5f" opacity="0.5"/>
+            <circle cx="207" cy="260" r="2" fill="#1e3a5f" opacity="0.5"/>
+
+            <!-- Cathode (LFP) -->
+            <rect x="220" y="30" width="450" height="260" rx="0" fill="url(#catGrad)"/>
+            <text x="445" y="150" text-anchor="middle" fill="#fbbf24" font-size="13" font-weight="700">CATHODE</text>
+            <text x="445" y="167" text-anchor="middle" fill="#f59e0b" font-size="10">LiFePO₄ — Olivine Structure</text>
+            <text x="445" y="182" text-anchor="middle" fill="#64748b" font-size="9">Li in tunnels between PO₄ tetrahedra &amp; FeO₆ octahedra</text>
+
+            <!-- Olivine lattice illustration -->
+            <g opacity="0.6">
+              <rect x="290" y="60" width="16" height="16" rx="2" fill="#ef4444" opacity="0.5"/><text x="298" y="72" text-anchor="middle" fill="#fff" font-size="7">Fe</text>
+              <rect x="320" y="60" width="16" height="16" rx="2" fill="#f97316" opacity="0.5"/><text x="328" y="72" text-anchor="middle" fill="#fff" font-size="7">PO₄</text>
+              <rect x="350" y="60" width="10" height="10" rx="5" fill="#60a5fa"/><text x="355" y="69" text-anchor="middle" fill="#fff" font-size="6">Li</text>
+              <rect x="290" y="90" width="10" height="10" rx="5" fill="#60a5fa"/><text x="295" y="99" text-anchor="middle" fill="#fff" font-size="6">Li</text>
+              <rect x="320" y="90" width="16" height="16" rx="2" fill="#ef4444" opacity="0.5"/><text x="328" y="102" text-anchor="middle" fill="#fff" font-size="7">Fe</text>
+              <rect x="350" y="90" width="16" height="16" rx="2" fill="#f97316" opacity="0.5"/><text x="358" y="102" text-anchor="middle" fill="#fff" font-size="7">PO₄</text>
+            </g>
+
+            <!-- Animated Li+ ions crossing separator during charge -->
+            <circle r="5" fill="#60a5fa" filter="url(#cell-glow)">
+              <animateMotion dur="3s" repeatCount="indefinite" path="M445,80 L200,80 L80,80"/>
+              <animate attributeName="opacity" values="0;1;1;0" dur="3s" repeatCount="indefinite"/>
+            </circle>
+            <circle r="5" fill="#60a5fa" filter="url(#cell-glow)">
+              <animateMotion dur="3s" begin="1s" repeatCount="indefinite" path="M445,140 L200,140 L80,140"/>
+              <animate attributeName="opacity" values="0;1;1;0" dur="3s" begin="1s" repeatCount="indefinite"/>
+            </circle>
+            <circle r="5" fill="#60a5fa" filter="url(#cell-glow)">
+              <animateMotion dur="3s" begin="2s" repeatCount="indefinite" path="M445,200 L200,200 L80,200"/>
+              <animate attributeName="opacity" values="0;1;1;0" dur="3s" begin="2s" repeatCount="indefinite"/>
+            </circle>
+
+            <!-- Li+ label -->
+            <text x="200" y="305" text-anchor="middle" fill="#60a5fa" font-size="9">← Li⁺ ions flow left (to anode) during CHARGE</text>
+
+            <!-- Dimension labels -->
+            <text x="98" y="298" text-anchor="middle" fill="#334155" font-size="8">~100μm thick</text>
+            <text x="200" y="298" text-anchor="middle" fill="#334155" font-size="8">25μm</text>
+            <text x="445" y="298" text-anchor="middle" fill="#334155" font-size="8">~120μm thick</text>
+          </svg>
+        </div>
+
+        <!-- Intercalation zoomed animation -->
+        <div style="padding:1rem;background:#0a0a18;border:2px solid #1e293b;border-radius:8px">
+          <h4 style="color:#60a5fa;margin-bottom:.8rem;font-size:1rem">🔑 Intercalation — Li⁺ Inserting into Graphite Layers</h4>
+          <div style="display:flex;gap:.8rem;margin-bottom:.8rem;flex-wrap:wrap">
+            <button onclick="setIntercMode('charge')" style="padding:.4rem 1rem;background:#001020;border:2px solid #60a5fa;color:#60a5fa;cursor:pointer;font-family:inherit;border-radius:4px;font-size:.85rem">⬅ CHARGE (Li→Anode)</button>
+            <button onclick="setIntercMode('discharge')" style="padding:.4rem 1rem;background:#1a0f00;border:2px solid #fbbf24;color:#fbbf24;cursor:pointer;font-family:inherit;border-radius:4px;font-size:.85rem">➡ DISCHARGE (Li→Cathode)</button>
+          </div>
+          <canvas id="intercalation-canvas" width="700" height="200" style="width:100%;background:#060610;border-radius:6px;display:block"></canvas>
+        </div>
+      </div>
+      <script>
+      (function() {
+        const canvas = document.getElementById('intercalation-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width, H = canvas.height;
+        let mode = 'charge';
+        window.setIntercMode = m => { mode = m; };
+
+        // Graphite layers: 8 horizontal slots
+        const layers = Array.from({length:8}, (_,i)=>({y: 20 + i*20, occupied: i%2===0 ? true : false}));
+        const ions = Array.from({length:6}, (_,i) => ({
+          x: mode==='charge' ? W*0.75 : W*0.05,
+          y: 20 + i*25,
+          targetX: mode==='charge' ? W*0.15 : W*0.75,
+          speed: 1.2 + i*0.2,
+          size: 7
+        }));
+        let frame = 0;
+
+        function draw() {
+          ctx.clearRect(0,0,W,H);
+          frame++;
+          // Draw graphite anode (left half)
+          ctx.fillStyle = '#0f0f1a';
+          ctx.fillRect(0,0,W*0.4,H);
+          ctx.fillStyle = '#1a1a2e';
+          ctx.strokeStyle = '#334155';
+          for(let l of layers) {
+            ctx.fillRect(10, l.y, W*0.38, 15);
+            ctx.strokeRect(10, l.y, W*0.38, 15);
+            ctx.fillStyle = '#64748b';
+            ctx.font = '8px system-ui'; ctx.textAlign = 'right';
+            ctx.fillText('C₆ layer', W*0.38+5, l.y+11);
+            ctx.fillStyle = '#1a1a2e';
+          }
+          ctx.fillStyle = '#94a3b8'; ctx.font = 'bold 11px system-ui'; ctx.textAlign = 'center';
+          ctx.fillText('GRAPHITE ANODE', W*0.2, H-8);
+
+          // Separator
+          ctx.fillStyle = '#0a1628';
+          ctx.fillRect(W*0.4, 0, W*0.2, H);
+          ctx.fillStyle = '#1e3a5f'; ctx.font = '9px system-ui'; ctx.textAlign = 'center';
+          ctx.fillText('ELECTROLYTE', W*0.5, H/2+4);
+          ctx.fillText('+ SEPARATOR', W*0.5, H/2+16);
+
+          // LFP cathode (right half)
+          ctx.fillStyle = '#100800';
+          ctx.fillRect(W*0.6, 0, W*0.4, H);
+          for(let i=0;i<8;i++) {
+            ctx.fillStyle = 'rgba(251,191,36,0.12)';
+            ctx.fillRect(W*0.62, 20+i*20, W*0.36, 14);
+            ctx.strokeStyle = '#2d1a00'; ctx.lineWidth=1;
+            ctx.strokeRect(W*0.62, 20+i*20, W*0.36, 14);
+          }
+          ctx.fillStyle = '#fbbf24'; ctx.font = 'bold 11px system-ui'; ctx.textAlign = 'center';
+          ctx.fillText('LFP CATHODE', W*0.8, H-8);
+
+          // Animate ions
+          ions.forEach((ion,idx) => {
+            const tgt = mode==='charge' ? W*0.15 : W*0.75;
+            const start = mode==='charge' ? W*0.75 : W*0.1;
+            // Oscillate within target zone once arrived
+            const dist = tgt - ion.x;
+            if(Math.abs(dist) > 2) ion.x += dist * 0.03;
+            else ion.x = tgt + Math.sin(frame*0.05 + idx)*2;
+            ion.y += Math.sin(frame*0.04 + idx*1.2)*0.3;
+
+            ctx.beginPath(); ctx.arc(ion.x, ion.y, ion.size, 0, Math.PI*2);
+            ctx.fillStyle = '#60a5fa'; ctx.fill();
+            ctx.strokeStyle = '#93c5fd'; ctx.lineWidth=1; ctx.stroke();
+            ctx.fillStyle = '#fff'; ctx.font = 'bold 7px system-ui'; ctx.textAlign='center';
+            ctx.fillText('Li⁺', ion.x, ion.y+2.5);
+          });
+
+          // Mode label
+          ctx.fillStyle = mode==='charge' ? '#60a5fa' : '#fbbf24';
+          ctx.font = '10px system-ui'; ctx.textAlign='center';
+          ctx.fillText(mode==='charge' ? '← CHARGING: Li⁺ intercalates into graphite (like keys in locks)' : '→ DISCHARGING: Li⁺ de-intercalates from graphite', W/2, 14);
+          requestAnimationFrame(draw);
+        }
+        draw();
+      })();
+      </script>
+
     </section><!-- end s2-1 -->
 
     <!-- ============================================================
