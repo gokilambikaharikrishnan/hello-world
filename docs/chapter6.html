@@ -2369,3 +2369,180 @@
       </div>
     </div>
   </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 6.4 — WORLD-CLASS BMS DESIGN
+  ═══════════════════════════════════════════════════════════════ -->
+  <section id="s6-4" class="chapter-section">
+    <div class="section-inner">
+      <div class="section-label">Section 6.4</div>
+      <h2 class="section-title">How World-Class BMS Companies Design Their Systems</h2>
+      <p class="section-intro">
+        Tesla, BYD, and CATL collectively manage hundreds of gigawatt-hours of lithium battery capacity.
+        Their BMS architectures were refined through millions of real-world failures — they represent the
+        accumulated safety and reliability knowledge of the entire industry. Understanding their design
+        philosophies reveals the principles that separate a battery that lasts a decade from one that fails
+        in two years.
+      </p>
+
+      <!-- Tesla -->
+      <h3 class="subsection-title">Tesla — Distributed Cell-Level Intelligence</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin:1.5rem 0;">
+        <div>
+          <div style="display:grid;grid-template-columns:1fr;gap:0.8rem;">
+            <div class="arch-block">
+              <div class="arch-block-title">Cell-Level Fusing (Invar Wire)</div>
+              <div class="arch-block-body">
+                Tesla uses thin nichrome/invar wire fuses bonded directly to each cell — one per cell.
+                If a cell shorts internally, the wire fuse for that cell melts and electrically disconnects
+                it from the pack. The pack continues operating at slightly reduced capacity rather than failing
+                catastrophically. In a 4680 pack with 960 cells, losing 10 cells is &lt;1% capacity degradation.
+                This is true Tier 1 protection — below even the BMS layer.
+              </div>
+            </div>
+            <div class="arch-block">
+              <div class="arch-block-title">Thermal Propagation Barrier</div>
+              <div class="arch-block-body">
+                Tesla's structural battery pack uses intumescent foam between cell rows. If one cell goes
+                into thermal runaway, the foam expands under heat and physically blocks heat transfer to
+                adjacent rows. The BMS detects thermal runaway on the affected cell via dT/dt, opens all
+                FETs, and activates venting. The cell-level fuse + thermal barrier give the pack a
+                "graceful degradation" capability most competitors cannot match.
+              </div>
+            </div>
+            <div class="arch-block">
+              <div class="arch-block-title">Multi-Node Distributed BMS</div>
+              <div class="arch-block-body">
+                Tesla's BMS consists of a Battery Management Unit (BMU) plus multiple Battery Module Controllers
+                (BMC), one per module of ~46 cells. Each BMC runs its own AFE and communicates to the BMU via
+                CAN. The BMU aggregates data, runs SoX algorithms, and interfaces to the vehicle/inverter.
+                This distributed architecture means a single AFE failure affects only one module, not the
+                entire pack.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr;gap:0.8rem;">
+          <div class="arch-block">
+            <div class="arch-block-title">Coulomb Counting Precision</div>
+            <div class="arch-block-body">
+              Tesla uses 500μΩ precision shunt resistors with 24-bit ADCs for current measurement —
+              far beyond the typical 16-bit, 1mΩ approach. At 500μΩ and 500A peak current, the shunt
+              voltage is 250mV — large enough for precise measurement. The 24-bit ADC gives ~15nV
+              resolution, translating to ~30mA current resolution at the shunt. Over a 100kWh pack,
+              this precision compounds into SoC accuracy well below ±1% — enabling the "you have
+              3 miles of range left" reliability that customers depend on for navigation routing.
+            </div>
+          </div>
+          <div class="arch-block">
+            <div class="arch-block-title">OTA Firmware Updates</div>
+            <div class="arch-block-body">
+              Tesla regularly updates BMS firmware over-the-air. This means: (1) dual-bank Flash is
+              mandatory — firmware updates to Bank B while Bank A runs; (2) CAN bootloader in dedicated
+              Flash region that cannot be overwritten by application code; (3) cryptographic signature
+              verification before applying update (prevents malicious firmware injection); (4) automatic
+              rollback if new firmware fails health checks in first 100 cycles. Several Tesla SoH
+              improvements, OVP threshold adjustments, and thermal management improvements have been
+              delivered as OTA updates years after pack shipment.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BYD -->
+      <h3 class="subsection-title">BYD — Blade Battery Architecture</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;margin:1.5rem 0;">
+        <div class="arch-block">
+          <div class="arch-block-title">Cell-to-Pack (CTP) — No Module Layer</div>
+          <div class="arch-block-body">
+            BYD's Blade battery eliminates the module layer entirely — cells go directly from cell to
+            pack. The blade cells (prismatic, ~100mm tall, 13.5mm wide) are arranged side-by-side in
+            a honeycomb structure that provides mechanical rigidity. This simplifies the BMS: only one
+            AFE tier is needed (no BMC + BMU), reducing latency and failure modes. The flat blade
+            geometry also allows the cell itself to act as the structural floor of the pack.
+          </div>
+        </div>
+        <div class="arch-block">
+          <div class="arch-block-title">Nail Penetration Safety</div>
+          <div class="arch-block-body">
+            BYD publicly demonstrated nail penetration tests on Blade LFP cells with no fire or smoke.
+            This is directly due to LFP's P-O bond chemistry (Chapter 1) — the cathode does not release
+            oxygen when mechanically shorted. The BMS contribution: dT/dt monitoring that detects the
+            sudden temperature rise from a nail short and logs the event. The cell survives; the BMS
+            records it as a safety event for later analysis.
+          </div>
+        </div>
+        <div class="arch-block">
+          <div class="arch-block-title">Temperature Uniformity Focus</div>
+          <div class="arch-block-body">
+            BYD's BMS allocates more temperature sensors than typical — one NTC per 4 cells rather than
+            the common 1-per-10-cells approach. The BMS runs a per-cell temperature model that interpolates
+            between sensors using cell impedance data to estimate internal temperature. The cell model is
+            updated in real-time using the thermal resistance calculated from dV/dT during dynamic loads.
+            This gives temperature accuracy well beyond what physical sensors alone can provide.
+          </div>
+        </div>
+        <div class="arch-block">
+          <div class="arch-block-title">Electrolyte Leak Detection</div>
+          <div class="arch-block-body">
+            Advanced BYD packs include resistive leak detection: a high-impedance resistor network
+            between the pack chassis and positive terminal detects if electrolyte has leaked and
+            bridged the insulation. The BMS monitors this isolation resistance continuously. If
+            isolation falls below 100Ω/V, the BMS logs a fault and alerts the operator before any
+            risk of electrical contact with the chassis — a NFPA 855 and UL 1973 requirement
+            implemented with elegant simplicity.
+          </div>
+        </div>
+      </div>
+
+      <!-- CATL -->
+      <h3 class="subsection-title">CATL — System-Level Intelligence</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;margin:1.5rem 0;">
+        <div class="arch-block">
+          <div class="arch-block-title">Cloud-Based Fleet SoH Calibration</div>
+          <div class="arch-block-body">
+            CATL's EVOGO and Horizon products connect pack SoH data to a central cloud platform.
+            When the fleet model observes that cell capacity fade is faster than the cell-level model
+            predicts, a calibration update is pushed to the entire fleet. This means a BMS SoH error
+            discovered in one customer's pack can be corrected in 50,000 packs within 24 hours —
+            without a service visit. The BMS telemetry payload includes cell voltages, temperatures,
+            current profiles, and SoH estimates, transmitted at every charge cycle end.
+          </div>
+        </div>
+        <div class="arch-block">
+          <div class="arch-block-title">Multi-Frequency Impedance Sensing</div>
+          <div class="arch-block-body">
+            CATL's advanced BMS injects small AC current signals at multiple frequencies (0.1–1000 Hz)
+            during idle periods and measures the resulting voltage response — a simplified form of
+            Electrochemical Impedance Spectroscopy (EIS). The BMS microcontroller runs FFT on the
+            response to compute R₀ (ohmic resistance), R₁/C₁ (SEI layer impedance), and diffusion
+            impedance. From these, it extracts lithium plating onset detection and early SEI growth
+            prediction — preventing failures 50–100 cycles before they would have been visible to
+            conventional SoH tracking.
+          </div>
+        </div>
+        <div class="arch-block">
+          <div class="arch-block-title">Adaptive Charging Protocol</div>
+          <div class="arch-block-body">
+            CATL's BMS adjusts the CC/CV charge profile based on real-time cell impedance. If R₁
+            has grown (SEI thickening), the BMS reduces the CC current limit to prevent lithium
+            plating on the anode. As the cell ages and internal resistance grows, the BMS automatically
+            reduces peak charge rate — extending cycle life at the cost of slightly longer charge time.
+            This adaptive protocol is why CATL cells in premium products often exceed 3,000 cycles
+            while the same cells in fixed-protocol chargers reach 2,200 cycles.
+          </div>
+        </div>
+        <div class="arch-block">
+          <div class="arch-block-title">What They All Have in Common</div>
+          <div class="arch-block-body">
+            <strong style="color:var(--arch-violet);">Every world-class BMS shares four properties:</strong><br>
+            1. <strong>Hardware fail-safe</strong> — watchdog + fuse + cell-level fusing independent of firmware<br>
+            2. <strong>Persistent state</strong> — SoC never lost on power cycle<br>
+            3. <strong>Timestamped events</strong> — every fault has a calendar timestamp<br>
+            4. <strong>Adaptive algorithms</strong> — SoC/SoH improve as data accumulates<br>
+            The gap between a $200 BMS module and a $2000 one is almost entirely in points 3 and 4.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
