@@ -1453,3 +1453,273 @@
       </div>
     </div>
   </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       CHAPTER SUMMARY
+  ═══════════════════════════════════════════════════════════════ -->
+  <section id="s5-summary" class="chapter-section">
+    <div class="section-inner">
+      <div class="section-label">Chapter Summary</div>
+      <h2 class="section-title">Ten Principles of Standards-Compliant BMS Design</h2>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1rem;margin:1.5rem 0;">
+
+        <div style="background:#0f1923;border:1px solid #1e3a5f;border-left:4px solid #2dd4bf;border-radius:10px;padding:1.2rem;">
+          <div style="color:#2dd4bf;font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">① Standards Define the Floor</div>
+          <div style="color:#94a3b8;font-size:13px;line-height:1.6;">IEC, UL, and UN standards set minimum safety requirements. They do not define optimal design. A BMS can comply fully and still be uncompetitive. Use standards as the start, not the finish.</div>
+        </div>
+
+        <div style="background:#0f1923;border:1px solid #1e3a5f;border-left:4px solid #2dd4bf;border-radius:10px;padding:1.2rem;">
+          <div style="color:#2dd4bf;font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">② No Single Standard Covers Everything</div>
+          <div style="color:#94a3b8;font-size:13px;line-height:1.6;">A UPS targeting North American markets needs IEC 62619 (safety), IEC 61960 (performance datasheet accuracy), UL 1973 (US utility interconnect), UN 38.3 (shipping), and NFPA 855 (installation). Each covers a different dimension.</div>
+        </div>
+
+        <div style="background:#0f1923;border:1px solid #1e3a5f;border-left:4px solid #2dd4bf;border-radius:10px;padding:1.2rem;">
+          <div style="color:#2dd4bf;font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">③ Incidents Write Standards</div>
+          <div style="color:#94a3b8;font-size:13px;line-height:1.6;">Boeing 787 (2013) → RTCA DO-311A. Samsung Note 7 (2016) → stricter IEC 62133 overcharge criteria. APS Arizona (2019) → NFPA 855 Chapter 15 first-responder access requirements. Every clause in every standard has a root-cause accident behind it.</div>
+        </div>
+
+        <div style="background:#0f1923;border:1px solid #1e3a5f;border-left:4px solid #2dd4bf;border-radius:10px;padding:1.2rem;">
+          <div style="color:#2dd4bf;font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">④ BMS is Tier 2 of a 3-Tier System</div>
+          <div style="color:#94a3b8;font-size:13px;line-height:1.6;">UL 1973 mandates cell-intrinsic (Tier 1), BMS-active (Tier 2), and hardware-redundant (Tier 3) protection independently. BMS failure must not result in unsafe condition — watchdog + fuse + contactor are your Tier 3 backstops.</div>
+        </div>
+
+        <div style="background:#0f1923;border:1px solid #1e3a5f;border-left:4px solid #2dd4bf;border-radius:10px;padding:1.2rem;">
+          <div style="color:#2dd4bf;font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">⑤ LFP Has a Structural Compliance Advantage</div>
+          <div style="color:#94a3b8;font-size:13px;line-height:1.6;">The olivine P–O bond (544 kJ/mol) is why LFP passes UN 38.3 T6 (crush) and T7 (overcharge) more easily than NMC. This is not marketing — it directly reduces test failure risk, insurance costs, and shipping tier classification.</div>
+        </div>
+
+        <div style="background:#0f1923;border:1px solid #1e3a5f;border-left:4px solid #2dd4bf;border-radius:10px;padding:1.2rem;">
+          <div style="color:#2dd4bf;font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">⑥ Test Reports Must Match Production</div>
+          <div style="color:#94a3b8;font-size:13px;line-height:1.6;">UN 38.3 reports are lot-specific. UL 1973 certifications require annual factory inspections. Any firmware change needs a UL change notice. Swapping cell supplier voids pack certification. Production control = certification control.</div>
+        </div>
+
+        <div style="background:#0f1923;border:1px solid #1e3a5f;border-left:4px solid #2dd4bf;border-radius:10px;padding:1.2rem;">
+          <div style="color:#2dd4bf;font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">⑦ Watchdog is Non-Negotiable</div>
+          <div style="color:#94a3b8;font-size:13px;line-height:1.6;">UL 1973 Phase 5 explicitly freezes BMS firmware during the test and watches for hardware watchdog response. A BMS without hardware watchdog cannot pass UL 1973. The watchdog is not optional and is not software-implementable.</div>
+        </div>
+
+        <div style="background:#0f1923;border:1px solid #1e3a5f;border-left:4px solid #2dd4bf;border-radius:10px;padding:1.2rem;">
+          <div style="color:#2dd4bf;font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">⑧ IEC 61960 Accuracy Matters for Sales</div>
+          <div style="color:#94a3b8;font-size:13px;line-height:1.6;">An uncertified manufacturer measuring capacity at C/5 instead of IEC-standard C/10, at 25°C instead of 20°C, without self-discharge data, will claim higher numbers than a compliant competitor. Specifying IEC 61960 compliance on RFQs protects you from inflated datasheets.</div>
+        </div>
+
+        <div style="background:#0f1923;border:1px solid #1e3a5f;border-left:4px solid #2dd4bf;border-radius:10px;padding:1.2rem;">
+          <div style="color:#2dd4bf;font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">⑨ Communication is a Safety Feature</div>
+          <div style="color:#94a3b8;font-size:13px;line-height:1.6;">NFPA 855 requires ESS to communicate fault status to building fire alarm systems. UL 1973 requires host to detect BMS silence within 5 s. The CAN or Modbus interface on your BMS is not optional telemetry — it is a certified safety path.</div>
+        </div>
+
+        <div style="background:#0f1923;border:1px solid #1e3a5f;border-left:4px solid #2dd4bf;border-radius:10px;padding:1.2rem;">
+          <div style="color:#2dd4bf;font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">⑩ Standards Gaps Are Engineering Opportunities</div>
+          <div style="color:#94a3b8;font-size:13px;line-height:1.6;">Active balancing, EKF SoC, cloud telemetry, second-life re-certification: all are beyond current standards. The engineer who solves these problems builds a competitive moat. Tomorrow's standard is today's best practice.</div>
+        </div>
+
+      </div>
+
+      <!-- Traceability diagram -->
+      <h3 class="subsection-title">Chapter-to-Chapter Traceability</h3>
+      <svg viewBox="0 0 760 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px;display:block;margin:1.5rem auto;border-radius:12px;background:#0d1117;">
+        <defs>
+          <marker id="arrowS" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#2dd4bf"/>
+          </marker>
+        </defs>
+
+        <!-- Ch1 -->
+        <rect x="20" y="70" width="130" height="60" rx="8" fill="#0f1923" stroke="#2dd4bf" stroke-width="1.5"/>
+        <text x="85" y="95" text-anchor="middle" fill="#2dd4bf" font-family="monospace" font-size="12" font-weight="bold">Chapter 1</text>
+        <text x="85" y="112" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="10">LFP Chemistry</text>
+        <text x="85" y="125" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="10">Why P-O Bond Matters</text>
+
+        <!-- Ch2 -->
+        <rect x="175" y="70" width="130" height="60" rx="8" fill="#0f1923" stroke="#3b82f6" stroke-width="1.5"/>
+        <text x="240" y="95" text-anchor="middle" fill="#3b82f6" font-family="monospace" font-size="12" font-weight="bold">Chapter 2</text>
+        <text x="240" y="112" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="10">SoC / SoH Algorithms</text>
+        <text x="240" y="125" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="10">IEC 61960 / UL §7.4.4</text>
+
+        <!-- Ch3 -->
+        <rect x="330" y="70" width="130" height="60" rx="8" fill="#0f1923" stroke="#f97316" stroke-width="1.5"/>
+        <text x="395" y="95" text-anchor="middle" fill="#f97316" font-family="monospace" font-size="12" font-weight="bold">Chapter 3</text>
+        <text x="395" y="112" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="10">Thermal Management</text>
+        <text x="395" y="125" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="10">IEC 62619 / NFPA 855</text>
+
+        <!-- Ch4 -->
+        <rect x="485" y="70" width="130" height="60" rx="8" fill="#0f1923" stroke="#00e5ff" stroke-width="1.5"/>
+        <text x="550" y="95" text-anchor="middle" fill="#00e5ff" font-family="monospace" font-size="12" font-weight="bold">Chapter 4</text>
+        <text x="550" y="112" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="10">Electrical Protection</text>
+        <text x="550" y="125" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="10">UN 38.3 T5 / UL §7.4</text>
+
+        <!-- Ch5 (this chapter) -->
+        <rect x="610" y="55" width="130" height="90" rx="8" fill="#0d2518" stroke="#2dd4bf" stroke-width="2"/>
+        <text x="675" y="88" text-anchor="middle" fill="#2dd4bf" font-family="monospace" font-size="12" font-weight="bold">Chapter 5</text>
+        <text x="675" y="105" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="10">Standards &amp;</text>
+        <text x="675" y="118" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="10">Compliance</text>
+        <text x="675" y="134" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="9">← validates all</text>
+
+        <!-- Arrows -->
+        <line x1="150" y1="100" x2="173" y2="100" stroke="#2dd4bf" stroke-width="1.5" marker-end="url(#arrowS)"/>
+        <line x1="305" y1="100" x2="328" y2="100" stroke="#2dd4bf" stroke-width="1.5" marker-end="url(#arrowS)"/>
+        <line x1="460" y1="100" x2="483" y2="100" stroke="#2dd4bf" stroke-width="1.5" marker-end="url(#arrowS)"/>
+        <line x1="615" y1="100" x2="608" y2="100" stroke="#2dd4bf" stroke-width="1.5" marker-end="url(#arrowS)">
+          <animate attributeName="stroke-dasharray" values="0,100;100,0" dur="2s" repeatCount="indefinite"/>
+        </line>
+
+        <text x="380" y="175" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="10">Each prior chapter provides the engineering that Chapter 5 standards require and test</text>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       QUICK REFERENCE
+  ═══════════════════════════════════════════════════════════════ -->
+  <section id="s5-ref" class="chapter-section">
+    <div class="section-inner">
+      <div class="section-label">Quick Reference</div>
+      <h2 class="section-title">Standards Reference Index</h2>
+
+      <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-family:monospace;font-size:12px;margin-bottom:2rem;">
+        <thead>
+          <tr style="background:#0f1923;">
+            <th style="color:#2dd4bf;padding:10px 12px;text-align:left;border-bottom:2px solid #1e3a5f;min-width:120px;">Standard</th>
+            <th style="color:#2dd4bf;padding:10px 12px;text-align:left;border-bottom:2px solid #1e3a5f;min-width:100px;">Body</th>
+            <th style="color:#2dd4bf;padding:10px 12px;text-align:left;border-bottom:2px solid #1e3a5f;min-width:80px;">Edition</th>
+            <th style="color:#2dd4bf;padding:10px 12px;text-align:left;border-bottom:2px solid #1e3a5f;min-width:200px;">Scope</th>
+            <th style="color:#2dd4bf;padding:10px 12px;text-align:left;border-bottom:2px solid #1e3a5f;">Key BMS Clause</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #1a2332;">
+            <td style="color:#e2e8f0;padding:9px 12px;">IEC 62133-2</td>
+            <td style="color:#94a3b8;padding:9px 12px;">IEC TC21</td>
+            <td style="color:#94a3b8;padding:9px 12px;">2017</td>
+            <td style="color:#94a3b8;padding:9px 12px;">Portable Li-ion cell/pack safety</td>
+            <td style="color:#94a3b8;padding:9px 12px;">§7.3 — OVP, UVP, OCP, OTP, reverse polarity, external short, crush, overcharge</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1a2332;background:#0a0f14;">
+            <td style="color:#e2e8f0;padding:9px 12px;">IEC 61960-3</td>
+            <td style="color:#94a3b8;padding:9px 12px;">IEC TC21</td>
+            <td style="color:#94a3b8;padding:9px 12px;">2017</td>
+            <td style="color:#94a3b8;padding:9px 12px;">Secondary Li-ion cell/pack performance</td>
+            <td style="color:#94a3b8;padding:9px 12px;">§7.2 — C/10 capacity; §7.3 — cycle life; §7.4 — self-discharge. Defines how datasheets are measured.</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1a2332;">
+            <td style="color:#e2e8f0;padding:9px 12px;">IEC 62619</td>
+            <td style="color:#94a3b8;padding:9px 12px;">IEC TC21</td>
+            <td style="color:#94a3b8;padding:9px 12px;">2022 Ed.2</td>
+            <td style="color:#94a3b8;padding:9px 12px;">Industrial/stationary Li-ion safety</td>
+            <td style="color:#94a3b8;padding:9px 12px;">§6 — all BMS functions; §7 — system tests; harmonised with UL 1973 since 2020</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1a2332;background:#0a0f14;">
+            <td style="color:#e2e8f0;padding:9px 12px;">UL 1973</td>
+            <td style="color:#94a3b8;padding:9px 12px;">UL / CSA</td>
+            <td style="color:#94a3b8;padding:9px 12px;">3rd Ed. 2022</td>
+            <td style="color:#94a3b8;padding:9px 12px;">Stationary ESS — US/Canada</td>
+            <td style="color:#94a3b8;padding:9px 12px;">§7.4 — BMS mandatory; §7.5 — isolation; §7.6 — watchdog; Phase 5 test = BMS fault injection</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1a2332;">
+            <td style="color:#e2e8f0;padding:9px 12px;">UN 38.3</td>
+            <td style="color:#94a3b8;padding:9px 12px;">UN UNCETDG</td>
+            <td style="color:#94a3b8;padding:9px 12px;">7th Rev. 2019</td>
+            <td style="color:#94a3b8;padding:9px 12px;">Transport safety — air/sea/road</td>
+            <td style="color:#94a3b8;padding:9px 12px;">T1–T8: altitude, thermal, vibration, shock, ext. short, crush, overcharge, forced discharge</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1a2332;background:#0a0f14;">
+            <td style="color:#e2e8f0;padding:9px 12px;">NFPA 855</td>
+            <td style="color:#94a3b8;padding:9px 12px;">NFPA</td>
+            <td style="color:#94a3b8;padding:9px 12px;">2023 Ed.</td>
+            <td style="color:#94a3b8;padding:9px 12px;">ESS installation — USA</td>
+            <td style="color:#94a3b8;padding:9px 12px;">§15 — BMS comm to fire alarm; thermal mgmt; ventilation; first-responder safety; fault logging</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1a2332;">
+            <td style="color:#e2e8f0;padding:9px 12px;">IEC 62040-1</td>
+            <td style="color:#94a3b8;padding:9px 12px;">IEC TC22</td>
+            <td style="color:#94a3b8;padding:9px 12px;">2017</td>
+            <td style="color:#94a3b8;padding:9px 12px;">UPS safety — general</td>
+            <td style="color:#94a3b8;padding:9px 12px;">Battery subsystem requirements within UPS; charger limits; isolation. References IEC 62619 for battery pack.</td>
+          </tr>
+          <tr style="background:#0a0f14;">
+            <td style="color:#e2e8f0;padding:9px 12px;">UL 9540A</td>
+            <td style="color:#94a3b8;padding:9px 12px;">UL</td>
+            <td style="color:#94a3b8;padding:9px 12px;">2019</td>
+            <td style="color:#94a3b8;padding:9px 12px;">ESS fire propagation — cell-to-cell</td>
+            <td style="color:#94a3b8;padding:9px 12px;">Propagation test: one cell initiated into TR; measures heat, gas, propagation rate. Required by NFPA 855 for systems &gt;20 kWh.</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+
+      <!-- Chapter navigation footer -->
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:1.5rem 0;border-top:1px solid #1e3a5f;margin-top:2rem;">
+        <a href="chapter4.html" style="color:#2dd4bf;text-decoration:none;font-family:monospace;font-size:13px;">← Chapter 4: Electrical Protection</a>
+        <span style="color:#64748b;font-family:monospace;font-size:12px;">Chapter 5 of 7</span>
+        <a href="chapter6.html" style="color:#2dd4bf;text-decoration:none;font-family:monospace;font-size:13px;">Chapter 6: Communication Architecture →</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<script>
+/* ── Sidebar scroll-spy ───────────────────────────────────── */
+const sidebarLinks = document.querySelectorAll('.sidebar-nav a');
+const sections = document.querySelectorAll('.chapter-section');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      sidebarLinks.forEach(a => {
+        a.classList.toggle('active', a.getAttribute('href') === '#' + id);
+      });
+    }
+  });
+}, { threshold: 0.25 });
+sections.forEach(s => observer.observe(s));
+
+/* ── Compliance matrix filter ─────────────────────────────── */
+function filterMatrix(tag, btn) {
+  document.querySelectorAll('.matrix-filter').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const rows = document.querySelectorAll('#matrixTable tbody tr');
+  rows.forEach(row => {
+    if (tag === 'all') {
+      row.classList.remove('hidden');
+    } else {
+      const tags = (row.dataset.tags || '').split(' ');
+      row.classList.toggle('hidden', !tags.includes(tag));
+    }
+  });
+}
+
+/* ── Standard card hover pulse ────────────────────────────── */
+document.querySelectorAll('.std-card').forEach(card => {
+  card.addEventListener('mouseenter', () => {
+    card.style.transform = 'translateY(-3px)';
+    card.style.boxShadow = '0 8px 30px rgba(45,212,191,0.15)';
+  });
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = '';
+    card.style.boxShadow = '';
+  });
+});
+
+/* ── Test card hover ──────────────────────────────────────── */
+document.querySelectorAll('.test-card').forEach(card => {
+  card.addEventListener('mouseenter', () => {
+    card.style.borderColor = 'var(--std-green)';
+    card.style.transform = 'translateY(-2px)';
+  });
+  card.addEventListener('mouseleave', () => {
+    card.style.borderColor = '';
+    card.style.transform = '';
+  });
+});
+
+/* ── T1-T8 test card hover ────────────────────────────────── */
+document.querySelectorAll('[data-tags]').forEach(row => {
+  row.style.transition = 'background 0.2s';
+});
+</script>
+</body>
+</html>
