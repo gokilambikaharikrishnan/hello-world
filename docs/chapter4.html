@@ -1688,6 +1688,256 @@
       </div>
     </div>
 
+    <!-- ══════ CH4 ANIMATIONS ══════ -->
+    <section style="padding:2rem;background:#060610;border-top:3px solid #22d3ee;margin-top:2rem" id="ch4-animations">
+      <div style="color:#22d3ee;font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.3rem">Interactive Animations</div>
+      <h2 style="color:#22d3ee;font-size:1.8rem;font-weight:800;margin-bottom:2rem">Chapter 4 — Visual Explainers</h2>
+
+      <!-- Cell Imbalance Drift -->
+      <div style="margin:2rem 0;padding:1.5rem;background:#0a0a18;border:2px solid #1e293b;border-radius:8px">
+        <h3 style="color:#22d3ee;margin-bottom:.5rem;font-size:1.1rem">📊 Cell Imbalance Drift Over Cycles</h3>
+        <p style="color:#64748b;font-size:.85rem;margin-bottom:.8rem">Cells drift apart at different rates. Without balancing, the weakest cell hits 0% first, terminating the entire pack early.</p>
+        <div style="display:flex;gap:.8rem;flex-wrap:wrap;margin-bottom:.8rem">
+          <button onclick="startImbalance()" style="padding:.5rem 1.2rem;background:#001a1a;border:2px solid #22d3ee;color:#22d3ee;cursor:pointer;font-weight:700;font-family:inherit;border-radius:4px">▶ START AGING</button>
+          <button onclick="resetImbalance()" style="padding:.5rem 1.2rem;background:#1a1a2e;border:2px solid #475569;color:#94a3b8;cursor:pointer;font-family:inherit;border-radius:4px">↺ RESET</button>
+          <input type="range" id="imb-speed" min="1" max="10" value="3" style="flex:1;min-width:100px" title="Aging speed">
+          <span id="cycle-imb" style="font-family:monospace;color:#22d3ee">Cycles: 0</span>
+        </div>
+        <canvas id="imbalance-canvas" width="700" height="220" style="width:100%;background:#080814;border-radius:6px;display:block"></canvas>
+      </div>
+
+      <!-- MOSFET Fault Animation -->
+      <div style="margin:2rem 0;padding:1.5rem;background:#0a0a18;border:2px solid #1e293b;border-radius:8px">
+        <h3 style="color:#22d3ee;margin-bottom:.5rem;font-size:1.1rem">⚡ MOSFET Switching — Fault Detection & FET Opens</h3>
+        <p style="color:#64748b;font-size:.85rem;margin-bottom:.8rem">Click INJECT FAULT to simulate an overcurrent event. Watch the CHG FET open in real time.</p>
+        <div style="display:flex;gap:.8rem;flex-wrap:wrap;margin-bottom:.8rem">
+          <button onclick="injectFault()" style="padding:.5rem 1.2rem;background:#3b0000;border:2px solid #ef4444;color:#ef4444;cursor:pointer;font-weight:700;font-family:inherit;border-radius:4px">⚠ INJECT FAULT</button>
+          <button onclick="clearFault()" style="padding:.5rem 1.2rem;background:#1a1a2e;border:2px solid #475569;color:#94a3b8;cursor:pointer;font-family:inherit;border-radius:4px">✓ CLEAR FAULT</button>
+          <span id="fet-status" style="font-family:monospace;color:#34d399;font-size:.9rem">Status: NORMAL — FETs CLOSED</span>
+        </div>
+        <svg id="mosfet-svg" viewBox="0 0 700 180" style="width:100%;height:auto">
+          <defs>
+            <marker id="curr-arrow" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#22d3ee"/></marker>
+            <filter id="glow-f"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          </defs>
+          <!-- Battery -->
+          <rect x="20" y="60" width="80" height="60" rx="6" fill="#1e293b" stroke="#fbbf24" stroke-width="2"/>
+          <text x="60" y="87" text-anchor="middle" fill="#fbbf24" font-size="10" font-weight="700">16S</text>
+          <text x="60" y="100" text-anchor="middle" fill="#fbbf24" font-size="10">LFP Pack</text>
+          <text x="60" y="113" text-anchor="middle" fill="#fbbf24" font-size="9">51.2V</text>
+          <!-- Wire from battery to CHG FET -->
+          <line x1="100" y1="90" x2="200" y2="90" stroke="#22d3ee" stroke-width="3" id="wire1"/>
+          <!-- CHG FET -->
+          <rect id="chg-fet" x="200" y="65" width="90" height="50" rx="6" fill="#001a1a" stroke="#22d3ee" stroke-width="2.5"/>
+          <text id="chg-lbl" x="245" y="87" text-anchor="middle" fill="#22d3ee" font-size="10" font-weight="700">CHG FET</text>
+          <text id="chg-st" x="245" y="100" text-anchor="middle" fill="#34d399" font-size="9">CLOSED ✓</text>
+          <text x="245" y="113" text-anchor="middle" fill="#64748b" font-size="8">RDS(on)=2mΩ</text>
+          <!-- Wire between FETs -->
+          <line x1="290" y1="90" x2="390" y2="90" stroke="#22d3ee" stroke-width="3" id="wire2"/>
+          <!-- DSG FET -->
+          <rect id="dsg-fet" x="390" y="65" width="90" height="50" rx="6" fill="#001a1a" stroke="#22d3ee" stroke-width="2.5"/>
+          <text id="dsg-lbl" x="435" y="87" text-anchor="middle" fill="#22d3ee" font-size="10" font-weight="700">DSG FET</text>
+          <text id="dsg-st" x="435" y="100" text-anchor="middle" fill="#34d399" font-size="9">CLOSED ✓</text>
+          <text x="435" y="113" text-anchor="middle" fill="#64748b" font-size="8">B2B topology</text>
+          <!-- Wire to load -->
+          <line x1="480" y1="90" x2="580" y2="90" stroke="#22d3ee" stroke-width="3" id="wire3"/>
+          <!-- Load -->
+          <rect x="580" y="60" width="100" height="60" rx="6" fill="#001020" stroke="#60a5fa" stroke-width="2"/>
+          <text x="630" y="87" text-anchor="middle" fill="#60a5fa" font-size="10" font-weight="700">LOAD</text>
+          <text x="630" y="100" text-anchor="middle" fill="#60a5fa" font-size="9">Inverter</text>
+          <!-- Current flow dots animated -->
+          <circle id="dot1" cx="130" cy="90" r="5" fill="#22d3ee" opacity="0.8">
+            <animate attributeName="cx" values="100;200" dur="0.8s" repeatCount="indefinite"/>
+          </circle>
+          <circle id="dot2" cx="330" cy="90" r="5" fill="#22d3ee" opacity="0.8">
+            <animate attributeName="cx" values="290;390" dur="0.8s" repeatCount="indefinite"/>
+          </circle>
+          <circle id="dot3" cx="520" cy="90" r="5" fill="#22d3ee" opacity="0.8">
+            <animate attributeName="cx" values="480;580" dur="0.8s" repeatCount="indefinite"/>
+          </circle>
+          <!-- Status label -->
+          <rect x="150" y="130" width="380" height="30" rx="4" fill="#001a00" stroke="#34d399" stroke-width="1" id="status-box"/>
+          <text id="status-txt" x="340" y="149" text-anchor="middle" fill="#34d399" font-size="10" font-weight="700">NORMAL OPERATION — Current flowing at 1C</text>
+          <!-- AFE label -->
+          <text x="350" y="25" text-anchor="middle" fill="#64748b" font-size="9">AFE monitors all cell voltages every 10ms → MCU computes protection decisions</text>
+        </svg>
+      </div>
+
+      <!-- Protection Timing Hierarchy -->
+      <div style="margin:2rem 0;padding:1.5rem;background:#0a0a18;border:2px solid #1e293b;border-radius:8px">
+        <h3 style="color:#22d3ee;margin-bottom:.5rem;font-size:1.1rem">⏱ Protection Response Timing Hierarchy</h3>
+        <p style="color:#64748b;font-size:.85rem;margin-bottom:.8rem">Click INJECT FAULT to see which protection tier fires first. SCD fires in hardware before firmware even runs.</p>
+        <button onclick="runProtTiming()" style="padding:.5rem 1.2rem;background:#3b0000;border:2px solid #ef4444;color:#ef4444;cursor:pointer;font-weight:700;font-family:inherit;border-radius:4px;margin-bottom:1rem">⚡ INJECT FAULT</button>
+        <svg id="prot-svg" viewBox="0 0 700 220" style="width:100%;height:auto">
+          <!-- Time axis -->
+          <line x1="100" y1="200" x2="680" y2="200" stroke="#334155" stroke-width="1.5"/>
+          <text x="100" y="215" text-anchor="middle" fill="#64748b" font-size="8">0</text>
+          <text x="213" y="215" text-anchor="middle" fill="#64748b" font-size="8">500μs</text>
+          <text x="320" y="215" text-anchor="middle" fill="#64748b" font-size="8">10ms</text>
+          <text x="460" y="215" text-anchor="middle" fill="#64748b" font-size="8">100ms</text>
+          <text x="600" y="215" text-anchor="middle" fill="#64748b" font-size="8">1s</text>
+          <!-- Protection bars -->
+          <rect id="p-scd" x="100" y="30" width="0" height="30" rx="3" fill="#ef4444"/>
+          <text x="107" y="50" fill="#ef4444" font-size="11" font-weight="700">SCD — Short Circuit</text>
+          <text x="107" y="62" fill="#64748b" font-size="8">Hardware comparator, &lt;500μs, opens both FETs directly</text>
+          <rect id="p-ocd" x="100" y="80" width="0" height="30" rx="3" fill="#f97316"/>
+          <text x="107" y="100" fill="#f97316" font-size="11" font-weight="700">OCD — Overcurrent</text>
+          <text x="107" y="112" fill="#64748b" font-size="8">Firmware response, &lt;10ms, logs event to NVM</text>
+          <rect id="p-ovp" x="100" y="130" width="0" height="30" rx="3" fill="#fbbf24"/>
+          <text x="107" y="150" fill="#fbbf24" font-size="11" font-weight="700">OVP/UVP — Voltage</text>
+          <text x="107" y="162" fill="#64748b" font-size="8">Firmware response, &lt;100ms, sends CAN fault frame</text>
+          <rect id="p-otp" x="100" y="170" width="0" height="25" rx="3" fill="#60a5fa"/>
+          <text x="107" y="188" fill="#60a5fa" font-size="11" font-weight="700">OTP/UTP — Temperature, &lt;1s</text>
+        </svg>
+      </div>
+    </section>
+
+    <script>
+    // ── CELL IMBALANCE ────────────────────────────────────────
+    (function() {
+      const canvas = document.getElementById('imbalance-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      let socs = Array.from({length:16}, (_,i) => 100);
+      let drifts = Array.from({length:16}, () => 0.95 + Math.random()*0.1);
+      let cycles = 0, timer = null;
+
+      window.startImbalance = function() {
+        if (timer) clearInterval(timer);
+        socs = Array.from({length:16}, () => 100);
+        cycles = 0;
+        const speed = parseInt(document.getElementById('imb-speed').value);
+        timer = setInterval(() => {
+          socs = socs.map((s,i) => Math.max(0, s - drifts[i] * speed * 0.1));
+          cycles += speed;
+          document.getElementById('cycle-imb').textContent = 'Cycles: ' + cycles;
+          draw();
+          if (socs.some(s => s <= 2)) {
+            clearInterval(timer);
+            // Flash fault
+            ctx.fillStyle = 'rgba(239,68,68,0.3)';
+            ctx.fillRect(0,0,W,H);
+            ctx.fillStyle = '#ef4444';
+            ctx.font = 'bold 20px system-ui';
+            ctx.textAlign = 'center';
+            ctx.fillText('⚠ WEAK CELL TERMINATED PACK! Balance required.', W/2, H/2);
+          }
+        }, 80);
+      };
+
+      window.resetImbalance = function() {
+        clearInterval(timer);
+        socs = Array.from({length:16}, () => 100);
+        drifts = Array.from({length:16}, () => 0.95 + Math.random()*0.1);
+        cycles = 0;
+        document.getElementById('cycle-imb').textContent = 'Cycles: 0';
+        draw();
+      };
+
+      function draw() {
+        ctx.clearRect(0, 0, W, H);
+        const bw = 32, gap = 5, startX = 30;
+        socs.forEach((soc, i) => {
+          const x = startX + i * (bw + gap);
+          const barH = (H - 50) * soc / 100;
+          const y = H - 30 - barH;
+          const col = soc > 50 ? '#22d3ee' : soc > 20 ? '#fbbf24' : '#ef4444';
+          ctx.fillStyle = '#1e293b';
+          ctx.fillRect(x, 10, bw, H - 40);
+          ctx.fillStyle = col;
+          ctx.fillRect(x, y, bw, barH);
+          ctx.fillStyle = '#fff';
+          ctx.font = '8px system-ui';
+          ctx.textAlign = 'center';
+          ctx.fillText('C' + (i+1), x + bw/2, H - 18);
+          ctx.fillStyle = col;
+          ctx.fillText(soc.toFixed(0) + '%', x + bw/2, H - 7);
+        });
+        // 80% line
+        const lineY = H - 30 - (H-50)*0.8;
+        ctx.strokeStyle = '#ef4444';
+        ctx.setLineDash([4,3]);
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(25, lineY); ctx.lineTo(W-5, lineY); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#ef4444';
+        ctx.font = '8px system-ui';
+        ctx.textAlign = 'right';
+        ctx.fillText('80% balance trigger', W-8, lineY - 3);
+      }
+      draw();
+    })();
+
+    // ── MOSFET FAULT ──────────────────────────────────────────
+    let faultActive = false;
+    window.injectFault = function() {
+      faultActive = true;
+      // Stop current flow dots
+      ['dot1','dot2','dot3'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      });
+      // Open CHG FET
+      const chgFet = document.getElementById('chg-fet');
+      const chgSt = document.getElementById('chg-st');
+      const chgLbl = document.getElementById('chg-lbl');
+      const wire2 = document.getElementById('wire2');
+      const wire3 = document.getElementById('wire3');
+      const statusBox = document.getElementById('status-box');
+      const statusTxt = document.getElementById('status-txt');
+      if (chgFet) { chgFet.setAttribute('stroke','#ef4444'); chgFet.setAttribute('fill','#3b0000'); }
+      if (chgSt) { chgSt.textContent = 'OPEN ✗'; chgSt.setAttribute('fill','#ef4444'); }
+      if (chgLbl) chgLbl.setAttribute('fill','#ef4444');
+      if (wire2) { wire2.setAttribute('stroke','#334155'); }
+      if (wire3) { wire3.setAttribute('stroke','#334155'); }
+      if (statusBox) { statusBox.setAttribute('stroke','#ef4444'); statusBox.setAttribute('fill','#3b0000'); }
+      if (statusTxt) { statusTxt.textContent = '⚠ FAULT DETECTED — CHG FET OPENED in <500μs'; statusTxt.setAttribute('fill','#ef4444'); }
+      document.getElementById('fet-status').textContent = 'Status: ⚠ FAULT — CHG FET OPEN';
+      document.getElementById('fet-status').style.color = '#ef4444';
+    };
+    window.clearFault = function() {
+      faultActive = false;
+      ['dot1','dot2','dot3'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = '';
+      });
+      const chgFet = document.getElementById('chg-fet');
+      const chgSt = document.getElementById('chg-st');
+      const chgLbl = document.getElementById('chg-lbl');
+      const wire2 = document.getElementById('wire2');
+      const wire3 = document.getElementById('wire3');
+      const statusBox = document.getElementById('status-box');
+      const statusTxt = document.getElementById('status-txt');
+      if (chgFet) { chgFet.setAttribute('stroke','#22d3ee'); chgFet.setAttribute('fill','#001a1a'); }
+      if (chgSt) { chgSt.textContent = 'CLOSED ✓'; chgSt.setAttribute('fill','#34d399'); }
+      if (chgLbl) chgLbl.setAttribute('fill','#22d3ee');
+      if (wire2) wire2.setAttribute('stroke','#22d3ee');
+      if (wire3) wire3.setAttribute('stroke','#22d3ee');
+      if (statusBox) { statusBox.setAttribute('stroke','#34d399'); statusBox.setAttribute('fill','#001a00'); }
+      if (statusTxt) { statusTxt.textContent = 'NORMAL OPERATION — Current flowing at 1C'; statusTxt.setAttribute('fill','#34d399'); }
+      document.getElementById('fet-status').textContent = 'Status: NORMAL — FETs CLOSED';
+      document.getElementById('fet-status').style.color = '#34d399';
+    };
+
+    // ── PROTECTION TIMING ─────────────────────────────────────
+    window.runProtTiming = function() {
+      const bars = [
+        {id:'p-scd', delay:200, dur:400, width:113, color:'#ef4444'},
+        {id:'p-ocd', delay:700, dur:600, width:220, color:'#f97316'},
+        {id:'p-ovp', delay:1400, dur:800, width:360, color:'#fbbf24'},
+        {id:'p-otp', delay:2300, dur:1000, width:500, color:'#60a5fa'}
+      ];
+      bars.forEach(b => {
+        const el = document.getElementById(b.id);
+        if (el) { el.setAttribute('width','0'); el.setAttribute('fill',b.color); }
+        setTimeout(() => {
+          if (el) el.setAttribute('width', b.width);
+        }, b.delay);
+      });
+    };
+    </script>
+
     <div class="chapter-footer">
       <a class="nav-btn" href="chapter3.html">← Chapter 3: Thermal &amp; Mechanical</a>
       <div style="text-align:center;">
