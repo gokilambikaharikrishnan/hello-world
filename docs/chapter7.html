@@ -1998,6 +1998,309 @@
         </div>
       </div>
 
+      <!-- ══════ CH7 ANIMATIONS ══════ -->
+      <div style="padding:2rem;background:#060610;border:3px solid #fbbf24;border-radius:8px;margin:2rem 0" id="ch7-animations">
+        <div style="color:#fbbf24;font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.3rem">Interactive Animations</div>
+        <h2 style="color:#fbbf24;font-size:1.6rem;font-weight:800;margin-bottom:1.5rem">Chapter 7 — Visual Explainers</h2>
+
+        <!-- UPS Switchover Animation -->
+        <div style="margin:1.5rem 0;padding:1.5rem;background:#0a0a18;border:2px solid #1e293b;border-radius:8px">
+          <h3 style="color:#fbbf24;margin-bottom:.5rem;font-size:1.1rem">⚡ UPS Switchover — Mains Fail → Battery in &lt;10ms</h3>
+          <p style="color:#64748b;font-size:.85rem;margin-bottom:.8rem">The DSG FET stays CLOSED at all times in float. On mains failure, NO BMS action needed — transfer is instantaneous.</p>
+          <div style="display:flex;gap:.8rem;flex-wrap:wrap;margin-bottom:.8rem">
+            <button onclick="triggerMainsFail()" style="padding:.5rem 1.2rem;background:#3b0000;border:2px solid #ef4444;color:#ef4444;cursor:pointer;font-weight:700;font-family:inherit;border-radius:4px">⚡ MAINS FAIL</button>
+            <button onclick="resetUPS()" style="padding:.5rem 1.2rem;background:#1a1a2e;border:2px solid #475569;color:#94a3b8;cursor:pointer;font-family:inherit;border-radius:4px">↺ RESTORE MAINS</button>
+            <span id="ups-timer" style="font-family:monospace;color:#fbbf24;font-size:1rem;align-self:center">Response: — ms</span>
+          </div>
+          <canvas id="ups-canvas" width="700" height="220" style="width:100%;background:#080814;border-radius:6px;display:block"></canvas>
+        </div>
+
+        <!-- Daily ESS Cycle Animation -->
+        <div style="margin:1.5rem 0;padding:1.5rem;background:#0a0a18;border:2px solid #1e293b;border-radius:8px">
+          <h3 style="color:#fbbf24;margin-bottom:.5rem;font-size:1.1rem">🌞 Daily ESS Charge/Discharge Cycle — 24 Hours</h3>
+          <p style="color:#64748b;font-size:.85rem;margin-bottom:.8rem">Solar charges the battery during the day. Home load discharges it in the evening. TOU tariff logic decides when to export vs store.</p>
+          <div style="display:flex;gap:.8rem;flex-wrap:wrap;margin-bottom:.8rem">
+            <button onclick="playESScycle()" style="padding:.5rem 1.2rem;background:#1a1000;border:2px solid #fbbf24;color:#fbbf24;cursor:pointer;font-weight:700;font-family:inherit;border-radius:4px">▶ PLAY 24H CYCLE</button>
+            <button onclick="pauseESScycle()" style="padding:.5rem 1.2rem;background:#1a1a2e;border:2px solid #475569;color:#94a3b8;cursor:pointer;font-family:inherit;border-radius:4px">⏸ PAUSE</button>
+            <span id="ess-time" style="font-family:monospace;color:#fbbf24;font-size:.9rem;align-self:center">Time: 00:00</span>
+            <span id="ess-soc" style="font-family:monospace;color:#34d399;font-size:.9rem;align-self:center">SoC: 25%</span>
+          </div>
+          <canvas id="ess-canvas" width="700" height="240" style="width:100%;background:#080814;border-radius:6px;display:block"></canvas>
+        </div>
+
+        <!-- Float Charging Longevity -->
+        <div style="margin:1.5rem 0;padding:1.5rem;background:#0a0a18;border:2px solid #1e293b;border-radius:8px">
+          <h3 style="color:#fbbf24;margin-bottom:.5rem;font-size:1.1rem">🔋 Float Voltage vs 10-Year Capacity — Why 3.39V Matters</h3>
+          <svg viewBox="0 0 700 240" style="width:100%;height:auto">
+            <!-- Axes -->
+            <line x1="80" y1="20" x2="80" y2="200" stroke="#334155" stroke-width="1.5"/>
+            <line x1="80" y1="200" x2="660" y2="200" stroke="#334155" stroke-width="1.5"/>
+            <text x="370" y="225" text-anchor="middle" fill="#64748b" font-size="9">Float Voltage (V/cell) →</text>
+            <text x="20" y="110" fill="#64748b" font-size="9" transform="rotate(-90 20 110)">Capacity at 10yr (%)</text>
+            <!-- Grid -->
+            <line x1="80" y1="60" x2="660" y2="60" stroke="#1e293b" stroke-dasharray="4,4" stroke-width="1"/><text x="74" y="64" text-anchor="end" fill="#64748b" font-size="8">100</text>
+            <line x1="80" y1="100" x2="660" y2="100" stroke="#ef4444" stroke-dasharray="4,4" stroke-width="1" opacity="0.5"/><text x="74" y="104" text-anchor="end" fill="#ef4444" font-size="8" opacity="0.8">80</text>
+            <line x1="80" y1="140" x2="660" y2="140" stroke="#1e293b" stroke-dasharray="4,4" stroke-width="1"/><text x="74" y="144" text-anchor="end" fill="#64748b" font-size="8">60</text>
+            <!-- X labels -->
+            <text x="130" y="215" text-anchor="middle" fill="#64748b" font-size="8">3.30V</text>
+            <text x="230" y="215" text-anchor="middle" fill="#64748b" font-size="8">3.35V</text>
+            <text x="340" y="215" text-anchor="middle" fill="#fbbf24" font-size="9" font-weight="700">3.39V ★</text>
+            <text x="450" y="215" text-anchor="middle" fill="#64748b" font-size="8">3.45V</text>
+            <text x="560" y="215" text-anchor="middle" fill="#64748b" font-size="8">3.55V</text>
+            <text x="640" y="215" text-anchor="middle" fill="#64748b" font-size="8">3.65V</text>
+            <!-- Capacity bars: 3.30=84%, 3.35=90%, 3.39=92%, 3.45=82%, 3.55=73%, 3.65=62% -->
+            <!-- scale: 100% = 140px height, base 200 -->
+            <rect x="105" y="200" width="50" height="0" fill="#fbbf24" rx="2" opacity="0.7">
+              <animate attributeName="height" values="0;117.6" dur="0.6s" begin="0.2s" fill="freeze"/>
+              <animate attributeName="y" values="200;82.4" dur="0.6s" begin="0.2s" fill="freeze"/>
+            </rect>
+            <rect x="205" y="200" width="50" height="0" fill="#fbbf24" rx="2" opacity="0.8">
+              <animate attributeName="height" values="0;126" dur="0.6s" begin="0.4s" fill="freeze"/>
+              <animate attributeName="y" values="200;74" dur="0.6s" begin="0.4s" fill="freeze"/>
+            </rect>
+            <!-- 3.39V OPTIMAL — gold highlighted -->
+            <rect x="315" y="200" width="50" height="0" fill="#fbbf24" rx="2" stroke="#fff" stroke-width="2">
+              <animate attributeName="height" values="0;128.8" dur="0.7s" begin="0.6s" fill="freeze"/>
+              <animate attributeName="y" values="200;71.2" dur="0.7s" begin="0.6s" fill="freeze"/>
+            </rect>
+            <text x="340" y="65" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="700" opacity="0"><animate attributeName="opacity" values="0;1" dur="0.3s" begin="1.2s" fill="freeze"/>92%</text>
+            <rect x="425" y="200" width="50" height="0" fill="#f97316" rx="2" opacity="0.7">
+              <animate attributeName="height" values="0;114.8" dur="0.6s" begin="0.8s" fill="freeze"/>
+              <animate attributeName="y" values="200;85.2" dur="0.6s" begin="0.8s" fill="freeze"/>
+            </rect>
+            <rect x="535" y="200" width="50" height="0" fill="#ef4444" rx="2" opacity="0.7">
+              <animate attributeName="height" values="0;102.2" dur="0.6s" begin="1.0s" fill="freeze"/>
+              <animate attributeName="y" values="200;97.8" dur="0.6s" begin="1.0s" fill="freeze"/>
+            </rect>
+            <rect x="615" y="200" width="50" height="0" fill="#dc2626" rx="2" opacity="0.8">
+              <animate attributeName="height" values="0;86.8" dur="0.6s" begin="1.2s" fill="freeze"/>
+              <animate attributeName="y" values="200;113.2" dur="0.6s" begin="1.2s" fill="freeze"/>
+            </rect>
+            <text x="640" y="107" text-anchor="middle" fill="#f87171" font-size="10" font-weight="700" opacity="0"><animate attributeName="opacity" values="0;1" dur="0.3s" begin="1.7s" fill="freeze"/>62%</text>
+            <!-- EOL line annotation -->
+            <text x="665" y="104" fill="#ef4444" font-size="8">← 80% EOL</text>
+            <!-- Sweet spot annotation -->
+            <line x1="340" y1="71" x2="340" y2="50" stroke="#fbbf24" stroke-width="1" stroke-dasharray="3,2"/>
+            <text x="340" y="46" text-anchor="middle" fill="#fbbf24" font-size="9" font-weight="700">OPTIMAL FLOAT POINT</text>
+          </svg>
+        </div>
+      </div>
+
+      <script>
+      // ── UPS SWITCHOVER CANVAS ─────────────────────────────
+      (function() {
+        const canvas = document.getElementById('ups-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width, H = canvas.height;
+        let mainsOK = true, switchTime = null, animFrame = 0;
+        const nodes = [
+          {x:60, y:H/2-30, w:80, h:60, label:'GRID', sub:'230V AC', col:'#60a5fa', active:true, id:'grid'},
+          {x:200, y:H/2-30, w:80, h:60, label:'RECTIFIER', sub:'AC→DC', col:'#94a3b8', active:true, id:'rect'},
+          {x:340, y:H/2-60, w:80, h:60, label:'BATTERY', sub:'51.2V\nFLOAT', col:'#fbbf24', active:true, id:'batt'},
+          {x:340, y:H/2+10, w:80, h:40, label:'BMS', sub:'DSG CLOSED', col:'#34d399', active:true, id:'bms'},
+          {x:480, y:H/2-30, w:80, h:60, label:'INVERTER', sub:'DC→AC', col:'#a78bfa', active:true, id:'inv'},
+          {x:610, y:H/2-30, w:80, h:60, label:'LOAD', sub:'Critical', col:'#34d399', active:true, id:'load'}
+        ];
+        const flowDots = [];
+        for(let i=0;i<8;i++) flowDots.push({t:i/8, seg:'grid'});
+
+        window.triggerMainsFail = function() {
+          mainsOK = false;
+          switchTime = performance.now();
+          setTimeout(() => {
+            const elapsed = (performance.now() - switchTime).toFixed(1);
+            document.getElementById('ups-timer').textContent = 'Response: <' + elapsed + 'ms ✓';
+          }, 50);
+        };
+        window.resetUPS = function() {
+          mainsOK = true;
+          switchTime = null;
+          document.getElementById('ups-timer').textContent = 'Response: — ms';
+        };
+
+        function draw() {
+          ctx.clearRect(0,0,W,H);
+          animFrame++;
+          // Draw connections
+          const paths = [
+            {x1:140,y1:H/2, x2:200,y2:H/2, active:()=>mainsOK},
+            {x1:280,y1:H/2, x2:340,y2:H/2-20, active:()=>mainsOK},
+            {x1:380,y1:H/2-20, x2:480,y2:H/2, active:()=>true},
+            {x1:380,y1:H/2+30, x2:480,y2:H/2+10, active:()=>!mainsOK},
+            {x1:560,y1:H/2, x2:610,y2:H/2, active:()=>true}
+          ];
+          paths.forEach(p => {
+            ctx.beginPath(); ctx.moveTo(p.x1,p.y1); ctx.lineTo(p.x2,p.y2);
+            ctx.strokeStyle = p.active() ? '#22d3ee' : '#1e293b';
+            ctx.lineWidth = p.active() ? 3 : 2;
+            ctx.setLineDash(p.active() ? [] : [5,5]);
+            ctx.stroke(); ctx.setLineDash([]);
+          });
+
+          // Draw nodes
+          nodes.forEach(n => {
+            const isGrid = n.id==='grid';
+            const isBatt = n.id==='batt';
+            const isBms = n.id==='bms';
+            let active = true;
+            if(isGrid && !mainsOK) active = false;
+            if(n.id==='rect' && !mainsOK) active = false;
+            ctx.fillStyle = active ? '#0a0a18' : '#0d0d0d';
+            ctx.strokeStyle = active ? n.col : '#334155';
+            ctx.lineWidth = active ? 2.5 : 1;
+            ctx.beginPath(); ctx.roundRect(n.x,n.y,n.w,n.h,6); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = active ? n.col : '#475569';
+            ctx.font = 'bold 10px system-ui'; ctx.textAlign = 'center';
+            ctx.fillText(n.label, n.x+n.w/2, n.y+n.h/2-5);
+            ctx.font = '8px system-ui'; ctx.fillStyle = active ? '#94a3b8' : '#334155';
+            ctx.fillText(n.sub, n.x+n.w/2, n.y+n.h/2+8);
+            // Pulse on battery when mains fail
+            if(isBatt && !mainsOK) {
+              ctx.strokeStyle = '#fbbf24';
+              ctx.lineWidth = 1.5 + Math.sin(animFrame*0.15)*1.5;
+              ctx.beginPath(); ctx.roundRect(n.x-3,n.y-3,n.w+6,n.h+6,8); ctx.stroke();
+            }
+          });
+
+          // Mains fail indicator
+          if(!mainsOK) {
+            ctx.fillStyle = `rgba(239,68,68,${0.1+Math.abs(Math.sin(animFrame*0.08))*0.1})`;
+            ctx.fillRect(0,0,200,H);
+            ctx.fillStyle = '#ef4444';
+            ctx.font = 'bold 11px system-ui'; ctx.textAlign = 'center';
+            ctx.fillText('✗ MAINS FAIL', 70, 25);
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillText('BATTERY SUPPLYING', W/2, 22);
+            ctx.fillStyle = '#34d399';
+            ctx.fillText('DSG FET WAS ALREADY CLOSED → 0ms response', W/2, 38);
+          } else {
+            ctx.fillStyle = '#34d399'; ctx.font = '10px system-ui'; ctx.textAlign = 'center';
+            ctx.fillText('✓ MAINS OK — Battery floating at 3.39V/cell', W/2, 22);
+          }
+
+          requestAnimationFrame(draw);
+        }
+        draw();
+      })();
+
+      // ── ESS DAILY CYCLE CANVAS ────────────────────────────
+      (function() {
+        const canvas = document.getElementById('ess-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width, H = canvas.height;
+        let t = 0, playing = false, raf = null;
+        // SoC profile over 24h (hourly): night low → solar charge → evening discharge → night
+        const socProfile = [25,22,20,20,22,28,42,58,72,83,88,90,88,85,82,78,68,55,40,32,28,26,25,25,25];
+        const solarProfile = [0,0,0,0,0,0.1,0.4,0.8,1.2,1.5,1.8,2.0,1.9,1.7,1.4,1.0,0.5,0.1,0,0,0,0,0,0,0];
+        const loadProfile =  [0.3,0.2,0.2,0.2,0.3,0.5,0.8,0.9,0.7,0.6,0.5,0.5,0.5,0.5,0.6,0.7,1.2,1.8,2.0,1.5,1.0,0.7,0.5,0.3,0.3];
+        const annotations = [
+          {h:6, label:'☀ Sunrise'},
+          {h:11, label:'Peak solar'},
+          {h:12, label:'SoC 90% — stop charge'},
+          {h:17, label:'Evening peak demand'},
+          {h:19, label:'Max discharge 2kW'},
+          {h:22, label:'SoC 20% — floor limit'}
+        ];
+
+        window.playESScycle = function() { playing = true; if(!raf) step(); };
+        window.pauseESScycle = function() { playing = false; };
+
+        function step() {
+          if(!playing) { raf=null; return; }
+          t = (t + 0.15) % 24;
+          draw();
+          raf = requestAnimationFrame(step);
+        }
+
+        function draw() {
+          ctx.clearRect(0,0,W,H);
+          const pad = {l:55, r:20, t:30, b:40};
+          const chartW = W - pad.l - pad.r;
+          const chartH = H - pad.t - pad.b;
+          const xOf = h => pad.l + (h/24)*chartW;
+          const yOfSoc = s => pad.t + chartH - (s/100)*chartH;
+          const yOfPow = p => pad.t + chartH/2 - (p/2)*chartH*0.4;
+
+          // Solar shading
+          ctx.beginPath(); ctx.moveTo(xOf(0), pad.t+chartH);
+          solarProfile.forEach((v,i) => ctx.lineTo(xOf(i), yOfPow(v)));
+          ctx.lineTo(xOf(24), pad.t+chartH); ctx.closePath();
+          ctx.fillStyle = 'rgba(251,191,36,0.08)'; ctx.fill();
+
+          // Grid lines
+          ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 1; ctx.setLineDash([3,3]);
+          [0,25,50,75,100].forEach(s => {
+            const y = yOfSoc(s);
+            ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W-pad.r, y); ctx.stroke();
+            ctx.fillStyle='#475569'; ctx.font='8px system-ui'; ctx.textAlign='right';
+            ctx.fillText(s+'%', pad.l-4, y+3);
+          });
+          ctx.setLineDash([]);
+          // Hour marks
+          for(let h=0;h<=24;h+=4) {
+            const x=xOf(h); ctx.strokeStyle='#1e293b'; ctx.lineWidth=1;
+            ctx.beginPath(); ctx.moveTo(x,pad.t); ctx.lineTo(x,pad.t+chartH); ctx.stroke();
+            ctx.fillStyle='#475569'; ctx.font='8px system-ui'; ctx.textAlign='center';
+            ctx.fillText(h+'h', x, H-4);
+          }
+
+          // Load curve
+          ctx.beginPath(); ctx.moveTo(xOf(0), yOfSoc(socProfile[0]));
+          loadProfile.forEach((v,i) => {
+            const x=xOf(i), y=pad.t+chartH-(v/2)*chartH*0.3;
+            if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+          });
+          ctx.strokeStyle='#ef4444'; ctx.lineWidth=1.5; ctx.stroke();
+
+          // SoC curve (draw up to current time t)
+          ctx.beginPath();
+          for(let i=0; i<=Math.min(t,23.9); i+=0.1) {
+            const hi = Math.floor(i);
+            const frac = i - hi;
+            const soc = socProfile[hi]*(1-frac) + (socProfile[hi+1]||socProfile[hi])*frac;
+            const x=xOf(i), y=yOfSoc(soc);
+            if(i<0.11) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+          }
+          ctx.strokeStyle='#fbbf24'; ctx.lineWidth=3; ctx.stroke();
+
+          // SoC limits
+          ctx.strokeStyle='#34d399'; ctx.lineWidth=1; ctx.setLineDash([5,3]);
+          ctx.beginPath(); ctx.moveTo(pad.l,yOfSoc(90)); ctx.lineTo(W-pad.r,yOfSoc(90)); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(pad.l,yOfSoc(20)); ctx.lineTo(W-pad.r,yOfSoc(20)); ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillStyle='#34d399'; ctx.font='8px system-ui'; ctx.textAlign='left';
+          ctx.fillText('90% ceiling',W-pad.r+2,yOfSoc(90)+3);
+          ctx.fillText('20% floor',W-pad.r+2,yOfSoc(20)+3);
+
+          // Current time cursor
+          const cx=xOf(t);
+          ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.setLineDash([3,3]);
+          ctx.beginPath(); ctx.moveTo(cx,pad.t); ctx.lineTo(cx,pad.t+chartH); ctx.stroke();
+          ctx.setLineDash([]);
+          // Current SoC dot
+          const curHi=Math.floor(t), curFrac=t-curHi;
+          const curSoc=socProfile[curHi]*(1-curFrac)+(socProfile[Math.min(curHi+1,24)]||socProfile[curHi])*curFrac;
+          ctx.beginPath(); ctx.arc(cx,yOfSoc(curSoc),6,0,Math.PI*2);
+          ctx.fillStyle='#fbbf24'; ctx.fill();
+
+          // Legend
+          ctx.fillStyle='#fbbf24'; ctx.font='bold 9px system-ui'; ctx.textAlign='left';
+          ctx.fillText('— Battery SoC', pad.l, 15);
+          ctx.fillStyle='#ef4444'; ctx.fillText('— Load demand', pad.l+100, 15);
+          ctx.fillStyle='rgba(251,191,36,0.5)'; ctx.fillRect(pad.l+200, 8, 20, 8);
+          ctx.fillStyle='#64748b'; ctx.fillText(' Solar irradiance', pad.l+220, 15);
+
+          // Update displays
+          const h=Math.floor(t), m=Math.floor((t-h)*60);
+          document.getElementById('ess-time').textContent = `Time: ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+          document.getElementById('ess-soc').textContent = `SoC: ${curSoc.toFixed(0)}%`;
+        }
+        draw();
+      })();
+      </script>
+
       <!-- Navigation footer -->
       <div style="display:flex;justify-content:space-between;align-items:center;margin:3rem 0 1rem;padding:1.5rem;background:var(--surface-2);border-radius:10px;flex-wrap:wrap;gap:1rem;">
         <a href="chapter6.html" style="color:var(--app-gold);text-decoration:none;font-weight:600;padding:0.6rem 1.2rem;border:1px solid var(--app-gold);border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='rgba(251,191,36,0.1)'" onmouseout="this.style.background='transparent'">← Chapter 6: BMS Architecture</a>
