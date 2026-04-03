@@ -2876,6 +2876,113 @@
 
     </section>
 
+    <!-- ══════ CH1 ANIMATIONS ══════ -->
+    <section class="section" id="ch1-animations" style="background:#060610;border-top:3px solid #fbbf24">
+      <div class="section-number" style="color:#fbbf24">Interactive Animations</div>
+      <h2 class="section-title" style="color:#fbbf24">Chapter 1 — Visual Explainers</h2>
+
+      <!-- Battery Evolution Timeline -->
+      <div style="margin:2rem 0;padding:1.5rem;background:#0a0a18;border:2px solid #1e293b;border-radius:8px">
+        <h3 style="color:#fbbf24;margin-bottom:1rem;font-size:1.1rem">⚡ Battery Technology Evolution (1800–1997)</h3>
+        <div style="overflow-x:auto;padding-bottom:1rem">
+          <svg viewBox="0 0 900 200" style="width:100%;min-width:600px;height:auto;font-family:system-ui,sans-serif">
+            <defs><filter id="glow-t"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+            <line x1="60" y1="100" x2="60" y2="100" stroke="#334155" stroke-width="2"><animate attributeName="x2" values="60;860" dur="1.5s" fill="freeze" begin="0.3s"/></line>
+            <g opacity="0"><animate attributeName="opacity" values="0;1" dur="0.4s" fill="freeze" begin="0.8s"/>
+              <circle cx="100" cy="100" r="18" fill="#334155" stroke="#fbbf24" stroke-width="2" filter="url(#glow-t)"/>
+              <text x="100" y="75" text-anchor="middle" fill="#fbbf24" font-size="10" font-weight="700">1800</text>
+              <text x="100" y="131" text-anchor="middle" fill="#94a3b8" font-size="9">Voltaic</text>
+              <text x="100" y="142" text-anchor="middle" fill="#94a3b8" font-size="9">Pile</text>
+              <text x="100" y="104" text-anchor="middle" fill="#fff" font-size="8">Zn/Cu</text>
+            </g>
+            <g opacity="0"><animate attributeName="opacity" values="0;1" dur="0.4s" fill="freeze" begin="1.2s"/>
+              <circle cx="220" cy="100" r="22" fill="#1e293b" stroke="#94a3b8" stroke-width="2" filter="url(#glow-t)"/>
+              <text x="220" y="68" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="700">1859</text>
+              <text x="220" y="134" text-anchor="middle" fill="#94a3b8" font-size="9">Lead-Acid</text>
+              <text x="220" y="103" text-anchor="middle" fill="#fff" font-size="8">30Wh/kg</text>
+            </g>
+            <g opacity="0"><animate attributeName="opacity" values="0;1" dur="0.4s" fill="freeze" begin="1.6s"/>
+              <circle cx="370" cy="100" r="20" fill="#1a0a00" stroke="#f97316" stroke-width="2" filter="url(#glow-t)"/>
+              <text x="370" y="70" text-anchor="middle" fill="#f97316" font-size="10" font-weight="700">1899</text>
+              <text x="370" y="133" text-anchor="middle" fill="#f97316" font-size="9">NiCd</text>
+              <text x="370" y="102" text-anchor="middle" fill="#fff" font-size="8">50Wh/kg</text>
+            </g>
+            <g opacity="0"><animate attributeName="opacity" values="0;1" dur="0.4s" fill="freeze" begin="2.0s"/>
+              <circle cx="520" cy="100" r="20" fill="#001a0a" stroke="#34d399" stroke-width="2" filter="url(#glow-t)"/>
+              <text x="520" y="70" text-anchor="middle" fill="#34d399" font-size="10" font-weight="700">1989</text>
+              <text x="520" y="133" text-anchor="middle" fill="#34d399" font-size="9">NiMH</text>
+              <text x="520" y="102" text-anchor="middle" fill="#fff" font-size="8">70Wh/kg</text>
+            </g>
+            <g opacity="0"><animate attributeName="opacity" values="0;1" dur="0.4s" fill="freeze" begin="2.4s"/>
+              <circle cx="680" cy="100" r="24" fill="#001020" stroke="#60a5fa" stroke-width="2" filter="url(#glow-t)"/>
+              <text x="680" y="66" text-anchor="middle" fill="#60a5fa" font-size="10" font-weight="700">1991</text>
+              <text x="680" y="136" text-anchor="middle" fill="#60a5fa" font-size="9">Li-ion</text>
+              <text x="680" y="103" text-anchor="middle" fill="#fff" font-size="8">200Wh/kg</text>
+            </g>
+            <g opacity="0"><animate attributeName="opacity" values="0;1" dur="0.6s" fill="freeze" begin="2.9s"/>
+              <circle cx="840" cy="100" r="30" fill="#1a0f00" stroke="#fbbf24" stroke-width="3" filter="url(#glow-t)"/>
+              <text x="840" y="63" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="700">1997</text>
+              <text x="840" y="137" text-anchor="middle" fill="#fbbf24" font-size="10" font-weight="700">LFP ★</text>
+              <text x="840" y="150" text-anchor="middle" fill="#f59e0b" font-size="8">Goodenough</text>
+              <text x="840" y="103" text-anchor="middle" fill="#fff" font-size="8">160Wh/kg</text>
+              <text x="840" y="113" text-anchor="middle" fill="#fde68a" font-size="7">5000 cycles</text>
+              <circle cx="840" cy="100" r="30" fill="none" stroke="#fbbf24" stroke-width="1"><animate attributeName="r" values="30;44;30" dur="2s" begin="3.5s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.8;0;0.8" dur="2s" begin="3.5s" repeatCount="indefinite"/></circle>
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Energy Density Bars -->
+      <div style="margin:2rem 0;padding:1.5rem;background:#0a0a18;border:2px solid #1e293b;border-radius:8px">
+        <h3 style="color:#fbbf24;margin-bottom:1rem;font-size:1.1rem">📊 Gravimetric Energy Density Comparison</h3>
+        <svg viewBox="0 0 700 260" style="width:100%;height:auto">
+          <line x1="80" y1="20" x2="80" y2="210" stroke="#334155" stroke-width="1.5"/>
+          <line x1="80" y1="210" x2="660" y2="210" stroke="#334155" stroke-width="1.5"/>
+          <line x1="80" y1="170" x2="660" y2="170" stroke="#1e293b" stroke-width="1" stroke-dasharray="3,3"/><text x="74" y="174" text-anchor="end" fill="#64748b" font-size="8">50</text>
+          <line x1="80" y1="130" x2="660" y2="130" stroke="#1e293b" stroke-width="1" stroke-dasharray="3,3"/><text x="74" y="134" text-anchor="end" fill="#64748b" font-size="8">100</text>
+          <line x1="80" y1="90" x2="660" y2="90" stroke="#1e293b" stroke-width="1" stroke-dasharray="3,3"/><text x="74" y="94" text-anchor="end" fill="#64748b" font-size="8">150</text>
+          <line x1="80" y1="50" x2="660" y2="50" stroke="#1e293b" stroke-width="1" stroke-dasharray="3,3"/><text x="74" y="54" text-anchor="end" fill="#64748b" font-size="8">200</text>
+          <rect x="110" y="210" width="70" height="0" fill="#64748b" rx="2"><animate attributeName="height" values="0;24" dur="0.6s" begin="0.3s" fill="freeze"/><animate attributeName="y" values="210;186" dur="0.6s" begin="0.3s" fill="freeze"/></rect>
+          <text x="145" y="228" text-anchor="middle" fill="#64748b" font-size="8">Lead-Acid</text>
+          <rect x="215" y="210" width="70" height="0" fill="#f97316" rx="2" opacity="0.8"><animate attributeName="height" values="0;40" dur="0.6s" begin="0.6s" fill="freeze"/><animate attributeName="y" values="210;170" dur="0.6s" begin="0.6s" fill="freeze"/></rect>
+          <text x="250" y="228" text-anchor="middle" fill="#f97316" font-size="8">NiCd</text>
+          <rect x="320" y="210" width="70" height="0" fill="#34d399" rx="2" opacity="0.8"><animate attributeName="height" values="0;56" dur="0.6s" begin="0.9s" fill="freeze"/><animate attributeName="y" values="210;154" dur="0.6s" begin="0.9s" fill="freeze"/></rect>
+          <text x="355" y="228" text-anchor="middle" fill="#34d399" font-size="8">NiMH</text>
+          <rect x="425" y="210" width="70" height="0" fill="#fbbf24" rx="2" opacity="0.9"><animate attributeName="height" values="0;128" dur="0.8s" begin="1.2s" fill="freeze"/><animate attributeName="y" values="210;82" dur="0.8s" begin="1.2s" fill="freeze"/></rect>
+          <text x="460" y="228" text-anchor="middle" fill="#fbbf24" font-size="8">LFP ★</text>
+          <rect x="530" y="210" width="70" height="0" fill="#60a5fa" rx="2" opacity="0.8"><animate attributeName="height" values="0;160" dur="0.9s" begin="1.5s" fill="freeze"/><animate attributeName="y" values="210;50" dur="0.9s" begin="1.5s" fill="freeze"/></rect>
+          <text x="565" y="228" text-anchor="middle" fill="#60a5fa" font-size="8">NMC</text>
+          <text x="380" y="248" text-anchor="middle" fill="#475569" font-size="8">NMC wins density. LFP wins safety, life, cost for ESS.</text>
+        </svg>
+      </div>
+
+      <!-- Weakness → BMS Feature Arrows -->
+      <div style="margin:2rem 0;padding:1.5rem;background:#0a0a18;border:2px solid #1e293b;border-radius:8px">
+        <h3 style="color:#fbbf24;margin-bottom:1rem;font-size:1.1rem">🔗 LFP Weakness → BMS Feature (Animated)</h3>
+        <svg viewBox="0 0 700 300" style="width:100%;height:auto">
+          <defs><marker id="arr-w" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#fbbf24"/></marker></defs>
+          <rect x="10" y="20" width="195" height="28" rx="4" fill="#1a0000" stroke="#ef4444" stroke-width="1.5"/><text x="107" y="38" text-anchor="middle" fill="#f87171" font-size="10">Narrow voltage window</text>
+          <rect x="10" y="63" width="195" height="28" rx="4" fill="#1a0000" stroke="#ef4444" stroke-width="1.5"/><text x="107" y="81" text-anchor="middle" fill="#f87171" font-size="10">Thermal sensitivity</text>
+          <rect x="10" y="106" width="195" height="28" rx="4" fill="#1a0000" stroke="#ef4444" stroke-width="1.5"/><text x="107" y="124" text-anchor="middle" fill="#f87171" font-size="10">Cell-to-cell variation</text>
+          <rect x="10" y="149" width="195" height="28" rx="4" fill="#1a0000" stroke="#ef4444" stroke-width="1.5"/><text x="107" y="167" text-anchor="middle" fill="#f87171" font-size="10">Flat OCV (blind SoC)</text>
+          <rect x="10" y="192" width="195" height="28" rx="4" fill="#1a0000" stroke="#ef4444" stroke-width="1.5"/><text x="107" y="210" text-anchor="middle" fill="#f87171" font-size="10">Short circuit dump</text>
+          <rect x="10" y="235" width="195" height="28" rx="4" fill="#1a0000" stroke="#ef4444" stroke-width="1.5"/><text x="107" y="253" text-anchor="middle" fill="#f87171" font-size="10">No self-regulation</text>
+          <rect x="495" y="20" width="195" height="28" rx="4" fill="#001a00" stroke="#22c55e" stroke-width="1.5"/><text x="592" y="38" text-anchor="middle" fill="#4ade80" font-size="10">OVP / UVP per cell</text>
+          <rect x="495" y="63" width="195" height="28" rx="4" fill="#001a00" stroke="#22c55e" stroke-width="1.5"/><text x="592" y="81" text-anchor="middle" fill="#4ade80" font-size="10">OTP + dT/dt firmware</text>
+          <rect x="495" y="106" width="195" height="28" rx="4" fill="#001a00" stroke="#22c55e" stroke-width="1.5"/><text x="592" y="124" text-anchor="middle" fill="#4ade80" font-size="10">Active / passive balancing</text>
+          <rect x="495" y="149" width="195" height="28" rx="4" fill="#001a00" stroke="#22c55e" stroke-width="1.5"/><text x="592" y="167" text-anchor="middle" fill="#4ade80" font-size="10">EKF SoC + CC integration</text>
+          <rect x="495" y="192" width="195" height="28" rx="4" fill="#001a00" stroke="#22c55e" stroke-width="1.5"/><text x="592" y="210" text-anchor="middle" fill="#4ade80" font-size="10">SCD hardware &lt;500μs</text>
+          <rect x="495" y="235" width="195" height="28" rx="4" fill="#001a00" stroke="#22c55e" stroke-width="1.5"/><text x="592" y="253" text-anchor="middle" fill="#4ade80" font-size="10">Redundant protection layers</text>
+          <line x1="205" y1="34" x2="495" y2="34" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="290" stroke-dashoffset="290" marker-end="url(#arr-w)"><animate attributeName="stroke-dashoffset" values="290;0" dur="0.5s" begin="0.4s" fill="freeze"/></line>
+          <line x1="205" y1="77" x2="495" y2="77" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="290" stroke-dashoffset="290" marker-end="url(#arr-w)"><animate attributeName="stroke-dashoffset" values="290;0" dur="0.5s" begin="0.8s" fill="freeze"/></line>
+          <line x1="205" y1="120" x2="495" y2="120" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="290" stroke-dashoffset="290" marker-end="url(#arr-w)"><animate attributeName="stroke-dashoffset" values="290;0" dur="0.5s" begin="1.2s" fill="freeze"/></line>
+          <line x1="205" y1="163" x2="495" y2="163" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="290" stroke-dashoffset="290" marker-end="url(#arr-w)"><animate attributeName="stroke-dashoffset" values="290;0" dur="0.5s" begin="1.6s" fill="freeze"/></line>
+          <line x1="205" y1="206" x2="495" y2="206" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="290" stroke-dashoffset="290" marker-end="url(#arr-w)"><animate attributeName="stroke-dashoffset" values="290;0" dur="0.5s" begin="2.0s" fill="freeze"/></line>
+          <line x1="205" y1="249" x2="495" y2="249" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="290" stroke-dashoffset="290" marker-end="url(#arr-w)"><animate attributeName="stroke-dashoffset" values="290;0" dur="0.5s" begin="2.4s" fill="freeze"/></line>
+        </svg>
+      </div>
+    </section>
+
     <!-- ============================================================
          CHAPTER SUMMARY
     ============================================================ -->
