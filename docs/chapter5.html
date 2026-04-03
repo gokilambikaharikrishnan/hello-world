@@ -1651,6 +1651,62 @@
       </table>
       </div>
 
+      <!-- ══════ CH5 ANIMATIONS ══════ -->
+      <div style="margin:2rem 0;padding:2rem;background:#060610;border:3px solid #10b981;border-radius:8px" id="ch5-animations">
+        <div style="color:#10b981;font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.3rem">Interactive</div>
+        <h2 style="color:#10b981;font-size:1.6rem;font-weight:800;margin-bottom:1.5rem">Chapter 5 — Compliance Animation</h2>
+
+        <!-- Animated Compliance Checklist -->
+        <div style="margin:1.5rem 0;padding:1.5rem;background:#0a0a18;border:2px solid #1e293b;border-radius:8px">
+          <h3 style="color:#10b981;margin-bottom:.5rem;font-size:1.1rem">✅ BMS Compliance Checklist — Animating Tick by Tick</h3>
+          <button onclick="runChecklist()" style="padding:.5rem 1.2rem;background:#001a0a;border:2px solid #10b981;color:#10b981;cursor:pointer;font-weight:700;font-family:inherit;border-radius:4px;margin-bottom:1rem">▶ RUN COMPLIANCE CHECK</button>
+          <div id="checklist-items">
+            <div class="chk-item" style="display:flex;align-items:center;gap:.8rem;padding:.5rem 0;border-bottom:1px solid #1e293b;opacity:.4;transition:opacity .3s" data-std="IEC 62619"><span class="chk-box" style="width:20px;height:20px;border:2px solid #475569;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;background:#1e293b;flex-shrink:0"></span><span style="flex:1;color:#94a3b8;font-size:.9rem">OVP per cell — voltage monitoring &lt;1ms</span><span style="font-size:.75rem;color:#475569">IEC 62619</span></div>
+            <div class="chk-item" style="display:flex;align-items:center;gap:.8rem;padding:.5rem 0;border-bottom:1px solid #1e293b;opacity:.4;transition:opacity .3s" data-std="IEC 62619"><span class="chk-box" style="width:20px;height:20px;border:2px solid #475569;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;background:#1e293b;flex-shrink:0"></span><span style="flex:1;color:#94a3b8;font-size:.9rem">UVP per cell — deep discharge protection</span><span style="font-size:.75rem;color:#475569">IEC 62619</span></div>
+            <div class="chk-item" style="display:flex;align-items:center;gap:.8rem;padding:.5rem 0;border-bottom:1px solid #1e293b;opacity:.4;transition:opacity .3s" data-std="UL 1973"><span class="chk-box" style="width:20px;height:20px;border:2px solid #475569;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;background:#1e293b;flex-shrink:0"></span><span style="flex:1;color:#94a3b8;font-size:.9rem">OCP — overcurrent detection &lt;10ms</span><span style="font-size:.75rem;color:#475569">UL 1973</span></div>
+            <div class="chk-item" style="display:flex;align-items:center;gap:.8rem;padding:.5rem 0;border-bottom:1px solid #1e293b;opacity:.4;transition:opacity .3s" data-std="UL 1973"><span class="chk-box" style="width:20px;height:20px;border:2px solid #475569;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;background:#1e293b;flex-shrink:0"></span><span style="flex:1;color:#94a3b8;font-size:.9rem">SCD — hardware short circuit &lt;500μs</span><span style="font-size:.75rem;color:#475569">UL 1973</span></div>
+            <div class="chk-item" style="display:flex;align-items:center;gap:.8rem;padding:.5rem 0;border-bottom:1px solid #1e293b;opacity:.4;transition:opacity .3s" data-std="IEC 62619"><span class="chk-box" style="width:20px;height:20px;border:2px solid #475569;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;background:#1e293b;flex-shrink:0"></span><span style="flex:1;color:#94a3b8;font-size:.9rem">OTP / UTP — temperature monitoring</span><span style="font-size:.75rem;color:#475569">IEC 62619</span></div>
+            <div class="chk-item" style="display:flex;align-items:center;gap:.8rem;padding:.5rem 0;border-bottom:1px solid #1e293b;opacity:.4;transition:opacity .3s" data-std="UL 1973"><span class="chk-box" style="width:20px;height:20px;border:2px solid #475569;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;background:#1e293b;flex-shrink:0"></span><span style="flex:1;color:#94a3b8;font-size:.9rem">Cell balancing — passive or active</span><span style="font-size:.75rem;color:#475569">UL 1973</span></div>
+            <div class="chk-item" style="display:flex;align-items:center;gap:.8rem;padding:.5rem 0;border-bottom:1px solid #1e293b;opacity:.4;transition:opacity .3s" data-std="UL 1973"><span class="chk-box" style="width:20px;height:20px;border:2px solid #475569;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;background:#1e293b;flex-shrink:0"></span><span style="flex:1;color:#94a3b8;font-size:.9rem">SoC estimation — ±5% accuracy minimum</span><span style="font-size:.75rem;color:#475569">UL 1973</span></div>
+            <div class="chk-item" style="display:flex;align-items:center;gap:.8rem;padding:.5rem 0;border-bottom:1px solid #1e293b;opacity:.4;transition:opacity .3s" data-std="IEC 62619"><span class="chk-box" style="width:20px;height:20px;border:2px solid #475569;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;background:#1e293b;flex-shrink:0"></span><span style="flex:1;color:#94a3b8;font-size:.9rem">SoH monitoring — capacity fade tracking</span><span style="font-size:.75rem;color:#475569">IEC 62619</span></div>
+            <div class="chk-item" style="display:flex;align-items:center;gap:.8rem;padding:.5rem 0;border-bottom:1px solid #1e293b;opacity:.4;transition:opacity .3s" data-std="NFPA 855"><span class="chk-box" style="width:20px;height:20px;border:2px solid #475569;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;background:#1e293b;flex-shrink:0"></span><span style="flex:1;color:#94a3b8;font-size:.9rem">Fire alarm integration — CAN fault signal</span><span style="font-size:.75rem;color:#475569">NFPA 855</span></div>
+            <div class="chk-item" style="display:flex;align-items:center;gap:.8rem;padding:.5rem 0;border-bottom:1px solid #1e293b;opacity:.4;transition:opacity .3s" data-std="UN 38.3"><span class="chk-box" style="width:20px;height:20px;border:2px solid #475569;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;background:#1e293b;flex-shrink:0"></span><span style="flex:1;color:#94a3b8;font-size:.9rem">Event logging — fault history NVM</span><span style="font-size:.75rem;color:#475569">UN 38.3</span></div>
+            <div class="chk-item" style="display:flex;align-items:center;gap:.8rem;padding:.5rem 0;border-bottom:1px solid #1e293b;opacity:.4;transition:opacity .3s" data-std="IEC 62619"><span class="chk-box" style="width:20px;height:20px;border:2px solid #475569;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;background:#1e293b;flex-shrink:0"></span><span style="flex:1;color:#94a3b8;font-size:.9rem">Communication — CAN / SMBus / Modbus</span><span style="font-size:.75rem;color:#475569">IEC 62619</span></div>
+            <div class="chk-item" style="display:flex;align-items:center;gap:.8rem;padding:.5rem 0;opacity:.4;transition:opacity .3s" data-std="UL 9540A"><span class="chk-box" style="width:20px;height:20px;border:2px solid #475569;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;background:#1e293b;flex-shrink:0"></span><span style="flex:1;color:#94a3b8;font-size:.9rem">Thermal runaway propagation — UL 9540A</span><span style="font-size:.75rem;color:#475569">UL 9540A</span></div>
+          </div>
+          <div id="checklist-result" style="margin-top:1rem;padding:.8rem 1rem;background:#001a0a;border:2px solid #10b981;border-radius:4px;display:none;text-align:center">
+            <span style="color:#10b981;font-weight:700;font-size:1rem">✓ ALL 12 REQUIREMENTS MET — Compliant with IEC 62619, UL 1973, NFPA 855, UN 38.3</span>
+          </div>
+        </div>
+      </div>
+      <script>
+      window.runChecklist = function() {
+        const items = document.querySelectorAll('.chk-item');
+        document.getElementById('checklist-result').style.display = 'none';
+        items.forEach(item => {
+          item.style.opacity = '.4';
+          const box = item.querySelector('.chk-box');
+          if (box) { box.style.background = '#1e293b'; box.style.borderColor = '#475569'; box.textContent = ''; }
+        });
+        items.forEach((item, i) => {
+          setTimeout(() => {
+            item.style.opacity = '1';
+            const box = item.querySelector('.chk-box');
+            if (box) {
+              box.style.background = '#10b981';
+              box.style.borderColor = '#10b981';
+              box.textContent = '✓';
+              box.style.color = '#fff';
+            }
+            item.style.background = 'rgba(16,185,129,0.05)';
+            if (i === items.length - 1) {
+              setTimeout(() => document.getElementById('checklist-result').style.display = 'block', 400);
+            }
+          }, i * 300);
+        });
+      };
+      </script>
+
       <!-- Chapter navigation footer -->
       <div style="display:flex;justify-content:space-between;align-items:center;padding:1.5rem 0;border-top:1px solid #1e3a5f;margin-top:2rem;">
         <a href="chapter4.html" style="color:#2dd4bf;text-decoration:none;font-family:monospace;font-size:13px;">← Chapter 4: Electrical Protection</a>
