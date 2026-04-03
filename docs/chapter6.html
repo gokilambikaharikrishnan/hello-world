@@ -1562,3 +1562,201 @@
       </div>
     </div>
   </section>
+
+  <!-- ─── NVM + BACKUP SRAM ─── -->
+  <section id="s6-2-nvm" class="chapter-section" style="border-bottom:none;padding-top:1.5rem;">
+    <div class="section-inner">
+      <h3 class="subsection-title" style="font-size:1.4rem;margin-top:0;">NVM &amp; Backup SRAM</h3>
+      <p style="color:var(--text-muted);font-size:0.95rem;line-height:1.75;max-width:820px;margin-bottom:1.5rem;">
+        When a BMS loses power, it must remember its state — SoC, SoH, cycle count, fault history, calibration.
+        Without this, every power cycle causes SoC to revert to an OCV-based estimate (which is inaccurate on
+        the LFP flat plateau) and cycle count resets to zero. Non-volatile storage and battery-backed SRAM
+        solve this, but each has tradeoffs around write speed, endurance, and data integrity.
+      </p>
+
+      <!-- NVM animated write cycle SVG -->
+      <svg viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:800px;display:block;margin:1.5rem auto;border-radius:12px;background:#0d1117;">
+        <defs>
+          <marker id="nvm-arrow" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L7,3 z" fill="#f97316"/>
+          </marker>
+          <marker id="sram-arrow" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L7,3 z" fill="#a78bfa"/>
+          </marker>
+        </defs>
+
+        <text x="400" y="24" text-anchor="middle" fill="#e2e8f0" font-family="monospace" font-size="13" font-weight="bold">Persistent State — NVM Write Strategy</text>
+
+        <!-- Timeline axis -->
+        <line x1="30" y1="80" x2="770" y2="80" stroke="#334155" stroke-width="1"/>
+        <text x="30" y="72" fill="#64748b" font-family="monospace" font-size="9">t=0</text>
+        <text x="400" y="72" fill="#64748b" font-family="monospace" font-size="9">Normal Operation</text>
+        <text x="700" y="72" fill="#ef4444" font-family="monospace" font-size="9">Power Loss!</text>
+
+        <!-- Backup SRAM writes (frequent, purple) -->
+        <text x="30" y="112" fill="#a78bfa" font-family="monospace" font-size="10">Backup SRAM (every 1s)</text>
+        <line x1="30" y1="120" x2="690" y2="120" stroke="#1e293b" stroke-width="1"/>
+        <!-- Small SRAM write pulses -->
+        <rect x="40" y="112" width="8" height="16" rx="2" fill="#a78bfa" opacity="0.8"/>
+        <rect x="90" y="112" width="8" height="16" rx="2" fill="#a78bfa" opacity="0.8"/>
+        <rect x="140" y="112" width="8" height="16" rx="2" fill="#a78bfa" opacity="0.8"/>
+        <rect x="190" y="112" width="8" height="16" rx="2" fill="#a78bfa" opacity="0.8"/>
+        <rect x="240" y="112" width="8" height="16" rx="2" fill="#a78bfa" opacity="0.8"/>
+        <rect x="290" y="112" width="8" height="16" rx="2" fill="#a78bfa" opacity="0.8"/>
+        <rect x="340" y="112" width="8" height="16" rx="2" fill="#a78bfa" opacity="0.8"/>
+        <rect x="390" y="112" width="8" height="16" rx="2" fill="#a78bfa" opacity="0.8"/>
+        <rect x="440" y="112" width="8" height="16" rx="2" fill="#a78bfa" opacity="0.8"/>
+        <rect x="490" y="112" width="8" height="16" rx="2" fill="#a78bfa" opacity="0.8"/>
+        <rect x="540" y="112" width="8" height="16" rx="2" fill="#a78bfa" opacity="0.8"/>
+        <rect x="590" y="112" width="8" height="16" rx="2" fill="#a78bfa" opacity="0.8"/>
+        <rect x="640" y="112" width="8" height="16" rx="2" fill="#a78bfa" opacity="0.8"/>
+        <text x="660" y="121" fill="#64748b" font-family="monospace" font-size="9">Fast (~2μs)</text>
+        <!-- Animated SRAM write pulse -->
+        <rect x="40" y="110" width="10" height="20" rx="2" fill="#c4b5fd" opacity="0">
+          <animateTransform attributeName="transform" type="translate" values="0,0;600,0;600,0;0,0" dur="3s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0;0.9;0.9;0" dur="3s" repeatCount="indefinite"/>
+        </rect>
+
+        <!-- NVM writes (slow, infrequent, orange) -->
+        <text x="30" y="168" fill="#f97316" font-family="monospace" font-size="10">NVM Flash (every 60s SOC, 1hr SOH)</text>
+        <line x1="30" y1="176" x2="690" y2="176" stroke="#1e293b" stroke-width="1"/>
+        <rect x="160" y="166" width="16" height="20" rx="2" fill="#f97316" opacity="0.9"/>
+        <text x="168" y="203" text-anchor="middle" fill="#f97316" font-family="monospace" font-size="8">SoC</text>
+        <rect x="350" y="166" width="16" height="20" rx="2" fill="#f97316" opacity="0.9"/>
+        <text x="358" y="203" text-anchor="middle" fill="#f97316" font-family="monospace" font-size="8">SoC</text>
+        <rect x="540" y="166" width="16" height="20" rx="2" fill="#f97316" opacity="0.9"/>
+        <text x="548" y="203" text-anchor="middle" fill="#f97316" font-family="monospace" font-size="8">SoC</text>
+        <text x="660" y="178" fill="#64748b" font-family="monospace" font-size="9">Slow (~5ms)</text>
+
+        <!-- Power loss marker -->
+        <line x1="700" y1="60" x2="700" y2="270" stroke="#ef4444" stroke-width="2" stroke-dasharray="6,3"/>
+        <text x="706" y="90" fill="#ef4444" font-family="monospace" font-size="10">Power</text>
+        <text x="706" y="103" fill="#ef4444" font-family="monospace" font-size="10">Loss</text>
+
+        <!-- What survives annotations -->
+        <rect x="30" y="220" width="300" height="60" rx="7" fill="rgba(167,139,250,0.1)" stroke="#a78bfa" stroke-width="1"/>
+        <text x="180" y="243" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="11" font-weight="bold">Backup SRAM Survives</text>
+        <text x="180" y="260" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">SoC accurate to last 1s write</text>
+        <text x="180" y="274" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Battery-backed by coin cell / VDD_BKUP</text>
+
+        <rect x="350" y="220" width="300" height="60" rx="7" fill="rgba(249,115,22,0.1)" stroke="#f97316" stroke-width="1"/>
+        <text x="500" y="243" text-anchor="middle" fill="#f97316" font-family="monospace" font-size="11" font-weight="bold">NVM Survives</text>
+        <text x="500" y="260" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">SoH, cycle count, fault history</text>
+        <text x="500" y="274" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">SoC accurate to last 60s checkpoint</td>
+
+        <!-- Worst case SoC error annotation -->
+        <line x1="540" y1="176" x2="700" y2="176" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3,2"/>
+        <text x="620" y="165" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="9">Max SoC drift</text>
+        <text x="620" y="177" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="9">at power loss:</text>
+        <text x="620" y="189" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="9">~60s × I_max × ΔSoC</text>
+      </svg>
+
+      <!-- NVM design considerations -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1rem;margin:1.5rem 0;">
+        <div class="arch-block">
+          <div class="arch-block-title">NVM Wear Leveling</div>
+          <div class="arch-block-body">
+            EEPROM endurance: 100,000–1,000,000 write cycles. If SoC is written every 60s for 10 years:
+            10yr × 365d × 24h × 60 = 5,256,000 writes. This would destroy a single EEPROM address in
+            ~5 years. Wear leveling rotates writes across a sector of N pages. With 16 pages and 1M endurance,
+            the effective life extends to 16M writes — over 30 years. Implement by maintaining a write pointer
+            that advances to the next page on each write, wrapping at N. A valid-byte header identifies the
+            current page on startup.
+          </div>
+        </div>
+        <div class="arch-block">
+          <div class="arch-block-title">CRC Protection of NVM Data</div>
+          <div class="arch-block-body">
+            A power loss during an NVM write leaves a partially written page — the data may appear valid
+            but contain bit errors. Every NVM record must include a CRC-16 or CRC-32 checksum over the
+            data payload. On startup, the MCU reads each NVM record and validates the CRC. If the CRC
+            fails, the record is marked invalid and the previous valid record is used. Never boot from
+            corrupted NVM data — this has caused field failures where a BMS reported 0% SoC and refused
+            to discharge from a fully charged pack.
+          </div>
+        </div>
+        <div class="arch-block">
+          <div class="arch-block-title">EEPROM vs Internal Flash</div>
+          <div class="arch-block-body">
+            External EEPROM (I²C AT24C256, 32KB): simple byte-level writes, 100K cycles per byte,
+            no erase-before-write required. Best for SoC/SoH records. Internal Flash (STM32 dual-bank):
+            must erase full page (2KB) before writing, 10K cycles per page, fast read. Best for large
+            OCV tables and firmware. The professional solution uses both: EEPROM for high-write-frequency
+            data (SoC checkpoints, fault log), internal Flash for low-write configuration (calibration,
+            OCV tables, firmware parameters).
+          </div>
+        </div>
+        <div class="arch-block">
+          <div class="arch-block-title">Backup SRAM Architecture</div>
+          <div class="arch-block-body">
+            STM32 backup SRAM (BKP_SRAM) is a 4KB SRAM powered from VBAT when main VDD is absent.
+            A CR2032 coin cell (220mAh) can power 4KB SRAM + RTC for 10+ years at 1–2μA standby.
+            On power loss, the MCU writes the current SoC, SoF, and critical fault flags to BKP_SRAM.
+            On startup, the MCU reads BKP_SRAM and validates integrity (magic number + checksum).
+            If valid, SoC is restored immediately — no OCV wait. This gives sub-millisecond SoC
+            recovery after power interruptions — critical for UPS applications where 10ms switchover
+            is expected.
+          </div>
+        </div>
+      </div>
+
+      <!-- NVM code example -->
+      <h3 class="subsection-title">NVM Write Pattern with CRC and Wear Leveling</h3>
+      <div class="code-block">
+<span class="code-keyword">#define</span> NVM_SECTOR_PAGES   <span class="code-num">16</span>
+<span class="code-keyword">#define</span> NVM_PAGE_SIZE      <span class="code-num">64</span>    <span class="code-comment">/* bytes per page */</span>
+<span class="code-keyword">#define</span> NVM_MAGIC          <span class="code-num">0xBDA5</span>
+
+<span class="code-keyword">typedef struct</span> {
+    <span class="code-type">uint16_t</span> magic;          <span class="code-comment">/* 0xBDA5 = valid */</span>
+    <span class="code-type">uint16_t</span> soc_x100;       <span class="code-comment">/* SoC * 100 (0–10000) */</span>
+    <span class="code-type">uint16_t</span> soh_x100;       <span class="code-comment">/* SoH * 100 (0–10000) */</span>
+    <span class="code-type">uint32_t</span> cycle_count;    <span class="code-comment">/* full cycles */</span>
+    <span class="code-type">uint32_t</span> timestamp;      <span class="code-comment">/* Unix seconds from RTC */</span>
+    <span class="code-type">uint16_t</span> crc16;          <span class="code-comment">/* CRC-16 of above fields */</span>
+} NVM_Record_t;
+
+<span class="code-keyword">static</span> <span class="code-type">uint8_t</span> nvm_write_ptr = <span class="code-num">0</span>;    <span class="code-comment">/* current write page */</span>
+
+<span class="code-type">void</span> <span class="code-fn">NVM_SaveState</span>(<span class="code-type">BMS_State_t</span> *bms) {
+    NVM_Record_t rec;
+    rec.magic       = NVM_MAGIC;
+    rec.soc_x100    = (<span class="code-type">uint16_t</span>)(bms->soc * <span class="code-num">100.0f</span>);
+    rec.soh_x100    = (<span class="code-type">uint16_t</span>)(bms->soh * <span class="code-num">100.0f</span>);
+    rec.cycle_count = bms->cycle_count;
+    rec.timestamp   = RTC_GetUnixTimestamp();
+    rec.crc16       = CRC16_Compute((<span class="code-type">uint8_t</span>*)&rec, <span class="code-keyword">offsetof</span>(NVM_Record_t, crc16));
+
+    <span class="code-comment">/* Write to current wear-level page */</span>
+    EEPROM_Write(nvm_write_ptr * NVM_PAGE_SIZE, (<span class="code-type">uint8_t</span>*)&rec, <span class="code-keyword">sizeof</span>(rec));
+
+    <span class="code-comment">/* Advance pointer (ring buffer) */</span>
+    nvm_write_ptr = (nvm_write_ptr + <span class="code-num">1</span>) % NVM_SECTOR_PAGES;
+}
+
+<span class="code-type">bool</span> <span class="code-fn">NVM_LoadState</span>(<span class="code-type">BMS_State_t</span> *bms) {
+    <span class="code-comment">/* Scan all pages, find newest valid record */</span>
+    <span class="code-type">uint32_t</span> newest_ts = <span class="code-num">0</span>;
+    <span class="code-type">int8_t</span>   best_page = -<span class="code-num">1</span>;
+    NVM_Record_t rec;
+
+    <span class="code-keyword">for</span> (<span class="code-type">uint8_t</span> i = <span class="code-num">0</span>; i &lt; NVM_SECTOR_PAGES; i++) {
+        EEPROM_Read(i * NVM_PAGE_SIZE, (<span class="code-type">uint8_t</span>*)&rec, <span class="code-keyword">sizeof</span>(rec));
+        <span class="code-type">uint16_t</span> expected = CRC16_Compute((<span class="code-type">uint8_t</span>*)&rec, <span class="code-keyword">offsetof</span>(NVM_Record_t, crc16));
+        <span class="code-keyword">if</span> (rec.magic == NVM_MAGIC && rec.crc16 == expected && rec.timestamp > newest_ts) {
+            newest_ts = rec.timestamp;
+            best_page = i;
+        }
+    }
+    <span class="code-keyword">if</span> (best_page &lt; <span class="code-num">0</span>) <span class="code-keyword">return false</span>; <span class="code-comment">/* No valid record */</span>
+
+    EEPROM_Read(best_page * NVM_PAGE_SIZE, (<span class="code-type">uint8_t</span>*)&rec, <span class="code-keyword">sizeof</span>(rec));
+    bms->soc         = rec.soc_x100 / <span class="code-num">100.0f</span>;
+    bms->soh         = rec.soh_x100 / <span class="code-num">100.0f</span>;
+    bms->cycle_count = rec.cycle_count;
+    nvm_write_ptr    = (best_page + <span class="code-num">1</span>) % NVM_SECTOR_PAGES;
+    <span class="code-keyword">return true</span>;
+}
+      </div>
+    </div>
+  </section>
