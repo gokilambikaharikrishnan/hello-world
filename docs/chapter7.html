@@ -838,3 +838,257 @@
       </div>
     </div>
   </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ SECTION 7.3 -->
+  <section id="s7-3" class="section">
+    <div class="container">
+      <div class="section-label">Section 7.3</div>
+      <h2 class="section-title">Why LFP Fits Perfectly</h2>
+      <p class="section-subtitle">Point-by-point: LFP material properties mapped to UPS and Home ESS engineering requirements — why this chemistry is uniquely suited.</p>
+
+      <!-- Match grid intro -->
+      <div class="callout callout-info">
+        <div class="callout-icon">⚡</div>
+        <div class="callout-body">
+          <div class="callout-title">Chemistry as System Design</div>
+          <p>The best BMS firmware cannot overcome a poorly chosen cell chemistry. LFP's properties were not accidental — they emerged from Goodenough's olivine crystal research (1997) and happen to align almost perfectly with stationary energy storage requirements. Each property below solves a real installation engineering problem.</p>
+        </div>
+      </div>
+
+      <!-- Animated match diagram SVG -->
+      <div class="svg-container" style="background:var(--surface-2);border-radius:12px;padding:1.5rem;margin:2rem 0;">
+        <svg viewBox="0 0 800 520" style="width:100%;height:auto;font-family:inherit;">
+          <defs>
+            <linearGradient id="lfpGrad73" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#fbbf24"/>
+              <stop offset="100%" stop-color="#f59e0b"/>
+            </linearGradient>
+            <linearGradient id="reqGrad73" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#10b981"/>
+              <stop offset="100%" stop-color="#059669"/>
+            </linearGradient>
+            <marker id="arrow73" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#fbbf24" opacity="0.8"/>
+            </marker>
+          </defs>
+          <!-- Title -->
+          <text x="400" y="28" text-anchor="middle" fill="#f8fafc" font-size="15" font-weight="700">LFP Property → ESS/UPS Requirement Match</text>
+          <!-- Column headers -->
+          <rect x="20" y="40" width="220" height="30" rx="6" fill="url(#lfpGrad73)" opacity="0.9"/>
+          <text x="130" y="60" text-anchor="middle" fill="#111" font-size="13" font-weight="700">LFP Material Property</text>
+          <rect x="560" y="40" width="220" height="30" rx="6" fill="url(#reqGrad73)" opacity="0.9"/>
+          <text x="670" y="60" text-anchor="middle" fill="#111" font-size="13" font-weight="700">ESS / UPS Requirement</text>
+
+          <!-- Row data: [y, LFP prop, req, tick] -->
+          <!-- Row 1: Thermal stability -->
+          <rect x="20" y="88" width="220" height="40" rx="6" fill="#1e293b" stroke="#fbbf24" stroke-width="1"/>
+          <text x="130" y="104" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="600">Olivine P–O Bond 544 kJ/mol</text>
+          <text x="130" y="120" text-anchor="middle" fill="#94a3b8" font-size="10">Thermal runaway threshold >270°C</text>
+          <line x1="240" y1="108" x2="320" y2="108" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow73)"/>
+          <rect x="320" y="92" width="120" height="30" rx="14" fill="#fbbf24" opacity="0.15"/>
+          <text x="380" y="111" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="700">Indoor Install ✅</text>
+          <line x1="440" y1="108" x2="560" y2="108" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow73)"/>
+          <rect x="560" y="88" width="220" height="40" rx="6" fill="#1e293b" stroke="#10b981" stroke-width="1"/>
+          <text x="670" y="104" text-anchor="middle" fill="#10b981" font-size="11" font-weight="600">NFPA 855 Reduced Clearances</text>
+          <text x="670" y="120" text-anchor="middle" fill="#94a3b8" font-size="10">No fire suppression required indoors</text>
+          <!-- animate arrows row 1 -->
+          <line x1="240" y1="108" x2="240" y2="108" stroke="#fbbf24" stroke-width="1.5"><animate attributeName="x2" values="240;320;320" dur="2s" begin="0s" fill="freeze"/></line>
+
+          <!-- Row 2: Cycle life -->
+          <rect x="20" y="148" width="220" height="40" rx="6" fill="#1e293b" stroke="#fbbf24" stroke-width="1"/>
+          <text x="130" y="164" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="600">Minimal Volume Change 6.8%</text>
+          <text x="130" y="180" text-anchor="middle" fill="#94a3b8" font-size="10">SEI growth rate extremely low</text>
+          <line x1="240" y1="168" x2="440" y2="168" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <rect x="320" y="152" width="120" height="30" rx="14" fill="#fbbf24" opacity="0.15"/>
+          <text x="380" y="171" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="700">3,000–5,000 cycles ✅</text>
+          <line x1="440" y1="168" x2="560" y2="168" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow73)"/>
+          <rect x="560" y="148" width="220" height="40" rx="6" fill="#1e293b" stroke="#10b981" stroke-width="1"/>
+          <text x="670" y="164" text-anchor="middle" fill="#10b981" font-size="11" font-weight="600">Daily Cycling 15 Years</text>
+          <text x="670" y="180" text-anchor="middle" fill="#94a3b8" font-size="10">5,475 cycles @ 1 cycle/day</text>
+
+          <!-- Row 3: Cobalt-free -->
+          <rect x="20" y="208" width="220" height="40" rx="6" fill="#1e293b" stroke="#fbbf24" stroke-width="1"/>
+          <text x="130" y="224" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="600">Fe + P abundant materials</text>
+          <text x="130" y="240" text-anchor="middle" fill="#94a3b8" font-size="10">No cobalt supply chain exposure</text>
+          <line x1="240" y1="228" x2="440" y2="228" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <rect x="320" y="212" width="120" height="30" rx="14" fill="#fbbf24" opacity="0.15"/>
+          <text x="380" y="231" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="700">Cost Stability ✅</text>
+          <line x1="440" y1="228" x2="560" y2="228" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow73)"/>
+          <rect x="560" y="208" width="220" height="40" rx="6" fill="#1e293b" stroke="#10b981" stroke-width="1"/>
+          <text x="670" y="224" text-anchor="middle" fill="#10b981" font-size="11" font-weight="600">Predictable $/kWh Pricing</text>
+          <text x="670" y="240" text-anchor="middle" fill="#94a3b8" font-size="10">10-yr TCO planning reliability</text>
+
+          <!-- Row 4: Flat OCV -->
+          <rect x="20" y="268" width="220" height="40" rx="6" fill="#1e293b" stroke="#fbbf24" stroke-width="1"/>
+          <text x="130" y="284" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="600">Two-phase Li intercalation</text>
+          <text x="130" y="300" text-anchor="middle" fill="#94a3b8" font-size="10">Flat OCV plateau 3.2–3.35V</text>
+          <line x1="240" y1="288" x2="440" y2="288" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <rect x="320" y="272" width="120" height="30" rx="14" fill="#fbbf24" opacity="0.15"/>
+          <text x="380" y="291" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="700">Stable Output V ✅</text>
+          <line x1="440" y1="288" x2="560" y2="288" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow73)"/>
+          <rect x="560" y="268" width="220" height="40" rx="6" fill="#1e293b" stroke="#10b981" stroke-width="1"/>
+          <text x="670" y="284" text-anchor="middle" fill="#10b981" font-size="11" font-weight="600">Inverter THD Compliance</text>
+          <text x="670" y="300" text-anchor="middle" fill="#94a3b8" font-size="10">Consistent DC bus voltage</text>
+
+          <!-- Row 5: Wide temp -->
+          <rect x="20" y="328" width="220" height="40" rx="6" fill="#1e293b" stroke="#fbbf24" stroke-width="1"/>
+          <text x="130" y="344" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="600">Discharge to −20°C</text>
+          <text x="130" y="360" text-anchor="middle" fill="#94a3b8" font-size="10">Charge cutoff at 0°C (safe)</text>
+          <line x1="240" y1="348" x2="440" y2="348" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <rect x="320" y="332" width="120" height="30" rx="14" fill="#fbbf24" opacity="0.15"/>
+          <text x="380" y="351" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="700">Outdoor Install ✅</text>
+          <line x1="440" y1="348" x2="560" y2="348" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow73)"/>
+          <rect x="560" y="328" width="220" height="40" rx="6" fill="#1e293b" stroke="#10b981" stroke-width="1"/>
+          <text x="670" y="344" text-anchor="middle" fill="#10b981" font-size="11" font-weight="600">Garage / Outdoor Cabinet</text>
+          <text x="670" y="360" text-anchor="middle" fill="#94a3b8" font-size="10">No climate control required</text>
+
+          <!-- Row 6: Float compatible -->
+          <rect x="20" y="388" width="220" height="40" rx="6" fill="#1e293b" stroke="#fbbf24" stroke-width="1"/>
+          <text x="130" y="404" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="600">Low self-discharge &lt;3%/mo</text>
+          <text x="130" y="420" text-anchor="middle" fill="#94a3b8" font-size="10">Stable at float 3.38–3.40V/cell</text>
+          <line x1="240" y1="408" x2="440" y2="408" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <rect x="320" y="392" width="120" height="30" rx="14" fill="#fbbf24" opacity="0.15"/>
+          <text x="380" y="411" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="700">UPS Float Mode ✅</text>
+          <line x1="440" y1="408" x2="560" y2="408" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow73)"/>
+          <rect x="560" y="388" width="220" height="40" rx="6" fill="#1e293b" stroke="#10b981" stroke-width="1"/>
+          <text x="670" y="404" text-anchor="middle" fill="#10b981" font-size="11" font-weight="600">10-Year Standby Life</text>
+          <text x="670" y="420" text-anchor="middle" fill="#94a3b8" font-size="10">No periodic topping charge damage</text>
+
+          <!-- Row 7: No cobalt ethics -->
+          <rect x="20" y="448" width="220" height="40" rx="6" fill="#1e293b" stroke="#fbbf24" stroke-width="1"/>
+          <text x="130" y="464" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="600">RoHS / conflict-mineral clean</text>
+          <text x="130" y="480" text-anchor="middle" fill="#94a3b8" font-size="10">No cobalt, no nickel issues</text>
+          <line x1="240" y1="468" x2="440" y2="468" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <rect x="320" y="452" width="120" height="30" rx="14" fill="#fbbf24" opacity="0.15"/>
+          <text x="380" y="471" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="700">Regulatory Clean ✅</text>
+          <line x1="440" y1="468" x2="560" y2="468" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow73)"/>
+          <rect x="560" y="448" width="220" height="40" rx="6" fill="#1e293b" stroke="#10b981" stroke-width="1"/>
+          <text x="670" y="464" text-anchor="middle" fill="#10b981" font-size="11" font-weight="600">EU Battery Regulation 2023</text>
+          <text x="670" y="480" text-anchor="middle" fill="#94a3b8" font-size="10">Supply chain due diligence compliant</text>
+
+          <!-- Pulse animation on center column -->
+          <rect x="316" y="88" width="128" height="424" rx="14" fill="none" stroke="#fbbf24" stroke-width="1" opacity="0.3">
+            <animate attributeName="opacity" values="0.1;0.5;0.1" dur="3s" repeatCount="indefinite"/>
+          </rect>
+        </svg>
+      </div>
+
+      <!-- Deep dives per property -->
+      <h3 style="color:var(--app-gold);margin:2rem 0 1rem;">Property Deep Dives</h3>
+
+      <div class="callout callout-physics">
+        <div class="callout-icon">🔬</div>
+        <div class="callout-body">
+          <div class="callout-title">Property 1: Thermal Stability — The P–O Bond Argument</div>
+          <p>LFP's olivine structure (LiFePO₄) has phosphate groups where the P–O bond requires 544 kJ/mol to break. By comparison, the Co–O bond in LiCoO₂ requires only ~150 kJ/mol. This means the oxygen release that initiates thermal runaway in NMC/NCA cells does not occur in LFP until temperatures exceed 270°C — versus ~150°C for NMC. The practical consequence: an LFP cell that reaches 100°C during a fault will self-cool. An NMC cell at 100°C is already on the runaway cascade. For indoor installations — garages, basement utility rooms, data center UPS rooms — this is not a preference but a code requirement. NFPA 855 and UL 9540A both impose significantly stricter installation requirements on chemistries with lower thermal runaway onset temperatures.</p>
+        </div>
+      </div>
+
+      <div class="callout callout-physics">
+        <div class="callout-icon">🔄</div>
+        <div class="callout-body">
+          <div class="callout-title">Property 2: Cycle Life — Volume Change Physics</div>
+          <p>During Li-ion intercalation, the host crystal lattice expands and contracts as lithium ions enter and leave. LFP exhibits only ~6.8% volume change per cycle (a and b lattice parameters shift, c is nearly fixed). NMC811 exhibits ~5–7% but with anisotropic strain that causes microcracking after 500–800 cycles. The practical result: LFP cells from reputable manufacturers regularly demonstrate 3,000–5,000 cycles to 80% capacity at 1C rate, 25°C. At 0.5C (common ESS rate), cycle life extends further. A home ESS completing one full cycle per day reaches 3,000 cycles in 8.2 years — well within the 10–15 year target. UPS batteries completing fewer cycles (standby with occasional mains failures) extend even further.</p>
+        </div>
+      </div>
+
+      <div class="callout callout-physics">
+        <div class="callout-icon">📊</div>
+        <div class="callout-body">
+          <div class="callout-title">Property 3: Flat OCV — Blessing and Engineering Challenge</div>
+          <p>The two-phase Li intercalation mechanism in LFP produces a flat OCV plateau from ~20–80% SoC. This plateau sits at 3.20–3.35V/cell with less than 30mV variation across 60% of the capacity. For inverter design this is excellent: the DC bus voltage barely moves, simplifying the inverter's boost/buck stage design and reducing output THD variation. But for BMS SoC estimation it creates a challenge — you cannot use OCV to determine SoC in the plateau region. Solution: (1) Use coulomb counting during the plateau. (2) Use OCV corrections only at the plateau endpoints (charge transition at ~3.45V, discharge transition at ~3.10V). (3) Apply EKF to catch accumulated drift. This is exactly the hybrid estimation algorithm in Chapter 2 Section 2.6.</p>
+        </div>
+      </div>
+
+      <div class="callout callout-physics">
+        <div class="callout-icon">🌡️</div>
+        <div class="callout-body">
+          <div class="callout-title">Property 4: Temperature Range — Discharge vs Charge Asymmetry</div>
+          <p>LFP can discharge at −20°C (with capacity derating: ~70% at −20°C versus 25°C baseline). However, charging below 0°C causes lithium plating on the anode — metallic lithium dendrites that create short-circuit risk and permanent capacity loss. The BMS must enforce this asymmetry: DSG FET remains enabled to −20°C, CHG FET is blocked below 0°C. For outdoor installations (garden sheds, garages in cold climates), this means the home ESS remains available to supply power during a cold-night power outage, but will not accept solar charge until ambient warms. Some premium systems add a small self-heating circuit (driven by pack energy) to bring cell temperature to 5°C before enabling charging — the BMS controls this as a pre-charge heating state.</p>
+        </div>
+      </div>
+
+      <!-- LFP vs alternatives for ESS comparison table -->
+      <h3 style="color:var(--app-gold);margin:2rem 0 1rem;">LFP vs Alternatives for Stationary Storage</h3>
+      <div style="overflow-x:auto;margin:1.5rem 0;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+          <thead>
+            <tr style="background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#111;">
+              <th style="padding:10px 12px;text-align:left;">Property</th>
+              <th style="padding:10px 12px;text-align:center;">LFP</th>
+              <th style="padding:10px 12px;text-align:center;">NMC 811</th>
+              <th style="padding:10px 12px;text-align:center;">NCA</th>
+              <th style="padding:10px 12px;text-align:center;">Lead-Acid</th>
+              <th style="padding:10px 12px;text-align:center;">ESS Winner</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="background:var(--surface-2);">
+              <td style="padding:9px 12px;color:#f8fafc;">Cycle life (to 80%)</td>
+              <td style="padding:9px 12px;text-align:center;color:#4ade80;font-weight:700;">3,000–5,000</td>
+              <td style="padding:9px 12px;text-align:center;color:#fbbf24;">1,000–2,000</td>
+              <td style="padding:9px 12px;text-align:center;color:#fbbf24;">800–1,500</td>
+              <td style="padding:9px 12px;text-align:center;color:#f87171;">200–500</td>
+              <td style="padding:9px 12px;text-align:center;"><span class="match-badge" style="background:#4ade80;color:#111;">LFP ✅</span></td>
+            </tr>
+            <tr>
+              <td style="padding:9px 12px;color:#f8fafc;">Thermal runaway onset</td>
+              <td style="padding:9px 12px;text-align:center;color:#4ade80;font-weight:700;">&gt;270°C</td>
+              <td style="padding:9px 12px;text-align:center;color:#f87171;">~150°C</td>
+              <td style="padding:9px 12px;text-align:center;color:#f87171;">~130°C</td>
+              <td style="padding:9px 12px;text-align:center;color:#fbbf24;">~110°C (H₂ gas)</td>
+              <td style="padding:9px 12px;text-align:center;"><span class="match-badge" style="background:#4ade80;color:#111;">LFP ✅</span></td>
+            </tr>
+            <tr style="background:var(--surface-2);">
+              <td style="padding:9px 12px;color:#f8fafc;">Energy density (Wh/kg)</td>
+              <td style="padding:9px 12px;text-align:center;color:#fbbf24;">150–200</td>
+              <td style="padding:9px 12px;text-align:center;color:#4ade80;font-weight:700;">250–300</td>
+              <td style="padding:9px 12px;text-align:center;color:#4ade80;">250–280</td>
+              <td style="padding:9px 12px;text-align:center;color:#f87171;">30–50</td>
+              <td style="padding:9px 12px;text-align:center;"><span class="match-badge" style="background:#f59e0b;color:#111;">NMC (EV only)</span></td>
+            </tr>
+            <tr>
+              <td style="padding:9px 12px;color:#f8fafc;">Cost trend ($/kWh)</td>
+              <td style="padding:9px 12px;text-align:center;color:#4ade80;font-weight:700;">Stable ↓ (Fe,P)</td>
+              <td style="padding:9px 12px;text-align:center;color:#f87171;">Volatile (Co,Ni)</td>
+              <td style="padding:9px 12px;text-align:center;color:#f87171;">Volatile (Co,Ni)</td>
+              <td style="padding:9px 12px;text-align:center;color:#fbbf24;">Stable (Pb)</td>
+              <td style="padding:9px 12px;text-align:center;"><span class="match-badge" style="background:#4ade80;color:#111;">LFP ✅</span></td>
+            </tr>
+            <tr style="background:var(--surface-2);">
+              <td style="padding:9px 12px;color:#f8fafc;">Float charging suitability</td>
+              <td style="padding:9px 12px;text-align:center;color:#4ade80;font-weight:700;">Excellent</td>
+              <td style="padding:9px 12px;text-align:center;color:#f87171;">Poor (SEI stress)</td>
+              <td style="padding:9px 12px;text-align:center;color:#f87171;">Poor</td>
+              <td style="padding:9px 12px;text-align:center;color:#4ade80;">Designed for it</td>
+              <td style="padding:9px 12px;text-align:center;"><span class="match-badge" style="background:#4ade80;color:#111;">LFP ✅</span></td>
+            </tr>
+            <tr>
+              <td style="padding:9px 12px;color:#f8fafc;">Indoor installation</td>
+              <td style="padding:9px 12px;text-align:center;color:#4ade80;font-weight:700;">Yes (NFPA 855)</td>
+              <td style="padding:9px 12px;text-align:center;color:#f87171;">Restricted</td>
+              <td style="padding:9px 12px;text-align:center;color:#f87171;">Restricted</td>
+              <td style="padding:9px 12px;text-align:center;color:#fbbf24;">H₂ venting needed</td>
+              <td style="padding:9px 12px;text-align:center;"><span class="match-badge" style="background:#4ade80;color:#111;">LFP ✅</span></td>
+            </tr>
+            <tr style="background:var(--surface-2);">
+              <td style="padding:9px 12px;color:#f8fafc;">10yr TCO ($/kWh stored)</td>
+              <td style="padding:9px 12px;text-align:center;color:#4ade80;font-weight:700;">Lowest</td>
+              <td style="padding:9px 12px;text-align:center;color:#fbbf24;">Medium</td>
+              <td style="padding:9px 12px;text-align:center;color:#fbbf24;">Medium</td>
+              <td style="padding:9px 12px;text-align:center;color:#f87171;">Highest (replacements)</td>
+              <td style="padding:9px 12px;text-align:center;"><span class="match-badge" style="background:#4ade80;color:#111;">LFP ✅</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-success">
+        <div class="callout-icon">✓</div>
+        <div class="callout-body">
+          <div class="callout-title">The ESS Chemistry Decision: LFP Wins 6 of 7 Criteria</div>
+          <p>NMC wins only on gravimetric energy density — which matters for EVs where every kilogram costs range. For stationary storage bolted to a wall, volume and weight are secondary to cycle life, safety, cost stability, and installation compliance. LFP is not a compromise chemistry for stationary storage: it is the purpose-built answer.</p>
+        </div>
+      </div>
+    </div>
+  </section>
