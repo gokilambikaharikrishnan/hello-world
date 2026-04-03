@@ -1949,3 +1949,186 @@
       </div>
     </div>
   </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 6.3 — FIRMWARE ARCHITECTURE
+  ═══════════════════════════════════════════════════════════════ -->
+  <section id="s6-3" class="chapter-section">
+    <div class="section-inner">
+      <div class="section-label">Section 6.3</div>
+      <h2 class="section-title">Firmware Architecture</h2>
+      <p class="section-intro">
+        BMS firmware is a real-time embedded system with strict timing requirements. Each module runs
+        at a specific frequency determined by physics: voltage measurements must occur at 10ms intervals
+        (fast enough to catch a runaway charge), SoC updates every 100ms (responsive to load steps),
+        SoH updates hourly (battery aging is slow). Getting the timing architecture right is the
+        difference between a BMS that works in the lab and one that works in production.
+      </p>
+
+      <!-- Firmware module overview -->
+      <h3 class="subsection-title">Module Architecture Overview</h3>
+      <svg viewBox="0 0 900 440" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:900px;display:block;margin:1.5rem auto;border-radius:12px;background:#0d1117;">
+        <defs>
+          <marker id="fw-arrow" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L7,3 z" fill="#a78bfa"/>
+          </marker>
+          <marker id="fw-arrowG" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L7,3 z" fill="#34d399"/>
+          </marker>
+        </defs>
+        <text x="450" y="24" text-anchor="middle" fill="#e2e8f0" font-family="monospace" font-size="13" font-weight="bold">BMS Firmware Module Architecture</text>
+
+        <!-- Hardware layer at bottom -->
+        <rect x="20" y="380" width="860" height="45" rx="8" fill="rgba(239,68,68,0.08)" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="450" y="400" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="11" font-weight="bold">HARDWARE ABSTRACTION LAYER (HAL)</text>
+        <text x="450" y="415" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">AFE SPI driver | ADC driver | CAN peripheral | EEPROM I²C | RTC | GPIO (FETs) | IWDG</text>
+
+        <!-- RTOS layer -->
+        <rect x="20" y="330" width="860" height="40" rx="8" fill="rgba(52,211,153,0.06)" stroke="#34d399" stroke-width="1"/>
+        <text x="450" y="351" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="11" font-weight="bold">RTOS — FreeRTOS (optional) or bare-metal superloop</text>
+        <text x="450" y="365" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Task scheduler | Timers | Semaphores | Message queues | Stack monitoring</text>
+
+        <!-- Module boxes row 1 (critical path, fast) -->
+        <rect x="20" y="180" width="160" height="135" rx="8" fill="rgba(239,68,68,0.1)" stroke="#ef4444" stroke-width="2"/>
+        <text x="100" y="202" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="11" font-weight="bold">Measurement</text>
+        <text x="100" y="218" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="10">10ms loop</text>
+        <text x="100" y="236" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">SPI → AFE read</text>
+        <text x="100" y="250" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">16× Vcell</text>
+        <text x="100" y="264" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">6× NTC temp</text>
+        <text x="100" y="278" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Pack current (ADC)</text>
+        <text x="100" y="292" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Filter + validate</text>
+        <text x="100" y="308" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="8">CPU: ~300μs</text>
+
+        <rect x="200" y="180" width="160" height="135" rx="8" fill="rgba(239,68,68,0.1)" stroke="#ef4444" stroke-width="2"/>
+        <text x="280" y="202" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="11" font-weight="bold">Protection</text>
+        <text x="280" y="218" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="10">10ms loop (HW &lt;1ms)</text>
+        <text x="280" y="236" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">OVP / UVP check</text>
+        <text x="280" y="250" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">OCP / OCC check</text>
+        <text x="280" y="264" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">OTP / UTP check</text>
+        <text x="280" y="278" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">dT/dt check</text>
+        <text x="280" y="292" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Trigger FETs</text>
+        <text x="280" y="308" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="8">CPU: ~50μs</text>
+
+        <rect x="380" y="180" width="160" height="135" rx="8" fill="rgba(167,139,250,0.1)" stroke="#a78bfa" stroke-width="2"/>
+        <text x="460" y="202" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="11" font-weight="bold">SOX Engine</text>
+        <text x="460" y="218" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="10">100ms loop</text>
+        <text x="460" y="236" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Coulomb counting</text>
+        <text x="460" y="250" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">OCV correction</text>
+        <text x="460" y="264" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">SoH update</text>
+        <text x="460" y="278" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">SoF / SoP calc</text>
+        <text x="460" y="292" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">EKF (if enabled)</text>
+        <text x="460" y="308" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="8">CPU: ~1ms (EKF ~3ms)</text>
+
+        <rect x="560" y="180" width="140" height="135" rx="8" fill="rgba(245,158,11,0.08)" stroke="#f59e0b" stroke-width="1.5"/>
+        <text x="630" y="202" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="11" font-weight="bold">Balancing</text>
+        <text x="630" y="218" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="10">1s loop</text>
+        <text x="630" y="236" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Find Vmax cell</text>
+        <text x="630" y="250" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Enable bleed FET</text>
+        <text x="630" y="264" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Monitor ΔV</text>
+        <text x="630" y="278" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Stop when balanced</text>
+        <text x="630" y="292" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Log bal. activity</text>
+        <text x="630" y="308" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="8">CPU: ~20μs</text>
+
+        <rect x="720" y="180" width="160" height="135" rx="8" fill="rgba(0,229,255,0.08)" stroke="#00e5ff" stroke-width="1.5"/>
+        <text x="800" y="202" text-anchor="middle" fill="#00e5ff" font-family="monospace" font-size="11" font-weight="bold">CAN / Comms</text>
+        <text x="800" y="218" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="10">1s TX | event RX</text>
+        <text x="800" y="236" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">TX: SoC/SoH/V/I/T</text>
+        <text x="800" y="250" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">TX: charge limits</text>
+        <text x="800" y="264" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">TX: alarm flags</text>
+        <text x="800" y="278" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">RX: charger cmds</text>
+        <text x="800" y="292" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">RX: wake-up</text>
+        <text x="800" y="308" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="8">CPU: ~100μs/msg</text>
+
+        <!-- Module boxes row 2 (slow, background) -->
+        <rect x="20" y="50" width="200" height="110" rx="8" fill="rgba(249,115,22,0.08)" stroke="#f97316" stroke-width="1.5"/>
+        <text x="120" y="72" text-anchor="middle" fill="#f97316" font-family="monospace" font-size="11" font-weight="bold">NVM Manager</text>
+        <text x="120" y="88" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="9">60s SoC | 1hr SoH</text>
+        <text x="120" y="105" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Write-leveled EEPROM</text>
+        <text x="120" y="119" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">CRC validated records</text>
+        <text x="120" y="133" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">BSRAM fast cache</text>
+        <text x="120" y="150" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="8">CPU: ~5ms per write</text>
+
+        <rect x="240" y="50" width="200" height="110" rx="8" fill="rgba(129,140,248,0.08)" stroke="#818cf8" stroke-width="1.5"/>
+        <text x="340" y="72" text-anchor="middle" fill="#818cf8" font-family="monospace" font-size="11" font-weight="bold">Event Logger</text>
+        <text x="340" y="88" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="9">On-event + 60s periodic</text>
+        <text x="340" y="105" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Circular log buffer</text>
+        <text x="340" y="119" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">RTC timestamp</text>
+        <text x="340" y="133" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">256 entries × 10B</text>
+        <text x="340" y="150" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="8">CPU: ~200μs per log</text>
+
+        <rect x="460" y="50" width="200" height="110" rx="8" fill="rgba(52,211,153,0.06)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="560" y="72" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="11" font-weight="bold">State Machine</text>
+        <text x="560" y="88" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="9">100ms evaluation</text>
+        <text x="560" y="105" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">POWER_ON → INIT</text>
+        <text x="560" y="119" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">IDLE/CHARGE/DISCHARGE</text>
+        <text x="560" y="133" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">FAULT → RECOVERY</text>
+        <text x="560" y="150" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="8">CPU: ~30μs per eval</text>
+
+        <rect x="680" y="50" width="200" height="110" rx="8" fill="rgba(167,139,250,0.06)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="780" y="72" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="11" font-weight="bold">Watchdog Pet</text>
+        <text x="780" y="88" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="9">Every 1s (IWDG 100ms)</text>
+        <text x="780" y="105" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Pet IWDG counter</text>
+        <text x="780" y="119" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Pet AFE WDOG reg</text>
+        <text x="780" y="133" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Only if meas loop OK</text>
+        <text x="780" y="150" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="8">CPU: &lt;1μs</text>
+
+        <!-- Arrows from fast modules up to slow modules -->
+        <line x1="100" y1="180" x2="100" y2="162" stroke="#f97316" stroke-width="1.5" marker-end="url(#fw-arrowG)" stroke-dasharray="3,2">
+          <animate attributeName="stroke-dashoffset" from="5" to="0" dur="1s" repeatCount="indefinite"/>
+        </line>
+        <line x1="460" y1="180" x2="460" y2="162" stroke="#818cf8" stroke-width="1.5" marker-end="url(#fw-arrowG)" stroke-dasharray="3,2">
+          <animate attributeName="stroke-dashoffset" from="5" to="0" dur="1s" repeatCount="indefinite"/>
+        </line>
+        <line x1="280" y1="180" x2="560" y2="162" stroke="#34d399" stroke-width="1.5" marker-end="url(#fw-arrowG)" stroke-dasharray="3,2">
+          <animate attributeName="stroke-dashoffset" from="5" to="0" dur="1.5s" repeatCount="indefinite"/>
+        </line>
+
+        <!-- HAL arrows up -->
+        <line x1="100" y1="315" x2="100" y2="328" stroke="#ef4444" stroke-width="1" stroke-dasharray="2,2"/>
+        <line x1="280" y1="315" x2="280" y2="328" stroke="#ef4444" stroke-width="1" stroke-dasharray="2,2"/>
+        <line x1="460" y1="315" x2="460" y2="328" stroke="#a78bfa" stroke-width="1" stroke-dasharray="2,2"/>
+        <line x1="630" y1="315" x2="630" y2="328" stroke="#f59e0b" stroke-width="1" stroke-dasharray="2,2"/>
+        <line x1="800" y1="315" x2="800" y2="328" stroke="#00e5ff" stroke-width="1" stroke-dasharray="2,2"/>
+      </svg>
+
+      <!-- Protection module timing hierarchy -->
+      <h3 class="subsection-title">Protection Response Time Hierarchy</h3>
+      <div style="display:flex;flex-direction:column;gap:0.6rem;margin:1.5rem 0;">
+        <div class="timing-card">
+          <div class="timing-badge">&lt; 500μs</div>
+          <div class="timing-body">
+            <div class="timing-title">Short Circuit Detection (SCD) — Hardware path</div>
+            AFE dedicated comparator monitors shunt voltage. No MCU involvement. Threshold set in AFE register (e.g., 300μV = 300A for 1mΩ shunt). Opens discharge FET directly via AFE output pin. MCU receives interrupt notification afterward. Required by UL 1973 and UN 38.3 T5.
+          </div>
+        </div>
+        <div class="timing-card">
+          <div class="timing-badge">&lt; 10ms</div>
+          <div class="timing-body">
+            <div class="timing-title">Over-Current Detection (OCD) — Fast firmware path</div>
+            MCU reads pack current from shunt ADC. If exceeding OCD threshold (e.g., 150A) for &gt;10ms, opens FET. Slower than SCD but handles sustained overcurrent that doesn't reach SCD level. OCD threshold = continuous rating × 1.5×, with configurable filter time to avoid false trips on capacitor inrush.
+          </div>
+        </div>
+        <div class="timing-card">
+          <div class="timing-badge">&lt; 100ms</div>
+          <div class="timing-body">
+            <div class="timing-title">Over-Voltage Protection (OVP) — Firmware path</div>
+            MCU reads all cell voltages from AFE every 10ms. If any cell exceeds 3.65V (LFP) for &gt;100ms (debounce), opens charge FET. Debounce prevents false trips from ADC noise. Must respond before Li plating begins — Li plating accelerates above 3.65V and becomes irreversible above 3.80V.
+          </div>
+        </div>
+        <div class="timing-card">
+          <div class="timing-badge">&lt; 1s</div>
+          <div class="timing-body">
+            <div class="timing-title">Under-Voltage / Temperature Protection — Firmware path</div>
+            UVP and OTP/UTP use 1s response time because the underlying mechanisms (Cu dissolution, thermal runaway initiation) develop over seconds. Using 100ms here would cause false trips from load steps. OTP threshold: 55°C charge cutoff (firmware). FET opens within one measurement-loop cycle after threshold exceeded.
+          </div>
+        </div>
+        <div class="timing-card">
+          <div class="timing-badge">&gt; 2°C/s</div>
+          <div class="timing-body">
+            <div class="timing-title">Thermal Runaway Detection (dT/dt) — Emergency path</div>
+            If rate of temperature rise exceeds 2°C/s, BMS opens ALL FETs, activates fault latch (power-cycle required to clear), logs fault with timestamp, and optionally triggers external fire suppression signal (GPIO output). The dT/dt threshold detects accelerating exothermic reactions before absolute temperature thresholds are reached.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
