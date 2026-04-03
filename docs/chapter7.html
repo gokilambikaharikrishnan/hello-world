@@ -196,3 +196,131 @@
       </div>
     </div>
   </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 7.1 — UPS SPECIFIC REQUIREMENTS
+  ═══════════════════════════════════════════════════════════════ -->
+  <section id="s7-1" class="chapter-section">
+    <div class="section-inner">
+      <div class="section-label">Section 7.1</div>
+      <h2 class="section-title">UPS Specific Requirements</h2>
+      <p class="section-intro">
+        An Uninterruptible Power Supply makes one absolute promise to the load: when mains power fails,
+        the load never knows. That promise translates into five hard engineering requirements that shape
+        every BMS decision for a UPS battery: always-ready state, sub-10ms switchover, sustained backup
+        at rated load, rapid recharge, and recovery from full discharge. Each requirement creates a
+        unique challenge for LFP chemistry that the BMS must solve.
+      </p>
+
+      <!-- UPS requirements animated SVG -->
+      <svg viewBox="0 0 860 360" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:860px;display:block;margin:1.5rem auto;border-radius:12px;background:#0d1117;">
+        <defs>
+          <marker id="ups-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#fbbf24"/>
+          </marker>
+        </defs>
+        <text x="430" y="24" text-anchor="middle" fill="#e2e8f0" font-family="monospace" font-size="13" font-weight="bold">UPS Power Flow — Mains Normal vs Outage</text>
+
+        <!-- Mains source -->
+        <rect x="20" y="50" width="100" height="60" rx="8" fill="rgba(52,211,153,0.1)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="70" y="77" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="11" font-weight="bold">Mains</text>
+        <text x="70" y="95" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">230V AC / 50Hz</text>
+
+        <!-- Rectifier -->
+        <rect x="160" y="50" width="100" height="60" rx="8" fill="rgba(251,191,36,0.1)" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="210" y="77" text-anchor="middle" fill="#fbbf24" font-family="monospace" font-size="11" font-weight="bold">Rectifier</text>
+        <text x="210" y="95" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">AC → DC 48V/54V</text>
+
+        <!-- Battery pack -->
+        <rect x="160" y="160" width="100" height="70" rx="8" fill="rgba(251,191,36,0.15)" stroke="#fbbf24" stroke-width="2"/>
+        <text x="210" y="185" text-anchor="middle" fill="#fbbf24" font-family="monospace" font-size="11" font-weight="bold">LFP Pack</text>
+        <text x="210" y="200" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">16S 280Ah</text>
+        <text x="210" y="215" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">BMS managed</text>
+
+        <!-- BMS -->
+        <rect x="160" y="250" width="100" height="50" rx="8" fill="rgba(167,139,250,0.1)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="210" y="272" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="10" font-weight="bold">BMS</text>
+        <text x="210" y="288" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="8">Float / Fault / SOX</text>
+
+        <!-- Inverter -->
+        <rect x="360" y="50" width="100" height="60" rx="8" fill="rgba(251,191,36,0.1)" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="410" y="77" text-anchor="middle" fill="#fbbf24" font-family="monospace" font-size="11" font-weight="bold">Inverter</text>
+        <text x="410" y="95" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">DC → AC 230V</text>
+
+        <!-- Transfer switch -->
+        <rect x="520" y="50" width="110" height="60" rx="8" fill="rgba(0,229,255,0.1)" stroke="#00e5ff" stroke-width="1.5"/>
+        <text x="575" y="73" text-anchor="middle" fill="#00e5ff" font-family="monospace" font-size="11" font-weight="bold">Transfer</text>
+        <text x="575" y="89" text-anchor="middle" fill="#00e5ff" font-family="monospace" font-size="11" font-weight="bold">Switch</text>
+        <text x="575" y="103" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="8">&lt; 4ms relay / 0ms static</text>
+
+        <!-- Load -->
+        <rect x="690" y="50" width="100" height="60" rx="8" fill="rgba(52,211,153,0.1)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="740" y="77" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="11" font-weight="bold">LOAD</text>
+        <text x="740" y="95" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Servers / Equipment</text>
+
+        <!-- Normal flow arrows -->
+        <line x1="120" y1="80" x2="158" y2="80" stroke="#34d399" stroke-width="2" marker-end="url(#ups-arrow)"/>
+        <line x1="260" y1="80" x2="358" y2="80" stroke="#fbbf24" stroke-width="2" marker-end="url(#ups-arrow)" stroke-dasharray="4,2">
+          <animate attributeName="stroke-dashoffset" from="6" to="0" dur="0.6s" repeatCount="indefinite"/>
+        </line>
+        <line x1="460" y1="80" x2="518" y2="80" stroke="#fbbf24" stroke-width="2" marker-end="url(#ups-arrow)"/>
+        <line x1="630" y1="80" x2="688" y2="80" stroke="#34d399" stroke-width="2" marker-end="url(#ups-arrow)">
+          <animate attributeName="stroke-dashoffset" from="6" to="0" dur="0.4s" repeatCount="indefinite"/>
+        </line>
+
+        <!-- Battery float connection -->
+        <line x1="210" y1="160" x2="210" y2="112" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="3,2"/>
+        <text x="175" y="140" fill="#fbbf24" font-family="monospace" font-size="9">float charge</text>
+        <text x="175" y="152" fill="#64748b" font-family="monospace" font-size="8">~200mA trickle</text>
+
+        <!-- Battery discharge path (backup) -->
+        <path d="M260,195 Q310,195 310,80 L360,80" fill="none" stroke="#f97316" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#ups-arrow)"/>
+        <text x="310" y="145" text-anchor="middle" fill="#f97316" font-family="monospace" font-size="9">ON MAINS FAIL</text>
+        <text x="310" y="160" text-anchor="middle" fill="#f97316" font-family="monospace" font-size="9">battery takeover</text>
+
+        <!-- Timing annotation -->
+        <rect x="490" y="140" width="280" height="150" rx="8" fill="rgba(251,191,36,0.05)" stroke="#fbbf24" stroke-width="1"/>
+        <text x="630" y="165" text-anchor="middle" fill="#fbbf24" font-family="monospace" font-size="11" font-weight="bold">UPS Switchover Timeline</text>
+        <text x="630" y="185" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">t=0ms      — Mains voltage drops</text>
+        <text x="630" y="200" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">t=0–2ms    — UPS detects undervoltage</text>
+        <text x="630" y="215" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="9">t=2–4ms    — Transfer switch operates</text>
+        <text x="630" y="230" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="9">t=4–10ms   — Inverter stabilises output</text>
+        <text x="630" y="248" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="9">t=10ms     — Load unaffected ✓</text>
+        <text x="630" y="270" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="8">IEC 62040-3: Class 3 = &lt;10ms gap</text>
+        <text x="630" y="283" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="8">BMS must NOT be on the critical path</text>
+
+        <!-- Animated mains fail marker -->
+        <line x1="70" y1="110" x2="70" y2="330" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,3" opacity="0">
+          <animate attributeName="opacity" values="0;1;1;0;0" dur="5s" repeatCount="indefinite" begin="2s"/>
+        </line>
+        <text x="78" y="160" fill="#ef4444" font-family="monospace" font-size="9" opacity="0">
+          MAINS FAIL
+          <animate attributeName="opacity" values="0;1;1;0;0" dur="5s" repeatCount="indefinite" begin="2s"/>
+        </text>
+      </svg>
+
+      <!-- 5 UPS requirements cards -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem;margin:1.5rem 0;">
+        <div class="req-card">
+          <div class="req-card-title">① Always Ready — Float State</div>
+          <div class="req-card-body">A UPS battery must be at 100% SoC at all times — it cannot be partially discharged. This requires a float charging state where the BMS holds the pack at a stable voltage indefinitely without overcharging. For LFP: float at 3.38–3.40V/cell (pack 54.1–54.4V). This is the most unique operational mode of a UPS BMS, not present in EV or pure ESS applications.</div>
+        </div>
+        <div class="req-card">
+          <div class="req-card-title">② Instant Response — &lt;10ms</div>
+          <div class="req-card-body">IEC 62040-3 Class 3 specifies output voltage interruption ≤10ms. The battery DSG FET must already be closed (or close within microseconds) when mains fails — there is no time for the BMS to "decide" to connect. This means the BMS cannot open the DSG FET for non-critical conditions during mains-connected float — only true faults warrant FET opening on standby.</div>
+        </div>
+        <div class="req-card">
+          <div class="req-card-title">③ Sustain Rated Load</div>
+          <div class="req-card-body">During an outage, the BMS must sustain the rated load until either mains restores or the battery reaches UVP (2.5V/cell). SoP discharge limit must match the UPS inverter's rated power. A 3kVA UPS at 0.8 PF = 2.4kW load. At 51.2V pack: I = 2400/51.2 = 46.9A continuous. The BMS must sustain this for the full backup duration without throttling.</div>
+        </div>
+        <div class="req-card">
+          <div class="req-card-title">④ Rapid Recharge</div>
+          <div class="req-card-body">After an outage event, the UPS must return to 100% SoC as quickly as possible — the next outage may follow within hours. LFP accepts 0.5C continuous charge safely, so a 280Ah pack can recharge at 140A. Full recharge from 0% to 100%: 280Ah / 140A = 2 hours. The BMS must allow maximum charge current immediately after discharge — not throttle "for safety."</div>
+        </div>
+        <div class="req-card">
+          <div class="req-card-title">⑤ Deep Discharge Recovery</div>
+          <div class="req-card-body">If mains fails for an extended period, the battery may fully discharge to UVP. The BMS must safely recover from this state using a pre-charge recovery sequence before allowing full current. LFP cells below 2.5V need care — copper dissolution risk at &lt;2.0V. A locked-out BMS requires controlled recovery, not simply connecting a charger at full current.</div>
+        </div>
+      </div>
+    </div>
+  </section>
