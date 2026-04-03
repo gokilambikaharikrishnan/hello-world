@@ -130,14 +130,34 @@ SIZE: ~95KB
 - Summary — 10-principle traceability diagram
 - Quick Reference — protection threshold table, formula grid
 
-## Cross-chapter Links
-- chapter1.html: sidebar links to chapter2 and chapter3
-- chapter2.html: sidebar links to chapter1 and chapter3
-- chapter3.html: sidebar links to chapter1, chapter2, chapter4; footer links to ch2 and ch4
-- chapter4.html: sidebar links to chapter1, chapter2, chapter3; footer links to ch3 and ch5
-
-## NEXT: Chapter 5
+## Chapter 5 Status
 FILE: docs/chapter5.html
+LAST_SECTION: All sections complete (5.1 through 5.6 + Summary + Reference)
+LAST_LINE: 1725
+STATUS: complete
+LINES: 1725
+SIZE: ~95KB
+
+## Chapter 5 Sections Written
+- Hero + Sidebar + CSS design system (emerald/teal standards theme)
+- 5.1 Why Standards Exist — incident timeline (2006–2019), standards bodies stat grid, cost of non-compliance callout
+- 5.2 IEC 62133 — portable safety standard card, 6 test cards, BMS contribution animated SVG
+- 5.3 IEC 61960 — performance standard card, test table, 5 red-flag datasheet callout
+- 5.4 UL 1973 — 3-tier protection hierarchy animated SVG, 8 BMS mandatory requirement cards, 6-phase certification test sequence timeline, harmonisation note
+- 5.5 UN 38.3 — standard card, T1–T8 test cards grid (all 8 tests), LFP vs NMC difficulty animated bar chart, LFP transport advantage callout
+- 5.6 BMS-to-Standard Compliance Matrix — filterable table (14 BMS features × 6 standards), gap analysis (4 beyond-compliance callouts)
+- Summary — 10 design principles grid, chapter traceability animated SVG
+- Quick Reference — 8-standard reference table, footer navigation
+
+## Cross-chapter Links
+- chapter1.html: sidebar links to chapter2, chapter3, chapter4, chapter5
+- chapter2.html: sidebar links to chapter1, chapter3, chapter4, chapter5
+- chapter3.html: sidebar links to chapter1, chapter2, chapter4, chapter5; footer links to ch2 and ch4
+- chapter4.html: sidebar links to chapter1, chapter2, chapter3, chapter5; footer links to ch3 and ch5
+- chapter5.html: footer links to chapter4 and chapter6
+
+## NEXT: Chapter 6
+FILE: docs/chapter6.html
 TOPIC: BMS Communication Architecture
 - CAN bus protocol and BMS messages
 - SMBus / I2C for smart battery
