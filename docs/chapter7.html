@@ -2417,5 +2417,65 @@ pre{border-left:4px solid #fde68a!important;border-radius:0!important;box-shadow
   }
 </script>
 
+<script>
+/* Glitch effect on hero title */
+(function(){
+  var el = document.querySelector('.hero-title');
+  if(!el) return;
+  el.setAttribute('data-text', el.textContent);
+  el.style.position = 'relative';
+  el.style.display = 'inline-block';
+  // inject glitch pseudo keyframes via style tag
+  if(!document.getElementById('__glitch-style')){
+    var s = document.createElement('style');
+    s.id = '__glitch-style';
+    s.textContent = `
+      .hero-title::before,.hero-title::after{content:attr(data-text);position:absolute;top:0;left:0;width:100%;height:100%}
+      .hero-title::before{color:#ff006e;clip-path:polygon(0 15%,100% 15%,100% 35%,0 35%);animation:__g1 3.5s infinite}
+      .hero-title::after{color:#00f5ff;clip-path:polygon(0 65%,100% 65%,100% 85%,0 85%);animation:__g2 3.5s infinite}
+      @keyframes __g1{0%,88%,100%{transform:translate(0)}89%{transform:translate(-5px,2px)}94%{transform:translate(5px,-2px)}}
+      @keyframes __g2{0%,88%,100%{transform:translate(0)}89%{transform:translate(5px,-2px)}94%{transform:translate(-5px,2px)}}
+    `;
+    document.head.appendChild(s);
+  }
+})();
+/* Animate section h2s in with neon flash */
+(function(){
+  var obs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        e.target.style.animation='__h2flash .6s ease forwards';
+        obs.unobserve(e.target);
+      }
+    });
+  },{threshold:.3});
+  if(!document.getElementById('__h2flash')){
+    var s=document.createElement('style');s.id='__h2flash';
+    s.textContent='@keyframes __h2flash{0%{opacity:0;transform:translateX(-20px)}60%{opacity:1;transform:translateX(4px)}100%{opacity:1;transform:translateX(0)}}';
+    document.head.appendChild(s);
+  }
+  document.querySelectorAll('.content-main h2').forEach(function(h){
+    h.style.opacity='0';obs.observe(h);
+  });
+})();
+/* Speed lines flash on load */
+(function(){
+  var style=document.createElement('style');
+  style.textContent=`
+    #__speedlines{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2;overflow:hidden}
+    .__sl{position:absolute;top:50%;left:50%;height:1px;background:rgba(255,255,255,.4);transform-origin:left center;animation:__slout 1s ease-out forwards;opacity:0}
+    @keyframes __slout{0%{width:0;opacity:.7}100%{width:200vw;opacity:0}}
+  `;
+  document.head.appendChild(style);
+  var div=document.createElement('div');div.id='__speedlines';document.body.appendChild(div);
+  for(var i=0;i<16;i++){
+    var l=document.createElement('div');l.className='__sl';
+    var angle=Math.random()*360;
+    l.style.cssText+=';transform:rotate('+angle+'deg);animation-delay:'+(i*0.06)+'s';
+    div.appendChild(l);
+  }
+  setTimeout(function(){if(div.parentNode)div.parentNode.removeChild(div);},2500);
+})();
+</script>
 </body>
 </html>
