@@ -478,3 +478,248 @@
       </div>
     </div>
   </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 6.1 — BMS REQUIREMENT TRACEABILITY
+  ═══════════════════════════════════════════════════════════════ -->
+  <section id="s6-1" class="chapter-section">
+    <div class="section-inner">
+      <div class="section-label">Section 6.1</div>
+      <h2 class="section-title">BMS Requirement Traceability</h2>
+      <p class="section-intro">
+        Every component in a BMS exists because of a specific battery physics problem. There is no
+        unnecessary hardware. Understanding this traceability is the foundation of good BMS design —
+        it tells you why each module exists, what it must do, and what happens if it fails.
+        This section maps the complete chain from battery weakness to silicon implementation.
+      </p>
+
+      <!-- Master Traceability SVG -->
+      <h3 class="subsection-title">Master Traceability Map</h3>
+      <svg viewBox="0 0 920 780" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:920px;display:block;margin:1.5rem auto;border-radius:12px;background:#0d1117;">
+        <defs>
+          <marker id="arrowP" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#a78bfa"/>
+          </marker>
+          <marker id="arrowG" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#34d399"/>
+          </marker>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="2" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <!-- Column headers -->
+        <rect x="20" y="15" width="185" height="30" rx="6" fill="rgba(239,68,68,0.2)" stroke="#ef4444" stroke-width="1"/>
+        <text x="112" y="35" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="12" font-weight="bold">Battery Weakness</text>
+
+        <rect x="230" y="15" width="185" height="30" rx="6" fill="rgba(245,158,11,0.2)" stroke="#f59e0b" stroke-width="1"/>
+        <text x="322" y="35" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="12" font-weight="bold">Physics Root Cause</text>
+
+        <rect x="440" y="15" width="185" height="30" rx="6" fill="rgba(167,139,250,0.2)" stroke="#a78bfa" stroke-width="1"/>
+        <text x="532" y="35" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="12" font-weight="bold">BMS Module</text>
+
+        <rect x="650" y="15" width="250" height="30" rx="6" fill="rgba(52,211,153,0.2)" stroke="#34d399" stroke-width="1"/>
+        <text x="775" y="35" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="12" font-weight="bold">Firmware Feature</text>
+
+        <!-- Row 1: Narrow voltage window -->
+        <rect x="20" y="62" width="185" height="42" rx="6" fill="rgba(239,68,68,0.1)" stroke="#ef4444" stroke-width="1"/>
+        <text x="112" y="78" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="10">Narrow Voltage Window</text>
+        <text x="112" y="95" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">2.5V – 3.65V per cell</text>
+        <line x1="205" y1="83" x2="228" y2="83" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrowP)">
+          <animate attributeName="stroke-dasharray" values="0,30;30,0;0,30" dur="3s" repeatCount="indefinite"/>
+        </line>
+
+        <rect x="230" y="62" width="185" height="42" rx="6" fill="rgba(245,158,11,0.1)" stroke="#f59e0b" stroke-width="1"/>
+        <text x="322" y="78" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="10">Li plating above 3.65V</text>
+        <text x="322" y="95" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Cu dissolution below 2.5V</text>
+        <line x1="415" y1="83" x2="438" y2="83" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrowP)"/>
+
+        <rect x="440" y="62" width="185" height="42" rx="6" fill="rgba(167,139,250,0.1)" stroke="#a78bfa" stroke-width="1"/>
+        <text x="532" y="78" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="10">AFE Cell Voltage Monitor</text>
+        <text x="532" y="95" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">16-bit ΔΣ ADC per cell</text>
+        <line x1="625" y1="83" x2="648" y2="83" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowG)"/>
+
+        <rect x="650" y="62" width="250" height="42" rx="6" fill="rgba(52,211,153,0.1)" stroke="#34d399" stroke-width="1"/>
+        <text x="775" y="78" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="10">OVP cutoff &lt;100ms</text>
+        <text x="775" y="95" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">UVP cutoff &lt;1s | ±1mV resolution</text>
+
+        <!-- Row 2: Thermal sensitivity -->
+        <rect x="20" y="118" width="185" height="42" rx="6" fill="rgba(239,68,68,0.1)" stroke="#ef4444" stroke-width="1"/>
+        <text x="112" y="134" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="10">Thermal Sensitivity</text>
+        <text x="112" y="151" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Runaway at 130–270°C</text>
+        <line x1="205" y1="139" x2="228" y2="139" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrowP)">
+          <animate attributeName="stroke-dasharray" values="0,30;30,0;0,30" dur="3s" begin="0.5s" repeatCount="indefinite"/>
+        </line>
+
+        <rect x="230" y="118" width="185" height="42" rx="6" fill="rgba(245,158,11,0.1)" stroke="#f59e0b" stroke-width="1"/>
+        <text x="322" y="134" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="10">SEI → exotherm → O₂</text>
+        <text x="322" y="151" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Arrhenius aging: 2× per 10°C</text>
+        <line x1="415" y1="139" x2="438" y2="139" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrowP)"/>
+
+        <rect x="440" y="118" width="185" height="42" rx="6" fill="rgba(167,139,250,0.1)" stroke="#a78bfa" stroke-width="1"/>
+        <text x="532" y="134" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="10">NTC Temperature Monitor</text>
+        <text x="532" y="151" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">MCU ADC + voting logic</text>
+        <line x1="625" y1="139" x2="648" y2="139" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowG)"/>
+
+        <rect x="650" y="118" width="250" height="42" rx="6" fill="rgba(52,211,153,0.1)" stroke="#34d399" stroke-width="1"/>
+        <text x="775" y="134" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="10">OTP/UTP cutoff | dT/dt monitor</text>
+        <text x="775" y="151" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Derating curve | charge inhibit</text>
+
+        <!-- Row 3: Cell variation -->
+        <rect x="20" y="174" width="185" height="42" rx="6" fill="rgba(239,68,68,0.1)" stroke="#ef4444" stroke-width="1"/>
+        <text x="112" y="190" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="10">Cell Manufacturing Variation</text>
+        <text x="112" y="207" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">ΔCapacity, ΔInternal R</text>
+        <line x1="205" y1="195" x2="228" y2="195" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrowP)">
+          <animate attributeName="stroke-dasharray" values="0,30;30,0;0,30" dur="3s" begin="1s" repeatCount="indefinite"/>
+        </line>
+
+        <rect x="230" y="174" width="185" height="42" rx="6" fill="rgba(245,158,11,0.1)" stroke="#f59e0b" stroke-width="1"/>
+        <text x="322" y="190" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="10">Weakest cell limits pack</text>
+        <text x="322" y="207" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">ΔV grows with cycle count</text>
+        <line x1="415" y1="195" x2="438" y2="195" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrowP)"/>
+
+        <rect x="440" y="174" width="185" height="42" rx="6" fill="rgba(167,139,250,0.1)" stroke="#a78bfa" stroke-width="1"/>
+        <text x="532" y="190" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="10">Balancing FETs via AFE</text>
+        <text x="532" y="207" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Passive bleed or active transfer</text>
+        <line x1="625" y1="195" x2="648" y2="195" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowG)"/>
+
+        <rect x="650" y="174" width="250" height="42" rx="6" fill="rgba(52,211,153,0.1)" stroke="#34d399" stroke-width="1"/>
+        <text x="775" y="190" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="10">Balancing algorithm | ΔV &lt;20mV</text>
+        <text x="775" y="207" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Top/bottom balance | LFP plateau</text>
+
+        <!-- Row 4: No SoC indicator -->
+        <rect x="20" y="230" width="185" height="42" rx="6" fill="rgba(239,68,68,0.1)" stroke="#ef4444" stroke-width="1"/>
+        <text x="112" y="246" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="10">No Visual State Indicator</text>
+        <text x="112" y="263" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Flat OCV curve (LFP)</text>
+        <line x1="205" y1="251" x2="228" y2="251" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrowP)">
+          <animate attributeName="stroke-dasharray" values="0,30;30,0;0,30" dur="3s" begin="1.5s" repeatCount="indefinite"/>
+        </line>
+
+        <rect x="230" y="230" width="185" height="42" rx="6" fill="rgba(245,158,11,0.1)" stroke="#f59e0b" stroke-width="1"/>
+        <text x="322" y="246" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="10">OCV ≈ flat 3.2–3.35V</text>
+        <text x="322" y="263" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Coulombs only reliable SoC</text>
+        <line x1="415" y1="251" x2="438" y2="251" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrowP)"/>
+
+        <rect x="440" y="230" width="185" height="42" rx="6" fill="rgba(167,139,250,0.1)" stroke="#a78bfa" stroke-width="1"/>
+        <text x="532" y="246" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="10">MCU SoC Algorithm</text>
+        <text x="532" y="263" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Coulomb counter + shunt ADC</text>
+        <line x1="625" y1="251" x2="648" y2="251" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowG)"/>
+
+        <rect x="650" y="230" width="250" height="42" rx="6" fill="rgba(52,211,153,0.1)" stroke="#34d399" stroke-width="1"/>
+        <text x="775" y="246" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="10">CC + OCV correction at rest</text>
+        <text x="775" y="263" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">EKF optional | ±3% accuracy</text>
+
+        <!-- Row 5: Short circuit energy -->
+        <rect x="20" y="286" width="185" height="42" rx="6" fill="rgba(239,68,68,0.1)" stroke="#ef4444" stroke-width="1"/>
+        <text x="112" y="302" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="10">Short Circuit Energy Dump</text>
+        <text x="112" y="319" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">kA fault current possible</text>
+        <line x1="205" y1="307" x2="228" y2="307" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrowP)">
+          <animate attributeName="stroke-dasharray" values="0,30;30,0;0,30" dur="3s" begin="2s" repeatCount="indefinite"/>
+        </line>
+
+        <rect x="230" y="286" width="185" height="42" rx="6" fill="rgba(245,158,11,0.1)" stroke="#f59e0b" stroke-width="1"/>
+        <text x="322" y="302" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="10">I²R → busbar melt in ms</text>
+        <text x="322" y="319" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">MCU too slow (1–2ms latency)</text>
+        <line x1="415" y1="307" x2="438" y2="307" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrowP)"/>
+
+        <rect x="440" y="286" width="185" height="42" rx="6" fill="rgba(167,139,250,0.1)" stroke="#a78bfa" stroke-width="1"/>
+        <text x="532" y="302" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="10">HW Comparator in AFE</text>
+        <text x="532" y="319" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Dedicated SCD path, no MCU</text>
+        <line x1="625" y1="307" x2="648" y2="307" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowG)"/>
+
+        <rect x="650" y="286" width="250" height="42" rx="6" fill="rgba(52,211,153,0.1)" stroke="#34d399" stroke-width="1"/>
+        <text x="775" y="302" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="10">SCD open FET in &lt;500μs</text>
+        <text x="775" y="319" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Hardware fault pin → MCU IRQ</text>
+
+        <!-- Row 6: No self-regulation -->
+        <rect x="20" y="342" width="185" height="42" rx="6" fill="rgba(239,68,68,0.1)" stroke="#ef4444" stroke-width="1"/>
+        <text x="112" y="358" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="10">No Self-Regulating Chemistry</text>
+        <text x="112" y="375" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Cannot self-limit current/V</text>
+        <line x1="205" y1="363" x2="228" y2="363" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrowP)">
+          <animate attributeName="stroke-dasharray" values="0,30;30,0;0,30" dur="3s" begin="2.5s" repeatCount="indefinite"/>
+        </line>
+
+        <rect x="230" y="342" width="185" height="42" rx="6" fill="rgba(245,158,11,0.1)" stroke="#f59e0b" stroke-width="1"/>
+        <text x="322" y="358" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="10">External control required</text>
+        <text x="322" y="375" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">3-tier protection mandatory</text>
+        <line x1="415" y1="363" x2="438" y2="363" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrowP)"/>
+
+        <rect x="440" y="342" width="185" height="42" rx="6" fill="rgba(167,139,250,0.1)" stroke="#a78bfa" stroke-width="1"/>
+        <text x="532" y="358" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="10">MCU + AFE + Fuse/Contactor</text>
+        <text x="532" y="375" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Redundant protection layers</text>
+        <line x1="625" y1="363" x2="648" y2="363" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowG)"/>
+
+        <rect x="650" y="342" width="250" height="42" rx="6" fill="rgba(52,211,153,0.1)" stroke="#34d399" stroke-width="1"/>
+        <text x="775" y="358" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="10">Watchdog → fuse → contactor</text>
+        <text x="775" y="375" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">HW fail-safe if FW crashes</text>
+
+        <!-- Row 7: No history memory -->
+        <rect x="20" y="398" width="185" height="42" rx="6" fill="rgba(239,68,68,0.1)" stroke="#ef4444" stroke-width="1"/>
+        <text x="112" y="414" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="10">No Built-In State Memory</text>
+        <text x="112" y="431" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">SoC lost on power-down</text>
+        <line x1="205" y1="419" x2="228" y2="419" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrowP)">
+          <animate attributeName="stroke-dasharray" values="0,30;30,0;0,30" dur="3s" begin="3s" repeatCount="indefinite"/>
+        </line>
+
+        <rect x="230" y="398" width="185" height="42" rx="6" fill="rgba(245,158,11,0.1)" stroke="#f59e0b" stroke-width="1"/>
+        <text x="322" y="414" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="10">SoC must be persistent</text>
+        <text x="322" y="431" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Calendar time needed for aging</text>
+        <line x1="415" y1="419" x2="438" y2="419" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrowP)"/>
+
+        <rect x="440" y="398" width="185" height="42" rx="6" fill="rgba(167,139,250,0.1)" stroke="#a78bfa" stroke-width="1"/>
+        <text x="532" y="414" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="10">NVM + Backup SRAM + RTC</text>
+        <text x="532" y="431" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Persistent state storage</text>
+        <line x1="625" y1="419" x2="648" y2="419" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowG)"/>
+
+        <rect x="650" y="398" width="250" height="42" rx="6" fill="rgba(52,211,153,0.1)" stroke="#34d399" stroke-width="1"/>
+        <text x="775" y="414" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="10">SoC checkpoint every 60s</text>
+        <text x="775" y="431" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">SoH + cycle count persist</text>
+
+        <!-- Row 8: Communication -->
+        <rect x="20" y="454" width="185" height="42" rx="6" fill="rgba(239,68,68,0.1)" stroke="#ef4444" stroke-width="1"/>
+        <text x="112" y="470" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="10">Battery Blind to Host System</text>
+        <text x="112" y="487" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Inverter cannot safely control</text>
+        <line x1="205" y1="475" x2="228" y2="475" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrowP)">
+          <animate attributeName="stroke-dasharray" values="0,30;30,0;0,30" dur="3s" begin="3.5s" repeatCount="indefinite"/>
+        </line>
+
+        <rect x="230" y="454" width="185" height="42" rx="6" fill="rgba(245,158,11,0.1)" stroke="#f59e0b" stroke-width="1"/>
+        <text x="322" y="470" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="10">SoC/SoH/SoP must propagate</text>
+        <text x="322" y="487" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Faults must reach operator</text>
+        <line x1="415" y1="475" x2="438" y2="475" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrowP)"/>
+
+        <rect x="440" y="454" width="185" height="42" rx="6" fill="rgba(167,139,250,0.1)" stroke="#a78bfa" stroke-width="1"/>
+        <text x="532" y="470" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="10">CAN / SMBus / RS-485</text>
+        <text x="532" y="487" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Bidirectional comms bus</text>
+        <line x1="625" y1="475" x2="648" y2="475" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowG)"/>
+
+        <rect x="650" y="454" width="250" height="42" rx="6" fill="rgba(52,211,153,0.1)" stroke="#34d399" stroke-width="1"/>
+        <text x="775" y="470" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="10">CAN at 250/500kbps periodic TX</text>
+        <text x="775" y="487" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Fault broadcast | charge limits</text>
+
+        <!-- bottom note -->
+        <text x="460" y="520" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="10">Every BMS module traces directly to a battery physics problem — nothing is speculative</text>
+
+        <!-- animated pulse on first arrow -->
+        <circle r="4" fill="#a78bfa" opacity="0.8">
+          <animateMotion dur="4s" repeatCount="indefinite">
+            <mpath href="#traceRow1"/>
+          </animateMotion>
+        </circle>
+        <path id="traceRow1" d="M205,83 L890,83" fill="none"/>
+      </svg>
+
+      <!-- Architecture overview paragraph -->
+      <div class="callout callout-physics">
+        <div class="callout-icon">⚛</div>
+        <div class="callout-body">
+          <div class="callout-title">The Fundamental Principle of BMS Architecture</div>
+          <p>A well-designed BMS has zero gratuitous complexity. Every IC, every firmware module, every
+          communication message exists because removing it would allow a specific battery failure mode.
+          When designing a new BMS, the correct starting point is the traceability matrix above — not
+          the BOM, not the MCU spec sheet. Physics first, silicon second.</p>
+        </div>
+      </div>
+    </div>
+  </section>
