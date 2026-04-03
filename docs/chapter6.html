@@ -1277,3 +1277,288 @@
       </div>
     </div>
   </section>
+
+  <!-- ─── CAN BUS DEEP DIVE ─── -->
+  <section id="s6-2-can" class="chapter-section" style="border-bottom:none;padding-top:1.5rem;">
+    <div class="section-inner">
+      <h3 class="subsection-title" style="font-size:1.4rem;margin-top:0;">CAN Bus — Deep Dive</h3>
+      <p style="color:var(--text-muted);font-size:0.95rem;line-height:1.75;max-width:820px;margin-bottom:1.5rem;">
+        CAN (Controller Area Network) is the dominant communication protocol for BMS-to-inverter communication
+        in stationary ESS. Developed by Bosch in 1986 for automotive, it offers differential signaling (noise
+        immunity), hardware error detection (CRC + bit stuffing), and bus-level arbitration — no master/slave
+        collisions. Understanding CAN framing is essential for BMS integration work.
+      </p>
+
+      <!-- CAN physical layer SVG -->
+      <svg viewBox="0 0 800 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:800px;display:block;margin:1.5rem auto;border-radius:12px;background:#0d1117;">
+        <text x="400" y="24" text-anchor="middle" fill="#00e5ff" font-family="monospace" font-size="13" font-weight="bold">CAN Physical Layer — Differential Bus Topology</text>
+
+        <!-- BMS node -->
+        <rect x="30" y="60" width="110" height="80" rx="8" fill="rgba(167,139,250,0.1)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="85" y="87" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="11" font-weight="bold">BMS Node</text>
+        <text x="85" y="103" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">MCU CAN</text>
+        <text x="85" y="117" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Transceiver</text>
+        <text x="85" y="131" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">TJA1050</text>
+
+        <!-- Inverter node -->
+        <rect x="340" y="60" width="120" height="80" rx="8" fill="rgba(0,229,255,0.1)" stroke="#00e5ff" stroke-width="1.5"/>
+        <text x="400" y="87" text-anchor="middle" fill="#00e5ff" font-family="monospace" font-size="11" font-weight="bold">Inverter</text>
+        <text x="400" y="103" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Host MCU</text>
+        <text x="400" y="117" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">CAN receive</text>
+        <text x="400" y="131" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">SoC/SoH/SoP</text>
+
+        <!-- EVSE / cloud node -->
+        <rect x="630" y="60" width="120" height="80" rx="8" fill="rgba(52,211,153,0.1)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="690" y="87" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="11" font-weight="bold">Charger /</text>
+        <text x="690" y="103" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="9">EVSE</text>
+        <text x="690" y="117" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">CAN commands</text>
+        <text x="690" y="131" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">charge limits</text>
+
+        <!-- CAN_H line (dominant = 3.5V) -->
+        <line x1="140" y1="85" x2="780" y2="85" stroke="#00e5ff" stroke-width="2"/>
+        <text x="150" y="78" fill="#00e5ff" font-family="monospace" font-size="9">CAN_H (2.5–3.5V)</text>
+
+        <!-- CAN_L line (recessive = 1.5V) -->
+        <line x1="140" y1="115" x2="780" y2="115" stroke="#a78bfa" stroke-width="2"/>
+        <text x="150" y="128" fill="#a78bfa" font-family="monospace" font-size="9">CAN_L (1.5–2.5V)</text>
+
+        <!-- Termination resistors -->
+        <rect x="140" y="92" width="14" height="16" rx="2" fill="#f59e0b"/>
+        <text x="147" y="123" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="9">120Ω</text>
+        <rect x="766" y="92" width="14" height="16" rx="2" fill="#f59e0b"/>
+        <text x="773" y="123" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="9">120Ω</text>
+
+        <!-- Animated bit pulse travelling on CAN_H -->
+        <rect x="160" y="80" width="20" height="10" rx="2" fill="#00e5ff" opacity="0.8">
+          <animateTransform attributeName="transform" type="translate" values="0,0;600,0;0,0" dur="2.5s" repeatCount="indefinite"/>
+        </rect>
+
+        <!-- Differential voltage note -->
+        <text x="400" y="170" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="10">Dominant bit: CAN_H−CAN_L = 2V diff | Recessive bit: CAN_H−CAN_L ≈ 0V</text>
+        <text x="400" y="185" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="10">Differential signalling rejects common-mode noise up to ±100V — ideal for noisy inverter environments</text>
+      </svg>
+
+      <!-- CAN frame structure -->
+      <h3 class="subsection-title">CAN Standard Frame Structure</h3>
+      <div class="can-frame">
+        <div class="can-field">
+          <div class="can-field-box" style="width:40px;background:rgba(239,68,68,0.15);border-color:#ef4444;color:#ef4444;">SOF</div>
+          <div class="can-field-label">Start</div>
+          <div class="can-field-bits">1 bit</div>
+        </div>
+        <div class="can-field">
+          <div class="can-field-box" style="width:80px;background:rgba(167,139,250,0.15);border-color:#a78bfa;">11-bit ID</div>
+          <div class="can-field-label">Message ID</div>
+          <div class="can-field-bits">11 bits</div>
+        </div>
+        <div class="can-field">
+          <div class="can-field-box" style="width:40px;">RTR</div>
+          <div class="can-field-label">Remote</div>
+          <div class="can-field-bits">1 bit</div>
+        </div>
+        <div class="can-field">
+          <div class="can-field-box" style="width:40px;">IDE</div>
+          <div class="can-field-label">Ext ID</div>
+          <div class="can-field-bits">1 bit</div>
+        </div>
+        <div class="can-field">
+          <div class="can-field-box" style="width:40px;">r0</div>
+          <div class="can-field-label">Reserved</div>
+          <div class="can-field-bits">1 bit</div>
+        </div>
+        <div class="can-field">
+          <div class="can-field-box" style="width:40px;">DLC</div>
+          <div class="can-field-label">Data Len</div>
+          <div class="can-field-bits">4 bits</div>
+        </div>
+        <div class="can-field">
+          <div class="can-field-box" style="width:120px;background:rgba(52,211,153,0.15);border-color:#34d399;color:#34d399;">DATA 0–7</div>
+          <div class="can-field-label">Payload</div>
+          <div class="can-field-bits">0–64 bits</div>
+        </div>
+        <div class="can-field">
+          <div class="can-field-box" style="width:60px;background:rgba(245,158,11,0.15);border-color:#f59e0b;color:#f59e0b;">CRC</div>
+          <div class="can-field-label">Checksum</div>
+          <div class="can-field-bits">15 bits</div>
+        </div>
+        <div class="can-field">
+          <div class="can-field-box" style="width:40px;">DEL</div>
+          <div class="can-field-label">Delimiter</div>
+          <div class="can-field-bits">1 bit</div>
+        </div>
+        <div class="can-field">
+          <div class="can-field-box" style="width:40px;background:rgba(52,211,153,0.15);border-color:#34d399;color:#34d399;">ACK</div>
+          <div class="can-field-label">Ack</div>
+          <div class="can-field-bits">2 bits</div>
+        </div>
+        <div class="can-field">
+          <div class="can-field-box" style="width:40px;background:rgba(239,68,68,0.15);border-color:#ef4444;color:#ef4444;">EOF</div>
+          <div class="can-field-label">End</div>
+          <div class="can-field-bits">7 bits</div>
+        </div>
+      </div>
+
+      <!-- BMS CAN message definitions -->
+      <h3 class="subsection-title">BMS CAN Message Set</h3>
+      <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1rem;">Standard BMS CAN messages for a 16S LFP pack, 250 kbps, 11-bit ID. Transmitted periodically by BMS; received by inverter and charger.</p>
+
+      <div style="overflow-x:auto;">
+      <table class="comp-table">
+        <thead>
+          <tr><th>CAN ID</th><th>Message Name</th><th>Period</th><th>DLC</th><th>Byte Layout</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="color:#a78bfa;font-weight:bold;">0x351</td>
+            <td>Charge Voltage/Current Limits</td>
+            <td>1 s</td>
+            <td>8</td>
+            <td style="font-size:11px;">B0-1: CVL (0.1V/bit) | B2-3: CCL (0.1A/bit) | B4-5: DCL (0.1A/bit) | B6-7: reserved</td>
+          </tr>
+          <tr>
+            <td style="color:#a78bfa;font-weight:bold;">0x355</td>
+            <td>SoC / SoH</td>
+            <td>1 s</td>
+            <td>8</td>
+            <td style="font-size:11px;">B0-1: SoC % (0.01%/bit, 0–100%) | B2-3: SoH % (0.01%/bit) | B4-5: SoC (high res) | B6-7: reserved</td>
+          </tr>
+          <tr>
+            <td style="color:#a78bfa;font-weight:bold;">0x356</td>
+            <td>Voltage / Current / Temperature</td>
+            <td>1 s</td>
+            <td>8</td>
+            <td style="font-size:11px;">B0-1: Pack V (0.01V/bit) | B2-3: Pack I (0.1A/bit, signed) | B4-5: Pack Temp (0.1°C/bit) | B6-7: reserved</td>
+          </tr>
+          <tr>
+            <td style="color:#a78bfa;font-weight:bold;">0x35A</td>
+            <td>Alarm Flags</td>
+            <td>1 s</td>
+            <td>8</td>
+            <td style="font-size:11px;">B0: bit0=Gen.Alarm, bit1=HighV, bit2=LowV, bit3=HighTemp, bit4=LowTemp | B1: OCP, SCP, UV, OV | B2-7: reserved</td>
+          </tr>
+          <tr>
+            <td style="color:#a78bfa;font-weight:bold;">0x35C</td>
+            <td>Request Flags</td>
+            <td>1 s</td>
+            <td>2</td>
+            <td style="font-size:11px;">B0: bit1=Charge Enable, bit6=Discharge Enable | B1: bit3=Force Charge (SoC recovery)</td>
+          </tr>
+          <tr>
+            <td style="color:#34d399;font-weight:bold;">0x360</td>
+            <td>Cell Voltages 1–4</td>
+            <td>5 s</td>
+            <td>8</td>
+            <td style="font-size:11px;">B0-1: Cell1 (1mV/bit) | B2-3: Cell2 | B4-5: Cell3 | B6-7: Cell4</td>
+          </tr>
+          <tr>
+            <td style="color:#34d399;font-weight:bold;">0x361</td>
+            <td>Cell Voltages 5–8</td>
+            <td>5 s</td>
+            <td>8</td>
+            <td style="font-size:11px;">B0-1: Cell5 | B2-3: Cell6 | B4-5: Cell7 | B6-7: Cell8</td>
+          </tr>
+          <tr>
+            <td style="color:#34d399;font-weight:bold;">0x362–0x363</td>
+            <td>Cell Voltages 9–16</td>
+            <td>5 s</td>
+            <td>8</td>
+            <td style="font-size:11px;">Same pattern — 4 cells per message, 1mV per bit</td>
+          </tr>
+          <tr>
+            <td style="color:#00e5ff;font-weight:bold;">0x370</td>
+            <td>Cycle Count / Capacity</td>
+            <td>60 s</td>
+            <td>8</td>
+            <td style="font-size:11px;">B0-1: Cycle count | B2-3: Design capacity (Ah×10) | B4-5: Remaining cap (Ah×10) | B6-7: reserved</td>
+          </tr>
+          <tr>
+            <td style="color:#f59e0b;font-weight:bold;">0x380</td>
+            <td>Fault Event (on fault only)</td>
+            <td>On event</td>
+            <td>8</td>
+            <td style="font-size:11px;">B0: fault code | B1: fault severity | B2-5: Unix timestamp | B6: cell index | B7: value at fault</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+
+      <!-- CAN error handling -->
+      <h3 class="subsection-title">CAN Error Handling and Bus-Off</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;margin:1.5rem 0;">
+        <div class="arch-block">
+          <div class="arch-block-title">Error Counters (TEC / REC)</div>
+          <div class="arch-block-body">
+            Every CAN node maintains a Transmit Error Counter (TEC) and Receive Error Counter (REC).
+            Each detected error increments the counter; successful frames decrement it. States:
+            Error Active (TEC/REC &lt;96) → Error Passive (TEC/REC 96–127) → Bus-Off (TEC ≥128).
+            In Bus-Off, the node disconnects from the bus and waits for 128 × 11 recessive bits
+            before re-joining. This prevents one faulty node from destroying the entire bus.
+          </div>
+        </div>
+        <div class="arch-block">
+          <div class="arch-block-title">BMS Silent Timeout</div>
+          <div class="arch-block-body">
+            UL 1973 requires the host (inverter) to detect BMS silence within 5 seconds. Implement
+            this in the inverter firmware: if no CAN message from BMS ID 0x355 received in &gt;5s,
+            the inverter must cease charging/discharging and raise an alarm. The BMS also monitors
+            this in reverse — if CAN TX fails continuously (bus-off state), it logs a communication
+            fault and opens FETs after a configurable timeout (default: 30s to allow bus recovery).
+          </div>
+        </div>
+        <div class="arch-block">
+          <div class="arch-block-title">Baud Rate: 250 vs 500 kbps</div>
+          <div class="arch-block-body">
+            250 kbps is the industry standard for stationary ESS (PYLON, SMA, Victron, Growatt all
+            use 250kbps). Maximum bus length at 250kbps: ~250m (5 ns/m propagation). 500 kbps halves
+            this to ~100m. For home ESS where BMS and inverter are in the same cabinet, 500 kbps
+            works fine. For UPS with remote monitoring over longer cable runs, stick to 250 kbps.
+            Both ends must match exactly — a baud mismatch produces immediate bus errors.
+          </div>
+        </div>
+      </div>
+
+      <!-- CAN code example -->
+      <h3 class="subsection-title">CAN Transmission Code (STM32 HAL)</h3>
+      <div class="code-block">
+<span class="code-comment">/* BMS CAN message definitions */</span>
+<span class="code-keyword">#define</span> CAN_ID_CHARGE_LIMITS  <span class="code-num">0x351</span>
+<span class="code-keyword">#define</span> CAN_ID_SOC_SOH        <span class="code-num">0x355</span>
+<span class="code-keyword">#define</span> CAN_ID_VOLTAGE_CURR   <span class="code-num">0x356</span>
+<span class="code-keyword">#define</span> CAN_ID_ALARMS         <span class="code-num">0x35A</span>
+
+<span class="code-type">void</span> <span class="code-fn">BMS_CAN_TransmitStatus</span>(<span class="code-type">BMS_State_t</span> *bms) {
+    CAN_TxHeaderTypeDef hdr;
+    <span class="code-type">uint8_t</span> data[<span class="code-num">8</span>];
+    <span class="code-type">uint32_t</span> mailbox;
+
+    <span class="code-comment">/* 0x355 — SoC / SoH */</span>
+    hdr.StdId = CAN_ID_SOC_SOH;
+    hdr.IDE   = CAN_ID_STD;
+    hdr.RTR   = CAN_RTR_DATA;
+    hdr.DLC   = <span class="code-num">8</span>;
+
+    <span class="code-type">uint16_t</span> soc_raw = (<span class="code-type">uint16_t</span>)(bms->soc * <span class="code-num">100.0f</span>); <span class="code-comment">/* 0.01% per bit */</span>
+    <span class="code-type">uint16_t</span> soh_raw = (<span class="code-type">uint16_t</span>)(bms->soh * <span class="code-num">100.0f</span>);
+    data[<span class="code-num">0</span>] = soc_raw &amp; <span class="code-num">0xFF</span>;
+    data[<span class="code-num">1</span>] = (soc_raw >> <span class="code-num">8</span>) &amp; <span class="code-num">0xFF</span>;
+    data[<span class="code-num">2</span>] = soh_raw &amp; <span class="code-num">0xFF</span>;
+    data[<span class="code-num">3</span>] = (soh_raw >> <span class="code-num">8</span>) &amp; <span class="code-num">0xFF</span>;
+    data[<span class="code-num">4</span>] = data[<span class="code-num">5</span>] = data[<span class="code-num">6</span>] = data[<span class="code-num">7</span>] = <span class="code-num">0</span>;
+
+    HAL_CAN_AddTxMessage(&hcan1, &hdr, data, &mailbox);
+
+    <span class="code-comment">/* 0x356 — Voltage / Current / Temp */</span>
+    hdr.StdId = CAN_ID_VOLTAGE_CURR;
+    <span class="code-type">int16_t</span> v_raw = (<span class="code-type">int16_t</span>)(bms->pack_voltage * <span class="code-num">100.0f</span>); <span class="code-comment">/* 0.01V/bit */</span>
+    <span class="code-type">int16_t</span> i_raw = (<span class="code-type">int16_t</span>)(bms->pack_current * <span class="code-num">10.0f</span>);  <span class="code-comment">/* 0.1A/bit, signed */</span>
+    <span class="code-type">int16_t</span> t_raw = (<span class="code-type">int16_t</span>)(bms->temp_avg * <span class="code-num">10.0f</span>);    <span class="code-comment">/* 0.1°C/bit */</span>
+    data[<span class="code-num">0</span>] = v_raw &amp; <span class="code-num">0xFF</span>;   data[<span class="code-num">1</span>] = v_raw >> <span class="code-num">8</span>;
+    data[<span class="code-num">2</span>] = i_raw &amp; <span class="code-num">0xFF</span>;   data[<span class="code-num">3</span>] = i_raw >> <span class="code-num">8</span>;
+    data[<span class="code-num">4</span>] = t_raw &amp; <span class="code-num">0xFF</span>;   data[<span class="code-num">5</span>] = t_raw >> <span class="code-num">8</span>;
+    data[<span class="code-num">6</span>] = data[<span class="code-num">7</span>] = <span class="code-num">0</span>;
+
+    HAL_CAN_AddTxMessage(&hcan1, &hdr, data, &mailbox);
+}
+      </div>
+    </div>
+  </section>
