@@ -1092,3 +1092,240 @@
       </div>
     </div>
   </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ SECTION 7.4 -->
+  <section id="s7-4" class="section" style="background:var(--surface-1);">
+    <div class="container">
+      <div class="section-label">Section 7.4</div>
+      <h2 class="section-title">EV BMS vs ESS BMS</h2>
+      <p class="section-subtitle">Electric vehicle BMS design priorities differ fundamentally from stationary storage. Applying EV BMS assumptions to an ESS produces a system optimized for the wrong problem.</p>
+
+      <div class="callout callout-warning">
+        <div class="callout-icon">⚠</div>
+        <div class="callout-body">
+          <div class="callout-title">The EV Engineer's ESS Mistake</div>
+          <p>Many BMS engineers trained on EV projects bring EV assumptions into ESS design: maximize energy density, optimize for peak power bursts, design cooling for 3–5C charge rates, tolerate 1–2% SoC error (GPS can verify range). In an ESS, all of these priorities invert. The result is a system that performs adequately but degrades 50% faster than necessary, costs 30% more than required, and occasionally fails safety inspections.</p>
+        </div>
+      </div>
+
+      <!-- Animated side-by-side comparison SVG -->
+      <div class="svg-container" style="background:var(--surface-2);border-radius:12px;padding:1.5rem;margin:2rem 0;">
+        <svg viewBox="0 0 800 420" style="width:100%;height:auto;font-family:inherit;">
+          <defs>
+            <linearGradient id="evGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.8"/>
+              <stop offset="100%" stop-color="#1d4ed8" stop-opacity="0.6"/>
+            </linearGradient>
+            <linearGradient id="essGrad74" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.8"/>
+              <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.6"/>
+            </linearGradient>
+          </defs>
+
+          <!-- Background panels -->
+          <rect x="10" y="10" width="375" height="400" rx="12" fill="url(#evGrad)" opacity="0.15" stroke="#3b82f6" stroke-width="1"/>
+          <rect x="415" y="10" width="375" height="400" rx="12" fill="url(#essGrad74)" opacity="0.15" stroke="#fbbf24" stroke-width="1"/>
+
+          <!-- Headers -->
+          <rect x="30" y="20" width="335" height="36" rx="8" fill="#3b82f6" opacity="0.8"/>
+          <text x="197" y="43" text-anchor="middle" fill="white" font-size="14" font-weight="700">⚡ EV BMS Priorities</text>
+          <rect x="435" y="20" width="335" height="36" rx="8" fill="#fbbf24" opacity="0.8"/>
+          <text x="602" y="43" text-anchor="middle" fill="#111" font-size="14" font-weight="700">🏠 ESS BMS Priorities</text>
+
+          <!-- Priority rows with animated comparison bars -->
+          <!-- Row 1: C-rate -->
+          <text x="30" y="82" fill="#94a3b8" font-size="10" font-weight="600">CHARGE/DISCHARGE RATE</text>
+          <text x="30" y="97" fill="#93c5fd" font-size="11">Peak: 3–5C (fast charging, regen)</text>
+          <text x="30" y="111" fill="#64748b" font-size="10">Sustained: 1–2C; BMS sized for bursts</text>
+          <text x="435" y="82" fill="#94a3b8" font-size="10" font-weight="600">CHARGE/DISCHARGE RATE</text>
+          <text x="435" y="97" fill="#fde68a" font-size="11">Normal: 0.1–0.3C (solar match rate)</text>
+          <text x="435" y="111" fill="#64748b" font-size="10">Peak: 1C; thermal management simpler</text>
+
+          <line x1="10" y1="120" x2="790" y2="120" stroke="#334155" stroke-width="1"/>
+
+          <!-- Row 2: Balancing -->
+          <text x="30" y="137" fill="#94a3b8" font-size="10" font-weight="600">CELL BALANCING</text>
+          <text x="30" y="152" fill="#93c5fd" font-size="11">Passive bleed-down at high SoC</text>
+          <text x="30" y="166" fill="#64748b" font-size="10">Window: 3.4–3.65V; short balance window</text>
+          <text x="435" y="137" fill="#94a3b8" font-size="10" font-weight="600">CELL BALANCING</text>
+          <text x="435" y="152" fill="#fde68a" font-size="11">Active balancing preferred (long float)</text>
+          <text x="435" y="166" fill="#64748b" font-size="10">Continuous at float; prevent drift divergence</text>
+
+          <line x1="10" y1="175" x2="790" y2="175" stroke="#334155" stroke-width="1"/>
+
+          <!-- Row 3: Cooling -->
+          <text x="30" y="192" fill="#94a3b8" font-size="10" font-weight="600">THERMAL MANAGEMENT</text>
+          <text x="30" y="207" fill="#93c5fd" font-size="11">Liquid cooling mandatory (3–5C rate)</text>
+          <text x="30" y="221" fill="#64748b" font-size="10">Thermal runaway propagation a major concern</text>
+          <text x="435" y="192" fill="#94a3b8" font-size="10" font-weight="600">THERMAL MANAGEMENT</text>
+          <text x="435" y="207" fill="#fde68a" font-size="11">Passive air cooling sufficient (&lt;0.5C rate)</text>
+          <text x="435" y="221" fill="#64748b" font-size="10">LFP chemistry + low rate = manageable heat</text>
+
+          <line x1="10" y1="230" x2="790" y2="230" stroke="#334155" stroke-width="1"/>
+
+          <!-- Row 4: SoC accuracy -->
+          <text x="30" y="247" fill="#94a3b8" font-size="10" font-weight="600">SOC ACCURACY REQUIRED</text>
+          <text x="30" y="262" fill="#93c5fd" font-size="11">±3–5% acceptable (range estimate)</text>
+          <text x="30" y="276" fill="#64748b" font-size="10">GPS range vs predicted covers error</text>
+          <text x="435" y="247" fill="#94a3b8" font-size="10" font-weight="600">SOC ACCURACY REQUIRED</text>
+          <text x="435" y="262" fill="#fde68a" font-size="11">±2–3% (UPS: ±1%) for energy trading</text>
+          <text x="435" y="276" fill="#64748b" font-size="10">TOU arbitrage needs real energy quantity</text>
+
+          <line x1="10" y1="285" x2="790" y2="285" stroke="#334155" stroke-width="1"/>
+
+          <!-- Row 5: Communication -->
+          <text x="30" y="302" fill="#94a3b8" font-size="10" font-weight="600">COMMUNICATION PROTOCOL</text>
+          <text x="30" y="317" fill="#93c5fd" font-size="11">CAN bus ISO 15765; OBD-II; OTA updates</text>
+          <text x="30" y="331" fill="#64748b" font-size="10">Vehicle network integration focus</text>
+          <text x="435" y="302" fill="#94a3b8" font-size="10" font-weight="600">COMMUNICATION PROTOCOL</text>
+          <text x="435" y="317" fill="#fde68a" font-size="11">CAN/Modbus/RS485; PYLON/CANOPEN</text>
+          <text x="435" y="331" fill="#64748b" font-size="10">Inverter compatibility ecosystem critical</text>
+
+          <line x1="10" y1="340" x2="790" y2="340" stroke="#334155" stroke-width="1"/>
+
+          <!-- Row 6: Lifetime target -->
+          <text x="30" y="357" fill="#94a3b8" font-size="10" font-weight="600">DESIGN LIFE TARGET</text>
+          <text x="30" y="372" fill="#93c5fd" font-size="11">8–12 years / 150,000–300,000 km</text>
+          <text x="30" y="386" fill="#64748b" font-size:10">Vehicle cycle; SoH alarm at 70–80%</text>
+          <text x="435" y="357" fill="#94a3b8" font-size="10" font-weight="600">DESIGN LIFE TARGET</text>
+          <text x="435" y="372" fill="#fde68a" font-size="11">10–15 years / 3,000–5,000 cycles</text>
+          <text x="435" y="386" fill="#64748b" font-size="10">Warranty period; SoH alarm at 80%</text>
+
+          <!-- Center divider -->
+          <line x1="400" y1="10" x2="400" y2="410" stroke="#475569" stroke-width="2" stroke-dasharray="6,4"/>
+          <text x="400" y="220" text-anchor="middle" fill="#64748b" font-size="24" font-weight="900" transform="rotate(-90 400 220)">VS</text>
+        </svg>
+      </div>
+
+      <!-- Detailed difference cards -->
+      <h3 style="color:var(--app-gold);margin:2rem 0 1rem;">Critical Design Differences</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.2rem;margin:1.5rem 0;">
+
+        <div class="req-card">
+          <div class="req-card-title">C-Rate: The Fundamental Difference</div>
+          <div class="req-card-body">
+            An EV accelerating at 0–100 km/h in 4 seconds draws 3–5C from the battery. An ESS accepting morning solar surplus charges at 0.1–0.3C. This 10–50× difference in current rate changes nearly every hardware decision: shunt resistor sizing, FET RDS(on) budget, thermal pad area, wire gauge, protection response timing. An EV BMS designed for 5C continuous does not fail in an ESS; it simply over-engineers thermal management while under-optimizing for the long float periods that dominate ESS operation.
+          </div>
+        </div>
+
+        <div class="req-card">
+          <div class="req-card-title">Balancing Window: Float vs Drive</div>
+          <div class="req-card-body">
+            EV cells balance once per charge cycle at the top-of-charge plateau. The balancing window is brief (minutes). ESS cells in float mode spend hours or days near the same SoC — passive balancing produces significant parasitic heat with no benefit. Active balancing (energy shuttling via inductors or switched capacitors) is more complex and expensive, but prevents continuous thermal dissipation and is more effective for maintaining pack uniformity over years of float operation.
+          </div>
+        </div>
+
+        <div class="req-card">
+          <div class="req-card-title">Communication: Inverter Ecosystem Lock-in</div>
+          <div class="req-card-body">
+            EV BMS communicates with the vehicle's powertrain ECU using proprietary CAN protocols. ESS BMS must communicate with third-party inverters — Victron, SMA, Growatt, Deye, Huawei — using published protocols: PYLON CAN (widely cloned), Victron VE.CAN, SMA CAN, generic Modbus RTU RS485. BMS firmware that hard-codes one inverter brand fails in the field. The ESS BMS must support at least 3 protocol profiles selectable via DIP switch or commissioning command.
+          </div>
+        </div>
+
+        <div class="req-card">
+          <div class="req-card-title">SoC Accuracy: Energy vs Range</div>
+          <div class="req-card-body">
+            EV SoC error of ±5% means ±15km range error on a 300km vehicle — acceptable. ESS SoC error of ±5% on a 10kWh system means ±500Wh billing error in a TOU arbitrage scenario. Over 365 cycles, that is 182kWh of mistracked energy — potentially €30–50/year of misallocated cost in high-tariff markets. ESS BMS must achieve ±2–3% via frequent OCV recalibrations and the EKF algorithm from Chapter 2. UPS BMS targets ±1% to provide accurate runtime estimates to building management systems.
+          </div>
+        </div>
+
+        <div class="req-card">
+          <div class="req-card-title">State Machine Complexity</div>
+          <div class="req-card-body">
+            EV BMS state machine centres around drive states: PARK, DRIVE, REGEN, CHARGE, DCFC. ESS BMS adds states without EV equivalent: FLOAT (UPS standby), SOLAR_CHARGE (MPPT current source input), GRID_CHARGE (AC coupled), GRID_EXPORT (feed-in), PEAK_SHAVE, TOU_HOLD. Chapter 6's 11-state machine is ESS-oriented. Mapping an EV state machine onto an ESS control loop produces a BMS that cannot distinguish between "float fully charged" and "bulk charging" — leading to continuous charge current at full SoC.
+          </div>
+        </div>
+
+        <div class="req-card">
+          <div class="req-card-title">Regulatory Path: IEC 62619 vs ECE R100</div>
+          <div class="req-card-body">
+            EV battery systems certify to UNECE Regulation R100 (vehicle safety) plus OEM-specific requirements. ESS certifies to IEC 62619 (stationary Li-ion safety), UL 9540A (thermal runaway propagation), UL 1973 (stationary BMS), and NFPA 855 (installation). These are completely different test suites. An EV-certified battery cannot be re-labelled as ESS-certified. Engineers crossing from EV to ESS programmes commonly underestimate this regulatory gap — especially the installation fire code requirements that have no EV equivalent.
+          </div>
+        </div>
+      </div>
+
+      <!-- C-rate impact animated chart -->
+      <h3 style="color:var(--app-gold);margin:2rem 0 1rem;">C-Rate Impact: EV vs ESS Thermal Profile</h3>
+      <div class="svg-container" style="background:var(--surface-2);border-radius:12px;padding:1.5rem;margin:1.5rem 0;">
+        <svg viewBox="0 0 700 240" style="width:100%;height:auto;font-family:inherit;">
+          <defs>
+            <linearGradient id="evHeatGrad" x1="0" y1="1" x2="0" y2="0">
+              <stop offset="0%" stop-color="#3b82f6"/>
+              <stop offset="100%" stop-color="#ef4444"/>
+            </linearGradient>
+            <linearGradient id="essHeatGrad" x1="0" y1="1" x2="0" y2="0">
+              <stop offset="0%" stop-color="#3b82f6"/>
+              <stop offset="100%" stop-color="#fbbf24"/>
+            </linearGradient>
+          </defs>
+          <text x="350" y="20" text-anchor="middle" fill="#f8fafc" font-size="13" font-weight="700">Cell Heat Generation: P = I²R₀ + I²R₁(1−e^(−t/τ))</text>
+
+          <!-- Axes -->
+          <line x1="60" y1="200" x2="680" y2="200" stroke="#475569" stroke-width="1.5"/>
+          <line x1="60" y1="30" x2="60" y2="200" stroke="#475569" stroke-width="1.5"/>
+          <text x="370" y="225" text-anchor="middle" fill="#94a3b8" font-size="10">C-Rate (multiples of capacity)</text>
+          <text x="20" y="115" text-anchor="middle" fill="#94a3b8" font-size="10" transform="rotate(-90 20 115)">Heat (W/cell)</text>
+
+          <!-- X labels -->
+          <text x="110" y="215" text-anchor="middle" fill="#64748b" font-size="10">0.1C</text>
+          <text x="220" y="215" text-anchor="middle" fill="#64748b" font-size="10">0.5C</text>
+          <text x="330" y="215" text-anchor="middle" fill="#64748b" font-size="10">1C</text>
+          <text x="440" y="215" text-anchor="middle" fill="#64748b" font-size="10">2C</text>
+          <text x="550" y="215" text-anchor="middle" fill="#64748b" font-size="10">3C</text>
+          <text x="660" y="215" text-anchor="middle" fill="#64748b" font-size="10">5C</text>
+
+          <!-- Heat curve (quadratic I²R) — bar style for clarity -->
+          <!-- P = I²×R₀; at 0.1C: 0.01 unit; 0.5C: 0.25; 1C: 1.0; 2C: 4.0; 3C: 9.0; 5C: 25 -->
+          <!-- Scale: 25 units = 160px height -->
+          <rect x="95" y="199" width="30" height="1" fill="#fbbf24" rx="2">
+            <animate attributeName="height" values="0;1" dur="0.5s" begin="0.1s" fill="freeze"/>
+            <animate attributeName="y" values="200;199" dur="0.5s" begin="0.1s" fill="freeze"/>
+          </rect>
+          <rect x="205" y="186" width="30" height="14" fill="#fbbf24" rx="2">
+            <animate attributeName="height" values="0;14" dur="0.5s" begin="0.2s" fill="freeze"/>
+            <animate attributeName="y" values="200;186" dur="0.5s" begin="0.2s" fill="freeze"/>
+          </rect>
+          <rect x="315" y="136" width="30" height="64" fill="#f59e0b" rx="2">
+            <animate attributeName="height" values="0;64" dur="0.5s" begin="0.3s" fill="freeze"/>
+            <animate attributeName="y" values="200;136" dur="0.5s" begin="0.3s" fill="freeze"/>
+          </rect>
+          <rect x="425" y="42" width="30" height="158" fill="#f97316" rx="2">
+            <animate attributeName="height" values="0;158" dur="0.6s" begin="0.4s" fill="freeze"/>
+            <animate attributeName="y" values="200;42" dur="0.6s" begin="0.4s" fill="freeze"/>
+          </rect>
+          <rect x="535" y="30" width="30" height="170" fill="#ef4444" rx="2" opacity="0.9">
+            <animate attributeName="height" values="0;170" dur="0.7s" begin="0.5s" fill="freeze"/>
+            <animate attributeName="y" values="200;30" dur="0.7s" begin="0.5s" fill="freeze"/>
+          </rect>
+          <rect x="645" y="30" width="30" height="170" fill="#dc2626" rx="2" opacity="0.9">
+            <animate attributeName="height" values="0;170" dur="0.7s" begin="0.6s" fill="freeze"/>
+            <animate attributeName="y" values="200;30" dur="0.7s" begin="0.6s" fill="freeze"/>
+          </rect>
+
+          <!-- ESS operating zone highlight -->
+          <rect x="75" y="30" width="185" height="170" fill="#fbbf24" opacity="0.05" rx="4"/>
+          <text x="167" y="50" text-anchor="middle" fill="#fbbf24" font-size="10" font-weight="700">ESS Zone</text>
+          <text x="167" y="62" text-anchor="middle" fill="#fbbf24" font-size="9">0.1–0.5C typical</text>
+
+          <!-- EV operating zone highlight -->
+          <rect x="410" y="30" width="275" height="170" fill="#3b82f6" opacity="0.05" rx="4"/>
+          <text x="548" y="50" text-anchor="middle" fill="#93c5fd" font-size="10" font-weight="700">EV Zone</text>
+          <text x="548" y="62" text-anchor="middle" fill="#93c5fd" font-size="9">2–5C peak common</text>
+
+          <!-- I²R label -->
+          <text x="580" y="90" fill="#94a3b8" font-size="10">Heat ∝ I²</text>
+          <text x="580" y="103" fill="#94a3b8" font-size="10">×25 increase</text>
+          <text x="580" y="116" fill="#94a3b8" font-size="10">from 0.1C→5C</text>
+        </svg>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-icon">📐</div>
+        <div class="callout-body">
+          <div class="callout-title">Design Rule: Size Thermal Management for Actual Operating Rate</div>
+          <p>Heat generation scales as I². An ESS operating at 0.3C generates (0.3)² = 0.09 relative heat units. An EV at 3C generates (3)² = 9 — exactly 100× more heat per unit resistance. This means an ESS with passive air cooling (adequate for 0.3C) cannot be directly used in an EV application, and an EV's liquid cooling system is massively over-specified for an ESS. Right-sizing thermal management to the actual C-rate reduces cost, complexity, and maintenance burden significantly.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
