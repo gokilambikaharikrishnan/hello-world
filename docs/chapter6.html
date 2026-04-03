@@ -1157,3 +1157,123 @@
       </div>
     </div>
   </section>
+
+  <!-- ─── MCU LAYER ─── -->
+  <section id="s6-2-mcu" class="chapter-section" style="border-bottom:none;padding-top:1.5rem;">
+    <div class="section-inner">
+      <h3 class="subsection-title" style="font-size:1.4rem;margin-top:0;">MCU Layer</h3>
+      <p style="color:var(--text-muted);font-size:0.95rem;line-height:1.75;max-width:820px;margin-bottom:1.5rem;">
+        The MCU is the brain of the BMS — it runs all firmware modules, manages state transitions, and
+        coordinates between the AFE, storage, and communication subsystems. Selecting the wrong MCU
+        is one of the most expensive engineering mistakes: insufficient RAM means SoC algorithms cannot
+        run; insufficient Flash means the OCV lookup table doesn't fit; missing CAN peripheral means
+        an external controller IC is needed.
+      </p>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem;margin:1.5rem 0;">
+        <div class="arch-block">
+          <div class="arch-block-title">Why Dedicated MCU for BMS</div>
+          <div class="arch-block-body">
+            Some designs try to share an MCU between the BMS and inverter control. This is dangerous: if
+            the inverter control loop takes a long CPU burst (e.g., MPPT recalculation), the BMS measurement
+            loop is delayed — a 100ms measurement gap during a fault condition can allow cell damage.
+            Production BMS systems always use a dedicated MCU. The cost of a second $2 MCU is far less
+            than the liability of a missed protection event. Dedicated MCU also simplifies UL 1973
+            fault-injection testing since the entire firmware under test is the BMS.
+          </div>
+        </div>
+        <div class="arch-block">
+          <div class="arch-block-title">Core Clock Speed Requirements</div>
+          <div class="arch-block-body">
+            A 48–168 MHz Cortex-M0+ to M4 is sufficient for most BMS applications. The EKF SoC
+            algorithm (Chapter 2) requires floating-point matrix operations; an FPU (Cortex-M4F or
+            M7F) eliminates software floating-point overhead. Rule of thumb: measure CPU load at
+            peak — measurement + protection + SoC + CAN TX should consume less than 60% CPU budget,
+            leaving headroom for balancing, logging, and future features. Never design at 95% CPU
+            utilisation — debugging interrupt latency issues at 3am is expensive.
+          </div>
+        </div>
+        <div class="arch-block">
+          <div class="arch-block-title">RAM Requirements</div>
+          <div class="arch-block-body">
+            Minimum for a 16S LFP BMS: 32KB RAM. Breakdown: cell voltage array (16×2B = 32B),
+            temperature array (6×4B = 24B), EKF state matrix (4×4 float = 64B), OCV-SoC lookup
+            table if in RAM (50×8B = 400B), circular log buffer (256×16B = 4KB), CAN TX/RX buffers
+            (8×16B = 128B), RTOS task stacks (4KB typical per task × 4 tasks = 16KB). Recommended:
+            64KB+ RAM to avoid tight-margin designs that fail in cold (-40°C) when stack depth
+            increases with slower execution.
+          </div>
+        </div>
+        <div class="arch-block">
+          <div class="arch-block-title">Flash Requirements</div>
+          <div class="arch-block-body">
+            Code size for a complete BMS firmware: 64–128KB typical. Breakdown: RTOS kernel (~12KB
+            for FreeRTOS), BMS application code (~40KB), OCV lookup table (400B), NVM driver (~4KB),
+            CAN stack (~8KB), calibration data in Flash (2KB). Always leave 25% Flash free for
+            firmware updates (OTA or bench-programmed). NVM sectors require separate Flash pages to
+            avoid code corruption during write. Minimum recommended: 256KB Flash.
+          </div>
+        </div>
+        <div class="arch-block">
+          <div class="arch-block-title">Required Peripherals</div>
+          <div class="arch-block-body">
+            Must-have: SPI (AFE communication), ADC (NTC temperature, shunt voltage, pack voltage),
+            CAN or CAN-FD (host communication), UART (debug/service interface), timers (measurement
+            loop, balancing timing, watchdog), hardware watchdog timer (WDT — must be separate from
+            RTOS tick), I²C or SPI for EEPROM/Flash NVM, RTC (timestamping), backup domain power
+            (for backup SRAM + RTC on power loss). Nice-to-have: DMA (SPI transfers without CPU
+            intervention), hardware CRC (NVM integrity), IWDG (independent watchdog — clocked from
+            LSI, separate from main clock).
+          </div>
+        </div>
+        <div class="arch-block">
+          <div class="arch-block-title">Watchdog Timer Design</div>
+          <div class="arch-block-body">
+            A BMS must have two watchdog layers: (1) AFE hardware watchdog — opened by AFE IC if
+            MCU stops writing WDOG register; (2) MCU independent watchdog (IWDG) — resets the MCU
+            if firmware hangs. The IWDG uses the LSI oscillator (32kHz), independent of the main
+            system clock, so a PLL failure does not affect the watchdog. The watchdog must be fed
+            by the measurement loop — not by a separate task. If the measurement loop hangs, the
+            system resets. Configure timeout: 100ms for IWDG (allow measurement loop to slip one
+            cycle), 2s for AFE watchdog (allow MCU reset and reinitialisation).
+          </div>
+        </div>
+      </div>
+
+      <!-- MCU peripheral requirements table -->
+      <h3 class="subsection-title">MCU Selection Checklist</h3>
+      <div style="overflow-x:auto;">
+      <table class="comp-table">
+        <thead>
+          <tr><th>Peripheral</th><th>Minimum Spec</th><th>Recommended</th><th>If Missing</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>SPI</td><td>1× SPI, 10MHz, 16-bit frames</td><td>2× SPI (AFE + NVM separate)</td><td>Must share bus — timing complexity</td></tr>
+          <tr><td>ADC</td><td>12-bit, 4 channels</td><td>12-bit, 8 channels, 1μs conversion</td><td>External ADC IC — extra BOM cost</td></tr>
+          <tr><td>CAN</td><td>bxCAN, 250kbps</td><td>CAN-FD, 500kbps, dual mailbox</td><td>External MCP2515 SPI-CAN — extra latency</td></tr>
+          <tr><td>UART</td><td>1× UART, 115200 baud</td><td>2× UART (debug + Modbus)</td><td>Debug only via SWD — field service harder</td></tr>
+          <tr><td>Timers</td><td>2× general purpose, 1× basic</td><td>4+ timers (loop, PWM, timeout, WDT)</td><td>Timers shared — priority conflicts</td></tr>
+          <tr><td>Hardware WDT</td><td>IWDG with LSI clock</td><td>IWDG + WWDG dual watchdog</td><td>Software WDT only — not safe</td></tr>
+          <tr><td>RTC</td><td>32-bit counter, backup power</td><td>Calendar RTC with Unix epoch</td><td>Timestamps lose accuracy after power loss</td></tr>
+          <tr><td>Backup SRAM</td><td>2KB battery-backed</td><td>4–8KB backup SRAM</td><td>SoC lost on power loss → OCV re-init</td></tr>
+          <tr><td>Flash</td><td>128KB (2 banks)</td><td>256KB+ dual-bank for OTA</td><td>NVM writes may erase code segment</td></tr>
+          <tr><td>RAM</td><td>32KB</td><td>64–128KB</td><td>EKF + log buffer don't fit together</td></tr>
+          <tr><td>FPU</td><td>Optional for simple CC SoC</td><td>Required for EKF (Cortex-M4F)</td><td>Software float — 10× slower EKF</td></tr>
+          <tr><td>DMA</td><td>Optional</td><td>DMA on SPI + ADC channels</td><td>SPI transfers block CPU — latency spikes</td></tr>
+        </tbody>
+      </table>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-icon">ℹ</div>
+        <div class="callout-body">
+          <div class="callout-title">MCU Recommendations for LFP BMS (2024)</div>
+          <ul>
+            <li><strong>Cost-optimised (home ESS):</strong> STM32G0B1 — Cortex-M0+, 64KB RAM, 512KB Flash, CAN, 12-bit ADC, backup SRAM, ~$1.50 at 1k</li>
+            <li><strong>Performance (UPS / industrial):</strong> STM32G431 — Cortex-M4F + FPU, 32KB RAM, 128KB Flash, CAN-FD, hardware WDT, ~$2.50 at 1k</li>
+            <li><strong>High-reliability:</strong> TI TMS570LS — Cortex-R4F dual-core lockstep, IEC 61508 SIL2 certified, ~$15 at 1k</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
