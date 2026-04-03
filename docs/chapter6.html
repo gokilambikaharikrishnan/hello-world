@@ -723,3 +723,224 @@
       </div>
     </div>
   </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 6.2 — HARDWARE ARCHITECTURE: FULL PICTURE
+  ═══════════════════════════════════════════════════════════════ -->
+  <section id="s6-2" class="chapter-section">
+    <div class="section-inner">
+      <div class="section-label">Section 6.2</div>
+      <h2 class="section-title">Hardware Architecture — Full Picture</h2>
+      <p class="section-intro">
+        A production BMS comprises six hardware layers: cells, the Analog Front End (AFE), the
+        microcontroller (MCU), communication interfaces, persistent storage, and physical protection
+        (FETs, fuse, contactor). Each layer has a specific job and communicates with adjacent layers
+        through well-defined interfaces. Failure to understand these boundaries is the most common
+        source of BMS design bugs.
+      </p>
+
+      <!-- Full system block diagram SVG -->
+      <svg viewBox="0 0 960 620" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:960px;display:block;margin:1.5rem auto;border-radius:12px;background:#0d1117;">
+        <defs>
+          <marker id="arrowW" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#e2e8f0"/>
+          </marker>
+          <marker id="arrowPu" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#a78bfa"/>
+          </marker>
+          <marker id="arrowC" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#00e5ff"/>
+          </marker>
+          <marker id="arrowO" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#f97316"/>
+          </marker>
+        </defs>
+
+        <text x="480" y="25" text-anchor="middle" fill="#e2e8f0" font-family="monospace" font-size="14" font-weight="bold">BMS Full Hardware Architecture</text>
+
+        <!-- ── CELL STACK (left) ── -->
+        <rect x="20" y="50" width="110" height="500" rx="8" fill="rgba(239,68,68,0.1)" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="75" y="70" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="11" font-weight="bold">CELL STACK</text>
+        <text x="75" y="84" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">16S LFP</text>
+
+        <!-- Individual cells -->
+        <rect x="32" y="92" width="86" height="28" rx="4" fill="#1a0808" stroke="#ef4444" stroke-width="1"/>
+        <text x="75" y="108" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="9">Cell 1  3.28V</text>
+        <rect x="32" y="124" width="86" height="28" rx="4" fill="#1a0808" stroke="#ef4444" stroke-width="1"/>
+        <text x="75" y="140" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="9">Cell 2  3.31V</text>
+        <rect x="32" y="156" width="86" height="28" rx="4" fill="#1a0808" stroke="#ef4444" stroke-width="1"/>
+        <text x="75" y="172" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="9">Cell 3  3.29V</text>
+        <text x="75" y="205" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="11">· · ·</text>
+        <rect x="32" y="220" width="86" height="28" rx="4" fill="#0a1a08" stroke="#f97316" stroke-width="1.5"/>
+        <text x="75" y="236" text-anchor="middle" fill="#f97316" font-family="monospace" font-size="9">Cell 8  3.19V ⚠</text>
+        <text x="75" y="265" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="11">· · ·</text>
+        <rect x="32" y="278" width="86" height="28" rx="4" fill="#1a0808" stroke="#ef4444" stroke-width="1"/>
+        <text x="75" y="294" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="9">Cell 16  3.30V</text>
+
+        <!-- NTC sensors -->
+        <rect x="32" y="320" width="86" height="22" rx="4" fill="rgba(249,115,22,0.15)" stroke="#f97316" stroke-width="1"/>
+        <text x="75" y="335" text-anchor="middle" fill="#f97316" font-family="monospace" font-size="9">NTC1  27.3°C</text>
+        <rect x="32" y="346" width="86" height="22" rx="4" fill="rgba(249,115,22,0.15)" stroke="#f97316" stroke-width="1"/>
+        <text x="75" y="361" text-anchor="middle" fill="#f97316" font-family="monospace" font-size="9">NTC2  28.1°C</text>
+        <rect x="32" y="372" width="86" height="22" rx="4" fill="rgba(249,115,22,0.15)" stroke="#f97316" stroke-width="1"/>
+        <text x="75" y="387" text-anchor="middle" fill="#f97316" font-family="monospace" font-size="9">NTC3  27.8°C</text>
+
+        <!-- Current shunt -->
+        <rect x="32" y="408" width="86" height="22" rx="4" fill="rgba(45,212,191,0.15)" stroke="#2dd4bf" stroke-width="1"/>
+        <text x="75" y="423" text-anchor="middle" fill="#2dd4bf" font-family="monospace" font-size="9">Shunt 1mΩ</text>
+        <text x="75" y="442" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="9">Pack Current</text>
+        <text x="75" y="455" text-anchor="middle" fill="#2dd4bf" font-family="monospace" font-size="9">−42.3A</text>
+
+        <!-- ── AFE block ── -->
+        <rect x="175" y="50" width="160" height="400" rx="8" fill="rgba(167,139,250,0.08)" stroke="#a78bfa" stroke-width="2"/>
+        <text x="255" y="74" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="12" font-weight="bold">AFE IC</text>
+        <text x="255" y="89" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">BQ76952 / LTC6813</text>
+
+        <rect x="185" y="100" width="140" height="35" rx="5" fill="rgba(167,139,250,0.12)" stroke="#a78bfa" stroke-width="1"/>
+        <text x="255" y="117" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="10">Δ-Σ ADC Mux</text>
+        <text x="255" y="130" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">16-bit, flying cap</text>
+
+        <rect x="185" y="148" width="140" height="35" rx="5" fill="rgba(167,139,250,0.12)" stroke="#a78bfa" stroke-width="1"/>
+        <text x="255" y="165" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="10">Temp Channels</text>
+        <text x="255" y="178" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">NTC / internal ref</text>
+
+        <rect x="185" y="196" width="140" height="35" rx="5" fill="rgba(167,139,250,0.12)" stroke="#a78bfa" stroke-width="1"/>
+        <text x="255" y="213" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="10">SCD Comparator</text>
+        <text x="255" y="226" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">HW path &lt;500μs</text>
+
+        <rect x="185" y="244" width="140" height="35" rx="5" fill="rgba(167,139,250,0.12)" stroke="#a78bfa" stroke-width="1"/>
+        <text x="255" y="261" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="10">Balance FET Driver</text>
+        <text x="255" y="274" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Passive / active</text>
+
+        <rect x="185" y="292" width="140" height="35" rx="5" fill="rgba(167,139,250,0.12)" stroke="#a78bfa" stroke-width="1"/>
+        <text x="255" y="309" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="10">AFE Watchdog</text>
+        <text x="255" y="322" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Opens FETs if MCU silent</text>
+
+        <rect x="185" y="340" width="140" height="35" rx="5" fill="rgba(167,139,250,0.12)" stroke="#a78bfa" stroke-width="1"/>
+        <text x="255" y="357" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="10">SPI / isoSPI Port</text>
+        <text x="255" y="370" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Data to/from MCU</text>
+
+        <!-- SPI arrow cells→AFE -->
+        <line x1="130" y1="150" x2="173" y2="150" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrowPu)" stroke-dasharray="4,3">
+          <animate attributeName="stroke-dashoffset" from="7" to="0" dur="0.8s" repeatCount="indefinite"/>
+        </line>
+        <text x="151" y="145" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="8">Vcell</text>
+
+        <line x1="130" y1="345" x2="173" y2="345" stroke="#f97316" stroke-width="1.5" marker-end="url(#arrowO)" stroke-dasharray="4,3">
+          <animate attributeName="stroke-dashoffset" from="7" to="0" dur="0.8s" repeatCount="indefinite"/>
+        </line>
+        <text x="151" y="340" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="8">Temp</text>
+
+        <!-- ── MCU block ── -->
+        <rect x="385" y="50" width="200" height="500" rx="8" fill="rgba(52,211,153,0.07)" stroke="#34d399" stroke-width="2"/>
+        <text x="485" y="74" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="12" font-weight="bold">MCU</text>
+        <text x="485" y="89" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">STM32 / TI C2000</text>
+
+        <rect x="395" y="100" width="180" height="30" rx="5" fill="rgba(52,211,153,0.1)" stroke="#34d399" stroke-width="1"/>
+        <text x="485" y="120" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="10">Measurement Module</text>
+
+        <rect x="395" y="140" width="180" height="30" rx="5" fill="rgba(52,211,153,0.1)" stroke="#34d399" stroke-width="1"/>
+        <text x="485" y="160" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="10">Protection Module</text>
+
+        <rect x="395" y="180" width="180" height="30" rx="5" fill="rgba(52,211,153,0.1)" stroke="#34d399" stroke-width="1"/>
+        <text x="485" y="200" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="10">SoC / SoH / SoF / SoP</text>
+
+        <rect x="395" y="220" width="180" height="30" rx="5" fill="rgba(52,211,153,0.1)" stroke="#34d399" stroke-width="1"/>
+        <text x="485" y="240" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="10">Balancing Module</text>
+
+        <rect x="395" y="260" width="180" height="30" rx="5" fill="rgba(52,211,153,0.1)" stroke="#34d399" stroke-width="1"/>
+        <text x="485" y="280" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="10">State Machine</text>
+
+        <rect x="395" y="300" width="180" height="30" rx="5" fill="rgba(52,211,153,0.1)" stroke="#34d399" stroke-width="1"/>
+        <text x="485" y="320" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="10">CAN / SMBus / UART</text>
+
+        <rect x="395" y="340" width="180" height="30" rx="5" fill="rgba(52,211,153,0.1)" stroke="#34d399" stroke-width="1"/>
+        <text x="485" y="360" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="10">NVM Manager</text>
+
+        <rect x="395" y="380" width="180" height="30" rx="5" fill="rgba(52,211,153,0.1)" stroke="#34d399" stroke-width="1"/>
+        <text x="485" y="400" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="10">Event Logger (RTC)</text>
+
+        <rect x="395" y="420" width="180" height="30" rx="5" fill="rgba(52,211,153,0.1)" stroke="#34d399" stroke-width="1"/>
+        <text x="485" y="440" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="10">Watchdog Pet</text>
+
+        <!-- SPI AFE↔MCU animated -->
+        <line x1="335" y1="240" x2="383" y2="240" stroke="#a78bfa" stroke-width="2" stroke-dasharray="5,3">
+          <animate attributeName="stroke-dashoffset" from="8" to="0" dur="0.6s" repeatCount="indefinite"/>
+        </line>
+        <text x="359" y="233" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="9">SPI</text>
+
+        <!-- ── Right side: Storage + Comms + Protection ── -->
+        <!-- NVM -->
+        <rect x="640" y="50" width="150" height="80" rx="8" fill="rgba(249,115,22,0.08)" stroke="#f97316" stroke-width="1.5"/>
+        <text x="715" y="74" text-anchor="middle" fill="#f97316" font-family="monospace" font-size="11" font-weight="bold">NVM / Flash</text>
+        <text x="715" y="90" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">SoC/SoH/Cycles/Faults</text>
+        <text x="715" y="104" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">CRC-protected sectors</text>
+        <text x="715" y="118" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Write: 60s SOC, 1hr SOH</text>
+
+        <!-- Backup SRAM -->
+        <rect x="640" y="148" width="150" height="70" rx="8" fill="rgba(167,139,250,0.08)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="715" y="170" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="11" font-weight="bold">Backup SRAM</text>
+        <text x="715" y="186" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Battery-backed 4KB</text>
+        <text x="715" y="200" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Fast SoC every 1s</text>
+
+        <!-- RTC -->
+        <rect x="640" y="234" width="150" height="65" rx="8" fill="rgba(129,140,248,0.08)" stroke="#818cf8" stroke-width="1.5"/>
+        <text x="715" y="255" text-anchor="middle" fill="#818cf8" font-family="monospace" font-size="11" font-weight="bold">RTC</text>
+        <text x="715" y="271" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Unix timestamp</text>
+        <text x="715" y="285" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Coin cell / backup domain</text>
+
+        <!-- CAN -->
+        <rect x="640" y="315" width="150" height="65" rx="8" fill="rgba(0,229,255,0.08)" stroke="#00e5ff" stroke-width="1.5"/>
+        <text x="715" y="337" text-anchor="middle" fill="#00e5ff" font-family="monospace" font-size="11" font-weight="bold">CAN Bus</text>
+        <text x="715" y="353" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">250 / 500 kbps</text>
+        <text x="715" y="367" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">→ Inverter / Charger</text>
+
+        <!-- FETs + protection -->
+        <rect x="640" y="396" width="150" height="90" rx="8" fill="rgba(239,68,68,0.08)" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="715" y="418" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="11" font-weight="bold">Protection HW</text>
+        <text x="715" y="434" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">CHG FET + DSG FET</text>
+        <text x="715" y="448" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Pre-charge resistor</text>
+        <text x="715" y="462" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">HRC Fuse + Contactor</text>
+
+        <!-- Host/Inverter -->
+        <rect x="840" y="315" width="100" height="65" rx="8" fill="rgba(52,211,153,0.08)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="890" y="340" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="10" font-weight="bold">Inverter /</text>
+        <text x="890" y="354" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="10" font-weight="bold">Charger</text>
+        <text x="890" y="368" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="9">Host system</text>
+
+        <!-- Arrows MCU → peripherals -->
+        <line x1="585" y1="115" x2="638" y2="95" stroke="#f97316" stroke-width="1.5" marker-end="url(#arrowO)" stroke-dasharray="4,3">
+          <animate attributeName="stroke-dashoffset" from="7" to="0" dur="1.2s" repeatCount="indefinite"/>
+        </line>
+        <line x1="585" y1="165" x2="638" y2="183" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrowPu)" stroke-dasharray="4,3">
+          <animate attributeName="stroke-dashoffset" from="7" to="0" dur="1.2s" repeatCount="indefinite"/>
+        </line>
+        <line x1="585" y1="200" x2="638" y2="262" stroke="#818cf8" stroke-width="1.5" marker-end="url(#arrowPu)" stroke-dasharray="4,3">
+          <animate attributeName="stroke-dashoffset" from="7" to="0" dur="1.2s" repeatCount="indefinite"/>
+        </line>
+        <line x1="585" y1="315" x2="638" y2="345" stroke="#00e5ff" stroke-width="1.5" marker-end="url(#arrowC)" stroke-dasharray="4,3">
+          <animate attributeName="stroke-dashoffset" from="7" to="0" dur="0.8s" repeatCount="indefinite"/>
+        </line>
+        <line x1="585" y1="390" x2="638" y2="430" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arrowW)" stroke-dasharray="4,3">
+          <animate attributeName="stroke-dashoffset" from="7" to="0" dur="0.8s" repeatCount="indefinite"/>
+        </line>
+
+        <!-- CAN → Inverter -->
+        <line x1="790" y1="347" x2="838" y2="347" stroke="#00e5ff" stroke-width="1.5" marker-end="url(#arrowC)">
+          <animate attributeName="stroke-dasharray" values="0,50;50,0;0,50" dur="1.5s" repeatCount="indefinite"/>
+        </line>
+
+        <!-- legend bottom -->
+        <rect x="20" y="570" width="10" height="8" rx="2" fill="#a78bfa"/>
+        <text x="35" y="579" fill="#94a3b8" font-family="monospace" font-size="10">AFE data (SPI)</text>
+        <rect x="140" y="570" width="10" height="8" rx="2" fill="#00e5ff"/>
+        <text x="155" y="579" fill="#94a3b8" font-family="monospace" font-size="10">CAN comms</text>
+        <rect x="260" y="570" width="10" height="8" rx="2" fill="#ef4444"/>
+        <text x="275" y="579" fill="#94a3b8" font-family="monospace" font-size="10">Protection control</text>
+        <rect x="400" y="570" width="10" height="8" rx="2" fill="#f97316"/>
+        <text x="415" y="579" fill="#94a3b8" font-family="monospace" font-size="10">NVM writes</text>
+        <rect x="520" y="570" width="10" height="8" rx="2" fill="#34d399"/>
+        <text x="535" y="579" fill="#94a3b8" font-family="monospace" font-size="10">MCU firmware modules</text>
+      </svg>
+    </div>
+  </section>
