@@ -324,3 +324,291 @@
       </div>
     </div>
   </section>
+
+  <!-- ─── FLOAT CHARGING ─── -->
+  <section id="s7-1-float" class="chapter-section" style="border-bottom:none;padding-top:1.5rem;">
+    <div class="section-inner">
+      <h3 class="subsection-title" style="font-size:1.4rem;margin-top:0;">Float Charging — The UPS-Specific State</h3>
+      <p style="color:var(--text-muted);font-size:0.95rem;line-height:1.75;max-width:820px;margin-bottom:1.5rem;">
+        Float charging is a state unique to standby power applications. The battery sits fully charged,
+        connected to a constant voltage source, for months or years at a time. For lead-acid, float is
+        straightforward — the chemistry tolerates continuous overcharge at low current. For LFP, float
+        requires careful BMS management: the wrong float voltage slowly destroys the battery.
+      </p>
+
+      <!-- Float voltage comparison SVG -->
+      <svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:800px;display:block;margin:1.5rem auto;border-radius:12px;background:#0d1117;">
+        <text x="400" y="24" text-anchor="middle" fill="#e2e8f0" font-family="monospace" font-size="13" font-weight="bold">LFP Float Voltage — Effect on Calendar Life</text>
+
+        <!-- Y-axis: calendar life remaining at 10 years -->
+        <text x="24" y="165" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="9" transform="rotate(-90,24,165)">Capacity at 10yr (%)</text>
+        <line x1="55" y1="50" x2="55" y2="260" stroke="#334155" stroke-width="1"/>
+        <text x="50" y="58" text-anchor="end" fill="#64748b" font-family="monospace" font-size="9">100%</text>
+        <text x="50" y="108" text-anchor="end" fill="#64748b" font-family="monospace" font-size="9">90%</text>
+        <text x="50" y="158" text-anchor="end" fill="#64748b" font-family="monospace" font-size="9">80%</text>
+        <text x="50" y="208" text-anchor="end" fill="#64748b" font-family="monospace" font-size="9">70%</text>
+        <text x="50" y="258" text-anchor="end" fill="#64748b" font-family="monospace" font-size="9">60%</text>
+        <line x1="55" y1="260" x2="760" y2="260" stroke="#334155" stroke-width="1"/>
+        <line x1="55" y1="50" x2="760" y2="50" stroke="#1e293b" stroke-width="1" stroke-dasharray="3,3"/>
+        <line x1="55" y1="100" x2="760" y2="100" stroke="#1e293b" stroke-width="1" stroke-dasharray="3,3"/>
+        <line x1="55" y1="150" x2="760" y2="150" stroke="#1e293b" stroke-width="1" stroke-dasharray="3,3"/>
+        <line x1="55" y1="200" x2="760" y2="200" stroke="#1e293b" stroke-width="1" stroke-dasharray="3,3"/>
+
+        <!-- X labels: float voltage options -->
+        <text x="130" y="278" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="10">3.30V/cell</text>
+        <text x="130" y="290" text-anchor="middle" fill="#64748b" font-family="monospace" font-size="9">SoC≈50%</text>
+        <text x="260" y="278" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="10">3.38V/cell</text>
+        <text x="260" y="290" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="9">Optimal ✓</text>
+        <text x="390" y="278" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="10">3.45V/cell</text>
+        <text x="390" y="290" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="9">Caution</text>
+        <text x="520" y="278" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="10">3.55V/cell</text>
+        <text x="520" y="290" text-anchor="middle" fill="#f97316" font-family="monospace" font-size="9">Poor</text>
+        <text x="650" y="278" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="10">3.65V/cell</text>
+        <text x="650" y="290" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="9">Harmful</text>
+
+        <!-- Bar heights: 3.30→84%, 3.38→92%, 3.45→82%, 3.55→73%, 3.65→62% -->
+        <!-- 100%=y50, 60%=y250. 1%=2px -->
+        <rect x="90" y="92" width="80" height="168" rx="4" fill="#64748b" fill-opacity="0.6">
+          <animate attributeName="height" from="0" to="168" dur="1s" begin="0.1s" fill="freeze"/>
+          <animate attributeName="y" from="260" to="92" dur="1s" begin="0.1s" fill="freeze"/>
+        </rect>
+        <text x="130" y="86" text-anchor="middle" fill="#94a3b8" font-family="monospace" font-size="10">84%</text>
+
+        <rect x="220" y="76" width="80" height="184" rx="4" fill="#34d399" fill-opacity="0.8">
+          <animate attributeName="height" from="0" to="184" dur="1s" begin="0.2s" fill="freeze"/>
+          <animate attributeName="y" from="260" to="76" dur="1s" begin="0.2s" fill="freeze"/>
+        </rect>
+        <text x="260" y="70" text-anchor="middle" fill="#34d399" font-family="monospace" font-size="10" font-weight="bold">92%</text>
+
+        <rect x="350" y="96" width="80" height="164" rx="4" fill="#f59e0b" fill-opacity="0.7">
+          <animate attributeName="height" from="0" to="164" dur="1s" begin="0.3s" fill="freeze"/>
+          <animate attributeName="y" from="260" to="96" dur="1s" begin="0.3s" fill="freeze"/>
+        </rect>
+        <text x="390" y="90" text-anchor="middle" fill="#f59e0b" font-family="monospace" font-size="10">82%</text>
+
+        <rect x="480" y="114" width="80" height="146" rx="4" fill="#f97316" fill-opacity="0.7">
+          <animate attributeName="height" from="0" to="146" dur="1s" begin="0.4s" fill="freeze"/>
+          <animate attributeName="y" from="260" to="114" dur="1s" begin="0.4s" fill="freeze"/>
+        </rect>
+        <text x="520" y="108" text-anchor="middle" fill="#f97316" font-family="monospace" font-size="10">73%</text>
+
+        <rect x="610" y="136" width="80" height="124" rx="4" fill="#ef4444" fill-opacity="0.7">
+          <animate attributeName="height" from="0" to="124" dur="1s" begin="0.5s" fill="freeze"/>
+          <animate attributeName="y" from="260" to="136" dur="1s" begin="0.5s" fill="freeze"/>
+        </rect>
+        <text x="650" y="130" text-anchor="middle" fill="#ef4444" font-family="monospace" font-size="10">62%</text>
+
+        <!-- 80% EOL line -->
+        <line x1="55" y1="150" x2="760" y2="150" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="5,3"/>
+        <text x="765" y="154" fill="#ef4444" font-family="monospace" font-size="9">80% EOL</text>
+
+        <!-- Annotation for optimal -->
+        <line x1="260" y1="76" x2="260" y2="40" stroke="#34d399" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="270" y="38" fill="#34d399" font-family="monospace" font-size="9" font-weight="bold">LFP Optimal Float: 3.38–3.40V</text>
+        <text x="270" y="50" fill="#34d399" font-family="monospace" font-size="9">~95–100% SoC, minimal SEI stress</text>
+      </svg>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;margin:1.5rem 0;">
+        <div class="req-card">
+          <div class="req-card-title">Why 3.38V, Not 3.65V for Float</div>
+          <div class="req-card-body">
+            3.65V/cell is the maximum charge voltage — used during CC/CV charging to reach 100% SoC
+            quickly. Holding LFP at 3.65V continuously accelerates SEI layer growth on the anode,
+            which is the dominant calendar aging mechanism. At 3.65V float, the electrolyte is under
+            maximum oxidative stress 24/7. Research shows LFP held at 3.65V for 10 years retains
+            only ~62% capacity. The same cells held at 3.38V retain ~92%. The BMS must transition
+            to float voltage immediately after reaching 100% SoC — never hold at charge voltage.
+          </div>
+        </div>
+        <div class="req-card">
+          <div class="req-card-title">Float SoC: ~95–100%</div>
+          <div class="req-card-body">
+            At 3.38V/cell float, LFP sits at approximately 95–98% SoC. This is not a problem for
+            UPS — the 2–5% headroom is negligible for backup time (a 5kWh pack at 95% SoC has
+            4.75kWh — barely noticeable). What matters is keeping SoC high enough that full backup
+            time is available. The BMS periodically checks: if pack voltage drifts below 3.35V/cell
+            (SoC ≈ 90%), it initiates a top-up charge cycle back to 3.40V float.
+          </div>
+        </div>
+        <div class="req-card">
+          <div class="req-card-title">Float Trickle Current</div>
+          <div class="req-card-body">
+            At float voltage with a fully charged battery, the BMS will see a small trickle current
+            (~50–200mA) flowing from the rectifier into the pack — compensating for self-discharge
+            and leakage. This is normal. If trickle current is abnormally high (&gt;500mA sustained),
+            the BMS should log a warning: it indicates a cell with elevated self-discharge (degraded
+            cell) or an internal leakage path. Monitoring float current is a free SoH indicator.
+          </div>
+        </div>
+        <div class="req-card">
+          <div class="req-card-title">BMS Float State Machine</div>
+          <div class="req-card-body">
+            The BMS float state is a separate entry in the state machine (between CHARGE and IDLE).
+            In FLOAT: CHG FET open (rectifier connected directly through a current-limiting stage),
+            DSG FET closed (ready for instant discharge). Monitoring: cell voltage every 10ms (same
+            as normal), top-up trigger at V &lt; 3.35V/cell, transition to DISCHARGE on load demand,
+            and calendar aging accumulation via RTC (Chapter 6 Arrhenius integral).
+          </div>
+        </div>
+      </div>
+
+      <!-- Float firmware code -->
+      <h3 class="subsection-title">Float State Firmware</h3>
+      <div class="code-block">
+<span class="code-comment">/* UPS float charging state — runs every 1s */</span>
+<span class="code-keyword">#define</span> FLOAT_TARGET_V      <span class="code-num">3.390f</span>   <span class="code-comment">/* V per cell — 3.39×16 = 54.24V */</span>
+<span class="code-keyword">#define</span> FLOAT_TOPUP_V       <span class="code-num">3.350f</span>   <span class="code-comment">/* Trigger top-up below this */</span>
+<span class="code-keyword">#define</span> FLOAT_TRICKLE_WARN  <span class="code-num">0.500f</span>   <span class="code-comment">/* Warn if float current > 500mA */</span>
+
+<span class="code-type">void</span> <span class="code-fn">BMS_FloatState_Run</span>(<span class="code-type">BMS_State_t</span> *bms) {
+    <span class="code-type">float</span> v_avg = bms->pack_voltage / <span class="code-num">16.0f</span>;
+
+    <span class="code-comment">/* Check for top-up needed */</span>
+    <span class="code-keyword">if</span> (v_avg &lt; FLOAT_TOPUP_V) {
+        bms->state = STATE_CHARGE; <span class="code-comment">/* Brief CC/CV cycle to restore SoC */</span>
+        Log_Write(LOG_INFO, EVT_FLOAT_TOPUP, (<span class="code-type">int16_t</span>)(v_avg*<span class="code-num">1000</span>), <span class="code-num">0xFF</span>);
+        <span class="code-keyword">return</span>;
+    }
+
+    <span class="code-comment">/* Monitor trickle current anomaly */</span>
+    <span class="code-keyword">if</span> (fabsf(bms->pack_current) > FLOAT_TRICKLE_WARN) {
+        bms->float_anomaly_count++;
+        <span class="code-keyword">if</span> (bms->float_anomaly_count > <span class="code-num">10</span>) { <span class="code-comment">/* 10s sustained */</span>
+            Log_Write(LOG_WARN, EVT_FLOAT_OVERCURRENT,
+                      (<span class="code-type">int16_t</span>)(bms->pack_current*<span class="code-num">1000</span>), <span class="code-num">0xFF</span>);
+            bms->float_anomaly_count = <span class="code-num">0</span>;
+        }
+    } <span class="code-keyword">else</span> { bms->float_anomaly_count = <span class="code-num">0</span>; }
+
+    <span class="code-comment">/* Accumulate calendar aging (Arrhenius) */</span>
+    BMS_AccumulateCalendarAging(bms, bms->temp_avg + <span class="code-num">273.15f</span>);
+
+    <span class="code-comment">/* DSG FET must remain CLOSED — ready for instant backup */</span>
+    GPIO_SetFET(FET_DSG, FET_CLOSED);
+
+    <span class="code-comment">/* Send CAN status — SoC ~98%, FLOAT mode flag */</span>
+    bms->can_status_flags |= CAN_FLAG_FLOAT_MODE;
+}
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── BACKUP TIME CALCULATION ─── -->
+  <section id="s7-1-backup" class="chapter-section" style="border-bottom:none;padding-top:1.5rem;">
+    <div class="section-inner">
+      <h3 class="subsection-title" style="font-size:1.4rem;margin-top:0;">Backup Time Calculation</h3>
+      <p style="color:var(--text-muted);font-size:0.95rem;line-height:1.75;max-width:820px;margin-bottom:1.5rem;">
+        Backup time is the first question every UPS customer asks. The BMS must not only compute it
+        accurately but must also account for the multiple factors that make real backup time less than
+        the theoretical calculation — and communicate this to the user via CAN.
+      </p>
+
+      <!-- Worked example -->
+      <div style="background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin:1.5rem 0;">
+        <div style="font-family:var(--font-mono);font-size:13px;color:var(--app-gold);font-weight:bold;margin-bottom:1.2rem;">Worked Example: 3kVA UPS with 16S 280Ah LFP Pack</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+          <div>
+            <div style="color:var(--text-muted);font-size:13px;line-height:2;">
+              <div><strong style="color:var(--app-warm);">Pack capacity:</strong> 280Ah × 51.2V = <strong style="color:var(--app-gold);">14,336 Wh = 14.3kWh</strong></div>
+              <div><strong style="color:var(--app-warm);">Load power:</strong> 3kVA × 0.8 PF = <strong style="color:var(--app-gold);">2,400W</strong></div>
+              <div><strong style="color:var(--app-warm);">Theoretical time:</strong> 14,336 / 2,400 = <strong style="color:var(--app-gold);">5.97 hours</strong></div>
+              <div style="margin-top:0.8rem;color:#ef4444;font-weight:bold;">Actual time after deductions:</div>
+              <div>− Inverter efficiency (90%): 14,336 × 0.90 = 12,902 Wh usable</div>
+              <div>− DoD limit (95%): 12,902 × 0.95 = 12,257 Wh</div>
+              <div>− Temperature derate (25°C): ×1.0 (no derate)</div>
+              <div>− Peukert factor (0.5C ≈ k=1.05): ×0.96</div>
+              <div style="margin-top:0.4rem;"><strong style="color:var(--app-gold);">Actual backup: 12,257 × 0.96 / 2400 = <span style="font-size:15px;">4.90 hours</span></strong></div>
+            </div>
+          </div>
+          <div>
+            <div style="color:var(--text-muted);font-size:12px;line-height:1.8;">
+              <div style="color:var(--app-amber);font-weight:bold;margin-bottom:0.5rem;">Why Real &lt; Theoretical:</div>
+              <div>1. <strong>Inverter losses:</strong> DC→AC conversion ~8–12% loss. Always include.</div>
+              <div>2. <strong>DoD limit:</strong> BMS cuts off at 2.5V/cell — not all stored energy is extractable at full power.</div>
+              <div>3. <strong>Peukert effect:</strong> At high current, apparent capacity reduces. LFP has lower Peukert exponent (k≈1.05) than lead-acid (k≈1.2), but effect still applies at high C-rates.</div>
+              <div>4. <strong>Temperature:</strong> At 0°C, LFP delivers ~82% of 25°C capacity — a cold server room or outdoor cabinet dramatically cuts backup time.</div>
+              <div>5. <strong>SoH:</strong> An aged pack at 85% SoH delivers 85% of its rated backup time.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="formula-grid">
+        <div class="formula-card">
+          <div class="formula-name">Theoretical backup time</div>
+          <div class="formula-eq">t = (C_Ah × V_nom × η_inv) / P_load</div>
+          <div class="formula-note">η_inv = inverter efficiency (~0.90). Always multiply pack Wh by inverter efficiency before dividing by load.</div>
+        </div>
+        <div class="formula-card">
+          <div class="formula-name">Peukert-corrected capacity</div>
+          <div class="formula-eq">C_act = C_rated × (I_rated/I_act)^(k−1)</div>
+          <div class="formula-note">LFP k≈1.05. At 1C discharge (I_act = I_rated): C_act = C_rated (no effect). At 2C: C_act ≈ 0.95×C_rated. LFP much better than lead-acid (k≈1.2).</div>
+        </div>
+        <div class="formula-card">
+          <div class="formula-name">Temperature-adjusted backup time</div>
+          <div class="formula-eq">t_T = t_25 × η(T) × SoH</div>
+          <div class="formula-note">η(0°C) ≈ 0.82, η(−20°C) ≈ 0.60. BMS reports t_T via CAN (time-to-empty estimate).</div>
+        </div>
+        <div class="formula-card">
+          <div class="formula-name">Time to empty (BMS calculation)</div>
+          <div class="formula-eq">TTE = (SoC × C_full × V × η_inv) / P_load</div>
+          <div class="formula-note">Computed by BMS in real-time. Updated every 10s. Sent via CAN 0x356 as part of SoF reporting.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── DEEP DISCHARGE RECOVERY ─── -->
+  <section id="s7-1-deep" class="chapter-section" style="border-bottom:none;padding-top:1.5rem;">
+    <div class="section-inner">
+      <h3 class="subsection-title" style="font-size:1.4rem;margin-top:0;">Deep Discharge Recovery</h3>
+      <p style="color:var(--text-muted);font-size:0.95rem;line-height:1.75;max-width:820px;margin-bottom:1.5rem;">
+        In a prolonged mains outage, the UPS battery fully discharges. The BMS trips the UVP at 2.5V/cell
+        and latches the discharge FET open. When mains returns, the BMS cannot simply allow full charge
+        current — cells below 2.5V require a pre-charge recovery sequence to avoid copper dissolution
+        damage and thermal stress.
+      </p>
+
+      <!-- Deep discharge recovery timeline -->
+      <div class="timeline" style="max-width:700px;margin:1.5rem 0;">
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-title">Step 1: UVP Latch (t=0)</div>
+          <div class="timeline-body">BMS detects one or more cells below 2.5V. Opens DSG FET. Logs fault event with RTC timestamp. Broadcasts CAN 0x35A: UVP fault flag set, SoC=0%. UPS inverter stops. Backup session complete.</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-title">Step 2: Mains Restore Detection</div>
+          <div class="timeline-body">BMS detects rectifier voltage on charge terminals (V &gt; 10V on CHG pin). BMS recognises: pack is in deep discharge lockout, charger is now available. Initiates recovery sequence. Does NOT open CHG FET at full current yet.</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot" style="background:#f59e0b;"></div>
+          <div class="timeline-title">Step 3: Recovery Pre-Charge (0.05C limit)</div>
+          <div class="timeline-body">BMS enables CHG FET with current limit set to 0.05C (14A for 280Ah). This "trickle recovery" phase continues until all cells rise above 2.8V. Duration: approximately 30–60 minutes. During this phase, BMS monitors dT/dt — any temperature spike indicates damaged cell that may not accept charge.</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot" style="background:#f59e0b;"></div>
+          <div class="timeline-title">Step 4: Cell Validation</div>
+          <div class="timeline-body">Once all cells reach 2.8V, BMS pauses for 5 minutes and measures OCV. If any cell's OCV drops back below 2.5V within 5 minutes (indicating high self-discharge — likely separator damage), that cell is flagged and the pack is placed in DEGRADED mode. Log event with cell index.</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot" style="background:#34d399;"></div>
+          <div class="timeline-title">Step 5: Normal Charge Resumption</div>
+          <div class="timeline-body">If all cells pass validation, BMS transitions to normal CHARGE state (CC at 0.5C, CV to 3.65V/cell). Full recharge time from 0%: approximately 2 hours. Logs cycle count increment. After full charge, transitions to FLOAT at 3.38V/cell.</div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot" style="background:#34d399;"></div>
+          <div class="timeline-title">Step 6: UPS Ready</div>
+          <div class="timeline-body">BMS broadcasts CAN 0x35C: Discharge Enable flag set. SoC restored. Float mode active. UPS is now fully operational again. Total time from mains-restore to UPS-ready: typically 2.5–3 hours depending on depth of discharge.</div>
+        </div>
+      </div>
+
+      <div class="callout callout-danger">
+        <div class="callout-icon">⚠</div>
+        <div class="callout-body">
+          <div class="callout-title">Never Charge a Deep-Discharged LFP at Full Current</div>
+          <p>Cells below 2.5V are electrochemically stressed. Immediately applying 0.5C charge causes a sudden thermal event in the SEI layer as the intercalation sites re-equilibrate. The correct maximum recovery current is 0.05C until cells reach 2.8V. This is also why lab "reviving" of deeply discharged cells by connecting them directly to a bench supply at 5A is a battery-destroying practice — even if it "works," it permanently damages the SEI layer.</p>
+        </div>
+      </div>
+    </div>
+  </section>
