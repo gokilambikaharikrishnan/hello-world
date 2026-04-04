@@ -3,500 +3,54 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>LFP BMS Knowledge Base ⚡ The Ultimate 7-Chapter Reference</title>
+<title>LFP BMS // JARVIS INTERFACE v2.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Space+Grotesk:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&family=Space+Grotesk:wght@400;500;700;900&display=swap');
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#09090f;--surface:#0f0f1a;--surface2:#141425;
-  --pink:#ff006e;--cyan:#00f5ff;--lime:#aaff00;--orange:#ff6b00;--purple:#b44eff;
-  --gold:#fbbf24;--text:#f0f0ff;--muted:#8888aa;--border:#2a2a4a;
-  --comic-border:3px solid #fff;--thick-border:5px solid #fff;
+:root {
+  --bg:       #050507;
+  --bg2:      #080810;
+  --bg3:      #0c0c18;
+  --panel:    rgba(0,245,255,0.03);
+  --border:   rgba(0,245,255,0.18);
+  --border2:  rgba(0,245,255,0.08);
+  --cyan:     #00F5FF;
+  --blue:     #0A84FF;
+  --amber:    #FFC857;
+  --green:    #00FF88;
+  --red:      #FF2D55;
+  --text:     #EAEAEA;
+  --muted:    rgba(234,234,234,0.45);
+  --mono:     'JetBrains Mono', monospace;
+  --head:     'Orbitron', sans-serif;
+  --body:     'Space Grotesk', sans-serif;
+  --glow:     0 0 20px rgba(0,245,255,0.25);
+  --glow-lg:  0 0 40px rgba(0,245,255,0.3);
 }
-html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;overflow-x:hidden}
-
-/* SCROLL PROGRESS */
-#scroll-progress{position:fixed;top:0;left:0;height:4px;width:0%;background:linear-gradient(90deg,var(--pink),var(--cyan),var(--lime));z-index:9999;transition:width 0.1s}
-
-/* PARTICLES */
-#particles{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden}
-.particle{position:absolute;border-radius:50%;animation:float-particle linear infinite}
-@keyframes float-particle{0%{transform:translateY(100vh) rotate(0deg);opacity:1}100%{transform:translateY(-100px) rotate(720deg);opacity:0}}
-
-/* SCANLINES */
-body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);pointer-events:none;z-index:1;animation:scanline 8s linear infinite}
-@keyframes scanline{0%{background-position:0 0}100%{background-position:0 100px}}
-
-/* HERO */
-.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;position:relative;z-index:2;overflow:hidden}
-.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(180,78,255,.15),transparent 70%),radial-gradient(ellipse at 20% 80%,rgba(0,245,255,.08),transparent 50%),radial-gradient(ellipse at 80% 20%,rgba(255,0,110,.08),transparent 50%);pointer-events:none}
-
-/* SPEED LINES */
-.speed-lines{position:absolute;inset:0;overflow:hidden;pointer-events:none}
-.speed-line{position:absolute;top:50%;left:50%;height:2px;transform-origin:left center;animation:shoot-line 1.5s ease-out forwards;opacity:0}
-@keyframes shoot-line{0%{width:0;opacity:.8}100%{width:200vw;opacity:0}}
-
-/* GLITCH TEXT */
-.glitch{position:relative;font-family:'Bangers',cursive;font-size:clamp(3rem,12vw,9rem);letter-spacing:0.05em;color:#fff;text-shadow:0 0 40px rgba(180,78,255,.5);line-height:1}
-.glitch::before,.glitch::after{content:attr(data-text);position:absolute;top:0;left:0;width:100%;height:100%}
-.glitch::before{color:var(--pink);clip-path:polygon(0 20%,100% 20%,100% 40%,0 40%);animation:glitch-1 3s infinite}
-.glitch::after{color:var(--cyan);clip-path:polygon(0 60%,100% 60%,100% 80%,0 80%);animation:glitch-2 3s infinite}
-@keyframes glitch-1{0%,90%,100%{transform:translate(0)}91%{transform:translate(-4px,2px)}95%{transform:translate(4px,-2px)}}
-@keyframes glitch-2{0%,90%,100%{transform:translate(0)}91%{transform:translate(4px,-2px)}95%{transform:translate(-4px,2px)}}
-
-.hero-sub{font-size:clamp(1rem,3vw,1.4rem);color:var(--muted);margin:1.5rem 0 2.5rem;max-width:600px;line-height:1.6}
-.hero-badge{display:inline-block;background:var(--pink);color:#fff;font-family:'Bangers',cursive;font-size:1rem;letter-spacing:.1em;padding:0.3rem 1rem;border-radius:4px;margin-bottom:1rem;animation:pulse-badge 2s ease infinite}
-@keyframes pulse-badge{0%,100%{box-shadow:0 0 0 0 rgba(255,0,110,.4)}50%{box-shadow:0 0 0 12px rgba(255,0,110,0)}}
-
-/* STATS GRID */
-.stats-grid{display:flex;gap:2rem;flex-wrap:wrap;justify-content:center;margin:2rem 0}
-.stat-box{background:var(--surface2);border:3px solid;border-radius:4px;padding:1rem 1.5rem;text-align:center;position:relative;overflow:hidden}
-.stat-box::before{content:'';position:absolute;inset:0;opacity:.05;background:currentColor}
-.stat-box.s1{border-color:var(--pink);color:var(--pink)}
-.stat-box.s2{border-color:var(--cyan);color:var(--cyan)}
-.stat-box.s3{border-color:var(--lime);color:var(--lime)}
-.stat-box.s4{border-color:var(--purple);color:var(--purple)}
-.stat-num{font-family:'Bangers',cursive;font-size:3rem;display:block;line-height:1}
-.stat-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
-
-/* SEARCH */
-.search-wrap{position:relative;width:min(500px,90vw);margin:2rem auto}
-.search-icon{position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--cyan);font-size:1.2rem}
-#search{width:100%;background:var(--surface2);border:2px solid var(--cyan);border-radius:0;padding:.9rem 1rem .9rem 3rem;color:#fff;font-family:'Space Grotesk',sans-serif;font-size:1rem;outline:none;transition:border-color .2s,box-shadow .2s}
-#search::placeholder{color:var(--muted)}
-#search:focus{border-color:var(--pink);box-shadow:0 0 20px rgba(255,0,110,.3)}
-#search-label{font-family:'Bangers',cursive;font-size:.9rem;letter-spacing:.15em;color:var(--cyan);position:absolute;top:-1.5rem;left:0}
-
-/* MAIN CONTAINER */
-.container{max-width:1200px;margin:0 auto;padding:0 1.5rem;position:relative;z-index:2}
-
-/* SECTION HEADERS */
-.section-header{text-align:center;margin:4rem 0 2.5rem;position:relative}
-.section-header h2{font-family:'Bangers',cursive;font-size:clamp(2.5rem,7vw,5rem);letter-spacing:.05em;line-height:1}
-.section-header .section-tag{font-size:.8rem;text-transform:uppercase;letter-spacing:.2em;color:var(--muted);margin-bottom:.5rem}
-.zigzag{height:8px;background:repeating-linear-gradient(90deg,var(--pink) 0,var(--pink) 10px,transparent 10px,transparent 20px,var(--cyan) 20px,var(--cyan) 30px,transparent 30px,transparent 40px);margin:1rem auto;width:200px}
-
-/* CHAPTER CARDS — COMIC STYLE */
-.chapters-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.5rem;margin-bottom:4rem}
-.chapter-card{border:4px solid #fff;border-radius:0;background:var(--surface);position:relative;overflow:hidden;cursor:pointer;transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s;text-decoration:none;color:inherit;display:flex;flex-direction:column}
-.chapter-card:hover{transform:translate(-4px,-4px) rotate(-0.5deg);box-shadow:8px 8px 0 #fff}
-.chapter-card.hidden{display:none}
-
-.card-top{padding:1.5rem;position:relative;clip-path:polygon(0 0,100% 0,100% 85%,95% 100%,0 100%)}
-.card-num{font-family:'Bangers',cursive;font-size:5rem;line-height:1;opacity:.15;position:absolute;right:1rem;top:.5rem}
-.card-badge{font-family:'Bangers',cursive;font-size:.8rem;letter-spacing:.1em;padding:.2rem .8rem;border:2px solid currentColor;display:inline-block;margin-bottom:.8rem;border-radius:2px}
-.card-title{font-family:'Bangers',cursive;font-size:2rem;letter-spacing:.05em;line-height:1.1;margin-bottom:.5rem}
-.card-tagline{font-size:.85rem;color:rgba(255,255,255,.7);line-height:1.5}
-
-.card-topics{padding:.8rem 1.5rem;border-top:2px dashed rgba(255,255,255,.2);flex:1}
-.topic-list{list-style:none;display:flex;flex-wrap:wrap;gap:.4rem}
-.topic-chip{font-size:.72rem;padding:.2rem .6rem;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:2px;color:var(--muted)}
-
-.card-footer{padding:1rem 1.5rem;border-top:2px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:space-between}
-.read-time{font-size:.75rem;color:var(--muted);display:flex;align-items:center;gap:.4rem}
-.cta{font-family:'Bangers',cursive;font-size:1rem;letter-spacing:.1em;padding:.4rem 1.2rem;border:2px solid currentColor;border-radius:2px;transition:background .15s,color .15s}
-.chapter-card:hover .cta{background:currentColor;color:#000}
-
-/* Chapter color themes */
-.ch1{border-color:#fbbf24;color:#fbbf24}.ch1 .card-top{background:linear-gradient(135deg,#1a1000,#0f0f0a)}
-.ch2{border-color:#60a5fa;color:#60a5fa}.ch2 .card-top{background:linear-gradient(135deg,#00081a,#0a0f1a)}
-.ch3{border-color:#fb923c;color:#fb923c}.ch3 .card-top{background:linear-gradient(135deg,#1a0500,#0f0a08)}
-.ch4{border-color:#22d3ee;color:#22d3ee}.ch4 .card-top{background:linear-gradient(135deg,#001a1a,#080f12)}
-.ch5{border-color:#34d399;color:#34d399}.ch5 .card-top{background:linear-gradient(135deg,#001a0a,#080f0c)}
-.ch6{border-color:#c4b5fd;color:#c4b5fd}.ch6 .card-top{background:linear-gradient(135deg,#0f001a,#0d0a12)}
-.ch7{border-color:#fde68a;color:#fde68a;border-width:5px}.ch7 .card-top{background:linear-gradient(135deg,#1a1200,#0f0f08)}
-
-/* HALFTONE SECTION BG */
-.halftone-bg{background-image:radial-gradient(circle,rgba(255,255,255,.08) 1px,transparent 1px);background-size:20px 20px;padding:3rem 0}
-
-/* POV SECTION */
-.pov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1.2rem;margin-bottom:4rem}
-.pov-card{border:3px solid var(--border);background:var(--surface2);padding:1.5rem;position:relative;text-decoration:none;color:inherit;transition:transform .2s,border-color .2s}
-.pov-card::before{content:'COMING SOON';position:absolute;top:1rem;right:1rem;font-family:'Bangers',cursive;font-size:.75rem;letter-spacing:.1em;color:var(--muted);border:1px solid var(--muted);padding:.1rem .5rem}
-.pov-card:hover{transform:translate(-3px,-3px);border-color:var(--pink)}
-.pov-icon{font-size:2.5rem;margin-bottom:.8rem}
-.pov-title{font-family:'Bangers',cursive;font-size:1.6rem;letter-spacing:.05em;margin-bottom:.4rem}
-.pov-desc{font-size:.82rem;color:var(--muted);line-height:1.5}
-
-/* KNOWLEDGE MAP */
-.knowledge-map-section{background:var(--surface);border-top:4px solid;border-image:linear-gradient(90deg,var(--pink),var(--cyan),var(--lime)) 1;padding:3rem 0}
-
-/* BACK TO TOP */
-#back-to-top{position:fixed;bottom:2rem;right:2rem;background:var(--pink);color:#fff;border:3px solid #fff;width:50px;height:50px;font-family:'Bangers',cursive;font-size:1.5rem;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:999;transition:transform .2s}
-#back-to-top:hover{transform:scale(1.1) rotate(5deg)}
-#back-to-top.visible{display:flex}
-
-/* FOOTER */
-.site-footer{background:var(--surface);border-top:4px solid;border-image:linear-gradient(90deg,var(--pink),var(--cyan)) 1;padding:3rem 1.5rem;text-align:center}
-.footer-logo{font-family:'Bangers',cursive;font-size:3rem;letter-spacing:.1em;background:linear-gradient(135deg,var(--pink),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.footer-sub{color:var(--muted);font-size:.85rem;margin-top:.5rem}
-
-/* PROGRESS BAR */
-.progress-section{background:var(--surface2);border:3px solid var(--lime);padding:1.5rem;margin:2rem 0;position:relative}
-.progress-section::before{content:'COMPLETION STATUS';font-family:'Bangers',cursive;font-size:.8rem;letter-spacing:.15em;color:var(--lime);position:absolute;top:-.7rem;left:1rem;background:var(--surface2);padding:0 .5rem}
-.progress-track{height:12px;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.2);overflow:hidden;margin:.8rem 0}
-.progress-fill{height:100%;background:linear-gradient(90deg,var(--pink),var(--orange),var(--lime));width:0;transition:width 2s cubic-bezier(.16,1,.3,1)}
-.progress-label{display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted)}
-
-/* ANIMATIONS */
-.reveal{opacity:0;transform:translateY(30px);transition:opacity .6s ease,transform .6s ease}
-.reveal.visible{opacity:1;transform:none}
-
-/* COMIC EFFECTS */
-.boom{font-family:'Bangers',cursive;display:inline-block;color:var(--pink);font-size:1.2rem;animation:boom-anim 1s ease infinite alternate}
-@keyframes boom-anim{0%{transform:scale(1) rotate(-3deg)}100%{transform:scale(1.05) rotate(3deg)}}
-
-@media(max-width:640px){.chapters-grid{grid-template-columns:1fr}.stats-grid{gap:1rem}.glitch{font-size:clamp(2.5rem,15vw,5rem)}}
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html { scroll-behavior:smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+/* micro grid bg */
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background-image:
+    linear-gradient(rgba(0,245,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,245,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events:none; z-index:0;
+}
 </style>
 </head>
 <body>
-<div id="scroll-progress"></div>
-<div id="particles"></div>
-<button id="back-to-top">↑</button>
-
-<!-- ══════ HERO ══════ -->
-<section class="hero">
-  <div class="speed-lines" id="speed-lines"></div>
-  <span class="hero-badge">⚡ KNOWLEDGE BASE v2.0</span>
-  <h1 class="glitch" data-text="LFP BMS">LFP BMS</h1>
-  <div style="font-family:'Bangers',cursive;font-size:clamp(1.5rem,5vw,3.5rem);letter-spacing:.05em;color:var(--cyan);margin-bottom:.5rem;text-shadow:0 0 30px rgba(0,245,255,.4)">KNOWLEDGE BASE</div>
-  <p class="hero-sub">The ultimate 7-chapter deep dive into lithium iron phosphate battery management systems. Chemistry → Physics → Thermal → Protection → Standards → Architecture → Application.</p>
-
-  <div class="stats-grid">
-    <div class="stat-box s1"><span class="stat-num" data-target="7" data-suffix="">0</span><div class="stat-label">Chapters</div></div>
-    <div class="stat-box s2"><span class="stat-num" data-target="19" data-suffix="K+">0</span><div class="stat-label">Lines of Code</div></div>
-    <div class="stat-box s3"><span class="stat-num" data-target="40" data-suffix="+">0</span><div class="stat-label">SVG Diagrams</div></div>
-    <div class="stat-box s4"><span class="stat-num" data-target="100" data-suffix="%">0</span><div class="stat-label">Complete</div></div>
-  </div>
-
-  <div class="search-wrap">
-    <div id="search-label">// FIND YOUR CHAPTER</div>
-    <span class="search-icon">⌕</span>
-    <input id="search" type="text" placeholder="Search topics: SoC, thermal, CAN bus, float charging..."/>
-  </div>
-
-  <div style="margin-top:1.5rem;animation:bounce-arrow 2s ease infinite">
-    <div style="font-size:2rem;color:var(--muted)">↓</div>
-  </div>
-</section>
-
-<!-- ══════ CHAPTERS ══════ -->
-<div class="container">
-  <div class="section-header reveal">
-    <div class="section-tag">// THE CURRICULUM</div>
-    <h2 style="background:linear-gradient(135deg,var(--pink),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent">7 CHAPTERS. ONE MISSION.</h2>
-    <div class="zigzag"></div>
-  </div>
-
-  <div class="progress-section reveal">
-    <div class="progress-label"><span>Overall Progress</span><span>100% ■■■■■■■■■■</span></div>
-    <div class="progress-track"><div class="progress-fill" id="main-progress"></div></div>
-    <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:.5rem">
-      <span style="font-size:.75rem;color:var(--lime)">✓ Ch1</span><span style="font-size:.75rem;color:var(--lime)">✓ Ch2</span><span style="font-size:.75rem;color:var(--lime)">✓ Ch3</span><span style="font-size:.75rem;color:var(--lime)">✓ Ch4</span><span style="font-size:.75rem;color:var(--lime)">✓ Ch5</span><span style="font-size:.75rem;color:var(--lime)">✓ Ch6</span><span style="font-size:.75rem;color:var(--lime)">✓ Ch7</span>
-    </div>
-  </div>
-
-  <div class="chapters-grid">
-    <a href="chapter1.html" class="chapter-card ch1 reveal">
-      <div class="card-top"><div class="card-num">01</div>
-        <div class="card-badge">~20 min read</div>
-        <div class="card-title">Chemistry & Why LFP</div>
-        <div class="card-tagline">From Volta's pile to olivine olivine crystal — why LFP is the superior choice for stationary storage. P–O bond physics, thermal runaway threshold 270°C, cycle life mechanisms.</div>
-      </div>
-      <div class="card-topics"><ul class="topic-list">
-        <li class="topic-chip">Olivine structure</li><li class="topic-chip">P–O bond 544 kJ/mol</li><li class="topic-chip">3000–5000 cycles</li><li class="topic-chip">6.8% volume change</li><li class="topic-chip">Calendar aging</li><li class="topic-chip">LFP vs NMC</li>
-      </ul></div>
-      <div class="card-footer"><span class="read-time">⏱ ~20 min · 3,092 lines</span><span class="cta" style="color:#fbbf24;border-color:#fbbf24">READ →</span></div>
-    </a>
-
-    <a href="chapter2.html" class="chapter-card ch2 reveal">
-      <div class="card-top"><div class="card-num">02</div>
-        <div class="card-badge">~25 min read</div>
-        <div class="card-title">Cell Physics & SoX</div>
-        <div class="card-tagline">Intercalation electrochemistry, Nernst equation, ECM modelling, EKF SoC estimation, Arrhenius calendar aging. 9 worked numerical examples with full calculations.</div>
-      </div>
-      <div class="card-topics"><ul class="topic-list">
-        <li class="topic-chip">Li+ intercalation</li><li class="topic-chip">Nernst equation</li><li class="topic-chip">EKF SoC</li><li class="topic-chip">Arrhenius aging</li><li class="topic-chip">ECM HPPC</li><li class="topic-chip">OCV curve</li>
-      </ul></div>
-      <div class="card-footer"><span class="read-time">⏱ ~25 min · 4,012 lines</span><span class="cta" style="color:#60a5fa;border-color:#60a5fa">READ →</span></div>
-    </a>
-
-    <a href="chapter3.html" class="chapter-card ch3 reveal">
-      <div class="card-top"><div class="card-num">03</div>
-        <div class="card-badge">~18 min read</div>
-        <div class="card-title">Thermal Management</div>
-        <div class="card-tagline">Joule heating, entropic heat, 5-stage thermal runaway cascade, LFP vs NMC propagation, NTC placement, dT/dt firmware logic with derating curves.</div>
-      </div>
-      <div class="card-topics"><ul class="topic-list">
-        <li class="topic-chip">I²R heat generation</li><li class="topic-chip">Thermal runaway</li><li class="topic-chip">dT/dt firmware</li><li class="topic-chip">NTC placement</li><li class="topic-chip">Derating curves</li><li class="topic-chip">OT/UT cutoffs</li>
-      </ul></div>
-      <div class="card-footer"><span class="read-time">⏱ ~18 min · 2,579 lines</span><span class="cta" style="color:#fb923c;border-color:#fb923c">READ →</span></div>
-    </a>
-
-    <a href="chapter4.html" class="chapter-card ch4 reveal">
-      <div class="card-top"><div class="card-num">04</div>
-        <div class="card-badge">~15 min read</div>
-        <div class="card-title">Protection & AFE</div>
-        <div class="card-tagline">OVP/UVP/OCP/SCP response hierarchy, back-to-back MOSFET topology, pre-charge sequencing, flying-capacitor AFE internals. BQ76952 vs LTC6813.</div>
-      </div>
-      <div class="card-topics"><ul class="topic-list">
-        <li class="topic-chip">SCD &lt;500μs</li><li class="topic-chip">MOSFET topology</li><li class="topic-chip">Pre-charge 4-phase</li><li class="topic-chip">Flying capacitor</li><li class="topic-chip">BQ76952</li><li class="topic-chip">Cell balancing</li>
-      </ul></div>
-      <div class="card-footer"><span class="read-time">⏱ ~15 min · 1,782 lines</span><span class="cta" style="color:#22d3ee;border-color:#22d3ee">READ →</span></div>
-    </a>
-
-    <a href="chapter5.html" class="chapter-card ch5 reveal">
-      <div class="card-top"><div class="card-num">05</div>
-        <div class="card-badge">~15 min read</div>
-        <div class="card-title">Standards & Compliance</div>
-        <div class="card-tagline">IEC 62133, IEC 61960, UL 1973, UN 38.3 — test requirements, mandatory BMS features, filterable compliance matrix across 14 BMS functions × 6 standards.</div>
-      </div>
-      <div class="card-topics"><ul class="topic-list">
-        <li class="topic-chip">IEC 62619</li><li class="topic-chip">UL 1973</li><li class="topic-chip">UN 38.3 T1–T8</li><li class="topic-chip">NFPA 855</li><li class="topic-chip">Compliance matrix</li><li class="topic-chip">Certification path</li>
-      </ul></div>
-      <div class="card-footer"><span class="read-time">⏱ ~15 min · 1,727 lines</span><span class="cta" style="color:#34d399;border-color:#34d399">READ →</span></div>
-    </a>
-
-    <a href="chapter6.html" class="chapter-card ch6 reveal">
-      <div class="card-top"><div class="card-num">06</div>
-        <div class="card-badge">~22 min read</div>
-        <div class="card-title">BMS Architecture</div>
-        <div class="card-tagline">Full hardware design: AFE, MCU peripherals, CAN bus (0x351–0x380), NVM wear-leveling, backup SRAM. 11-state interactive firmware machine. Tesla/BYD/CATL teardown.</div>
-      </div>
-      <div class="card-topics"><ul class="topic-list">
-        <li class="topic-chip">BQ76952 AFE</li><li class="topic-chip">STM32 MCU</li><li class="topic-chip">PYLON CAN</li><li class="topic-chip">NVM wear leveling</li><li class="topic-chip">11-state machine</li><li class="topic-chip">SOX complete</li>
-      </ul></div>
-      <div class="card-footer"><span class="read-time">⏱ ~22 min · 3,245 lines</span><span class="cta" style="color:#c4b5fd;border-color:#c4b5fd">READ →</span></div>
-    </a>
-
-    <a href="chapter7.html" class="chapter-card ch7 reveal">
-      <div class="card-top"><div class="card-num">07</div>
-        <div class="card-badge" style="background:var(--gold);color:#000;border:none">★ FINAL CHAPTER</div>
-        <div class="card-title">UPS & Home ESS</div>
-        <div class="card-tagline">Everything applied to real products. Float charging physics (3.39V/cell), backup time formulas, ESS vs EV BMS differences, NFPA 855 indoor installation, full system energy flow.</div>
-      </div>
-      <div class="card-topics"><ul class="topic-list">
-        <li class="topic-chip">Float 3.39V/cell</li><li class="topic-chip">&lt;10ms switchover</li><li class="topic-chip">20–90% SoC window</li><li class="topic-chip">NFPA 855</li><li class="topic-chip">EV vs ESS BMS</li><li class="topic-chip">System energy flow</li>
-      </ul></div>
-      <div class="card-footer"><span class="read-time">⏱ ~20 min · 2,048 lines</span><span class="cta" style="color:#fde68a;border-color:#fde68a">READ →</span></div>
-    </a>
-  </div><!-- /chapters-grid -->
-</div>
-
-<!-- ══════ POV SECTION ══════ -->
-<div class="halftone-bg">
-<div class="container">
-  <div class="section-header reveal">
-    <div class="section-tag">// COMING SOON</div>
-    <h2 style="color:var(--purple)">POV DOCUMENTS</h2>
-    <p style="color:var(--muted);font-size:.9rem;margin-top:.5rem">Role-specific deep dives. Same knowledge base — your engineering lens.</p>
-    <div class="zigzag"></div>
-  </div>
-  <div class="pov-grid">
-    <div class="pov-card reveal">
-      <div class="pov-icon">💾</div>
-      <div class="pov-title" style="color:var(--cyan)">FW Engineer</div>
-      <div class="pov-desc">State machine implementation, timing budgets, interrupt handlers, CAN protocol stack, NVM management, EKF tuning in embedded C.</div>
-    </div>
-    <div class="pov-card reveal">
-      <div class="pov-icon">⚡</div>
-      <div class="pov-title" style="color:var(--orange)">HW Engineer</div>
-      <div class="pov-desc">Schematic review checklist, AFE layout guidelines, MOSFET selection, shunt resistor sizing, PCB thermal management, EMI compliance.</div>
-    </div>
-    <div class="pov-card reveal">
-      <div class="pov-icon">🔥</div>
-      <div class="pov-title" style="color:var(--pink)">Thermal Engineer</div>
-      <div class="pov-desc">Heat generation modelling, Rth calculations, NTC placement optimisation, derating curve generation, thermal runaway propagation analysis.</div>
-    </div>
-    <div class="pov-card reveal">
-      <div class="pov-icon">🏗️</div>
-      <div class="pov-title" style="color:var(--lime)">System Engineer</div>
-      <div class="pov-desc">System integration spec, commissioning procedures, inverter compatibility matrix, NFPA 855 installation checklist, acceptance test protocol.</div>
-    </div>
-  </div>
-</div>
-</div>
-
-<!-- ══════ KNOWLEDGE MAP ══════ -->
-<div class="knowledge-map-section">
-<div class="container" style="position:relative;z-index:2">
-  <div class="section-header reveal">
-    <div class="section-tag">// ARCHITECTURE</div>
-    <h2 style="color:var(--gold)">KNOWLEDGE MAP</h2>
-    <div class="zigzag"></div>
-  </div>
-  <div style="background:var(--surface2);border:3px solid var(--border);padding:1.5rem;border-radius:0" class="reveal">
-    <svg viewBox="0 0 900 180" style="width:100%;height:auto;font-family:'Space Grotesk',sans-serif">
-      <defs>
-        <marker id="idx-arrow" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#fbbf24"/></marker>
-        <filter id="glow"><feGaussianBlur stdDeviation="3" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-      </defs>
-      <text x="20" y="25" fill="#555577" font-size="9" letter-spacing="2">LAYER 1: FOUNDATION</text>
-      <text x="20" y="95" fill="#555577" font-size="9" letter-spacing="2">LAYER 2: HARDWARE &amp; STANDARDS</text>
-      <text x="20" y="158" fill="#555577" font-size="9" letter-spacing="2">LAYER 3: APPLICATION</text>
-      <!-- Ch1 -->
-      <rect x="160" y="10" width="100" height="44" rx="0" fill="#1a1000" stroke="#fbbf24" stroke-width="2" filter="url(#glow)"/>
-      <text x="210" y="29" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="700">Ch 1</text>
-      <text x="210" y="44" text-anchor="middle" fill="#aaa" font-size="9">Chemistry</text>
-      <!-- Ch2 -->
-      <rect x="295" y="10" width="100" height="44" rx="0" fill="#00081a" stroke="#60a5fa" stroke-width="2" filter="url(#glow)"/>
-      <text x="345" y="29" text-anchor="middle" fill="#60a5fa" font-size="11" font-weight="700">Ch 2</text>
-      <text x="345" y="44" text-anchor="middle" fill="#aaa" font-size="9">Cell Physics</text>
-      <!-- Ch3 -->
-      <rect x="430" y="10" width="100" height="44" rx="0" fill="#1a0500" stroke="#fb923c" stroke-width="2" filter="url(#glow)"/>
-      <text x="480" y="29" text-anchor="middle" fill="#fb923c" font-size="11" font-weight="700">Ch 3</text>
-      <text x="480" y="44" text-anchor="middle" fill="#aaa" font-size="9">Thermal</text>
-      <!-- Ch4 -->
-      <rect x="215" y="80" width="100" height="44" rx="0" fill="#001a1a" stroke="#22d3ee" stroke-width="2" filter="url(#glow)"/>
-      <text x="265" y="99" text-anchor="middle" fill="#22d3ee" font-size="11" font-weight="700">Ch 4</text>
-      <text x="265" y="114" text-anchor="middle" fill="#aaa" font-size="9">Protection</text>
-      <!-- Ch5 -->
-      <rect x="345" y="80" width="100" height="44" rx="0" fill="#001a0a" stroke="#34d399" stroke-width="2" filter="url(#glow)"/>
-      <text x="395" y="99" text-anchor="middle" fill="#34d399" font-size="11" font-weight="700">Ch 5</text>
-      <text x="395" y="114" text-anchor="middle" fill="#aaa" font-size="9">Standards</text>
-      <!-- Ch6 -->
-      <rect x="475" y="80" width="100" height="44" rx="0" fill="#0f001a" stroke="#c4b5fd" stroke-width="2" filter="url(#glow)"/>
-      <text x="525" y="99" text-anchor="middle" fill="#c4b5fd" font-size="11" font-weight="700">Ch 6</text>
-      <text x="525" y="114" text-anchor="middle" fill="#aaa" font-size="9">Architecture</text>
-      <!-- Ch7 -->
-      <rect x="330" y="148" width="180" height="24" rx="0" fill="#1a1200" stroke="#fde68a" stroke-width="3" filter="url(#glow)"/>
-      <text x="420" y="163" text-anchor="middle" fill="#fde68a" font-size="11" font-weight="700">Ch 7 — Application Layer</text>
-      <rect x="330" y="148" width="180" height="24" rx="0" fill="none" stroke="#fde68a" stroke-width="1"><animate attributeName="opacity" values="1;0.2;1" dur="2s" repeatCount="indefinite"/></rect>
-      <!-- Arrows -->
-      <line x1="210" y1="54" x2="248" y2="80" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#idx-arrow)" opacity=".7"/>
-      <line x1="345" y1="54" x2="310" y2="80" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#idx-arrow)" opacity=".7"/>
-      <line x1="345" y1="54" x2="375" y2="80" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#idx-arrow)" opacity=".7"/>
-      <line x1="480" y1="54" x2="440" y2="80" stroke="#fb923c" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#idx-arrow)" opacity=".7"/>
-      <line x1="480" y1="54" x2="510" y2="80" stroke="#fb923c" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#idx-arrow)" opacity=".7"/>
-      <line x1="265" y1="124" x2="380" y2="148" stroke="#22d3ee" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#idx-arrow)" opacity=".7"/>
-      <line x1="395" y1="124" x2="415" y2="148" stroke="#34d399" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#idx-arrow)" opacity=".7"/>
-      <line x1="525" y1="124" x2="480" y2="148" stroke="#c4b5fd" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#idx-arrow)" opacity=".7"/>
-    </svg>
-  </div>
-</div>
-</div>
-
-<!-- ══════ FOOTER ══════ -->
-<footer class="site-footer">
-  <div class="footer-logo">LFP BMS KB</div>
-  <div class="footer-sub">7 chapters · 19,106+ lines · IEC 62619 · UL 1973 · NFPA 855 · IEC 62040-3</div>
-  <div style="margin-top:1rem;display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
-    <a href="chapter1.html" style="color:var(--muted);font-size:.8rem;text-decoration:none">Ch1</a>
-    <a href="chapter2.html" style="color:var(--muted);font-size:.8rem;text-decoration:none">Ch2</a>
-    <a href="chapter3.html" style="color:var(--muted);font-size:.8rem;text-decoration:none">Ch3</a>
-    <a href="chapter4.html" style="color:var(--muted);font-size:.8rem;text-decoration:none">Ch4</a>
-    <a href="chapter5.html" style="color:var(--muted);font-size:.8rem;text-decoration:none">Ch5</a>
-    <a href="chapter6.html" style="color:var(--muted);font-size:.8rem;text-decoration:none">Ch6</a>
-    <a href="chapter7.html" style="color:var(--muted);font-size:.8rem;text-decoration:none">Ch7</a>
-  </div>
-</footer>
-
-<script>
-// ── SCROLL PROGRESS ──────────────────────────────────────────
-const prog = document.getElementById('scroll-progress');
-window.addEventListener('scroll', () => {
-  const s = document.documentElement.scrollTop;
-  const h = document.documentElement.scrollHeight - window.innerHeight;
-  prog.style.width = (s / h * 100) + '%';
-});
-
-// ── BACK TO TOP ───────────────────────────────────────────────
-const btt = document.getElementById('back-to-top');
-window.addEventListener('scroll', () => {
-  btt.classList.toggle('visible', window.scrollY > 400);
-});
-btt.addEventListener('click', () => window.scrollTo({top: 0, behavior: 'smooth'}));
-
-// ── PARTICLES ─────────────────────────────────────────────────
-const pc = document.getElementById('particles');
-const colors = ['#ff006e','#00f5ff','#aaff00','#b44eff','#fbbf24','#fff'];
-for (let i = 0; i < 35; i++) {
-  const p = document.createElement('div');
-  p.className = 'particle';
-  const size = Math.random() * 5 + 2;
-  p.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;background:${colors[Math.floor(Math.random()*colors.length)]};animation-duration:${Math.random()*15+10}s;animation-delay:${Math.random()*10}s;opacity:${Math.random()*.6+.1}`;
-  pc.appendChild(p);
-}
-
-// ── SPEED LINES ───────────────────────────────────────────────
-const sl = document.getElementById('speed-lines');
-for (let i = 0; i < 16; i++) {
-  const line = document.createElement('div');
-  line.className = 'speed-line';
-  const angle = (i / 16) * 360;
-  line.style.cssText = `transform:rotate(${angle}deg);animation-delay:${i*0.08}s;background:rgba(${Math.random()>0.5?'0,245,255':'255,0,110'},.2);height:${Math.random()*2+1}px`;
-  sl.appendChild(line);
-}
-
-// ── COUNTER ANIMATION ─────────────────────────────────────────
-function animateCounter(el) {
-  const target = parseInt(el.dataset.target);
-  const suffix = el.dataset.suffix || '';
-  let current = 0;
-  const step = target / 60;
-  const timer = setInterval(() => {
-    current = Math.min(current + step, target);
-    el.textContent = Math.floor(current) + suffix;
-    if (current >= target) clearInterval(timer);
-  }, 20);
-}
-setTimeout(() => {
-  document.querySelectorAll('.stat-num[data-target]').forEach(el => animateCounter(el));
-}, 500);
-
-// ── PROGRESS BAR ──────────────────────────────────────────────
-setTimeout(() => {
-  const pf = document.getElementById('main-progress');
-  if (pf) pf.style.width = '100%';
-}, 600);
-
-// ── REVEAL ON SCROLL ──────────────────────────────────────────
-const revealObs = new IntersectionObserver((entries) => {
-  entries.forEach((e, i) => {
-    if (e.isIntersecting) {
-      setTimeout(() => e.target.classList.add('visible'), i * 80);
-      revealObs.unobserve(e.target);
-    }
-  });
-}, { threshold: 0.1 });
-document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
-
-// ── SEARCH ────────────────────────────────────────────────────
-const searchTopics = {
-  'chapter1.html': 'chemistry lfp olivine thermal runaway cycle life p-o bond calendar aging cobalt cost nmc nca lead acid',
-  'chapter2.html': 'soc soh cell physics intercalation nernst ecm ekf hppc ocv curve peukert arrhenius sei capacity fade coulomb counting',
-  'chapter3.html': 'thermal heat joule i2r runaway cascade ntc derating dtemp ott utp cooling heatmap gradient',
-  'chapter4.html': 'protection ovp uvp ocp scp mosfet afe bq76952 ltc6813 balancing pre-charge flying capacitor',
-  'chapter5.html': 'standards iec 62619 ul 1973 un 38.3 nfpa 855 compliance certification matrix',
-  'chapter6.html': 'architecture bms state machine can pylon 0x351 nvm sram rtc event log tesla byd catl sox',
-  'chapter7.html': 'ups ess float 3.39v switchover 10ms home solar tou nfpa ev bms backup time'
-};
-
-document.getElementById('search').addEventListener('input', function() {
-  const q = this.value.toLowerCase().trim();
-  document.querySelectorAll('.chapter-card').forEach(card => {
-    const href = card.getAttribute('href');
-    const topics = searchTopics[href] || '';
-    const title = card.querySelector('.card-title')?.textContent.toLowerCase() || '';
-    const chips = card.querySelector('.card-topics')?.textContent.toLowerCase() || '';
-    const match = !q || topics.includes(q) || title.includes(q) || chips.includes(q);
-    card.classList.toggle('hidden', !match);
-  });
-});
-
-// ── CARD TILT EFFECT ──────────────────────────────────────────
-document.querySelectorAll('.chapter-card').forEach(card => {
-  card.addEventListener('mousemove', e => {
-    const r = card.getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width - 0.5;
-    const y = (e.clientY - r.top) / r.height - 0.5;
-    card.style.transform = `translate(-4px,-4px) rotate(-0.5deg) rotateX(${-y*6}deg) rotateY(${x*6}deg)`;
-  });
-  card.addEventListener('mouseleave', () => {
-    card.style.transform = '';
-  });
-});
-</script>
+<!-- PLACEHOLDER - building in chunks -->
+<div style="color:#00F5FF;font-family:monospace;padding:2rem;">SYSTEM INITIALIZING...</div>
 </body>
 </html>
