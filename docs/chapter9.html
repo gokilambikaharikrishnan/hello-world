@@ -777,5 +777,76 @@ bool BSP_FET_GetDSG(void)    { return s_dsg; }</code></pre>
   </div>
 </section>
 
+
+<section class="section reveal" id="s96">
+  <div class="section-eyebrow">Section 9.6</div>
+  <h2 class="section-title">Embedded Optimisation Techniques</h2>
+  <p class="section-intro">The STM32G474 at 170 MHz has ample headroom for BMS tasks, but writing efficient code prevents surprises at scale — especially when soft-real-time guarantees are required for the protection loop.</p>
+
+  <h3 class="sub-title">Fixed-Point Arithmetic</h3>
+  <p>Avoid floating-point in ISR and protection paths. The STM32G4 has an FPU, but FP operations take 3–14 cycles and are not re-entrant without a context save. Fixed-point integer arithmetic is faster and deterministic.</p>
+  <pre><code>/* Fixed-point Q12.4 format: 1 bit sign + 11 int + 4 frac bits */
+/* Voltage in mV (integer) is already natural fixed-point */
+
+/* Example: Compute pack power in watts */
+/* P = V_pack_mV * I_pack_mA / 1_000_000 */
+/* Use 64-bit to avoid overflow: 58000 mV * 50000 mA = 2.9e9, fits int32_t barely */
+int32_t APP_GetPackPower_W(void) {
+    int64_t p_uw = (int64_t)g_meas.pack_mv * (int64_t)g_meas.current_ma;
+    return (int32_t)(p_uw / 1000000LL);  /* µW → W */
+}
+
+/* Avoid: float version (slower, FPU context) */
+float BAD_GetPackPower(void) {
+    return ((float)g_meas.pack_mv / 1000.0f) * ((float)g_meas.current_ma / 1000.0f);
+}</code></pre>
+
+  <h3 class="sub-title">Lookup Table vs Runtime Calculation</h3>
+  <pre><code>/* LFP OCV curve: 16-point LUT stored in flash (const = ROM) */
+/* RAM cost: 0 bytes. Access: single array index + interpolation */
+static const uint16_t OCV_LUT_MV[16] = {
+    2800, 3050, 3130, 3180, 3220, 3260, 3290, 3310,
+    3320, 3330, 3340, 3360, 3380, 3400, 3420, 3450
+};
+/* Each entry = 6.67% SoC step = 1/15 of full range */
+/* Interpolation between two points: 2 multiplies + 1 divide */</code></pre>
+
+  <h3 class="sub-title">ISR Latency Budget</h3>
+  <table>
+    <thead><tr><th>Interrupt</th><th>Trigger</th><th>Max latency budget</th><th>Typical</th></tr></thead>
+    <tbody>
+      <tr><td>SCP (short-circuit)</td><td>AFE ALERT pin falling edge</td><td>10 µs</td><td>2–4 µs</td></tr>
+      <tr><td>OCP hardware (comparator)</td><td>Internal COMP on shunt sense</td><td>5 µs</td><td>1–2 µs</td></tr>
+      <tr><td>CAN RX</td><td>CAN frame received</td><td>500 µs</td><td>50–100 µs</td></tr>
+      <tr><td>SysTick (scheduler)</td><td>1 ms</td><td>10 µs overhead</td><td>3–5 µs</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-warn">
+    <div class="callout-title">⚡ Measure, Don't Guess</div>
+    <p>Toggle a spare GPIO at ISR entry/exit and measure with a logic analyser. Never assume cycle counts from datasheets are actual latencies under real interrupt load. The STM32 DWT cycle counter (<code>DWT-&gt;CYCCNT</code>) can measure with ~6 ns resolution at 170 MHz.</p>
+  </div>
+
+  <h3 class="sub-title">Memory Efficiency</h3>
+  <pre><code>/* Pack structs tightly — use __attribute__((packed)) for NVM structs only */
+/* For RAM structs, let compiler align naturally (faster access) */
+
+/* GOOD — natural alignment, 12 bytes, fast access */
+typedef struct {
+    uint32_t timestamp;   /* 4B, aligned at 0 */
+    uint16_t voltage_mv;  /* 2B, aligned at 4 */
+    int16_t  current_ma;  /* 2B, aligned at 6 */
+    uint8_t  flags;       /* 1B, aligned at 8 */
+    uint8_t  pad[3];      /* explicit pad, 12 bytes total */
+} Sample_t;
+
+/* BAD — packed wastes cycles on unaligned reads */
+typedef struct __attribute__((packed)) {
+    uint8_t  flags;
+    uint32_t timestamp;   /* unaligned! */
+    uint16_t voltage_mv;
+} BadSample_t;</code></pre>
+</section>
+
 </body>
 </html>
