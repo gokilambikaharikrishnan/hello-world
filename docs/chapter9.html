@@ -1020,5 +1020,34 @@ void test_SoC_OCV_Anchor_AtRest(void) {
   </table>
 </section>
 
+
+<!-- Summary + Footer -->
+<section class="section reveal" id="summary">
+  <div class="section-eyebrow">Chapter Summary</div>
+  <h2 class="section-title">Chapter 9 · Key Takeaways</h2>
+  <p class="section-intro">The 10 principles that define production-grade BMS firmware:</p>
+  <div class="card-grid">
+    <div class="card reveal"><div class="card-label">Principle 1</div><div class="card-title">Safety is architectural</div><div class="card-body">Protection thresholds are compile-time constants in flash, never RAM-configurable over CAN without cryptographic authentication.</div></div>
+    <div class="card reveal"><div class="card-label">Principle 2</div><div class="card-title">Layer strictly</div><div class="card-body">HAL → Driver → Middleware → App. Application code never writes a register address. This enables host-based unit tests and chip portability.</div></div>
+    <div class="card reveal"><div class="card-label">Principle 3</div><div class="card-title">No dynamic memory</div><div class="card-body"><code>malloc</code>/<code>free</code> after init is forbidden. All buffers are static. Execution time is bounded and heap fragmentation is impossible.</div></div>
+    <div class="card reveal"><div class="card-label">Principle 4</div><div class="card-title">Fixed-point everywhere</div><div class="card-body">Integer millivolts and milliamps are natural fixed-point. Avoid FP in ISRs. 64-bit integer handles Coulomb counting without overflow for 280 Ah packs.</div></div>
+    <div class="card reveal"><div class="card-label">Principle 5</div><div class="card-title">Log everything</div><div class="card-body">Every fault, state change, and calibration event gets a timestamp and a NVM-backed entry. Post-mortem debugging without a log is guesswork.</div></div>
+    <div class="card reveal"><div class="card-label">Principle 6</div><div class="card-title">One config header</div><div class="card-body"><code>bms_config.h</code> is the single source of truth for thresholds, cell count, capacity. Board variants = separate config folder, same firmware binary.</div></div>
+    <div class="card reveal"><div class="card-label">Principle 7</div><div class="card-title">Measure latency</div><div class="card-body">Use DWT cycle counter or GPIO toggles to measure every ISR. Protection ISR must trip FETs in &lt;10 µs for SCP, &lt;200 ms for software OVP/UVP.</div></div>
+    <div class="card reveal"><div class="card-label">Principle 8</div><div class="card-title">OCV anchor drift</div><div class="card-body">Re-anchor Coulomb counter with OCV lookup whenever |I| &lt; 500 mA for 30 s. LFP flat OCV curve means ±3 mV accuracy gives ±8% SoC at inflection.</div></div>
+    <div class="card reveal"><div class="card-label">Principle 9</div><div class="card-title">PYLON-compatible CAN</div><div class="card-body">Implement 0x351–0x355 message set. Tested with Victron MultiPlus-II and Growatt SPF 5000. No proprietary protocol needed for most home ESS inverters.</div></div>
+    <div class="card reveal"><div class="card-label">Principle 10</div><div class="card-title">Test at all levels</div><div class="card-body">Host unit tests for algorithms. HIL for hardware interactions. Pack integration for end-to-end validation. All three are necessary for production confidence.</div></div>
+  </div>
+</section>
+
+<!-- Footer navigation -->
+<footer style="padding:2.5rem 3rem;border-top:1px solid var(--border2);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
+  <a href="chapter8.html" style="font-family:var(--mono);font-size:0.75rem;color:var(--muted);text-decoration:none;letter-spacing:0.1em;border:1px solid var(--border);padding:0.5rem 1rem;border-radius:4px;transition:all 0.15s;">← Chapter 8: HW Design</a>
+  <span style="font-family:var(--mono);font-size:0.62rem;color:rgba(0,255,136,0.4);letter-spacing:0.15em;">CH09 · FIRMWARE ARCHITECTURE · COMPLETE</span>
+  <a href="index.html" style="font-family:var(--mono);font-size:0.75rem;color:var(--acc);text-decoration:none;letter-spacing:0.1em;border:1px solid rgba(0,255,136,0.3);padding:0.5rem 1rem;border-radius:4px;transition:all 0.15s;">Full Index →</a>
+</footer>
+</div><!-- end .main-content -->
+</div><!-- end .page-wrapper -->
+
 </body>
 </html>
