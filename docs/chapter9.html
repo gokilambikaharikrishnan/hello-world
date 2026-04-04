@@ -687,5 +687,95 @@ void read_voltages(void) {
   </div>
 </section>
 
+
+<section class="section reveal" id="s95">
+  <div class="section-eyebrow">Section 9.5</div>
+  <h2 class="section-title">Portability &amp; Generic Code Patterns</h2>
+  <p class="section-intro">Hardware independence allows the same BMS firmware to run on STM32F103, STM32G474, or a PC-based HIL simulator. The key is separating the <em>what</em> (application logic) from the <em>how</em> (hardware access).</p>
+
+  <h3 class="sub-title">HAL Abstraction Pattern</h3>
+  <p>Define a hardware abstraction interface in a header. Provide two implementations: one using STM32 HAL, one using mocked functions for unit tests on a host PC.</p>
+  <pre><code>/* bsp_hal.h — hardware abstraction interface */
+#ifndef BSP_HAL_H
+#define BSP_HAL_H
+
+#include &lt;stdint.h&gt;
+#include &lt;stdbool.h&gt;
+
+/* Time */
+uint32_t BSP_GetTickMs(void);
+void     BSP_DelayMs(uint32_t ms);
+
+/* FET control */
+void     BSP_FET_SetDSG(bool enable);
+void     BSP_FET_SetCHG(bool enable);
+bool     BSP_FET_GetDSG(void);
+
+/* I2C (AFE) */
+int32_t  BSP_I2C_Write(uint8_t addr, uint8_t reg, const uint8_t *buf, uint8_t len);
+int32_t  BSP_I2C_Read (uint8_t addr, uint8_t reg, uint8_t *buf, uint8_t len);
+
+/* SPI (optional: LTC6813) */
+int32_t  BSP_SPI_Transfer(const uint8_t *tx, uint8_t *rx, uint16_t len);
+
+/* CAN */
+int32_t  BSP_CAN_Send(uint32_t id, const uint8_t *data, uint8_t dlc);
+int32_t  BSP_CAN_Recv(uint32_t *id, uint8_t *data, uint8_t *dlc);
+
+#endif</code></pre>
+
+  <pre><code>/* bsp_hal_stm32.c — real STM32G4 implementation */
+#include "bsp_hal.h"
+#include "stm32g4xx_hal.h"
+
+uint32_t BSP_GetTickMs(void) { return HAL_GetTick(); }
+void     BSP_DelayMs(uint32_t ms) { HAL_Delay(ms); }
+
+void BSP_FET_SetDSG(bool en) {
+    HAL_GPIO_WritePin(DSG_GPIO_Port, DSG_Pin, en ? GPIO_PIN_SET : GPIO_PIN_RESET);
+}
+
+/* --- bsp_hal_mock.c — host PC test stub --- */
+static bool s_dsg = false;
+void BSP_FET_SetDSG(bool en) { s_dsg = en; }
+bool BSP_FET_GetDSG(void)    { return s_dsg; }</code></pre>
+
+  <h3 class="sub-title">Configuration via Compile-Time Constants</h3>
+  <p>Hardware parameters differ per board revision. Keep them in a single <code>bms_config.h</code> rather than scattered through source files.</p>
+  <pre><code>/* bms_config.h — single source of truth for this board */
+#ifndef BMS_CONFIG_H
+#define BMS_CONFIG_H
+
+/* Pack topology */
+#define CFG_CELL_COUNT          16U
+#define CFG_PARALLEL_STRINGS     1U
+#define CFG_CAPACITY_AH        280U
+
+/* Voltage thresholds (per cell, mV) */
+#define CFG_OVP_MV            3650U
+#define CFG_UVP_MV            2800U
+#define CFG_FLOAT_MV          3390U   /* UPS float target */
+#define CFG_BALANCE_START_SOC  900U   /* ppt = 90% */
+
+/* Current thresholds (pack, mA) */
+#define CFG_OCP_DSG_MA       50000L
+#define CFG_OCP_CHG_MA       30000L
+
+/* Communication */
+#define CFG_CAN_BAUD_BPS    250000U
+#define CFG_CAN_BASE_ID      0x351U
+
+/* AFE */
+#define CFG_AFE_I2C_ADDR      0x10U   /* BQ76952 ADDR pin = GND */
+#define CFG_SHUNT_UOHM        500U    /* 0.5 mΩ shunt */
+
+#endif</code></pre>
+
+  <div class="callout callout-info">
+    <div class="callout-title">ℹ️ Board Variants</div>
+    <p>Maintain one <code>bms_config.h</code> per board variant in separate folders: <code>boards/ups_16s/</code>, <code>boards/ess_16s/</code>. CMake or Makefile selects the right config at compile time. Never use runtime <code>#ifdef</code> for hardware parameters — that's a build-time decision.</p>
+  </div>
+</section>
+
 </body>
 </html>
