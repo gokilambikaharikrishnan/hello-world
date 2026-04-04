@@ -312,6 +312,42 @@ pre{font-family:var(--mono);background:var(--bg2);border:1px solid var(--border)
   </div>
 </div>
 
+
+<!-- 8.3 MCU SELECTION -->
+<div class="section reveal" id="s8-3">
+  <span class="section-tag">// SECTION 8.3</span>
+  <h2 class="section-title">MCU Selection for BMS</h2>
+  <p>The MCU runs the state machine, EKF, CAN stack, NVM writes, and watchdog. It is not a simple microcontroller task — it is a real-time safety-critical embedded system. Peripheral choice matters as much as clock speed.</p>
+
+  <div class="callout callout-warning">
+    <span class="callout-tag">// COMMON MISTAKE</span>
+    <p style="margin:0;font-size:0.85rem;">Choosing MCU by clock speed or flash size alone. The critical question is: <strong>does it have the right peripherals?</strong> Missing FDCAN, no backup SRAM, or no hardware watchdog = redesign.</p>
+  </div>
+
+  <h3 class="subsection-title" id="s8-3-specs">Key MCU Specs for BMS</h3>
+  <table>
+    <tr><th>Peripheral / Spec</th><th>Why It Matters for BMS</th><th>Minimum Requirement</th></tr>
+    <tr><td><strong>Flash size</strong></td><td>Firmware + lookup tables (OCV, derating)</td><td class="good">≥128 KB (256 KB recommended)</td></tr>
+    <tr><td><strong>RAM</strong></td><td>EKF matrices, CAN buffers, event log</td><td class="good">≥32 KB (64 KB recommended)</td></tr>
+    <tr><td><strong>CAN / FDCAN</strong></td><td>PYLON protocol, inverter comms — hardware CAN only</td><td class="good">At least 1× CAN peripheral</td></tr>
+    <tr><td><strong>SPI</strong></td><td>AFE communication (BQ76952, LTC6813)</td><td class="good">1× SPI, ≥10 MHz</td></tr>
+    <tr><td><strong>I²C</strong></td><td>Fallback AFE interface, RTC, EEPROM</td><td class="warn">Optional but useful</td></tr>
+    <tr><td><strong>ADC</strong></td><td>Current sense amp, pack voltage divider, NTC</td><td class="good">12-bit, ≥4 channels</td></tr>
+    <tr><td><strong>Hardware watchdog</strong></td><td>MCU crash recovery — must reset system independently</td><td class="good">IWDG required; WWDG preferred</td></tr>
+    <tr><td><strong>RTC + backup domain</strong></td><td>Calendar aging timestamp, event log time</td><td class="good">RTC with VBAT pin</td></tr>
+    <tr><td><strong>Backup SRAM</strong></td><td>SoC, SoH, cycle count survive power loss</td><td class="warn">≥4 KB (NVM alternative exists)</td></tr>
+    <tr><td><strong>Operating temperature</strong></td><td>BMS ambient inside enclosure</td><td class="good">−40 to +85°C minimum</td></tr>
+    <tr><td><strong>Functional safety</strong></td><td>IEC 62619 requires systematic safety capability</td><td class="warn">IEC 61508 SIL1 or higher</td></tr>
+  </table>
+
+  <h3 class="subsection-title">Why CAN Must Be Hardware</h3>
+  <p>Software bit-banged CAN is not acceptable for BMS. Hardware CAN peripheral guarantees:</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border2);border:1px solid var(--border);margin:1rem 0;">
+    <div style="background:var(--bg2);padding:1rem;"><span style="font-family:var(--mono);font-size:0.7rem;color:var(--green);">✓ HARDWARE CAN</span><p style="margin:0.5rem 0 0;font-size:0.82rem;">Bit timing from crystal, error counting, automatic retransmit, bus-off recovery, ISO 11898 compliant, interrupt-driven</p></div>
+    <div style="background:var(--bg2);padding:1rem;"><span style="font-family:var(--mono);font-size:0.7rem;color:var(--red);">✗ BIT-BANG CAN</span><p style="margin:0.5rem 0 0;font-size:0.82rem;">Timing jitter from interrupts, no error frame handling, fails under load, not certifiable, CPU hog at 250kbps</p></div>
+  </div>
+</div>
+
 </main>
 </div><!-- end page-wrapper -->
 </body>
