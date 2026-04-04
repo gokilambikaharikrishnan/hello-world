@@ -165,5 +165,57 @@ pre{font-family:var(--mono);background:var(--bg2);border:1px solid var(--border)
 </div>
 
 
+
+<!-- 8.1 ARCHITECTURE DECISIONS -->
+<div class="section reveal" id="s8-1">
+  <span class="section-tag">// SECTION 8.1</span>
+  <h2 class="section-title">How Hardware Architecture is Decided</h2>
+  <p>Every BMS starts from battery requirements. Cell count → AFE choice. Current range → sensing method. Protection topology follows from fault modes. Every decision is derived, not arbitrary.</p>
+
+  <h3 class="subsection-title" id="s8-1-cell">Cell Count → Voltage Range → AFE Choice</h3>
+  <p>Series cell count directly sets voltage range and AFE cell-count requirement. 16S needs ≥16-cell AFE support. Above 18 cells, daisy-chain topologies (LTC6813, BQ79616) are required.</p>
+
+  <div class="callout callout-info">
+    <span class="callout-tag">// DESIGN RULE</span>
+    <p style="margin:0;font-family:var(--mono);font-size:0.82rem;">≤12S → single-chip AFE (BQ76952, ISL94216)<br>13–18S → mid-tier single AFE or daisy-chain<br>&gt;18S → daisy-chain (LTC6813, BQ79616)</p>
+  </div>
+
+  <svg viewBox="0 0 700 180" style="width:100%;height:auto;margin:2rem 0;" id="arch-flow-svg">
+    <defs><marker id="arr8" markerWidth="8" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L0,7 L8,3.5z" fill="rgba(255,200,87,0.8)"/></marker></defs>
+    <rect x="10" y="65" width="120" height="50" fill="rgba(255,200,87,0.06)" stroke="rgba(255,200,87,0.4)" stroke-width="1"/>
+    <text x="70" y="87" text-anchor="middle" fill="#FFC857" font-size="10" font-weight="600" font-family="'JetBrains Mono',monospace">BATTERY SPEC</text>
+    <text x="70" y="104" text-anchor="middle" fill="rgba(234,234,234,0.5)" font-size="9" font-family="'JetBrains Mono',monospace">Cell count · Icont</text>
+    <rect x="190" y="15" width="120" height="45" fill="rgba(0,245,255,0.05)" stroke="rgba(0,245,255,0.3)" stroke-width="1"/>
+    <text x="250" y="35" text-anchor="middle" fill="#00F5FF" font-size="10" font-family="'JetBrains Mono',monospace">AFE SELECTION</text>
+    <text x="250" y="51" text-anchor="middle" fill="rgba(234,234,234,0.4)" font-size="9" font-family="'JetBrains Mono',monospace">BQ76952 / LTC6813</text>
+    <rect x="190" y="120" width="120" height="45" fill="rgba(191,90,242,0.05)" stroke="rgba(191,90,242,0.3)" stroke-width="1"/>
+    <text x="250" y="140" text-anchor="middle" fill="#BF5AF2" font-size="10" font-family="'JetBrains Mono',monospace">SHUNT / HALL</text>
+    <text x="250" y="156" text-anchor="middle" fill="rgba(234,234,234,0.4)" font-size="9" font-family="'JetBrains Mono',monospace">Current sensing</text>
+    <rect x="380" y="65" width="120" height="50" fill="rgba(0,255,136,0.05)" stroke="rgba(0,255,136,0.3)" stroke-width="1"/>
+    <text x="440" y="87" text-anchor="middle" fill="#00FF88" font-size="10" font-family="'JetBrains Mono',monospace">MCU SELECTION</text>
+    <text x="440" y="104" text-anchor="middle" fill="rgba(234,234,234,0.4)" font-size="9" font-family="'JetBrains Mono',monospace">STM32 family</text>
+    <rect x="565" y="65" width="120" height="50" fill="rgba(255,45,85,0.05)" stroke="rgba(255,45,85,0.3)" stroke-width="1"/>
+    <text x="625" y="87" text-anchor="middle" fill="#FF2D55" font-size="10" font-family="'JetBrains Mono',monospace">ISOLATION</text>
+    <text x="625" y="104" text-anchor="middle" fill="rgba(234,234,234,0.4)" font-size="9" font-family="'JetBrains Mono',monospace">Opto / Digital ISO</text>
+    <line x1="130" y1="82" x2="188" y2="38" stroke="rgba(255,200,87,0.6)" stroke-width="1.5" marker-end="url(#arr8)"/>
+    <line x1="130" y1="98" x2="188" y2="143" stroke="rgba(255,200,87,0.6)" stroke-width="1.5" marker-end="url(#arr8)"/>
+    <line x1="310" y1="37" x2="378" y2="82" stroke="rgba(0,245,255,0.5)" stroke-width="1.5" marker-end="url(#arr8)"/>
+    <line x1="310" y1="143" x2="378" y2="98" stroke="rgba(191,90,242,0.5)" stroke-width="1.5" marker-end="url(#arr8)"/>
+    <line x1="500" y1="90" x2="563" y2="90" stroke="rgba(0,255,136,0.5)" stroke-width="1.5" marker-end="url(#arr8)"/>
+  </svg>
+
+  <h3 class="subsection-title" id="s8-1-current">Current Range → Shunt vs Hall Effect</h3>
+  <table>
+    <tr><th>Parameter</th><th>Shunt Resistor</th><th>Hall Effect</th></tr>
+    <tr><td>Accuracy</td><td class="good">±0.5–1%</td><td class="warn">±1–3%</td></tr>
+    <tr><td>Isolation</td><td class="bad">None (inline)</td><td class="good">Galvanic</td></tr>
+    <tr><td>Power loss</td><td class="warn">I²R (100μΩ @ 200A = 4W)</td><td class="good">Minimal</td></tr>
+    <tr><td>Cost</td><td class="good">Low ($1–5)</td><td class="warn">Higher ($5–20)</td></tr>
+    <tr><td>Reference part</td><td><code>100μΩ + INA228</code></td><td><code>ACS758 / TMCS1100</code></td></tr>
+  </table>
+</div>
+
+</main>
+</div><!-- end page-wrapper -->
 </body>
 </html>
