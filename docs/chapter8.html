@@ -96,6 +96,55 @@ pre{font-family:var(--mono);background:var(--bg2);border:1px solid var(--border)
 </style>
 </head>
 <body>
-<p style="color:#FFC857;font-family:monospace;padding:2rem;z-index:10;position:relative;">// CHAPTER 8 LOADING...</p>
+
+<div id="hud-progress"></div>
+
+<!-- HUD TOPBAR -->
+<div id="ch-topbar" style="position:fixed;top:0;left:0;width:100%;height:44px;background:rgba(5,5,7,0.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,200,87,0.12);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;z-index:9000;font-family:'JetBrains Mono',monospace;font-size:0.65rem;">
+  <span style="color:rgba(255,200,87,0.65);letter-spacing:0.15em;">// LFP-BMS-KB &nbsp;·&nbsp; MOD_08 — HW DESIGN</span>
+  <div style="display:flex;gap:1.2rem;">
+    <span style="color:rgba(0,255,136,0.7);letter-spacing:0.1em;">● ONLINE</span>
+    <a href="index.html" style="color:rgba(255,200,87,0.4);text-decoration:none;letter-spacing:0.1em;">← INDEX</a>
+    <span style="color:rgba(255,200,87,0.3);letter-spacing:0.1em;">CH 08/08</span>
+  </div>
+</div>
+
+<div class="page-wrapper">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-text">LFP BMS Knowledge Base</div>
+    <div class="sidebar-title">Chapter 8 — HW Design</div>
+  </div>
+
+  <div class="sidebar-nav-label">Chapter 8</div>
+  <a class="sidebar-link active" href="#hero"><span class="dot"></span> Overview</a>
+  <a class="sidebar-link" href="#s8-1"><span class="dot"></span> 8.1 Architecture Decisions</a>
+  <a class="sidebar-link sidebar-sub" href="#s8-1-cell"><span class="dot"></span> Cell → AFE path</a>
+  <a class="sidebar-link sidebar-sub" href="#s8-1-current"><span class="dot"></span> Current sensing</a>
+  <a class="sidebar-link" href="#s8-2"><span class="dot"></span> 8.2 AFE Selection</a>
+  <a class="sidebar-link sidebar-sub" href="#s8-2-specs"><span class="dot"></span> Key specs</a>
+  <a class="sidebar-link sidebar-sub" href="#s8-2-compare"><span class="dot"></span> Comparison table</a>
+  <a class="sidebar-link" href="#s8-3"><span class="dot"></span> 8.3 MCU Selection</a>
+  <a class="sidebar-link sidebar-sub" href="#s8-3-specs"><span class="dot"></span> Key specs</a>
+  <a class="sidebar-link" href="#s8-4"><span class="dot"></span> 8.4 STM32 Guide</a>
+  <a class="sidebar-link sidebar-sub" href="#s8-4-family"><span class="dot"></span> Family overview</a>
+  <a class="sidebar-link sidebar-sub" href="#s8-4-matrix"><span class="dot"></span> Decision matrix</a>
+  <a class="sidebar-link" href="#s8-5"><span class="dot"></span> 8.5 High Voltage</a>
+  <a class="sidebar-link" href="#s8-6"><span class="dot"></span> 8.6 PCB Design</a>
+
+  <div class="sidebar-nav-label">Other Chapters</div>
+  <a class="sidebar-link" href="chapter1.html"><span class="dot"></span> Ch1: Chemistry</a>
+  <a class="sidebar-link" href="chapter2.html"><span class="dot"></span> Ch2: Cell Physics</a>
+  <a class="sidebar-link" href="chapter3.html"><span class="dot"></span> Ch3: Thermal</a>
+  <a class="sidebar-link" href="chapter4.html"><span class="dot"></span> Ch4: Protection</a>
+  <a class="sidebar-link" href="chapter5.html"><span class="dot"></span> Ch5: Standards</a>
+  <a class="sidebar-link" href="chapter6.html"><span class="dot"></span> Ch6: Architecture</a>
+  <a class="sidebar-link" href="chapter7.html"><span class="dot"></span> Ch7: UPS & ESS</a>
+</nav>
+
+<main class="main-content">
+
 </body>
 </html>
