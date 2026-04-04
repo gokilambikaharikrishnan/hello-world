@@ -497,5 +497,69 @@ pre{font-family:var(--mono);background:var(--bg2);border:1px solid var(--border)
 </main>
 </div><!-- end page-wrapper -->
 
+
+<style>
+.stm-btn{font-family:'JetBrains Mono',monospace;font-size:0.65rem;letter-spacing:0.1em;padding:0.3rem 0.8rem;border:1px solid rgba(255,200,87,0.25);background:transparent;color:rgba(255,200,87,0.5);cursor:pointer;transition:all 0.15s;}
+.stm-btn.active,.stm-btn:hover{background:rgba(255,200,87,0.1);color:var(--amber);border-color:rgba(255,200,87,0.5);}
+.stm-card{background:#080810;padding:1.2rem;transition:background 0.2s;}
+.stm-card:hover{background:#0c0c18;}
+.stm-card-name{font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--amber);font-weight:600;margin-bottom:0.3rem;}
+.stm-card-core{font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--muted);margin-bottom:0.5rem;}
+.stm-card-rec{font-size:0.75rem;color:rgba(234,234,234,0.6);line-height:1.5;}
+.stm-card.hidden{display:none;}
+</style>
+<script>
+// scroll progress
+(function(){
+  var p=document.getElementById('hud-progress');
+  window.addEventListener('scroll',function(){
+    var s=document.documentElement.scrollTop,h=document.documentElement.scrollHeight-window.innerHeight;
+    if(p&&h>0)p.style.width=(s/h*100)+'%';
+  });
+})();
+
+// reveal
+var obs=new IntersectionObserver(function(entries){
+  entries.forEach(function(e,i){if(e.isIntersecting){setTimeout(function(){e.target.classList.add('visible');},i*60);obs.unobserve(e.target);}});
+},{threshold:0.1});
+document.querySelectorAll('.reveal').forEach(function(el){obs.observe(el);});
+
+// sidebar active on scroll
+var sections=document.querySelectorAll('[id]');
+var links=document.querySelectorAll('.sidebar-link');
+window.addEventListener('scroll',function(){
+  var cur='';
+  sections.forEach(function(s){if(window.scrollY>=s.offsetTop-120)cur=s.id;});
+  links.forEach(function(l){
+    var href=l.getAttribute('href')||'';
+    l.classList.toggle('active',href==='#'+cur);
+  });
+});
+
+// STM32 decision matrix
+var stmData=[
+  {name:'STM32F103C8',core:'Cortex-M3 · 72MHz',tags:['cost','all'],rec:'Classic BMS choice. bxCAN, SPI, I²C. Limited RAM (20KB) — no EKF. Good for simple protection-only BMS.'},
+  {name:'STM32G431KB',core:'Cortex-M4F · 170MHz',tags:['modern','all'],rec:'Modern FDCAN, 32KB SRAM, math accelerator. Best value for new designs. LQFP-32 fits small boards.'},
+  {name:'STM32F446RE',core:'Cortex-M4F · 180MHz',tags:['perf','all'],rec:'Reference design choice. 4KB backup SRAM, dual SPI, bxCAN, 128KB RAM for EKF. LQFP-64.'},
+  {name:'STM32L432KC',core:'Cortex-M4F · 80MHz',tags:['lp','all'],rec:'Ultra low power. Stop mode 2: 2μA. For battery-powered BMS monitors. 4KB backup SRAM.'},
+  {name:'STM32G474RE',core:'Cortex-M4F · 170MHz',tags:['modern','perf','all'],rec:'FDCAN + HRTIM. Best for active balancing BMS. Rich ADC (5 ADCs). Large 128KB RAM.'},
+  {name:'STM32F407VG',core:'Cortex-M4F · 168MHz',tags:['perf','all'],rec:'1MB flash, 192KB RAM, crypto. Overkill for most BMS but ideal if running full SoH analytics.'},
+];
+function stmFilter(f){
+  document.querySelectorAll('.stm-btn').forEach(function(b){b.classList.toggle('active',b.dataset.f===f);});
+  document.querySelectorAll('.stm-card').forEach(function(c){c.classList.toggle('hidden',f!=='all'&&!c.dataset.tags.includes(f));});
+}
+(function(){
+  var container=document.getElementById('stm-cards');
+  if(!container)return;
+  stmData.forEach(function(d){
+    var el=document.createElement('div');
+    el.className='stm-card';el.dataset.tags=d.tags.join(',');
+    el.innerHTML='<div class="stm-card-name">'+d.name+'</div><div class="stm-card-core">'+d.core+'</div><div class="stm-card-rec">'+d.rec+'</div>';
+    container.appendChild(el);
+  });
+})();
+</script>
+
 </body>
 </html>
