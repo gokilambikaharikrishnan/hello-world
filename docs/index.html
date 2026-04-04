@@ -63,6 +63,26 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
 .topbar-chip{color:var(--muted);letter-spacing:0.1em;padding:0.2rem 0.6rem;border:1px solid var(--border2);font-size:0.65rem;}
 .topbar-chip.online{color:var(--green);border-color:rgba(0,255,136,0.3);}
 
+
+/* hero */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:6rem 2rem 4rem;position:relative;z-index:2;}
+.hero-eyebrow{font-family:var(--mono);font-size:0.7rem;letter-spacing:0.25em;color:var(--cyan);opacity:0.7;margin-bottom:1.5rem;text-transform:uppercase;}
+.hero-title{font-family:var(--head);font-size:clamp(3rem,9vw,7rem);font-weight:900;letter-spacing:0.04em;line-height:1;color:#fff;text-shadow:0 0 60px rgba(0,245,255,0.4);margin-bottom:0.5rem;}
+.hero-title span{color:var(--cyan);text-shadow:var(--glow-lg);}
+.hero-sub-title{font-family:var(--head);font-size:clamp(1rem,3vw,1.8rem);font-weight:400;letter-spacing:0.15em;color:rgba(0,245,255,0.6);margin-bottom:2rem;}
+.hero-desc{max-width:600px;color:var(--muted);font-size:0.95rem;line-height:1.8;margin-bottom:3rem;}
+/* hero corner brackets */
+.hero-panel{position:relative;padding:2rem;border:1px solid var(--border2);}
+.hero-panel::before,.hero-panel::after{content:'';position:absolute;width:20px;height:20px;border-color:var(--cyan);border-style:solid;}
+.hero-panel::before{top:-1px;left:-1px;border-width:2px 0 0 2px;}
+.hero-panel::after{bottom:-1px;right:-1px;border-width:0 2px 2px 0;}
+/* stats row */
+.hero-stats{display:flex;gap:0;border:1px solid var(--border);margin-bottom:2.5rem;overflow:hidden;}
+.hstat{padding:1.2rem 2rem;text-align:center;border-right:1px solid var(--border);position:relative;background:var(--panel);flex:1;}
+.hstat:last-child{border-right:none;}
+.hstat-val{font-family:var(--head);font-size:2rem;font-weight:700;color:var(--cyan);display:block;line-height:1;text-shadow:var(--glow);}
+.hstat-lbl{font-family:var(--mono);font-size:0.6rem;letter-spacing:0.15em;color:var(--muted);text-transform:uppercase;margin-top:0.3rem;display:block;}
+
 </style>
 </head>
 <body>
