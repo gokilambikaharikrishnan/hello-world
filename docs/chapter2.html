@@ -320,7 +320,19 @@
     .anatomy-layer-role { font-size:0.78rem; color:var(--text-muted); line-height:1.5; }
 
     @media print { .sidebar,.chapter-footer{display:none} body{background:white;color:black} .main-content{padding:1cm} }
-  </style>
+  
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Space+Grotesk:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{--hud-acc:#0A84FF;--hud-acc-rgb:rgba(10,132,255,}
+body{background:#050507!important;font-family:'Space Grotesk',sans-serif!important;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(10,132,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(10,132,255,0.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px);pointer-events:none;z-index:1;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:rgba(0,245,255,0.25);}
+.sidebar{background:#050507!important;border-right:1px solid rgba(0,245,255,0.1)!important;}
+.sidebar-link{font-family:'JetBrains Mono',monospace!important;font-size:0.72rem!important;color:rgba(234,234,234,0.4)!important;border-left:2px solid transparent!important;}
+.sidebar-link:hover,.sidebar-link.active{color:#0A84FF!important;border-left-color:#0A84FF!important;background:rgba(10,132,255,0.05)!important;}
+.sidebar-link.active .dot{background:#0A84FF!important;box-shadow:0 0 6px #0A84FF!important;}
+nav.sidebar,.sidebar{background:#050507!important;}
+</style>
 <style id="__comic-extra">
 /* ---- NEON TABLE ---- */
 .content-main table{border-collapse:collapse!important;border:3px solid #60a5fa!important;box-shadow:0 0 20px rgba(96,165,250,.2)!important;width:100%;}

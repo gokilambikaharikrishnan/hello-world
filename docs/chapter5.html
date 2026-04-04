@@ -225,7 +225,19 @@
       .test-grid { grid-template-columns: 1fr; }
       .chapter-footer { grid-template-columns: 1fr; }
     }
-  </style>
+  
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Space+Grotesk:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{--hud-acc:#00FF88;--hud-acc-rgb:rgba(0,255,136,}
+body{background:#050507!important;font-family:'Space Grotesk',sans-serif!important;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,255,136,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,136,0.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px);pointer-events:none;z-index:1;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:rgba(0,245,255,0.25);}
+.sidebar{background:#050507!important;border-right:1px solid rgba(0,245,255,0.1)!important;}
+.sidebar-link{font-family:'JetBrains Mono',monospace!important;font-size:0.72rem!important;color:rgba(234,234,234,0.4)!important;border-left:2px solid transparent!important;}
+.sidebar-link:hover,.sidebar-link.active{color:#00FF88!important;border-left-color:#00FF88!important;background:rgba(0,255,136,0.05)!important;}
+.sidebar-link.active .dot{background:#00FF88!important;box-shadow:0 0 6px #00FF88!important;}
+nav.sidebar,.sidebar{background:#050507!important;}
+</style>
 <style id="__comic-extra">
 /* ---- NEON TABLE ---- */
 .content-main table{border-collapse:collapse!important;border:3px solid #34d399!important;box-shadow:0 0 20px rgba(52,211,153,.2)!important;width:100%;}
