@@ -348,6 +348,56 @@ pre{font-family:var(--mono);background:var(--bg2);border:1px solid var(--border)
   </div>
 </div>
 
+
+<!-- 8.4 STM32 SELECTION GUIDE -->
+<div class="section reveal" id="s8-4">
+  <span class="section-tag">// SECTION 8.4</span>
+  <h2 class="section-title">STM32 Selection Guide</h2>
+  <p>STM32 dominates BMS designs for good reasons: wide peripheral selection, 3.3V operation, HAL driver availability, cube MX pin configurator, strong community, and long-term availability. Here's how to navigate the family.</p>
+
+  <h3 class="subsection-title" id="s8-4-family">STM32 Family Overview</h3>
+  <table>
+    <tr><th>Family</th><th>Core</th><th>Flash</th><th>CAN</th><th>Backup SRAM</th><th>BMS Suitability</th><th>Verdict</th></tr>
+    <tr><td><code>STM32F0</code></td><td>Cortex-M0</td><td>16–256KB</td><td class="bad">No</td><td class="bad">No</td><td>Only sensor nodes</td><td><span class="chip bad">AVOID</span></td></tr>
+    <tr><td><code>STM32F1</code></td><td>Cortex-M3</td><td>64–512KB</td><td class="good">bxCAN</td><td class="warn">SRAM (no backup)</td><td>Basic BMS, legacy</td><td><span class="chip warn">OK</span></td></tr>
+    <tr><td><code>STM32F3</code></td><td>Cortex-M4F</td><td>64–512KB</td><td class="good">bxCAN</td><td class="warn">Limited</td><td>Good ADC (Σ-Δ), limited RAM</td><td><span class="chip warn">OK</span></td></tr>
+    <tr><td><code>STM32F4</code></td><td>Cortex-M4F</td><td>512K–2MB</td><td class="good">bxCAN</td><td class="good">64KB backup</td><td>High performance, EKF capable</td><td><span class="chip good">GOOD</span></td></tr>
+    <tr><td><code>STM32G0</code></td><td>Cortex-M0+</td><td>32–512KB</td><td class="warn">FDCAN</td><td class="bad">No</td><td>Cost-sensitive, limited algo</td><td><span class="chip warn">OK</span></td></tr>
+    <tr><td><code>STM32G4</code></td><td>Cortex-M4F</td><td>128K–512KB</td><td class="good">FDCAN</td><td class="warn">Small</td><td>Modern, FDCAN, good ADC</td><td><span class="chip good">GOOD</span></td></tr>
+    <tr><td><code>STM32L4</code></td><td>Cortex-M4F</td><td>256K–1MB</td><td class="good">bxCAN</td><td class="good">4KB backup</td><td>Ultra low power, sleep modes</td><td><span class="chip good">BEST LP</span></td></tr>
+    <tr><td><code>STM32F446</code></td><td>Cortex-M4F</td><td>512KB</td><td class="good">bxCAN</td><td class="good">4KB backup</td><td>High clock, dual SPI, USB</td><td><span class="chip best">TOP PICK</span></td></tr>
+  </table>
+
+  <h3 class="subsection-title" id="s8-4-matrix">Decision Matrix — Which STM32 for Your BMS?</h3>
+  <!-- Interactive decision matrix -->
+  <div style="background:var(--bg2);border:1px solid var(--border);padding:1.5rem;margin:1.5rem 0;">
+    <div style="font-family:var(--mono);font-size:0.65rem;letter-spacing:0.15em;color:rgba(255,200,87,0.5);margin-bottom:1rem;">// INTERACTIVE SELECTOR — click your priority</div>
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.5rem;" id="stm-filters">
+      <button onclick="stmFilter('all')" class="stm-btn active" data-f="all">ALL</button>
+      <button onclick="stmFilter('cost')" class="stm-btn" data-f="cost">COST SENSITIVE</button>
+      <button onclick="stmFilter('perf')" class="stm-btn" data-f="perf">HIGH PERFORMANCE</button>
+      <button onclick="stmFilter('lp')" class="stm-btn" data-f="lp">LOW POWER</button>
+      <button onclick="stmFilter('modern')" class="stm-btn" data-f="modern">MODERN FDCAN</button>
+    </div>
+    <div id="stm-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1px;background:var(--border2);"></div>
+  </div>
+
+  <div class="callout callout-info">
+    <span class="callout-tag">// REFERENCE DESIGN MCU</span>
+    <p style="margin:0;font-family:var(--mono);font-size:0.82rem;"><strong style="color:var(--amber);">STM32F446RET6</strong> — 180MHz Cortex-M4F · 512KB Flash · 128KB RAM · bxCAN · 2× SPI · 4KB backup SRAM · −40 to +85°C · LQFP-64 package<br><span style="color:var(--muted);">Reason: Maximum peripheral density, backup SRAM for SoC persistence, dual SPI (AFE + flash), single-chip BMS solution.</span></p>
+  </div>
+
+  <h3 class="subsection-title">Key Peripherals to Verify in CubeMX</h3>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1px;background:var(--border2);border:1px solid var(--border);margin:1rem 0;">
+    <div style="background:var(--bg2);padding:1.2rem;"><strong style="font-family:var(--mono);font-size:0.75rem;color:var(--cyan);">FDCAN / bxCAN</strong><p style="margin:0.4rem 0 0;font-size:0.82rem;">Verify bit-timing at 250kbps with your crystal. Check filter banks for 0x351–0x380 range. Enable error interrupts.</p></div>
+    <div style="background:var(--bg2);padding:1.2rem;"><strong style="font-family:var(--mono);font-size:0.75rem;color:var(--cyan);">Backup SRAM</strong><p style="margin:0.4rem 0 0;font-size:0.82rem;">Enable PWR_CR_DBP to unlock backup domain. SRAM contents survive VBAT brownout. Map SoC, cycle count, SoH here.</p></div>
+    <div style="background:var(--bg2);padding:1.2rem;"><strong style="font-family:var(--mono);font-size:0.75rem;color:var(--cyan);">IWDG + WWDG</strong><p style="margin:0.4rem 0 0;font-size:0.82rem;">IWDG = independent watchdog (LSI clock, MCU reset if not kicked). WWDG = window watchdog (too-early kick also resets). Use both.</p></div>
+    <div style="background:var(--bg2);padding:1.2rem;"><strong style="font-family:var(--mono);font-size:0.75rem;color:var(--cyan);">RTC calibration</strong><p style="margin:0.4rem 0 0;font-size:0.82rem;">Use 32.768 kHz crystal. Enable smooth calibration. Accuracy target: &lt;1 min/month for Arrhenius aging timestamp reliability.</p></div>
+    <div style="background:var(--bg2);padding:1.2rem;"><strong style="font-family:var(--mono);font-size:0.75rem;color:var(--cyan);">Internal VREF</strong><p style="margin:0.4rem 0 0;font-size:0.82rem;">Enable VREFBUF for stable ADC reference. Bypass with 1μF + 10nF. Critical for current sense accuracy at all temperatures.</p></div>
+    <div style="background:var(--bg2);padding:1.2rem;"><strong style="font-family:var(--mono);font-size:0.75rem;color:var(--cyan);">DMA for SPI</strong><p style="margin:0.4rem 0 0;font-size:0.82rem;">Use DMA for AFE polling (continuous SPI transfers). Frees CPU for EKF computation. Target: AFE read every 10ms, CPU free 95%.</p></div>
+  </div>
+</div>
+
 </main>
 </div><!-- end page-wrapper -->
 </body>
