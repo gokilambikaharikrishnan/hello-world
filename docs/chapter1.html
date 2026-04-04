@@ -1039,6 +1039,27 @@ th{font-family:'JetBrains Mono',monospace !important;font-size:0.65rem !importan
 td{font-size:0.83rem !important;padding:0.6rem 1rem !important;border-bottom:1px solid rgba(0,245,255,0.06) !important;color:rgba(234,234,234,0.7) !important;}
 tr:hover td{background:rgba(0,245,255,0.03) !important;}
 .good{color:#00FF88 !important;}.bad,.worst{color:#FF2D55 !important;}.fair{color:#FFC857 !important;}.best{color:#00F5FF !important;}
+
+/* HUD STAT CARDS */
+.stat-grid{display:grid !important;gap:1px !important;background:rgba(0,245,255,0.08) !important;}
+.stat-card{background:#080810 !important;border:none !important;border-radius:0 !important;padding:1.5rem !important;position:relative !important;transition:background 0.2s !important;}
+.stat-card:hover{background:#0c0c18 !important;}
+.stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,var(--hud-cyan,#00F5FF),transparent);opacity:0;transition:opacity 0.2s;}
+.stat-card:hover::after{opacity:0.5;}
+.stat-value{font-family:'Orbitron',sans-serif !important;font-size:2rem !important;font-weight:700 !important;color:#00F5FF !important;text-shadow:0 0 20px rgba(0,245,255,0.4) !important;line-height:1 !important;}
+.stat-unit{font-family:'JetBrains Mono',monospace !important;font-size:0.6rem !important;color:rgba(0,245,255,0.45) !important;letter-spacing:0.15em !important;text-transform:uppercase !important;display:block !important;margin:0.3rem 0 !important;}
+.stat-label{font-size:0.78rem !important;color:rgba(234,234,234,0.5) !important;line-height:1.5 !important;}
+/* HUD TOC */
+.toc-card{background:#080810 !important;border:1px solid rgba(0,245,255,0.12) !important;border-radius:0 !important;padding:1.5rem !important;margin:2rem 0 !important;}
+.toc-title{font-family:'JetBrains Mono',monospace !important;font-size:0.65rem !important;letter-spacing:0.2em !important;color:rgba(0,245,255,0.5) !important;text-transform:uppercase !important;margin-bottom:1rem !important;}
+.toc-item{border-left:2px solid rgba(0,245,255,0.1) !important;padding:0.4rem 0.8rem !important;margin-bottom:0.3rem !important;transition:border-color 0.15s !important;}
+.toc-item:hover{border-left-color:#00F5FF !important;}
+.toc-num{font-family:'JetBrains Mono',monospace !important;font-size:0.65rem !important;color:rgba(0,245,255,0.4) !important;}
+/* TIMELINE */
+.timeline-item{border-left:1px solid rgba(0,245,255,0.15) !important;padding-left:1.5rem !important;margin-bottom:2rem !important;position:relative !important;}
+.timeline-item::before{content:'';position:absolute;left:-4px;top:4px;width:7px;height:7px;border:1px solid #00F5FF;background:#050507;}
+.timeline-year{font-family:'JetBrains Mono',monospace !important;font-size:0.62rem !important;color:rgba(0,245,255,0.45) !important;letter-spacing:0.15em !important;}
+.timeline-heading{font-family:'Orbitron',sans-serif !important;font-size:0.95rem !important;font-weight:600 !important;color:#fff !important;margin:0.3rem 0 !important;}
 </style>
 <style id="__comic-extra">
 /* ---- NEON TABLE ---- */
