@@ -160,5 +160,65 @@ tr:hover td{background:rgba(0,255,136,0.03);}
     <div class="hero-stat"><span>~40min</span>Read</div>
   </div>
 </section>
+
+<section class="section reveal" id="s91">
+  <div class="section-eyebrow">Section 9.1</div>
+  <h2 class="section-title">Firmware Design Philosophy</h2>
+  <p class="section-intro">BMS firmware is safety-critical embedded software. Unlike an app or a web service, a firmware bug can destroy a battery pack, ignite a fire, or silently under-report SoC until a UPS fails on power cut. The design philosophy must reflect this reality.</p>
+
+  <h3 class="sub-title">Core Principles</h3>
+  <div class="card-grid">
+    <div class="card reveal">
+      <div class="card-label">Principle 01</div>
+      <div class="card-title">Safety First, Features Second</div>
+      <div class="card-body">Protection thresholds are hard-coded constants — never overwritten by CAN commands without authenticated write + watchdog confirmation. An attacker must not be able to raise OVP via a CAN frame.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">Principle 02</div>
+      <div class="card-title">Deterministic Execution</div>
+      <div class="card-body">No dynamic memory allocation (<code>malloc</code>/<code>free</code>) after init. No recursion in safety paths. All buffers are static. Execution time of every ISR and task must be bounded and measured.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">Principle 03</div>
+      <div class="card-title">Defensive Programming</div>
+      <div class="card-body">Assert every assumption. Validate every input. Check pointer != NULL before dereference. Range-check every sensor reading before using it in a decision. Return explicit error codes.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">Principle 04</div>
+      <div class="card-title">Fail-Safe Defaults</div>
+      <div class="card-body">On any undefined state or assert failure, open both DSG and CHG FETs, log the fault, and halt or reset. Never continue operating in an unknown state. The safe default is to disconnect the pack.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">Principle 05</div>
+      <div class="card-title">Minimal Trusted Core</div>
+      <div class="card-body">The protection loop (read → compare → trip FET) is implemented in &lt;100 lines of C with no dependencies. It runs in the fastest interrupt. Everything else is application-layer.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">Principle 06</div>
+      <div class="card-title">Observable System</div>
+      <div class="card-body">Every state change, fault event, and calibration write is logged with a 32-bit timestamp. The log is NVM-backed. Engineers must be able to reconstruct what happened from the log alone.</div>
+    </div>
+  </div>
+
+  <h3 class="sub-title">MISRA C:2012 — What It Actually Means</h3>
+  <p>MISRA C is a coding standard, not a programming language subset. It constrains dangerous C patterns to reduce undefined behaviour. For a safety-critical BMS these rules matter:</p>
+  <table>
+    <thead><tr><th>Rule</th><th>What it forbids</th><th>Why it matters</th></tr></thead>
+    <tbody>
+      <tr><td><code>Rule 1.3</code></td><td>Undefined behaviour (signed overflow, OOB array)</td><td>Signed overflow is UB in C — compilers may silently optimise it away</td></tr>
+      <tr><td><code>Rule 11.3</code></td><td>Pointer cast between object types</td><td>Aliasing violations cause data corruption on optimised builds</td></tr>
+      <tr><td><code>Rule 15.5</code></td><td>Single point of exit per function</td><td>Reduces missed cleanup, easier static analysis</td></tr>
+      <tr><td><code>Rule 17.2</code></td><td>Recursive function calls</td><td>Stack depth becomes unbounded and unanalysable</td></tr>
+      <tr><td><code>Rule 21.3</code></td><td><code>malloc</code> / <code>free</code></td><td>Heap fragmentation + non-deterministic timing</td></tr>
+      <tr><td><code>Rule 14.4</code></td><td>Non-boolean if/while condition</td><td>Prevents accidental <code>if(ptr)</code> instead of <code>if(ptr!=NULL)</code></td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-warn">
+    <div class="callout-title">⚡ Pragmatic Adoption</div>
+    <p>Full MISRA C compliance requires a commercial static analyser (LDRA, PC-lint, Polyspace). For a start-up or hobbyist BMS, adopt the most impactful rules: no malloc, no recursion, explicit types, single exit. Use <strong>cppcheck --enable=all</strong> for free partial coverage.</p>
+  </div>
+</section>
+
 </body>
 </html>
