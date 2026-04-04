@@ -506,5 +506,116 @@ void APP_Balance_Task(void) {
   </div>
 </section>
 
+
+<!-- 9.3 continued: CAN + NVM + Event Logger -->
+<section class="section reveal" id="s93c">
+  <h3 class="sub-title">Module 05 · CAN Communication (app_can.c)</h3>
+  <p>The CAN module assembles PYLON-compatible frames and transmits them every 1 second. It also handles incoming charge voltage/current setpoints from the inverter (0x356 / 0x35C).</p>
+  <pre><code>/* PYLON message set — 0x351 through 0x355 */
+/* 0x351: Charge voltage limit + current limit */
+void CAN_TX_0x351(void) {
+    uint8_t data[8] = {0};
+    uint16_t cv_limit = (uint16_t)(OVP_MV * CELL_COUNT); /* pack CV limit in 100mV */
+    uint16_t ci_limit = (uint16_t)(OCP_C_MA / 100U);     /* 0.1 A per bit */
+    uint16_t di_limit = (uint16_t)(OCP_D_MA / 100U);
+
+    data[0] = (uint8_t)(cv_limit & 0xFFU);
+    data[1] = (uint8_t)(cv_limit >> 8);
+    data[2] = (uint8_t)(ci_limit & 0xFFU);
+    data[3] = (uint8_t)(ci_limit >> 8);
+    data[4] = (uint8_t)(di_limit & 0xFFU);
+    data[5] = (uint8_t)(di_limit >> 8);
+    /* data[6..7] = discharge voltage minimum */
+    data[6] = (uint8_t)((UVP_MV * CELL_COUNT / 100U) & 0xFFU);
+    data[7] = (uint8_t)((UVP_MV * CELL_COUNT / 100U) >> 8);
+
+    DRV_CAN_Transmit(0x351U, data, 8U);
+}
+
+/* 0x355: SoC % and SoH % */
+void CAN_TX_0x355(void) {
+    uint8_t data[8] = {0};
+    data[0] = (uint8_t)(g_soc.soc_ppt / 10U);   /* 0–100% */
+    data[1] = 0U;
+    data[2] = 100U;  /* SoH fixed 100 (no degradation model yet) */
+    data[3] = 0U;
+    DRV_CAN_Transmit(0x355U, data, 8U);
+}
+
+/* 0x356: Pack voltage, current, temperature */
+void CAN_TX_0x356(void) {
+    uint8_t data[8] = {0};
+    int16_t pv = (int16_t)(g_meas.pack_mv / 10U);   /* 0.01V/bit */
+    int16_t pc = (int16_t)(g_meas.current_ma / 100L); /* 0.1A/bit, signed */
+    int16_t pt = g_meas.temp_dc[1];                   /* mid NTC */
+    data[0]=(uint8_t)(pv & 0xFF); data[1]=(uint8_t)(pv>>8);
+    data[2]=(uint8_t)(pc & 0xFF); data[3]=(uint8_t)(pc>>8);
+    data[4]=(uint8_t)(pt & 0xFF); data[5]=(uint8_t)(pt>>8);
+    DRV_CAN_Transmit(0x356U, data, 8U);
+}</code></pre>
+
+  <h3 class="sub-title">Module 06 · NVM / Flash (drv_flash.c)</h3>
+  <p>Persistent storage uses an emulated EEPROM approach with two flash pages (ping-pong). Critical data: SoC anchor, event log, calibration. Never store protection thresholds in NVM — hardcode them.</p>
+  <pre><code>/* drv_flash.h — NVM partition layout */
+/* STM32G474 internal flash: 512 KB, pages 63+64 reserved for NVM */
+#define NVM_PAGE_A      63U
+#define NVM_PAGE_B      64U
+#define NVM_PAGE_SIZE   2048U   /* bytes, STM32G4 */
+
+typedef struct __attribute__((packed)) {
+    uint32_t magic;          /* 0xBEEF1234 — valid marker */
+    uint32_t seq;            /* write sequence counter */
+    int64_t  cc_uah;         /* SoC Coulomb counter */
+    uint16_t soc_ppt;        /* last known SoC */
+    uint32_t cycle_count;    /* full cycles since manufacture */
+    uint32_t crc32;          /* CRC of bytes [0..N-5] */
+} NVM_Data_t;                /* 28 bytes */
+
+HAL_StatusTypeDef DRV_Flash_WriteNVM(const NVM_Data_t *d);
+HAL_StatusTypeDef DRV_Flash_ReadNVM(NVM_Data_t *d);</code></pre>
+
+  <h3 class="sub-title">Module 07 · Event Logger (mw_event_log.c)</h3>
+  <p>A circular log of 128 events stored in NVM. Each event has a type, 32-bit data, and millisecond timestamp. Critical for post-mortem fault analysis.</p>
+  <pre><code>/* mw_event_log.h */
+typedef enum {
+    EVT_POWER_ON      = 0x01,
+    EVT_POWER_OFF     = 0x02,
+    EVT_PROT_CHANGE   = 0x10,  /* data = fault bitmask */
+    EVT_SOC_ANCHOR    = 0x20,  /* data = new SoC ppt */
+    EVT_OVER_TEMP     = 0x30,  /* data = temp_dc */
+    EVT_CAN_TIMEOUT   = 0x40,
+    EVT_NVM_ERROR     = 0x50,
+    EVT_WATCHDOG_RST  = 0x60,
+} EventType_t;
+
+typedef struct __attribute__((packed)) {
+    uint8_t  type;       /* EventType_t */
+    uint32_t ts_ms;      /* HAL_GetTick() */
+    uint32_t data;       /* event-specific payload */
+} Event_t;              /* 9 bytes */
+
+#define EVT_LOG_SIZE   128U
+void MW_EventLog_Write(EventType_t type, uint32_t data);
+Event_t *MW_EventLog_GetLatest(uint8_t n);</code></pre>
+
+  <pre><code>/* mw_event_log.c */
+static Event_t s_log[EVT_LOG_SIZE];
+static uint8_t s_head = 0U;
+
+void MW_EventLog_Write(EventType_t type, uint32_t data) {
+    s_log[s_head].type  = (uint8_t)type;
+    s_log[s_head].ts_ms = HAL_GetTick();
+    s_log[s_head].data  = data;
+    s_head = (uint8_t)((s_head + 1U) % EVT_LOG_SIZE);
+    /* Flush to NVM every 8 events to reduce flash writes */
+    if ((s_head % 8U) == 0U) { DRV_Flash_FlushEventLog(s_log, EVT_LOG_SIZE); }
+}</code></pre>
+
+  <div class="callout callout-info">
+    <div class="callout-title">ℹ️ Flash Endurance</div>
+    <p>STM32 internal flash: 10,000 erase cycles. At 8 events per flush and 1 event per second worst case, that's 10,000 × 2048 bytes / (9 bytes × 8) ≈ 284,000 seconds ≈ 3.3 years of worst-case logging before endurance limit. Use ping-pong pages to double effective life.</p>
+  </div>
+</section>
+
 </body>
 </html>
