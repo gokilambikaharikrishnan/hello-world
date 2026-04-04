@@ -848,5 +848,82 @@ typedef struct __attribute__((packed)) {
 } BadSample_t;</code></pre>
 </section>
 
+
+<section class="section reveal" id="s97">
+  <div class="section-eyebrow">Section 9.7</div>
+  <h2 class="section-title">Memory Map Design</h2>
+  <p class="section-intro">Understanding the STM32G474 memory map is essential for placing code, data, and NVM partitions correctly. Errors in linker scripts cause subtle bugs that only appear in release builds.</p>
+
+  <h3 class="sub-title">STM32G474 Memory Layout</h3>
+  <table>
+    <thead><tr><th>Region</th><th>Start</th><th>Size</th><th>Used for</th></tr></thead>
+    <tbody>
+      <tr><td>Flash (main)</td><td><code>0x0800_0000</code></td><td>512 KB</td><td>Code, const data, vector table</td></tr>
+      <tr><td>Flash page 63</td><td><code>0x0807_F000</code></td><td>2 KB</td><td>NVM_PAGE_A (ping-pong NVM)</td></tr>
+      <tr><td>Flash page 64</td><td><code>0x0807_F800</code></td><td>2 KB</td><td>NVM_PAGE_B + event log</td></tr>
+      <tr><td>SRAM1</td><td><code>0x2000_0000</code></td><td>96 KB</td><td>Stack, heap (unused), BSS, data</td></tr>
+      <tr><td>SRAM2</td><td><code>0x2001_8000</code></td><td>32 KB</td><td>DMA buffers (CAN RX FIFO, ADC buffer)</td></tr>
+      <tr><td>CCM SRAM</td><td><code>0x1000_0000</code></td><td>32 KB</td><td>Tightly coupled — protection ISR stack</td></tr>
+      <tr><td>Backup SRAM</td><td><code>0x4002_4000</code></td><td>4 KB</td><td>VBAT-powered — WDT reset counter</td></tr>
+      <tr><td>Peripheral bus</td><td><code>0x4000_0000</code></td><td>—</td><td>CAN, I2C, SPI, ADC registers</td></tr>
+    </tbody>
+  </table>
+
+  <h3 class="sub-title">Linker Script Sections</h3>
+  <pre><code>/* STM32G474RE.ld — key custom sections */
+
+/* DMA buffers — must be in SRAM2 (DMA-accessible, non-cacheable) */
+.dma_buf (NOLOAD) :
+{
+    *(.dma_buf)
+} &gt;SRAM2
+
+/* ISR stack in CCM for lowest latency */
+.isr_stack (NOLOAD) :
+{
+    _isr_stack_start = .;
+    . = . + 0x800;   /* 2 KB for protection ISR */
+    _isr_stack_end = .;
+} &gt;CCMRAM
+
+/* NVM constants in last 2 flash pages — excluded from erase */
+.nvm_page_a :
+{
+    KEEP(*(.nvm_page_a))
+} &gt;FLASH_NVM_A AT&gt;FLASH
+
+/* C attribute to place variable in SRAM2 DMA region */
+/* Usage: uint8_t can_rx_buf[64] __attribute__((section(".dma_buf"))); */</code></pre>
+
+  <h3 class="sub-title">RAM Budget for 16S BMS</h3>
+  <div class="card-grid">
+    <div class="card reveal">
+      <div class="card-label">Global Data</div>
+      <div class="card-title">~2 KB</div>
+      <div class="card-body"><code>g_meas</code> (48B) + <code>g_soc</code> (16B) + event log (128×9=1152B) + misc globals</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">Stack</div>
+      <div class="card-title">~4 KB</div>
+      <div class="card-body">Main stack 2 KB + ISR stack 2 KB (CCM). Measure HWM with stack paint (<code>0xDEADBEEF</code> fill at startup)</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">DMA Buffers</div>
+      <div class="card-title">~1 KB</div>
+      <div class="card-body">CAN RX FIFO ×2 (128B each), ADC DMA buffer (32B), I2C temp buffer (48B)</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">Total Used</div>
+      <div class="card-title">&lt;8 KB</div>
+      <div class="card-body">Well within 96 KB SRAM1 + 32 KB SRAM2. Leaves room for future logging expansion.</div>
+    </div>
+  </div>
+
+  <div class="callout callout-success">
+    <div class="callout-title">✅ Stack Overflow Detection</div>
+    <p>Enable <strong>MPU stack guard region</strong> on STM32G4: place an MPU-protected 32-byte region just below the stack base. Stack overflow triggers a HardFault immediately, instead of silently corrupting data. CubeMX can generate this configuration automatically.</p>
+  </div>
+</section>
+
 </body>
 </html>
