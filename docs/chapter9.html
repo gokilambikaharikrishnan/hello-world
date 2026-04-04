@@ -301,5 +301,112 @@ int main(void) {
   </table>
 </section>
 
+
+<section class="section reveal" id="s93">
+  <div class="section-eyebrow">Section 9.3</div>
+  <h2 class="section-title">Functional Module Implementations</h2>
+  <p class="section-intro">Each BMS firmware module has a well-defined API, owns its data, and exposes only what other layers need. Below are the 7 core modules with C code examples for the 16S1P reference design.</p>
+
+  <h3 class="sub-title">Module 01 · Measurement (drv_afe.c + app_meas.c)</h3>
+  <p>Reads cell voltages and temperatures from the BQ76952 via I2C, applies IIR smoothing, and stores in a shared data structure. All voltages stored as <code>uint16_t</code> in millivolts to avoid float.</p>
+  <pre><code>/* app_meas.h — public types */
+#define CELL_COUNT   16U
+#define TEMP_COUNT    3U   /* top / mid / bottom NTC */
+
+typedef struct {
+    uint16_t cell_mv[CELL_COUNT]; /* 2800–3650 mV */
+    int16_t  temp_dc[TEMP_COUNT]; /* deci-Celsius, -400..+850 */
+    uint16_t pack_mv;             /* sum of cells */
+    int32_t  current_ma;          /* signed: +charge, -discharge */
+    uint8_t  valid;               /* bitmask: bit0=volt, bit1=temp, bit2=curr */
+} BMS_Meas_t;
+
+extern BMS_Meas_t g_meas; /* single shared instance */</code></pre>
+
+  <pre><code>/* app_meas.c — measurement task (runs every 100 ms) */
+void APP_Meas_Task(void) {
+    uint16_t raw[CELL_COUNT];
+    int16_t  temps[TEMP_COUNT];
+
+    if (DRV_AFE_ReadVoltages(raw, CELL_COUNT) != HAL_OK) {
+        g_meas.valid &= ~0x01U;   /* invalidate voltage data */
+        APP_Fault_Set(FAULT_AFE_COMM);
+        return;
+    }
+
+    uint32_t sum = 0U;
+    for (uint8_t i = 0U; i < CELL_COUNT; i++) {
+        /* IIR filter: y = 0.8*y + 0.2*x  (fixed-point: *10 scale) */
+        g_meas.cell_mv[i] = (uint16_t)(
+            ((uint32_t)g_meas.cell_mv[i] * 8U + (uint32_t)raw[i] * 2U) / 10U
+        );
+        sum += g_meas.cell_mv[i];
+    }
+    g_meas.pack_mv = (uint16_t)(sum / 1U); /* store as mV (fits uint16_t for &lt;60V) */
+    g_meas.valid |= 0x01U;
+}</code></pre>
+
+  <div class="callout callout-success">
+    <div class="callout-title">✅ IIR Filter Coefficient Choice</div>
+    <p>0.8/0.2 (α=0.2) gives ~5 sample time constant. At 100 ms period that's ~500 ms settling. For UPS float voltage accuracy use α=0.05 (0.95/0.05) — slower but eliminates noise from load transients. Scale factor 10 keeps fixed-point error &lt;0.1 mV.</p>
+  </div>
+
+  <h3 class="sub-title">Module 02 · Protection (app_protect.c)</h3>
+  <p>The protection module is the most critical path. It compares measurements against thresholds and trips the appropriate FET. It must run fast and have no dependencies beyond the measurement struct.</p>
+  <pre><code>/* app_protect.h */
+typedef enum {
+    PROT_NONE   = 0x00,
+    PROT_OVP    = 0x01,  /* over-voltage */
+    PROT_UVP    = 0x02,  /* under-voltage */
+    PROT_OCP_D  = 0x04,  /* over-current discharge */
+    PROT_OCP_C  = 0x08,  /* over-current charge */
+    PROT_OTP    = 0x10,  /* over-temperature */
+    PROT_UTP    = 0x20,  /* under-temperature charge */
+    PROT_SCP    = 0x40,  /* short-circuit */
+} Prot_Fault_t;
+
+/* Thresholds — hard-coded, not RAM-configurable */
+#define OVP_MV        3650U   /* per cell */
+#define UVP_MV        2800U
+#define OVP_HYST_MV     50U   /* re-engage after OVP-hyst */
+#define OCP_D_MA      50000L  /* 50 A discharge */
+#define OCP_C_MA      30000L  /* 30 A charge */
+#define OTP_DC          550   /* 55.0 °C */
+#define UTP_CHARGE_DC  (-50)  /* -5.0 °C, disable charge only */</code></pre>
+
+  <pre><code>/* app_protect.c */
+static Prot_Fault_t s_active = PROT_NONE;
+
+void APP_Protect_Task(void) {
+    if ((g_meas.valid & 0x01U) == 0U) { return; } /* no valid data */
+
+    Prot_Fault_t new_fault = PROT_NONE;
+
+    /* --- Voltage checks --- */
+    for (uint8_t i = 0U; i < CELL_COUNT; i++) {
+        if (g_meas.cell_mv[i] > OVP_MV)  { new_fault |= PROT_OVP; break; }
+        if (g_meas.cell_mv[i] < UVP_MV)  { new_fault |= PROT_UVP; break; }
+    }
+
+    /* --- Current checks --- */
+    if (g_meas.current_ma >  (int32_t)OCP_C_MA) { new_fault |= PROT_OCP_C; }
+    if (g_meas.current_ma < -(int32_t)OCP_D_MA) { new_fault |= PROT_OCP_D; }
+
+    /* --- Temperature checks --- */
+    for (uint8_t j = 0U; j < TEMP_COUNT; j++) {
+        if (g_meas.temp_dc[j] > OTP_DC)        { new_fault |= PROT_OTP; }
+        if (g_meas.temp_dc[j] < UTP_CHARGE_DC) { new_fault |= PROT_UTP; }
+    }
+
+    /* Trip / clear FETs */
+    if (new_fault != s_active) {
+        s_active = new_fault;
+        BSP_FET_SetDSG((new_fault & (PROT_UVP|PROT_OCP_D|PROT_OTP|PROT_SCP)) == 0U);
+        BSP_FET_SetCHG((new_fault & (PROT_OVP|PROT_OCP_C|PROT_UTP))          == 0U);
+        APP_EventLog_Write(EVT_PROT_CHANGE, (uint32_t)new_fault);
+    }
+}</code></pre>
+</section>
+
 </body>
 </html>
