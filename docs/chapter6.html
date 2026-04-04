@@ -501,6 +501,14 @@ main.main, main.main-content, main {
 /* Fixed/absolute elements stay out of grid flow */
 #scroll-progress, #particles-c, #btt { grid-column: auto; }
 </style>
+<style id="__layout-fix2">
+div.main-wrap {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  min-width: 0 !important;
+  overflow-x: hidden !important;
+}
+</style>
 </head>
 <body>
 <!-- === CHAPTER NAV BAR === -->
