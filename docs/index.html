@@ -47,6 +47,22 @@ body::before {
   background-size: 40px 40px;
   pointer-events:none; z-index:0;
 }
+
+/* scanlines */
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px);pointer-events:none;z-index:1;}
+/* scrollbar */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(0,245,255,0.3);border-radius:2px;}
+/* scroll progress */
+#hud-progress{position:fixed;top:0;left:0;height:2px;width:0%;background:linear-gradient(90deg,var(--cyan),var(--blue));z-index:9999;transition:width 0.1s;box-shadow:0 0 8px var(--cyan);}
+/* topbar */
+#topbar{position:fixed;top:0;left:0;width:100%;background:rgba(5,5,7,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border2);padding:0 2rem;height:48px;display:flex;align-items:center;justify-content:space-between;z-index:900;font-family:var(--mono);font-size:0.7rem;}
+.topbar-left{color:var(--cyan);letter-spacing:0.12em;}
+.topbar-right{display:flex;gap:1.5rem;}
+.topbar-chip{color:var(--muted);letter-spacing:0.1em;padding:0.2rem 0.6rem;border:1px solid var(--border2);font-size:0.65rem;}
+.topbar-chip.online{color:var(--green);border-color:rgba(0,255,136,0.3);}
+
 </style>
 </head>
 <body>
