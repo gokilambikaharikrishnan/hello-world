@@ -617,5 +617,75 @@ void MW_EventLog_Write(EventType_t type, uint32_t data) {
   </div>
 </section>
 
+
+<section class="section reveal" id="s94">
+  <div class="section-eyebrow">Section 9.4</div>
+  <h2 class="section-title">Code Quality Guidelines</h2>
+  <p class="section-intro">Production BMS firmware must be readable, auditable, and testable. These guidelines encode lessons learned from safety-critical embedded projects.</p>
+
+  <h3 class="sub-title">Naming Conventions</h3>
+  <table>
+    <thead><tr><th>Item</th><th>Convention</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td>Global variable</td><td><code>g_</code> prefix + snake_case</td><td><code>g_meas</code>, <code>g_soc</code></td></tr>
+      <tr><td>Static module var</td><td><code>s_</code> prefix</td><td><code>s_active</code>, <code>s_head</code></td></tr>
+      <tr><td>Function</td><td>Module_Verb_Noun (PascalCase)</td><td><code>APP_Meas_Task</code>, <code>DRV_AFE_Init</code></td></tr>
+      <tr><td>Constant / macro</td><td>ALL_CAPS</td><td><code>OVP_MV</code>, <code>CELL_COUNT</code></td></tr>
+      <tr><td>Type</td><td>PascalCase + _t suffix</td><td><code>BMS_Meas_t</code>, <code>Prot_Fault_t</code></td></tr>
+      <tr><td>Enum member</td><td>ALL_CAPS with module prefix</td><td><code>PROT_OVP</code>, <code>EVT_POWER_ON</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3 class="sub-title">Type Safety Rules</h3>
+  <div class="card-grid">
+    <div class="card reveal">
+      <div class="card-label">Rule T1</div>
+      <div class="card-title">Use &lt;stdint.h&gt; fixed-width types</div>
+      <div class="card-body">Never use <code>int</code>, <code>long</code>, or <code>char</code> for data. Always <code>uint8_t</code>, <code>int16_t</code>, <code>uint32_t</code>, etc. Width and signedness are explicit.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">Rule T2</div>
+      <div class="card-title">Explicit casts at boundaries</div>
+      <div class="card-body">When narrowing (e.g., <code>uint32_t</code> → <code>uint16_t</code>) always add an explicit cast <em>and</em> a range check or assert before the cast.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">Rule T3</div>
+      <div class="card-title">Bitmasks with U suffix</div>
+      <div class="card-body">All integer literals used as bitmasks must have <code>U</code> suffix: <code>0x01U</code>, <code>(1U &lt;&lt; 3)</code>. Prevents sign-extension surprises.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">Rule T4</div>
+      <div class="card-title">Boolean-returning functions</div>
+      <div class="card-body">Use <code>bool</code> from <code>&lt;stdbool.h&gt;</code> for predicate functions. Never return 1/0 as int and compare with == 1.</div>
+    </div>
+  </div>
+
+  <h3 class="sub-title">Function Design Rules</h3>
+  <pre><code>/* GOOD: single responsibility, explicit error return, no side effects on error */
+HAL_StatusTypeDef DRV_AFE_ReadVoltages(uint16_t *out, uint8_t count) {
+    if (out == NULL)    { return HAL_ERROR; }  /* guard: null pointer */
+    if (count == 0U)    { return HAL_ERROR; }  /* guard: zero count */
+    if (count > 16U)    { return HAL_ERROR; }  /* guard: over spec */
+
+    /* ... I2C burst read ... */
+    return HAL_OK;
+}
+
+/* BAD: modifies globals on error path, no return value, magic numbers */
+void read_voltages(void) {
+    for (int i=0; i&lt;16; i++) {
+        cells[i] = AFE_Read(i);  /* no error check */
+    }
+}</code></pre>
+
+  <div class="callout callout-success">
+    <div class="callout-title">✅ Static Analysis Tools</div>
+    <p><strong>cppcheck</strong> — free, catches null-deref, uninitialised vars, array OOB. Run in CI.<br>
+    <strong>PC-lint / Flexelint</strong> — commercial, full MISRA coverage.<br>
+    <strong>Polyspace</strong> — formal verification, required for IEC 62133 / ISO 26262 paths.<br>
+    For a BMS start-up: cppcheck + clang-tidy covers 80% of common bugs for free.</p>
+  </div>
+</section>
+
 </body>
 </html>
