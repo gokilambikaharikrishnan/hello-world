@@ -408,5 +408,103 @@ void APP_Protect_Task(void) {
 }</code></pre>
 </section>
 
+
+<!-- 9.3 continued: SoC + Balancing modules -->
+<section class="section reveal" id="s93b">
+  <h3 class="sub-title">Module 03 · State-of-Charge (app_soc.c)</h3>
+  <p>SoC is estimated using a hybrid of Coulomb Counting (CC) and OCV-lookup, with periodic re-anchoring when the pack is at rest. The CC accumulator uses 64-bit integer arithmetic to avoid drift over long periods.</p>
+  <pre><code>/* app_soc.h */
+#define SOC_SCALE    1000U  /* internal: 0–1000 = 0.0–100.0 % */
+
+typedef struct {
+    uint16_t soc_ppt;       /* parts-per-thousand, 0–1000 */
+    int64_t  cc_uah;        /* coulomb counter in µAh */
+    uint8_t  anchored;      /* 1 = last CC anchor is valid */
+    uint32_t anchor_ts;     /* HAL_GetTick() at last anchor */
+} SoC_State_t;
+
+extern SoC_State_t g_soc;</code></pre>
+
+  <pre><code>/* app_soc.c — Coulomb counter update (100 ms period) */
+#define CC_PERIOD_MS   100U
+#define CAPACITY_UAH   (280000000LL)  /* 280 Ah = 280,000,000 µAh */
+
+void APP_SoC_CoulombUpdate(void) {
+    /* current_ma is signed: +charge, -discharge */
+    /* µAh += mA * 100ms / 3600s  =>  µAh += mA * 100 / 3600 */
+    int64_t delta_uah = ((int64_t)g_meas.current_ma * CC_PERIOD_MS) / 3600LL;
+    g_soc.cc_uah += delta_uah;
+
+    /* Clamp to physical limits */
+    if (g_soc.cc_uah > CAPACITY_UAH)  { g_soc.cc_uah = CAPACITY_UAH; }
+    if (g_soc.cc_uah < 0LL)           { g_soc.cc_uah = 0LL; }
+
+    g_soc.soc_ppt = (uint16_t)((g_soc.cc_uah * SOC_SCALE) / CAPACITY_UAH);
+}</code></pre>
+
+  <pre><code>/* OCV re-anchor: called when |current| &lt; 500 mA for 30 s */
+/* LFP OCV lookup: 8 breakpoints (mV vs SoC ppt) */
+static const uint16_t ocv_mv[8]   = {2800,3100,3200,3280,3320,3340,3380,3400};
+static const uint16_t ocv_soc[8]  = {   0,  50, 100, 200, 400, 600, 850,1000};
+
+static uint16_t OCV_Lookup(uint16_t mv) {
+    if (mv &lt;= ocv_mv[0]) { return ocv_soc[0]; }
+    if (mv >= ocv_mv[7]) { return ocv_soc[7]; }
+    for (uint8_t i = 1U; i &lt; 8U; i++) {
+        if (mv &lt;= ocv_mv[i]) {
+            /* linear interpolation (fixed-point) */
+            uint16_t range_mv  = ocv_mv[i]  - ocv_mv[i-1U];
+            uint16_t range_soc = ocv_soc[i] - ocv_soc[i-1U];
+            uint16_t offset    = mv - ocv_mv[i-1U];
+            return ocv_soc[i-1U] + (uint16_t)((uint32_t)offset * range_soc / range_mv);
+        }
+    }
+    return 0U; /* unreachable */
+}
+
+void APP_SoC_AnchorOCV(void) {
+    /* Use median cell voltage for flat OCV curve region */
+    uint16_t mid_mv = g_meas.cell_mv[CELL_COUNT / 2U];
+    uint16_t soc_from_ocv = OCV_Lookup(mid_mv);
+    /* Re-anchor CC accumulator */
+    g_soc.cc_uah    = ((int64_t)soc_from_ocv * CAPACITY_UAH) / SOC_SCALE;
+    g_soc.anchored  = 1U;
+    g_soc.anchor_ts = HAL_GetTick();
+    APP_EventLog_Write(EVT_SOC_ANCHOR, (uint32_t)soc_from_ocv);
+}</code></pre>
+
+  <h3 class="sub-title">Module 04 · Balancing (app_balance.c)</h3>
+  <p>Passive top balancing: enable the bleed resistor FET for cells above average voltage. Only runs when pack voltage is above 90% SoC to avoid wasting energy at low SoC.</p>
+  <pre><code>/* app_balance.c — passive balancing decision (5 s period) */
+#define BAL_ENABLE_SOC_PPT   900U   /* only balance above 90% */
+#define BAL_DELTA_MV          10U   /* start balancing if Vcell &gt; Vavg + 10 mV */
+
+void APP_Balance_Task(void) {
+    if (g_soc.soc_ppt &lt; BAL_ENABLE_SOC_PPT) {
+        DRV_AFE_SetBalance(0x0000U); /* all off */
+        return;
+    }
+
+    /* Compute average voltage */
+    uint32_t sum = 0U;
+    for (uint8_t i = 0U; i &lt; CELL_COUNT; i++) { sum += g_meas.cell_mv[i]; }
+    uint16_t avg_mv = (uint16_t)(sum / CELL_COUNT);
+
+    /* Build bitmask of cells to balance */
+    uint16_t bal_mask = 0U;
+    for (uint8_t i = 0U; i &lt; CELL_COUNT; i++) {
+        if (g_meas.cell_mv[i] > (uint16_t)(avg_mv + BAL_DELTA_MV)) {
+            bal_mask |= (uint16_t)(1U &lt;&lt; i);
+        }
+    }
+    DRV_AFE_SetBalance(bal_mask);
+}</code></pre>
+
+  <div class="callout callout-warn">
+    <div class="callout-title">⚡ Temperature Gate</div>
+    <p>Always gate balancing on temperature. If any NTC reads &gt;45 °C, disable all balance FETs — the bleed resistors add heat. This is especially important in a sealed UPS enclosure where convection is limited.</p>
+  </div>
+</section>
+
 </body>
 </html>
