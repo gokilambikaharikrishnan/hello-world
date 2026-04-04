@@ -160,6 +160,42 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
 </head>
 <body>
 <!-- PLACEHOLDER - building in chunks -->
-<div style="color:#00F5FF;font-family:monospace;padding:2rem;">SYSTEM INITIALIZING...</div>
+
+<div id="hud-progress"></div>
+<button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <span class="topbar-left">// LFP-BMS-KB &nbsp;·&nbsp; JARVIS INTERFACE v2.0</span>
+  <div class="topbar-right">
+    <span class="topbar-chip online">● ALL SYSTEMS NOMINAL</span>
+    <span class="topbar-chip">MODULES: 7</span>
+    <span class="topbar-chip">BUILD: v2.0</span>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">// INITIALIZING KNOWLEDGE BASE INTERFACE</div>
+  <h1 class="hero-title">LFP <span>BMS</span></h1>
+  <div class="hero-sub-title">KNOWLEDGE BASE</div>
+  <p class="hero-desc">The complete engineering reference for lithium iron phosphate battery management systems. From electrochemistry to firmware — 7 modules, one mission.</p>
+
+  <div class="hero-stats">
+    <div class="hstat"><span class="hstat-val" data-target="7" data-suffix="">0</span><span class="hstat-lbl">MODULES</span></div>
+    <div class="hstat"><span class="hstat-val" data-target="19" data-suffix="K+">0</span><span class="hstat-lbl">LINES</span></div>
+    <div class="hstat"><span class="hstat-val" data-target="40" data-suffix="+">0</span><span class="hstat-lbl">DIAGRAMS</span></div>
+    <div class="hstat"><span class="hstat-val" data-target="100" data-suffix="%">0</span><span class="hstat-lbl">COMPLETE</span></div>
+  </div>
+
+  <div class="search-wrap">
+    <span class="search-label">// QUERY KNOWLEDGE BASE</span>
+    <div class="search-inner">
+      <span class="search-prefix">&gt;_</span>
+      <input id="search" type="text" placeholder="Search: SoC, thermal, CAN bus, float charging..."/>
+    </div>
+  </div>
+</section>
+
 </body>
 </html>
