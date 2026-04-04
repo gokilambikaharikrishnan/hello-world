@@ -215,6 +215,103 @@ pre{font-family:var(--mono);background:var(--bg2);border:1px solid var(--border)
   </table>
 </div>
 
+
+<!-- 8.2 AFE SELECTION -->
+<div class="section reveal" id="s8-2">
+  <span class="section-tag">// SECTION 8.2</span>
+  <h2 class="section-title">AFE Selection</h2>
+  <p>The Analog Front End (AFE) is the most critical IC in the BMS — it measures cell voltages, manages balancing, and detects faults. Getting this wrong means redesigning the board.</p>
+
+  <h3 class="subsection-title" id="s8-2-specs">Key Specs to Evaluate</h3>
+  <div class="spec-grid">
+    <div class="spec-card">
+      <div class="spec-card-title">CELL COUNT SUPPORT</div>
+      <div class="spec-card-val">8–18S</div>
+      <div class="spec-card-desc">Most single-chip AFEs support 8–16 cells. Plan for daisy-chain if &gt;16S. Verify max count includes all cell positions.</div>
+    </div>
+    <div class="spec-card">
+      <div class="spec-card-title">MEASUREMENT ACCURACY</div>
+      <div class="spec-card-val">±1–5 mV</div>
+      <div class="spec-card-desc">Cell voltage accuracy at full scale. BQ76952 achieves ±2mV typical. Critical for SoC estimation accuracy near flat OCV region.</div>
+    </div>
+    <div class="spec-card">
+      <div class="spec-card-title">BALANCING CURRENT</div>
+      <div class="spec-card-val">50–200 mA</div>
+      <div class="spec-card-desc">Passive balancing FET drive current. Higher = faster balance but more heat. 100mA is typical for 280Ah cells (slow balance is fine).</div>
+    </div>
+    <div class="spec-card">
+      <div class="spec-card-title">INTERFACE</div>
+      <div class="spec-card-val">SPI / I²C</div>
+      <div class="spec-card-desc">SPI preferred for BMS (faster, more robust, easier to daisy-chain). I²C works for lower cell counts. BQ76952 uses I²C/SPI selectable.</div>
+    </div>
+    <div class="spec-card">
+      <div class="spec-card-title">BUILT-IN FAULT DETECTION</div>
+      <div class="spec-card-val">OVP/UVP/OTP</div>
+      <div class="spec-card-desc">Hardware protection thresholds independent of MCU. Essential for safety — MCU firmware failure must not disable protection.</div>
+    </div>
+    <div class="spec-card">
+      <div class="spec-card-title">TEMPERATURE RANGE</div>
+      <div class="spec-card-val">−40 to +85°C</div>
+      <div class="spec-card-desc">AFE must operate across full battery operating range. Automotive grade (−40 to +125°C) for harsh environments.</div>
+    </div>
+  </div>
+
+  <h3 class="subsection-title" id="s8-2-compare">AFE Comparison Table</h3>
+  <table>
+    <tr><th>Part</th><th>Vendor</th><th>Cells</th><th>Accuracy</th><th>Interface</th><th>Bal. Current</th><th>HW Protection</th><th>Price</th></tr>
+    <tr>
+      <td><strong>BQ76952</strong></td><td>TI</td><td class="good">3–16S</td>
+      <td class="good">±2mV</td><td>I²C / SPI</td><td>200mA</td><td class="good">Yes</td><td class="good">~$3</td>
+    </tr>
+    <tr>
+      <td><strong>BQ76940</strong></td><td>TI</td><td>9–15S</td>
+      <td class="good">±3mV</td><td>I²C</td><td>100mA</td><td class="good">Yes</td><td class="good">~$2.5</td>
+    </tr>
+    <tr>
+      <td><strong>LTC6813-1</strong></td><td>ADI</td><td class="good">18S</td>
+      <td class="best">±0.8mV</td><td>SPI (daisy)</td><td>150mA</td><td class="good">Yes</td><td class="warn">~$12</td>
+    </tr>
+    <tr>
+      <td><strong>LTC6811-2</strong></td><td>ADI</td><td>12S</td>
+      <td class="best">±1.2mV</td><td>SPI (daisy)</td><td>150mA</td><td class="good">Yes</td><td class="warn">~$8</td>
+    </tr>
+    <tr>
+      <td><strong>ISL94216</strong></td><td>Renesas</td><td>6–16S</td>
+      <td>±3mV</td><td>I²C</td><td>100mA</td><td class="good">Yes</td><td>~$4</td>
+    </tr>
+    <tr>
+      <td><strong>ISL94203</strong></td><td>Renesas</td><td>3–8S</td>
+      <td>±4mV</td><td>I²C</td><td>60mA</td><td class="warn">Partial</td><td class="good">~$2</td>
+    </tr>
+  </table>
+
+  <div class="callout callout-success">
+    <span class="callout-tag">// REFERENCE DESIGN CHOICE</span>
+    <p style="margin:0;font-size:0.85rem;"><strong>BQ76952</strong> for the 16S1P 280Ah pack. Reasons: 16-cell support, ±2mV accuracy, hardware OVP/UVP/OTP independent of MCU, SPI or I²C selectable, $3 price point. TI provides BQSTUDIO GUI for register debugging. Datasheet: SLUSDX3.</p>
+  </div>
+
+  <h3 class="subsection-title">How to Read an AFE Datasheet</h3>
+  <p>Focus on these sections in order:</p>
+  <div style="display:flex;flex-direction:column;gap:0.5rem;margin:1rem 0;">
+    <div style="display:flex;gap:1rem;align-items:flex-start;padding:0.8rem;border:1px solid var(--border2);background:var(--panel);">
+      <span style="font-family:var(--mono);font-size:0.7rem;color:var(--amber);min-width:2rem;text-align:right;padding-top:2px;">01</span>
+      <div><strong style="font-family:var(--mono);font-size:0.8rem;color:var(--text);">Electrical Characteristics table</strong><p style="margin:0.3rem 0 0;font-size:0.82rem;">Cell voltage measurement accuracy, temperature coefficient, ADC conversion time, balancing switch ratings.</p></div>
+    </div>
+    <div style="display:flex;gap:1rem;align-items:flex-start;padding:0.8rem;border:1px solid var(--border2);background:var(--panel);">
+      <span style="font-family:var(--mono);font-size:0.7rem;color:var(--amber);min-width:2rem;text-align:right;padding-top:2px;">02</span>
+      <div><strong style="font-family:var(--mono);font-size:0.8rem;color:var(--text);">Protection thresholds</strong><p style="margin:0.3rem 0 0;font-size:0.82rem;">OVP, UVP, OTP, SCP threshold registers — verify they are configurable and hardware-enforced.</p></div>
+    </div>
+    <div style="display:flex;gap:1rem;align-items:flex-start;padding:0.8rem;border:1px solid var(--border2);background:var(--panel);">
+      <span style="font-family:var(--mono);font-size:0.7rem;color:var(--amber);min-width:2rem;text-align:right;padding-top:2px;">03</span>
+      <div><strong style="font-family:var(--mono);font-size:0.8rem;color:var(--text);">Communication interface</strong><p style="margin:0.3rem 0 0;font-size:0.82rem;">SPI timing diagrams, I²C address pins, daisy-chain wiring. Check maximum bus speed vs MCU peripheral capability.</p></div>
+    </div>
+    <div style="display:flex;gap:1rem;align-items:flex-start;padding:0.8rem;border:1px solid var(--border2);background:var(--panel);">
+      <span style="font-family:var(--mono);font-size:0.7rem;color:var(--amber);min-width:2rem;text-align:right;padding-top:2px;">04</span>
+      <div><strong style="font-family:var(--mono);font-size:0.8rem;color:var(--text);">Typical application schematic</strong><p style="margin:0.3rem 0 0;font-size:0.82rem;">Reference layout shows recommended decoupling, REG18 capacitor, TSREF, balancing resistor sizing. Start here for schematic.</p></div>
+    </div>
+  </div>
+</div>
+
 </main>
 </div><!-- end page-wrapper -->
 </body>
