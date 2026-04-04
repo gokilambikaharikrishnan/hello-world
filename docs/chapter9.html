@@ -925,5 +925,100 @@ typedef struct __attribute__((packed)) {
   </div>
 </section>
 
+
+<section class="section reveal" id="s98">
+  <div class="section-eyebrow">Section 9.8</div>
+  <h2 class="section-title">Testing Strategy</h2>
+  <p class="section-intro">BMS firmware testing has three distinct levels: host-based unit tests (no hardware), Hardware-in-the-Loop (HIL) simulation, and final pack-level integration testing. All three are necessary.</p>
+
+  <h3 class="sub-title">Level 1: Host Unit Tests (Unity / CMock)</h3>
+  <p>Application and middleware layers are hardware-independent. They can be compiled for a host PC and tested with the Unity test framework. Mock the BSP layer to inject controlled inputs.</p>
+  <pre><code>/* test_soc.c — Unity unit test for SoC Coulomb counter */
+#include "unity.h"
+#include "app_soc.h"
+#include "mock_bsp_hal.h"  /* CMock-generated mock */
+
+void setUp(void) {
+    /* Reset SoC state before each test */
+    g_soc.cc_uah   = 0LL;
+    g_soc.soc_ppt  = 0U;
+    g_soc.anchored = 0U;
+    /* Set initial measurement values */
+    g_meas.current_ma = 0L;
+    g_meas.valid = 0x07U;
+}
+
+void test_CoulombCounter_Charge_100ms(void) {
+    g_meas.current_ma = 10000L;    /* 10 A charge */
+    APP_SoC_CoulombUpdate();        /* 100 ms tick */
+    /* Expected: 10000 mA * 100 ms / 3600 s = 277.7 µAh */
+    TEST_ASSERT_INT64_WITHIN(5LL, 277LL, g_soc.cc_uah);
+}
+
+void test_CoulombCounter_Clamps_AtCapacity(void) {
+    g_soc.cc_uah = CAPACITY_UAH - 100LL;
+    g_meas.current_ma = 100000L;   /* huge current — should clamp */
+    APP_SoC_CoulombUpdate();
+    TEST_ASSERT_EQUAL_INT64(CAPACITY_UAH, g_soc.cc_uah);
+    TEST_ASSERT_EQUAL_UINT16(1000U, g_soc.soc_ppt);  /* 100% */
+}
+
+void test_SoC_OCV_Anchor_AtRest(void) {
+    /* Cell at 3320 mV ≈ 40% SoC on LFP OCV curve */
+    for (uint8_t i = 0; i &lt; CELL_COUNT; i++) {
+        g_meas.cell_mv[i] = 3320U;
+    }
+    APP_SoC_AnchorOCV();
+    TEST_ASSERT_UINT16_WITHIN(20U, 400U, g_soc.soc_ppt);
+    TEST_ASSERT_EQUAL_UINT8(1U, g_soc.anchored);
+}</code></pre>
+
+  <h3 class="sub-title">Level 2: Hardware-in-the-Loop (HIL)</h3>
+  <p>A second STM32 acts as a "battery simulator" — it drives I2C with fake cell voltages and injects known currents via a DAC into the shunt sense input. The BMS firmware runs unmodified on real hardware.</p>
+  <div class="card-grid">
+    <div class="card reveal">
+      <div class="card-label">HIL Component</div>
+      <div class="card-title">Cell Voltage Injector</div>
+      <div class="card-body">STM32 acts as I2C slave, responds to BQ76952 register read addresses with programmable values. Inject OVP scenario: set cell 7 = 3660 mV, verify CHG FET opens within 200 ms.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">HIL Component</div>
+      <div class="card-title">Current DAC</div>
+      <div class="card-body">12-bit DAC drives the shunt sense amplifier input. Ramp current from 0→55 A over 1 s. Verify OCP trip at 50 A ± 2 A. Verify DSG FET opens, CAN 0x359 alarm frame transmitted.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">HIL Component</div>
+      <div class="card-title">Fault Injection</div>
+      <div class="card-body">Pull ALERT pin low at precise times. Corrupt I2C ACK to simulate AFE comms loss. Measure BMS response latency with logic analyser. Verify event log entry written.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">HIL Component</div>
+      <div class="card-title">CAN Bus Monitor</div>
+      <div class="card-body">Raspberry Pi with MCP2515 CAN HAT captures all frames. Python script validates PYLON message timing (&lt;2 s gap), payload encoding, and alarm bits set correctly.</div>
+    </div>
+  </div>
+
+  <h3 class="sub-title">Level 3: Pack Integration Checklist</h3>
+  <div class="callout callout-warn">
+    <div class="callout-title">⚡ Safety First</div>
+    <p>Pack-level testing uses real cells. Have a fire extinguisher rated for Class D fires nearby. Test in a fireproof enclosure. Wear PPE. Never exceed 1C charge rate during first power-on.</p>
+  </div>
+  <table>
+    <thead><tr><th>#</th><th>Test</th><th>Pass Criterion</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Power-on self test</td><td>Event log shows EVT_POWER_ON, CAN 0x351 frame within 2 s</td></tr>
+      <tr><td>2</td><td>Voltage accuracy</td><td>All 16 cells read within ±5 mV of lab DMM</td></tr>
+      <tr><td>3</td><td>Current accuracy</td><td>Pack current within ±200 mA of clamp meter at 10 A, 30 A</td></tr>
+      <tr><td>4</td><td>OVP trip</td><td>Force cell voltage to 3660 mV — CHG FET opens &lt;200 ms</td></tr>
+      <tr><td>5</td><td>UVP trip</td><td>Discharge until one cell hits 2800 mV — DSG FET opens</td></tr>
+      <tr><td>6</td><td>OCP trip</td><td>Apply 55 A pulse — DSG FET opens, event logged</td></tr>
+      <tr><td>7</td><td>OTP trip</td><td>Heat NTC to 56 °C — both FETs open, CAN alarm set</td></tr>
+      <tr><td>8</td><td>SoC accuracy</td><td>Charge from 0 → 100%, compare Ah-counted vs label capacity</td></tr>
+      <tr><td>9</td><td>NVM persistence</td><td>Power cycle — SoC restores within ±2% of pre-cycle value</td></tr>
+      <tr><td>10</td><td>CAN PYLON protocol</td><td>Growatt/Victron inverter shows correct SoC and limits</td></tr>
+    </tbody>
+  </table>
+</section>
+
 </body>
 </html>
