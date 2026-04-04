@@ -960,7 +960,28 @@
       body { background: white; color: black; }
       .main-content { padding: 1cm; }
     }
-  </style>
+  
+/* ═══════════════════════════════════════════
+   STARK HUD OVERRIDE — CHAPTER 1
+═══════════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Space+Grotesk:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+:root {
+  --bg-deep:#050507 !important;
+  --bg-card:#080810 !important;
+  --bg-card2:#0c0c18 !important;
+  --hud-cyan:#00F5FF;
+  --hud-blue:#0A84FF;
+  --hud-amber:#FFC857;
+  --hud-green:#00FF88;
+  --hud-red:#FF2D55;
+  --hud-border:rgba(0,245,255,0.15);
+  --hud-panel:rgba(0,245,255,0.03);
+  --hud-glow:0 0 20px rgba(0,245,255,0.2);
+}
+body { background:#050507 !important; font-family:'Space Grotesk',sans-serif !important; }
+body::before { content:''; position:fixed; inset:0; background-image:linear-gradient(rgba(0,245,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,255,0.025) 1px,transparent 1px); background-size:40px 40px; pointer-events:none; z-index:0; }
+body::after { content:''; position:fixed; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px); pointer-events:none; z-index:1; }
+</style>
 <style id="__comic-extra">
 /* ---- NEON TABLE ---- */
 .content-main table{border-collapse:collapse!important;border:3px solid #fbbf24!important;box-shadow:0 0 20px rgba(251,191,36,.2)!important;width:100%;}
