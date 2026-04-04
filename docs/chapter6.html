@@ -509,6 +509,42 @@ div.main-wrap {
   overflow-x: hidden !important;
 }
 </style>
+<style id="__layout-fix3">
+/* Stronger grid + sticky sidebar fix */
+html { height: 100%; }
+body {
+  display: grid !important;
+  grid-template-columns: 260px 1fr !important;
+  grid-template-rows: auto 1fr !important;
+  min-height: 100vh !important;
+  align-items: start !important;
+}
+#chapter-navbar {
+  grid-column: 1 / -1 !important;
+  grid-row: 1 !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 9998 !important;
+  width: 100% !important;
+}
+nav.sidebar, nav#sidebar, .sidebar {
+  grid-column: 1 !important;
+  grid-row: 2 !important;
+  position: sticky !important;
+  top: 0 !important;
+  max-height: 100vh !important;
+  overflow-y: auto !important;
+  align-self: start !important;
+}
+main.main, main#main, div.main-wrap {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+/* Prevent style/script tags from being visible grid items */
+body > style, body > script { display: none !important; }
+</style>
 </head>
 <body>
 <!-- === CHAPTER NAV BAR === -->
