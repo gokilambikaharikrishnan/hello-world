@@ -992,6 +992,20 @@ body::after { content:''; position:fixed; inset:0; background:repeating-linear-g
 .sidebar-link.active{color:#00F5FF !important;border-left-color:#00F5FF !important;background:rgba(0,245,255,0.06) !important;box-shadow:inset 0 0 20px rgba(0,245,255,0.03) !important;}
 .sidebar-link .dot{width:4px !important;height:4px !important;border-radius:50% !important;background:rgba(0,245,255,0.4) !important;flex-shrink:0 !important;}
 .sidebar-link.active .dot{background:#00F5FF !important;box-shadow:0 0 6px #00F5FF !important;}
+
+/* HUD HERO */
+.hero{background:linear-gradient(180deg,rgba(0,245,255,0.04) 0%,transparent 100%) !important;border-bottom:1px solid rgba(0,245,255,0.1) !important;padding:4rem 3rem 3rem !important;position:relative !important;}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,#00F5FF,transparent);}
+.hero-badge{font-family:'JetBrains Mono',monospace !important;font-size:0.65rem !important;letter-spacing:0.2em !important;background:rgba(0,245,255,0.08) !important;border:1px solid rgba(0,245,255,0.25) !important;color:#00F5FF !important;border-radius:0 !important;padding:0.3rem 0.8rem !important;text-transform:uppercase !important;}
+.hero-chapter{font-family:'JetBrains Mono',monospace !important;font-size:0.65rem !important;letter-spacing:0.2em !important;color:rgba(0,245,255,0.45) !important;margin:0.8rem 0 0.4rem !important;}
+.hero-title{font-family:'Orbitron',sans-serif !important;font-size:clamp(2rem,5vw,3.5rem) !important;font-weight:900 !important;letter-spacing:0.04em !important;color:#fff !important;text-shadow:0 0 40px rgba(0,245,255,0.35) !important;line-height:1.1 !important;}
+.hero-subtitle{font-size:0.9rem !important;color:rgba(234,234,234,0.55) !important;max-width:680px !important;line-height:1.8 !important;border-left:2px solid rgba(0,245,255,0.3) !important;padding-left:1rem !important;margin-top:1rem !important;}
+.hero-meta{display:flex !important;gap:0 !important;border:1px solid rgba(0,245,255,0.12) !important;margin-top:2rem !important;background:rgba(0,245,255,0.02) !important;}
+.hero-meta-item{padding:1rem 1.5rem !important;border-right:1px solid rgba(0,245,255,0.1) !important;flex:1 !important;}
+.hero-meta-item:last-child{border-right:none !important;}
+.hero-meta-label{font-family:'JetBrains Mono',monospace !important;font-size:0.58rem !important;letter-spacing:0.18em !important;color:rgba(0,245,255,0.4) !important;text-transform:uppercase !important;display:block !important;margin-bottom:0.3rem !important;}
+.hero-meta-value{font-family:'Orbitron',sans-serif !important;font-size:0.9rem !important;font-weight:600 !important;color:#fff !important;}
+.hero-meta-value.highlight{color:#00FF88 !important;}
 </style>
 <style id="__comic-extra">
 /* ---- NEON TABLE ---- */
