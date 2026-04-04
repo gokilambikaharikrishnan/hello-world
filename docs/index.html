@@ -379,5 +379,41 @@ document.getElementById('search').addEventListener('input', function() {
 });
 </script>
 
+
+<script>
+// floating particles
+(function(){
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.4;';
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  let W, H, dots = [];
+  function resize(){ W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+  for(let i=0;i<60;i++) dots.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*0.3,vy:(Math.random()-.5)*0.3,r:Math.random()*1.5+0.5,a:Math.random()*.6+.1});
+  function frame(){
+    ctx.clearRect(0,0,W,H);
+    dots.forEach(d=>{
+      d.x+=d.vx; d.y+=d.vy;
+      if(d.x<0)d.x=W; if(d.x>W)d.x=0;
+      if(d.y<0)d.y=H; if(d.y>H)d.y=0;
+      ctx.beginPath(); ctx.arc(d.x,d.y,d.r,0,Math.PI*2);
+      ctx.fillStyle = `rgba(0,245,255,${d.a})`; ctx.fill();
+    });
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+
+// boot sequence text reveal
+(function(){
+  const el = document.querySelector('.hero-eyebrow');
+  if(!el) return;
+  const txt = el.textContent; el.textContent = '';
+  let i = 0;
+  const t = setInterval(()=>{ el.textContent += txt[i++]; if(i>=txt.length) clearInterval(t); }, 40);
+})();
+</script>
+
 </body>
 </html>
