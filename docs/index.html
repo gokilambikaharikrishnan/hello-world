@@ -319,5 +319,65 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
   </div>
 </footer>
 
+
+<script>
+// scroll progress + back to top
+const prog = document.getElementById('hud-progress');
+const btt = document.getElementById('btt');
+window.addEventListener('scroll', () => {
+  const s = document.documentElement.scrollTop;
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  if(prog) prog.style.width = (s/h*100) + '%';
+  if(btt) btt.classList.toggle('show', s > 400);
+});
+
+// counter animation
+function animCount(el) {
+  const target = parseInt(el.dataset.target);
+  const suffix = el.dataset.suffix || '';
+  let cur = 0; const step = target / 50;
+  const t = setInterval(() => {
+    cur = Math.min(cur + step, target);
+    el.textContent = Math.floor(cur) + suffix;
+    if(cur >= target) clearInterval(t);
+  }, 25);
+}
+setTimeout(() => document.querySelectorAll('[data-target]').forEach(animCount), 400);
+
+// progress bar
+setTimeout(() => { const p = document.getElementById('main-progress'); if(p) p.style.width='100%'; }, 600);
+
+// reveal on scroll
+const obs = new IntersectionObserver((entries) => {
+  entries.forEach((e, i) => {
+    if(e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('visible'), i * 60);
+      obs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+// search
+const searchMap = {
+  'chapter1.html': 'chemistry lfp olivine thermal runaway cycle p-o bond aging nmc lead acid',
+  'chapter2.html': 'soc soh intercalation nernst ecm ekf hppc ocv arrhenius sei coulomb',
+  'chapter3.html': 'thermal heat joule i2r runaway ntc derating gradient cooling',
+  'chapter4.html': 'protection ovp uvp ocp scp mosfet afe bq76952 balancing pre-charge',
+  'chapter5.html': 'standards iec 62619 ul 1973 un 38.3 nfpa 855 compliance matrix',
+  'chapter6.html': 'architecture bms state machine can pylon nvm rtc event log',
+  'chapter7.html': 'ups ess float 3.39v switchover home solar tou nfpa ev backup'
+};
+document.getElementById('search').addEventListener('input', function() {
+  const q = this.value.toLowerCase().trim();
+  document.querySelectorAll('.chapter-card').forEach(card => {
+    const href = card.getAttribute('href');
+    const match = !q || (searchMap[href]||'').includes(q)
+      || card.textContent.toLowerCase().includes(q);
+    card.classList.toggle('hidden', !match);
+  });
+});
+</script>
+
 </body>
 </html>
