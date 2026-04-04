@@ -1049,5 +1049,48 @@ void test_SoC_OCV_Anchor_AtRest(void) {
 </div><!-- end .main-content -->
 </div><!-- end .page-wrapper -->
 
+
+<script>
+/* HUD clock */
+(function(){
+  var clk=document.getElementById('clk');
+  function tick(){if(clk){var d=new Date();clk.textContent=d.toLocaleTimeString('en-GB',{hour12:false});}}
+  tick();setInterval(tick,1000);
+})();
+
+/* Reading progress bar */
+(function(){
+  var bar=document.getElementById('hud-progress');
+  function update(){
+    var s=document.documentElement.scrollTop||document.body.scrollTop;
+    var h=document.documentElement.scrollHeight-document.documentElement.clientHeight;
+    if(bar){bar.style.width=(h>0?Math.round(s/h*100):0)+'%';}
+  }
+  window.addEventListener('scroll',update,{passive:true});
+})();
+
+/* Intersection observer — reveal + sidebar active */
+(function(){
+  var obs=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){e.target.classList.add('visible');}
+    });
+  },{threshold:0.08});
+  document.querySelectorAll('.reveal').forEach(function(el){obs.observe(el);});
+
+  var sObs=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        var id=e.target.getAttribute('id');
+        document.querySelectorAll('.sidebar-sub').forEach(function(a){
+          a.classList.toggle('active',a.getAttribute('href')==='#'+id);
+        });
+      }
+    });
+  },{rootMargin:'-30% 0px -60% 0px'});
+  document.querySelectorAll('section[id]').forEach(function(s){sObs.observe(s);});
+})();
+</script>
+
 </body>
 </html>
