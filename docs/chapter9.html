@@ -81,6 +81,29 @@ tr:hover td{background:rgba(0,255,136,0.03);}
 .badge-amber{background:rgba(255,200,87,0.15);color:var(--amber);border:1px solid rgba(255,200,87,0.3);}
 .badge-blue{background:rgba(10,132,255,0.15);color:var(--blue);border:1px solid rgba(10,132,255,0.3);}
 
+
+/* chunk5: card grid, arch-layer, reveal animation */
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;margin:1.2rem 0;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.4rem;position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--acc);opacity:0;transition:opacity 0.2s;}
+.card:hover::before{opacity:1;}
+.card-label{font-family:var(--mono);font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--acc);margin-bottom:0.5rem;opacity:0.75;}
+.card-title{font-family:var(--head);font-size:0.95rem;font-weight:700;color:#fff;margin-bottom:0.6rem;}
+.card-body{font-size:0.82rem;color:var(--muted);line-height:1.6;}
+.arch-layer{border:1px solid var(--border);border-radius:6px;margin:0.6rem 0;overflow:hidden;}
+.arch-layer-header{display:flex;align-items:center;gap:0.8rem;padding:0.8rem 1.2rem;font-family:var(--mono);font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;}
+.arch-layer-body{padding:0.8rem 1.2rem 1rem;font-size:0.84rem;color:var(--muted);border-top:1px solid var(--border2);}
+.layer-app{background:rgba(0,255,136,0.06);border-color:rgba(0,255,136,0.25);}
+.layer-app .arch-layer-header{color:var(--acc);}
+.layer-mid{background:rgba(10,132,255,0.06);border-color:rgba(10,132,255,0.25);}
+.layer-mid .arch-layer-header{color:var(--blue);}
+.layer-drv{background:rgba(255,200,87,0.06);border-color:rgba(255,200,87,0.25);}
+.layer-drv .arch-layer-header{color:var(--amber);}
+.layer-hal{background:rgba(0,245,255,0.06);border-color:rgba(0,245,255,0.25);}
+.layer-hal .arch-layer-header{color:var(--cyan);}
+.reveal{opacity:0;transform:translateY(18px);transition:opacity 0.5s,transform 0.5s;}
+.reveal.visible{opacity:1;transform:none;}
+
 </style>
 </head>
 <body>
