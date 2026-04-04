@@ -398,7 +398,104 @@ pre{font-family:var(--mono);background:var(--bg2);border:1px solid var(--border)
   </div>
 </div>
 
+
+<!-- 8.5 HIGH VOLTAGE -->
+<div class="section reveal" id="s8-5">
+  <span class="section-tag">// SECTION 8.5</span>
+  <h2 class="section-title">High Voltage Considerations</h2>
+  <p>A 16S LFP pack sits at 40–58V. The BMS must interface between this high-voltage domain and the 3.3V MCU logic. Incorrect isolation design is a safety and regulatory failure.</p>
+
+  <h3 class="subsection-title">Isolation Options</h3>
+  <table>
+    <tr><th>Method</th><th>Device</th><th>Speed</th><th>Isolation V</th><th>BMS Use</th></tr>
+    <tr><td><strong>Optocoupler</strong></td><td>PC817, 6N137</td><td class="warn">Slow (10–100kbps)</td><td>1000–5000V</td><td>Fault signal, charge enable</td></tr>
+    <tr><td><strong>Digital Isolator</strong></td><td>ISO7742, ADUM1201</td><td class="good">Fast (≥100Mbps)</td><td>2500–5000V</td><td>SPI isolation, CAN isolation</td></tr>
+    <tr><td><strong>Isolated CAN</strong></td><td>ISO1042, SN65HVD230</td><td class="good">1Mbps CAN</td><td>4242V</td><td>CAN bus to inverter</td></tr>
+    <tr><td><strong>Isolated DC-DC</strong></td><td>ADUM3070, B0505S</td><td>Power only</td><td>1000–3000V</td><td>AFE power supply from pack</td></tr>
+  </table>
+
+  <div class="callout callout-danger">
+    <span class="callout-tag">// SAFETY CRITICAL</span>
+    <p style="margin:0;font-size:0.85rem;">For UPS/ESS applications (IEC 62619): the CAN interface <strong>must be isolated</strong>. Use ISO1042 or equivalent. Creepage between HV and LV conductors must meet IEC 60664-1 requirements (≥2mm for 60V systems, reinforced = ≥6mm).</p>
+  </div>
+
+  <h3 class="subsection-title">Creepage and Clearance Rules</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border2);border:1px solid var(--border);margin:1rem 0;">
+    <div style="background:var(--bg2);padding:1.2rem;"><strong style="font-family:var(--mono);font-size:0.75rem;color:var(--amber);">CLEARANCE</strong><p style="margin:0.4rem 0 0;font-size:0.82rem;">Shortest path through air. For 60V working voltage, pollution degree 2: <strong style="color:var(--cyan);">≥1.0mm basic, ≥2.0mm reinforced</strong>.</p></div>
+    <div style="background:var(--bg2);padding:1.2rem;"><strong style="font-family:var(--mono);font-size:0.75rem;color:var(--amber);">CREEPAGE</strong><p style="margin:0.4rem 0 0;font-size:0.82rem;">Shortest path along surface. CTI group material dependent. FR4 (CTI 175–249): <strong style="color:var(--cyan);">≥2.0mm basic, ≥4.0mm reinforced</strong>.</p></div>
+  </div>
+</div>
+
+<!-- 8.6 PCB DESIGN -->
+<div class="section reveal" id="s8-6">
+  <span class="section-tag">// SECTION 8.6</span>
+  <h2 class="section-title">PCB Design Guidelines</h2>
+  <p>The BMS PCB carries both millivolt-level cell voltage sense signals and high-current shunt sense signals on the same board. Routing discipline is mandatory.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1px;background:var(--border2);border:1px solid var(--border);margin:1.5rem 0;">
+    <div style="background:var(--bg2);padding:1.4rem;">
+      <strong style="font-family:var(--mono);font-size:0.72rem;color:var(--cyan);">CELL VOLTAGE SENSE ROUTING</strong>
+      <p style="margin:0.5rem 0 0;font-size:0.82rem;">Run sense wires as differential pairs. Keep away from switching nodes (MOSFET gates, DC-DC). Use 0.1μF filter cap at each AFE input pin. Match trace length within 2mm per cell group.</p>
+    </div>
+    <div style="background:var(--bg2);padding:1.4rem;">
+      <strong style="font-family:var(--mono);font-size:0.72rem;color:var(--cyan);">CURRENT SENSE AMPLIFIER</strong>
+      <p style="margin:0.5rem 0 0;font-size:0.82rem;">Place INA228 directly adjacent to shunt resistor. Use Kelvin (4-wire) connection. Minimize trace resistance from shunt pad to INA input. Decouple VS with 100nF + 10μF.</p>
+    </div>
+    <div style="background:var(--bg2);padding:1.4rem;">
+      <strong style="font-family:var(--mono);font-size:0.72rem;color:var(--cyan);">NTC SIGNAL CONDITIONING</strong>
+      <p style="margin:0.5rem 0 0;font-size:0.82rem;">Use voltage divider with 1% resistor. Decouple ADC input with RC filter (10kΩ + 100nF). Route away from power planes. Shield with ground pour if near high-frequency switching.</p>
+    </div>
+    <div style="background:var(--bg2);padding:1.4rem;">
+      <strong style="font-family:var(--mono);font-size:0.72rem;color:var(--cyan);">MOSFET GATE DRIVE</strong>
+      <p style="margin:0.5rem 0 0;font-size:0.82rem;">Gate drive traces must be short (&lt;10mm). Add gate resistor (10–47Ω) to control switching speed and reduce EMI. TVS diode gate-to-source for ESD protection.</p>
+    </div>
+    <div style="background:var(--bg2);padding:1.4rem;">
+      <strong style="font-family:var(--mono);font-size:0.72rem;color:var(--cyan);">CAN BUS TERMINATION</strong>
+      <p style="margin:0.5rem 0 0;font-size:0.82rem;">120Ω at each end of bus stub. Use split termination (2× 60Ω + 4.7nF to ground) for common-mode filtering. Do not place in middle of bus. TVS on CANH/CANL for ESD.</p>
+    </div>
+    <div style="background:var(--bg2);padding:1.4rem;">
+      <strong style="font-family:var(--mono);font-size:0.72rem;color:var(--cyan);">THERMAL DESIGN</strong>
+      <p style="margin:0.5rem 0 0;font-size:0.82rem;">MOSFETs on copper pours connected to vias (thermal vias 0.3mm, 0.5mm pitch). BMS PCB typically dissipates 2–5W total. Add temperature monitor near high-power area.</p>
+    </div>
+    <div style="background:var(--bg2);padding:1.4rem;">
+      <strong style="font-family:var(--mono);font-size:0.72rem;color:var(--cyan);">POWER DECOUPLING</strong>
+      <p style="margin:0.5rem 0 0;font-size:0.82rem;">MCU VDD: 100nF per power pin + 10μF bulk. AFE VDD: 100nF + 1μF + 10μF. Place caps within 0.5mm of IC power pin. Separate analog and digital ground planes, single-point join.</p>
+    </div>
+    <div style="background:var(--bg2);padding:1.4rem;">
+      <strong style="font-family:var(--mono);font-size:0.72rem;color:var(--cyan);">EMC CONSIDERATIONS</strong>
+      <p style="margin:0.5rem 0 0;font-size:0.82rem;">Switching current loops must be minimized. Add ferrite bead on MCU VDD supply. Place bulk cap (100μF) at board power entry. CAN interface: common-mode choke before RJ45/connector.</p>
+    </div>
+  </div>
+
+  <div class="callout callout-info">
+    <span class="callout-tag">// PCB REVIEW CHECKLIST</span>
+    <p style="margin:0;font-family:var(--mono);font-size:0.78rem;line-height:1.8;">
+      □ Kelvin connection on shunt resistor<br>
+      □ 120Ω termination at both ends of CAN bus<br>
+      □ Gate resistors on all MOSFET drive signals<br>
+      □ Creepage ≥2mm between HV and LV nets<br>
+      □ 100nF decap within 0.5mm of each IC power pin<br>
+      □ NTC sense traces away from switching nodes<br>
+      □ Thermal vias under MOSFETs to bottom copper<br>
+      □ TVS diodes on CANH, CANL, and external connectors
+    </p>
+  </div>
+</div>
+
+<!-- CHAPTER FOOTER -->
+<div class="chapter-footer">
+  <div>
+    <div style="font-family:var(--mono);font-size:0.62rem;color:var(--muted);margin-bottom:0.4rem;letter-spacing:0.12em;">// NAVIGATION</div>
+    <div style="font-family:var(--mono);font-size:0.8rem;color:var(--text);">Chapter 8: BMS Hardware Design</div>
+  </div>
+  <div style="display:flex;gap:1rem;">
+    <a class="nav-btn" href="chapter7.html">← Ch7: UPS &amp; ESS</a>
+    <a class="nav-btn" href="index.html" style="border-color:rgba(0,245,255,0.3);color:var(--cyan);">⌂ Index</a>
+  </div>
+</div>
+
 </main>
 </div><!-- end page-wrapper -->
+
 </body>
 </html>
