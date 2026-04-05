@@ -111,6 +111,21 @@ pre{font-family:var(--mono);background:var(--bg2);border:1px solid var(--border)
 @keyframes reveal-right{0%{opacity:0;transform:translateX(20px)}100%{opacity:1;transform:none}}
 @keyframes spin-slow{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 
+
+/* === JARVIS ANIMATIONS BLOCK B: hero boot + topbar === */
+#ch-topbar{animation:hud-topbar-in 0.6s cubic-bezier(0.16,1,0.3,1) both;}
+.hero{animation:hud-boot 0.8s cubic-bezier(0.16,1,0.3,1) 0.1s both;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;top:-100%;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--amber),transparent);animation:hud-scan 3s linear 1s infinite;opacity:0.4;pointer-events:none;}
+.hero-badge{animation:hud-fadein 0.5s ease 0.3s both;}
+.hero-title{animation:hud-slide-up 0.7s cubic-bezier(0.16,1,0.3,1) 0.25s both;}
+.hero-subtitle{animation:hud-slide-up 0.7s cubic-bezier(0.16,1,0.3,1) 0.4s both;}
+.hero-stats{animation:hud-slide-up 0.7s cubic-bezier(0.16,1,0.3,1) 0.55s both;}
+.hstat{transition:background 0.25s;}
+.hstat:hover{background:rgba(255,200,87,0.07);}
+.hstat-val{animation:hud-counter 0.5s ease both;}
+/* Topbar scan line */
+#ch-topbar::after{content:'';position:absolute;bottom:0;left:-100%;width:60%;height:1px;background:linear-gradient(90deg,transparent,var(--amber),transparent);animation:hud-line-in 2s ease 0.8s both,hud-scan 6s linear 3s infinite;}
+
 </style>
 </head>
 <body>
