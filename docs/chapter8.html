@@ -166,6 +166,21 @@ svg{filter:drop-shadow(0 0 4px rgba(255,200,87,0.1));}
 /* Scan line overlay on whole page */
 body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(255,200,87,0.012) 3px,rgba(255,200,87,0.012) 4px);pointer-events:none;z-index:1;}
 
+
+/* === JARVIS ANIMATIONS BLOCK E: AR overlays, corner marks, particle canvas === */
+.hud-corner{position:absolute;width:18px;height:18px;pointer-events:none;}
+.hud-corner-tl{top:10px;left:10px;border-top:2px solid rgba(255,200,87,0.6);border-left:2px solid rgba(255,200,87,0.6);}
+.hud-corner-tr{top:10px;right:10px;border-top:2px solid rgba(255,200,87,0.6);border-right:2px solid rgba(255,200,87,0.6);}
+.hud-corner-bl{bottom:10px;left:10px;border-bottom:2px solid rgba(255,200,87,0.6);border-left:2px solid rgba(255,200,87,0.6);}
+.hud-corner-br{bottom:10px;right:10px;border-bottom:2px solid rgba(255,200,87,0.6);border-right:2px solid rgba(255,200,87,0.6);}
+#particle-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.35;}
+.section-title::after{content:'';display:block;width:0;height:1px;background:linear-gradient(90deg,var(--amber),transparent);margin-top:6px;animation:hud-line-in 1s ease 0.4s both;}
+.subsection-title{position:relative;}
+.subsection-title::before{content:'//';font-family:var(--mono);font-size:0.7em;color:rgba(255,200,87,0.45);margin-right:6px;letter-spacing:0.05em;}
+.hero-chapter,.section-tag{letter-spacing:0.25em !important;animation:hud-fadein 0.6s ease 0.2s both;}
+code{transition:background 0.15s,color 0.15s;}
+code:hover{background:rgba(255,200,87,0.15);color:#fff;}
+
 </style>
 </head>
 <body>
