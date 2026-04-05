@@ -745,6 +745,171 @@ void MW_EventLog_Write(EventType_t type, uint32_t data) {
 </section>
 
 
+
+<!-- Protection State Machine — inserted before Section 9.4 -->
+<section class="section reveal" id="s93-sm">
+  <div class="section-eyebrow">Section 9.3 · Addendum</div>
+  <h2 class="section-title">Protection State Machine</h2>
+  <p class="section-intro">Every BMS protection module implements an implicit state machine. Understanding the state transitions prevents common bugs — like re-enabling FETs before the fault condition has actually cleared.</p>
+
+  <!-- Animated state machine SVG -->
+  <svg id="sm-svg" viewBox="0 0 760 320" style="width:100%;max-width:760px;height:auto;margin:1.5rem 0;display:block;">
+    <defs>
+      <marker id="sm-arrow" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
+        <path d="M0,0 L7,3.5 L0,7 Z" fill="rgba(0,255,136,0.7)"/>
+      </marker>
+      <marker id="sm-arrow-r" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
+        <path d="M0,0 L7,3.5 L0,7 Z" fill="rgba(255,45,85,0.7)"/>
+      </marker>
+      <filter id="sm-glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    </defs>
+    <rect width="760" height="320" fill="rgba(0,0,0,0.35)" rx="8"/>
+
+    <!-- NORMAL state -->
+    <rect x="30" y="120" width="120" height="70" rx="6" fill="rgba(0,255,136,0.1)" stroke="rgba(0,255,136,0.6)" stroke-width="2" id="sm-normal"/>
+    <text x="90" y="150" fill="#00FF88" font-family="Orbitron,sans-serif" font-size="10" text-anchor="middle" font-weight="700">NORMAL</text>
+    <text x="90" y="166" fill="rgba(0,255,136,0.6)" font-family="JetBrains Mono,monospace" font-size="8" text-anchor="middle">DSG=ON</text>
+    <text x="90" y="178" fill="rgba(0,255,136,0.6)" font-family="JetBrains Mono,monospace" font-size="8" text-anchor="middle">CHG=ON</text>
+
+    <!-- WARNING state -->
+    <rect x="220" y="50" width="130" height="70" rx="6" fill="rgba(255,200,87,0.1)" stroke="rgba(255,200,87,0.6)" stroke-width="2" id="sm-warn"/>
+    <text x="285" y="80" fill="#FFC857" font-family="Orbitron,sans-serif" font-size="10" text-anchor="middle" font-weight="700">WARNING</text>
+    <text x="285" y="96" fill="rgba(255,200,87,0.6)" font-family="JetBrains Mono,monospace" font-size="8" text-anchor="middle">DSG=ON</text>
+    <text x="285" y="108" fill="rgba(255,200,87,0.6)" font-family="JetBrains Mono,monospace" font-size="8" text-anchor="middle">CHG=ON*derate</text>
+
+    <!-- OVP TRIP state -->
+    <rect x="430" y="30" width="130" height="70" rx="6" fill="rgba(255,45,85,0.1)" stroke="rgba(255,45,85,0.6)" stroke-width="2"/>
+    <text x="495" y="58" fill="#FF2D55" font-family="Orbitron,sans-serif" font-size="9" text-anchor="middle" font-weight="700">OVP TRIP</text>
+    <text x="495" y="74" fill="rgba(255,45,85,0.6)" font-family="JetBrains Mono,monospace" font-size="8" text-anchor="middle">DSG=ON</text>
+    <text x="495" y="86" fill="rgba(255,45,85,0.6)" font-family="JetBrains Mono,monospace" font-size="8" text-anchor="middle">CHG=OFF</text>
+
+    <!-- UVP/OCP TRIP state -->
+    <rect x="430" y="120" width="130" height="70" rx="6" fill="rgba(255,45,85,0.1)" stroke="rgba(255,45,85,0.6)" stroke-width="2"/>
+    <text x="495" y="148" fill="#FF2D55" font-family="Orbitron,sans-serif" font-size="9" text-anchor="middle" font-weight="700">DSG TRIP</text>
+    <text x="495" y="164" fill="rgba(255,45,85,0.6)" font-family="JetBrains Mono,monospace" font-size="8" text-anchor="middle">DSG=OFF</text>
+    <text x="495" y="176" fill="rgba(255,45,85,0.6)" font-family="JetBrains Mono,monospace" font-size="8" text-anchor="middle">CHG=ON (recovery)</text>
+
+    <!-- FAULT state -->
+    <rect x="430" y="210" width="130" height="70" rx="6" fill="rgba(191,90,242,0.1)" stroke="rgba(191,90,242,0.6)" stroke-width="2"/>
+    <text x="495" y="238" fill="#BF5AF2" font-family="Orbitron,sans-serif" font-size="9" text-anchor="middle" font-weight="700">HARD FAULT</text>
+    <text x="495" y="254" fill="rgba(191,90,242,0.6)" font-family="JetBrains Mono,monospace" font-size="8" text-anchor="middle">DSG=OFF</text>
+    <text x="495" y="266" fill="rgba(191,90,242,0.6)" font-family="JetBrains Mono,monospace" font-size="8" text-anchor="middle">CHG=OFF</text>
+
+    <!-- RECOVERY state -->
+    <rect x="220" y="200" width="130" height="70" rx="6" fill="rgba(10,132,255,0.1)" stroke="rgba(10,132,255,0.6)" stroke-width="2"/>
+    <text x="285" y="228" fill="#0A84FF" font-family="Orbitron,sans-serif" font-size="10" text-anchor="middle" font-weight="700">RECOVERY</text>
+    <text x="285" y="244" fill="rgba(10,132,255,0.6)" font-family="JetBrains Mono,monospace" font-size="8" text-anchor="middle">Checking clear</text>
+    <text x="285" y="256" fill="rgba(10,132,255,0.6)" font-family="JetBrains Mono,monospace" font-size="8" text-anchor="middle">30s timeout</text>
+
+    <!-- Transitions: NORMAL → WARNING -->
+    <line x1="150" y1="140" x2="218" y2="110" stroke="rgba(255,200,87,0.6)" stroke-width="1.5" marker-end="url(#sm-arrow)">
+      <animate attributeName="stroke-opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/>
+    </line>
+    <text x="170" y="118" fill="rgba(255,200,87,0.6)" font-family="JetBrains Mono,monospace" font-size="7.5">V&gt;3.6V</text>
+
+    <!-- WARNING → OVP TRIP -->
+    <line x1="350" y1="75" x2="428" y2="70" stroke="rgba(255,45,85,0.6)" stroke-width="1.5" marker-end="url(#sm-arrow-r)">
+      <animate attributeName="stroke-opacity" values="0.3;1;0.3" dur="2.5s" repeatCount="indefinite"/>
+    </line>
+    <text x="362" y="65" fill="rgba(255,45,85,0.6)" font-family="JetBrains Mono,monospace" font-size="7.5">V&gt;3.65V</text>
+
+    <!-- NORMAL → DSG TRIP -->
+    <line x1="150" y1="160" x2="428" y2="160" stroke="rgba(255,45,85,0.6)" stroke-width="1.5" marker-end="url(#sm-arrow-r)">
+      <animate attributeName="stroke-opacity" values="0.2;0.9;0.2" dur="1.8s" repeatCount="indefinite"/>
+    </line>
+    <text x="260" y="155" fill="rgba(255,45,85,0.6)" font-family="JetBrains Mono,monospace" font-size="7.5">UVP or OCP</text>
+
+    <!-- NORMAL → HARD FAULT (SCP) -->
+    <line x1="90" y1="190" x2="90" y2="280" stroke="rgba(191,90,242,0.5)" stroke-width="1.5"/>
+    <line x1="90" y1="280" x2="428" y2="248" stroke="rgba(191,90,242,0.5)" stroke-width="1.5" marker-end="url(#sm-arrow)">
+      <animate attributeName="stroke-opacity" values="0.2;0.8;0.2" dur="1.5s" repeatCount="indefinite"/>
+    </line>
+    <text x="96" y="260" fill="rgba(191,90,242,0.6)" font-family="JetBrains Mono,monospace" font-size="7.5">SCP/OTP</text>
+
+    <!-- OVP TRIP → RECOVERY -->
+    <line x1="495" y1="100" x2="495" y2="115" stroke="rgba(10,132,255,0.5)" stroke-width="1.5"/>
+    <line x1="350" y1="235" x2="428" y2="235" stroke="rgba(255,45,85,0.4)" stroke-width="1" stroke-dasharray="4,3"/>
+    <line x1="430" y1="120" x2="353" y2="228" stroke="rgba(10,132,255,0.5)" stroke-width="1.5" marker-end="url(#sm-arrow)"/>
+    <text x="370" y="178" fill="rgba(10,132,255,0.6)" font-family="JetBrains Mono,monospace" font-size="7.5">Fault clear</text>
+
+    <!-- RECOVERY → NORMAL -->
+    <line x1="220" y1="240" x2="150" y2="175" stroke="rgba(0,255,136,0.5)" stroke-width="1.5" marker-end="url(#sm-arrow)">
+      <animate attributeName="stroke-opacity" values="0.2;1;0.2" dur="3s" repeatCount="indefinite"/>
+    </line>
+    <text x="148" y="218" fill="rgba(0,255,136,0.6)" font-family="JetBrains Mono,monospace" font-size="7.5">Hysteresis OK</text>
+
+    <!-- HARD FAULT → RECOVERY (manual reset only) -->
+    <line x1="430" y1="252" x2="352" y2="252" stroke="rgba(10,132,255,0.4)" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#sm-arrow)"/>
+    <text x="355" y="270" fill="rgba(10,132,255,0.5)" font-family="JetBrains Mono,monospace" font-size="7.5">Manual reset</text>
+
+    <!-- Animated current state indicator -->
+    <circle cx="90" cy="155" r="5" fill="rgba(0,255,136,0.8)" filter="url(#sm-glow)">
+      <animate attributeName="opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite"/>
+    </circle>
+  </svg>
+
+  <h3 class="sub">C Implementation: State Machine Core</h3>
+  <pre><code>/* app_prot_sm.h — Protection State Machine */
+typedef enum {
+    PROT_STATE_NORMAL   = 0,
+    PROT_STATE_WARN     = 1,   /* pre-fault: derate output */
+    PROT_STATE_OVP      = 2,   /* CHG FET open */
+    PROT_STATE_DSG_TRIP = 3,   /* DSG FET open */
+    PROT_STATE_HARD     = 4,   /* both FETs open, manual reset needed */
+    PROT_STATE_RECOVERY = 5,   /* checking if fault cleared */
+} ProtState_t;
+
+/* Hysteresis: must be clear for N consecutive ticks before recovery */
+#define PROT_CLEAR_TICKS   30U   /* 30 × 100ms = 3 seconds */</code></pre>
+
+  <pre><code>/* State machine tick — called every 100ms */
+static ProtState_t s_state = PROT_STATE_NORMAL;
+static uint8_t s_clear_count = 0U;
+
+void APP_ProtSM_Tick(void) {
+    Prot_Fault_t f = APP_Protect_GetActive();
+
+    switch (s_state) {
+    case PROT_STATE_NORMAL:
+        if (f & PROT_SCP) { s_state = PROT_STATE_HARD; s_clear_count=0; break; }
+        if (f & PROT_OTP) { s_state = PROT_STATE_HARD; s_clear_count=0; break; }
+        if (f & (PROT_UVP|PROT_OCP_D)) { s_state = PROT_STATE_DSG_TRIP; s_clear_count=0; break; }
+        if (f & (PROT_OVP|PROT_OCP_C)) { s_state = PROT_STATE_OVP;      s_clear_count=0; break; }
+        if (g_meas.cell_mv[APP_MaxCellIdx()] > WARN_OVP_MV) { s_state = PROT_STATE_WARN; }
+        break;
+
+    case PROT_STATE_WARN:
+        if (f) { s_state = (f & PROT_SCP) ? PROT_STATE_HARD : PROT_STATE_OVP; break; }
+        if (g_meas.cell_mv[APP_MaxCellIdx()] < (WARN_OVP_MV - 20U)) { s_state = PROT_STATE_NORMAL; }
+        break;
+
+    case PROT_STATE_OVP:
+    case PROT_STATE_DSG_TRIP:
+        if (!f) { s_clear_count++;
+            if (s_clear_count >= PROT_CLEAR_TICKS) { s_state = PROT_STATE_RECOVERY; s_clear_count=0; }
+        } else { s_clear_count = 0U; }
+        break;
+
+    case PROT_STATE_RECOVERY:
+        if (f) { s_state = PROT_STATE_DSG_TRIP; s_clear_count=0; break; }
+        s_clear_count++;
+        if (s_clear_count >= 5U) { s_state = PROT_STATE_NORMAL; s_clear_count=0;
+            APP_EventLog_Write(EVT_PROT_RECOVERY, 0); }
+        break;
+
+    case PROT_STATE_HARD:
+        /* Only exits via manual reset or watchdog reboot */
+        BSP_FET_SetDSG(false); BSP_FET_SetCHG(false);
+        break;
+    }
+    APP_ProtSM_ApplyFETs();
+}</code></pre>
+
+  <div class="callout callout-warn">
+    <div class="callout-title">⚡ Hysteresis Is Non-Optional</div>
+    <p>Without hysteresis on the recovery path, a FET will chatter: trip → clear → re-enable → trip → clear, potentially hundreds of times per second. This stresses the MOSFET, generates RF interference, and destroys gate driver lifetime. The 3-second clear window above is the minimum; use 10s for SCP recovery.</p>
+  </div>
+</section>
 <section class="section reveal" id="s94">
   <div class="section-eyebrow">Section 9.4</div>
   <h2 class="section-title">Code Quality Guidelines</h2>
