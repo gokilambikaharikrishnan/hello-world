@@ -144,6 +144,28 @@ pre{font-family:var(--mono);background:var(--bg2);border:1px solid var(--border)
 .sidebar-link:hover{letter-spacing:0.06em;}
 .sidebar-link.active{animation:hud-glow-pulse 3s ease-in-out infinite;}
 
+
+/* === JARVIS ANIMATIONS BLOCK D: tables, code, callouts, SVG === */
+table tr{transition:background 0.15s;}
+tr:hover td{background:rgba(255,200,87,0.05) !important;}
+pre{position:relative;overflow:hidden;}
+pre::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,200,87,0.4),transparent);animation:hud-line-in 1.5s ease both;}
+.callout{animation:hud-slide-up 0.5s ease both;border-radius:4px;position:relative;}
+.callout::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px;border-radius:3px 0 0 3px;}
+.callout-info::before{background:var(--blue);}
+.callout-warn::before{background:var(--amber);box-shadow:0 0 8px rgba(255,200,87,0.4);}
+.callout-danger::before{background:var(--red);}
+.callout-success::before{background:var(--green);}
+svg{filter:drop-shadow(0 0 4px rgba(255,200,87,0.1));}
+.stm-filter-btn{transition:all 0.18s;position:relative;overflow:hidden;}
+.stm-filter-btn::after{content:'';position:absolute;inset:0;background:rgba(255,200,87,0.1);opacity:0;transition:opacity 0.15s;}
+.stm-filter-btn:hover::after{opacity:1;}
+.stm-filter-btn.active{animation:hud-glow-pulse 2s ease-in-out infinite;}
+/* Corner decorations on hero */
+.hero::before{content:'';position:absolute;top:12px;left:12px;width:16px;height:16px;border-top:2px solid rgba(255,200,87,0.5);border-left:2px solid rgba(255,200,87,0.5);}
+/* Scan line overlay on whole page */
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(255,200,87,0.012) 3px,rgba(255,200,87,0.012) 4px);pointer-events:none;z-index:1;}
+
 </style>
 </head>
 <body>
