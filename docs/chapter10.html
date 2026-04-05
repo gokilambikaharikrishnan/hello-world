@@ -773,5 +773,33 @@ soh, rul = ml_model.predict(features)
   </div>
 </section>
 
+
+<!-- Summary + close tags -->
+<section class="section reveal" id="summary">
+  <div class="section-eyebrow">Chapter Summary</div>
+  <h2 class="section-title">Chapter 10 · Key Takeaways</h2>
+  <p class="section-intro">The 10 principles that connect your BMS firmware to the global energy future:</p>
+  <div class="card-grid">
+    <div class="card reveal"><div class="card-label">01</div><div class="card-title">Storage enables renewables</div><div class="card-body">Without storage, solar and wind are curtailed. Your BMS is the control system enabling the energy transition — not just a protection circuit.</div></div>
+    <div class="card reveal"><div class="card-label">02</div><div class="card-title">LFP is ethically superior</div><div class="card-body">No cobalt, abundant iron/phosphate, 4000+ cycle life, second-life potential. The sustainable choice at every scale from home ESS to grid containers.</div></div>
+    <div class="card reveal"><div class="card-label">03</div><div class="card-title">Architecture scales</div><div class="card-body">Cell → Module → Pack → System. The BMS principles from ch1–9 apply at every level. Communication protocols change (CAN → IEC 61850), physics does not.</div></div>
+    <div class="card reveal"><div class="card-label">04</div><div class="card-title">Response time is the asset</div><div class="card-body">Battery frequency regulation responds in 200 ms. Gas turbines take 5 minutes. This speed advantage is the primary value proposition of grid-scale BESS.</div></div>
+    <div class="card reveal"><div class="card-label">05</div><div class="card-title">Second life is planned, not retrofitted</div><div class="card-body">Design your BMS with cell-level SoH tracking from day one. NVM-stored capacity data, configurable thresholds, and standardised comms make second-life redeployment feasible.</div></div>
+    <div class="card reveal"><div class="card-label">06</div><div class="card-title">Solid-state needs new sensors</div><div class="card-body">SSB BMS requires EIS (impedance spectroscopy), pressure sensing, and mandatory thermal management at 60–80 °C. Plan for these peripheral requirements now.</div></div>
+    <div class="card reveal"><div class="card-label">07</div><div class="card-title">AI augments, not replaces, BMS</div><div class="card-body">ML models predict SoH with &lt;2% error. But they run in the cloud — the embedded BMS still handles real-time protection. Safety logic stays in silicon.</div></div>
+    <div class="card reveal"><div class="card-label">08</div><div class="card-title">Cybersecurity is now safety-critical</div><div class="card-body">A compromised BMS can cause fires. Secure boot, authenticated CAN, and signed OTA are not optional features — they are safety requirements for any networked BMS.</div></div>
+    <div class="card reveal"><div class="card-label">09</div><div class="card-title">Na-ion needs OCV recalibration</div><div class="card-body">The flat OCV trick that anchors LFP SoC doesn't work for Na-ion's sloped curve. But that's actually better — voltage-based SoC is more accurate, reducing Coulomb counter drift sensitivity.</div></div>
+    <div class="card reveal"><div class="card-label">10</div><div class="card-title">V2G is a multi-objective problem</div><div class="card-body">Departure SoC guarantee + grid service + battery health. Your BMS must balance three competing objectives simultaneously. This is the hardest optimisation problem in consumer energy storage.</div></div>
+  </div>
+</section>
+
+<footer style="padding:2.5rem 3rem;border-top:1px solid var(--border2);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
+  <a href="chapter9.html" style="font-family:var(--mono);font-size:0.75rem;color:var(--muted);text-decoration:none;letter-spacing:0.1em;border:1px solid var(--border);padding:0.5rem 1rem;border-radius:4px;transition:all 0.15s;">← Chapter 9: Firmware Arch</a>
+  <span style="font-family:var(--mono);font-size:0.62rem;color:rgba(0,207,255,0.4);letter-spacing:0.15em;">CH10 · SUSTAINABLE ENERGY · COMPLETE</span>
+  <a href="index.html" style="font-family:var(--mono);font-size:0.75rem;color:var(--acc);text-decoration:none;letter-spacing:0.1em;border:1px solid rgba(0,207,255,0.3);padding:0.5rem 1rem;border-radius:4px;transition:all 0.15s;">Full Index →</a>
+</footer>
+</div><!-- end .main-content -->
+</div><!-- end .page-wrapper -->
+
 </body>
 </html>
