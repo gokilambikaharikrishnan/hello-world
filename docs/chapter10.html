@@ -458,5 +458,105 @@ pre code{background:none;border:none;padding:0;color:inherit;}
   </div>
 </section>
 
+
+<section class="section reveal" id="s103">
+  <div class="section-eyebrow">Section 10.3</div>
+  <h2 class="section-title">Grid Scale ESS vs Home ESS</h2>
+  <p class="section-intro">The BMS principles from this knowledge base scale — from a single 16S1P 280Ah home pack all the way to a 100 MW / 400 MWh grid-scale container system. The physics doesn't change; the architecture and communication layers do.</p>
+
+  <h3 class="sub">The Battery Management Hierarchy</h3>
+  <!-- SVG: Cell → Module → Pack → System hierarchy -->
+  <svg viewBox="0 0 700 180" style="width:100%;max-width:700px;height:auto;margin:1.5rem 0;display:block;">
+    <rect width="700" height="180" fill="rgba(0,0,0,0.3)" rx="6"/>
+    <!-- Cell -->
+    <g>
+      <rect x="20" y="50" width="80" height="80" rx="6" fill="rgba(0,207,255,0.07)" stroke="rgba(0,207,255,0.35)" stroke-width="1.5"/>
+      <text x="60" y="75" fill="var(--acc)" font-family="Orbitron,sans-serif" font-size="8" text-anchor="middle" font-weight="700">CELL</text>
+      <text x="60" y="92" fill="rgba(0,207,255,0.55)" font-family="JetBrains Mono,monospace" font-size="7.5" text-anchor="middle">3.2V · 280Ah</text>
+      <text x="60" y="107" fill="rgba(0,207,255,0.4)" font-family="JetBrains Mono,monospace" font-size="7" text-anchor="middle">BMS: Cell IC</text>
+      <text x="60" y="120" fill="rgba(0,207,255,0.4)" font-family="JetBrains Mono,monospace" font-size="7" text-anchor="middle">BQ76952</text>
+    </g>
+    <!-- Arrow -->
+    <line x1="102" y1="90" x2="148" y2="90" stroke="rgba(0,207,255,0.4)" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <defs><marker id="arrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(0,207,255,0.5)"/></marker></defs>
+    <!-- Module -->
+    <g>
+      <rect x="150" y="35" width="110" height="110" rx="6" fill="rgba(0,207,255,0.05)" stroke="rgba(0,207,255,0.3)" stroke-width="1.5"/>
+      <text x="205" y="62" fill="var(--acc)" font-family="Orbitron,sans-serif" font-size="8" text-anchor="middle" font-weight="700">MODULE</text>
+      <text x="205" y="78" fill="rgba(0,207,255,0.55)" font-family="JetBrains Mono,monospace" font-size="7.5" text-anchor="middle">16S1P · 51.2V</text>
+      <text x="205" y="93" fill="rgba(0,207,255,0.55)" font-family="JetBrains Mono,monospace" font-size="7.5" text-anchor="middle">280Ah · 14.3kWh</text>
+      <text x="205" y="110" fill="rgba(0,207,255,0.4)" font-family="JetBrains Mono,monospace" font-size="7" text-anchor="middle">BMS: STM32</text>
+      <text x="205" y="124" fill="rgba(0,207,255,0.4)" font-family="JetBrains Mono,monospace" font-size="7" text-anchor="middle">CAN · 250kbps</text>
+    </g>
+    <!-- Arrow -->
+    <line x1="262" y1="90" x2="308" y2="90" stroke="rgba(0,207,255,0.4)" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <!-- Pack -->
+    <g>
+      <rect x="310" y="20" width="120" height="140" rx="6" fill="rgba(0,207,255,0.04)" stroke="rgba(0,207,255,0.28)" stroke-width="1.5"/>
+      <text x="370" y="48" fill="var(--acc)" font-family="Orbitron,sans-serif" font-size="8" text-anchor="middle" font-weight="700">PACK</text>
+      <text x="370" y="64" fill="rgba(0,207,255,0.55)" font-family="JetBrains Mono,monospace" font-size="7.5" text-anchor="middle">4–8 Modules</text>
+      <text x="370" y="79" fill="rgba(0,207,255,0.55)" font-family="JetBrains Mono,monospace" font-size="7.5" text-anchor="middle">200–400V Bus</text>
+      <text x="370" y="94" fill="rgba(0,207,255,0.55)" font-family="JetBrains Mono,monospace" font-size="7.5" text-anchor="middle">57–114 kWh</text>
+      <text x="370" y="112" fill="rgba(0,207,255,0.4)" font-family="JetBrains Mono,monospace" font-size="7" text-anchor="middle">BMU: Master BMS</text>
+      <text x="370" y="126" fill="rgba(0,207,255,0.4)" font-family="JetBrains Mono,monospace" font-size="7" text-anchor="middle">CAN + Modbus</text>
+      <text x="370" y="140" fill="rgba(0,207,255,0.4)" font-family="JetBrains Mono,monospace" font-size="7" text-anchor="middle">Thermal mgmt</text>
+    </g>
+    <!-- Arrow -->
+    <line x1="432" y1="90" x2="476" y2="90" stroke="rgba(0,207,255,0.4)" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <!-- System -->
+    <g>
+      <rect x="478" y="10" width="200" height="160" rx="6" fill="rgba(0,207,255,0.03)" stroke="rgba(0,207,255,0.22)" stroke-width="1.5"/>
+      <text x="578" y="38" fill="var(--acc)" font-family="Orbitron,sans-serif" font-size="8" text-anchor="middle" font-weight="700">SYSTEM</text>
+      <text x="578" y="54" fill="rgba(0,207,255,0.55)" font-family="JetBrains Mono,monospace" font-size="7.5" text-anchor="middle">Rack · Cabinet · Container</text>
+      <text x="578" y="69" fill="rgba(0,207,255,0.55)" font-family="JetBrains Mono,monospace" font-size="7.5" text-anchor="middle">100 kWh → 100 MWh</text>
+      <text x="578" y="88" fill="rgba(0,207,255,0.4)" font-family="JetBrains Mono,monospace" font-size="7" text-anchor="middle">EMS: Energy Mgmt System</text>
+      <text x="578" y="103" fill="rgba(0,207,255,0.4)" font-family="JetBrains Mono,monospace" font-size="7" text-anchor="middle">SCADA · EtherNet/IP</text>
+      <text x="578" y="118" fill="rgba(0,207,255,0.4)" font-family="JetBrains Mono,monospace" font-size="7" text-anchor="middle">DNP3 · IEC 61850</text>
+      <text x="578" y="133" fill="rgba(0,207,255,0.4)" font-family="JetBrains Mono,monospace" font-size="7" text-anchor="middle">Fire suppression</text>
+      <text x="578" y="148" fill="rgba(0,207,255,0.4)" font-family="JetBrains Mono,monospace" font-size="7" text-anchor="middle">NFPA 855 / UL 9540</text>
+    </g>
+  </svg>
+
+  <h3 class="sub">What Changes at MW Scale</h3>
+  <table>
+    <thead><tr><th>Parameter</th><th>Home ESS (kWh)</th><th>Commercial (MWh)</th><th>Grid Scale (100+ MWh)</th></tr></thead>
+    <tbody>
+      <tr><td>BMS topology</td><td>Single BMS board</td><td>Module BMU + Pack BMS</td><td>Cell → Module → Pack → EMS hierarchy</td></tr>
+      <tr><td>Communication</td><td>CAN 250 kbps / PYLON</td><td>CAN + Modbus RTU</td><td>IEC 61850, DNP3, SCADA</td></tr>
+      <tr><td>Thermal management</td><td>Passive / fan</td><td>Active liquid cooling</td><td>HVAC + fire suppression</td></tr>
+      <tr><td>Grid interface</td><td>Inverter (Victron/SMA)</td><td>PCS (Power Conv. System)</td><td>Grid-forming inverter, black start</td></tr>
+      <tr><td>Standards</td><td>IEC 62619, UL 1973</td><td>UL 9540, NFPA 855</td><td>IEEE 1547, IEC 61850, NERC CIP</td></tr>
+      <tr><td>Cybersecurity</td><td>Local only</td><td>VPN access</td><td>NERC CIP-013, IEC 62443</td></tr>
+    </tbody>
+  </table>
+
+  <h3 class="sub">Frequency Regulation — BMS in Milliseconds</h3>
+  <p>Grid frequency (50 Hz / 60 Hz) deviates when generation ≠ load. Battery systems respond to frequency events far faster than any thermal generator:</p>
+  <div class="card-grid">
+    <div class="card reveal">
+      <div class="card-label">Response Time</div>
+      <div class="card-title">&lt; 200 ms</div>
+      <div class="card-body">From frequency deviation detected to full power injection. The BMS must update discharge current setpoints within one 100 ms measurement cycle and the inverter responds in &lt;50 ms.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">Gas Peaker</div>
+      <div class="card-title">3–5 Minutes</div>
+      <div class="card-body">A gas turbine takes 3–5 minutes to spin up to full power. During that time, grid frequency can collapse. Battery systems eliminate this gap — fundamentally changing grid operations.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">BMS SoC Strategy</div>
+      <div class="card-title">Maintain 50% Buffer</div>
+      <div class="card-body">Grid-scale BMS keeps SoC near 50% to allow both charge (over-frequency absorption) and discharge (under-frequency injection) at full power. Never charge to 100% or discharge below 20%.</div>
+    </div>
+  </div>
+
+  <h3 class="sub">Peak Shaving — Time-of-Use Arbitrage</h3>
+  <p>Industrial and commercial customers pay demand charges based on their peak power draw in any 15-minute window per month. A single 15-minute peak event can drive the entire month's electricity bill. A BMS-managed ESS that detects rising load and smooths the peak can reduce electricity costs by 20–40%.</p>
+  <div class="callout callout-info">
+    <div class="callout-title">ℹ️ BMS Demand Response Logic</div>
+    <p>The EMS monitors real-time power draw. When <code>P_load &gt; P_threshold</code>, it commands the BMS to discharge at <code>P_peak - P_load</code>. The BMS validates available energy (SoC × capacity) and current limits before accepting the setpoint. A simple proportional controller with SoC-based derating is sufficient for most commercial applications.</p>
+  </div>
+</section>
+
 </body>
 </html>
