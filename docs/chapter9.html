@@ -1188,5 +1188,79 @@ void test_SoC_OCV_Anchor_AtRest(void) {
 })();
 </script>
 
+
+<script>
+/* === CH9 JARVIS JS === */
+// Boot counter for hero stats
+(function(){
+  function animCount(el,target,suffix,dur){
+    var start=null;
+    function step(ts){
+      if(!start)start=ts;
+      var pct=Math.min((ts-start)/dur,1);
+      var ease=1-Math.pow(1-pct,3);
+      el.textContent=Math.round(target*ease)+(suffix||'');
+      if(pct<1)requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  window.addEventListener('load',function(){
+    document.querySelectorAll('.hero-stat span').forEach(function(el){
+      var raw=el.textContent.replace(/[^0-9]/g,'');
+      var suffix=el.textContent.replace(/[0-9]/g,'');
+      var t=parseInt(raw,10)||0;
+      if(!t)return;
+      el.textContent='0'+suffix;
+      setTimeout(function(){animCount(el,t,suffix,1100);},700);
+    });
+  });
+})();
+
+// Mouse-tracking radial glow on cards
+(function(){
+  document.querySelectorAll('.card').forEach(function(c){
+    c.addEventListener('mousemove',function(e){
+      var r=c.getBoundingClientRect();
+      c.style.setProperty('--mx',((e.clientX-r.left)/r.width*100).toFixed(1)+'%');
+      c.style.setProperty('--my',((e.clientY-r.top)/r.height*100).toFixed(1)+'%');
+    });
+  });
+})();
+
+// Section boot stagger
+(function(){
+  var secs=document.querySelectorAll('.section');
+  secs.forEach(function(s,i){
+    s.style.opacity='0';s.style.transform='translateY(14px)';
+    s.style.transition='opacity 0.5s ease,transform 0.5s ease';
+    setTimeout(function(){s.style.opacity='1';s.style.transform='none';},180+i*70);
+  });
+})();
+
+// Sidebar scroll spy (enhanced)
+(function(){
+  var sec=document.querySelectorAll('section[id]');
+  var links=document.querySelectorAll('.sidebar-sub');
+  var obs=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        links.forEach(function(l){l.classList.toggle('active',l.getAttribute('href')==='#'+e.target.id);});
+      }
+    });
+  },{rootMargin:'-25% 0px -65% 0px'});
+  sec.forEach(function(s){obs.observe(s);});
+})();
+
+// Tag flicker effect
+(function(){
+  var tags=document.querySelectorAll('.topbar-tag');
+  tags.forEach(function(t,i){
+    setInterval(function(){
+      t.style.opacity='0.3';
+      setTimeout(function(){t.style.opacity='1';},90);
+    },3500+i*1100);
+  });
+})();
+</script>
 </body>
 </html>
