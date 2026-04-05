@@ -195,6 +195,26 @@ code:hover{background:rgba(255,200,87,0.15);color:#fff;}
 </head>
 <body>
 
+
+<div id="boot-overlay">
+  <div class="boot-logo">BMS_KB</div>
+  <div class="boot-line">// INITIALISING MODULE_08 — HW DESIGN</div>
+  <div class="boot-line">// LOADING AFE CONFIG . BQ76952 . LTC6813</div>
+  <div class="boot-line">// MOUNTING STM32 PERIPHERAL MAP . OK</div>
+  <div class="boot-line">// PCB RULE MATRIX . READY</div>
+  <div class="boot-bar-wrap"><div class="boot-bar" id="boot-bar"></div></div>
+</div>
+<script>
+(function(){
+  var ov=document.getElementById('boot-overlay');
+  var bar=document.getElementById('boot-bar');
+  if(!ov)return;
+  var lines=ov.querySelectorAll('.boot-line');
+  lines.forEach(function(l,i){setTimeout(function(){l.classList.add('show');},i*180+200);});
+  setTimeout(function(){if(bar)bar.style.width='100%';},300);
+  setTimeout(function(){ov.classList.add('done');setTimeout(function(){ov.remove();},450);},1600);
+})();
+</script>
 <div id="hud-progress"></div>
 
 <!-- HUD TOPBAR -->
