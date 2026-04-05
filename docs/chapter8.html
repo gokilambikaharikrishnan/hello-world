@@ -635,5 +635,77 @@ function stmFilter(f){
 })();
 </script>
 
+<script>
+// Boot counter animation for hero stats
+(function(){
+  function animCount(el,target,suffix,dur){
+    var start=null,from=0;
+    function step(ts){
+      if(!start)start=ts;
+      var pct=Math.min((ts-start)/dur,1);
+      var ease=1-Math.pow(1-pct,3);
+      el.textContent=Math.round(from+(target-from)*ease)+(suffix||'');
+      if(pct<1)requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  window.addEventListener('load',function(){
+    document.querySelectorAll('.hstat-val[data-target]').forEach(function(el){
+      var t=parseInt(el.dataset.target,10)||0;
+      var s=el.dataset.suffix||'';
+      el.textContent='0'+s;
+      setTimeout(function(){animCount(el,t,s,1200);},600);
+    });
+  });
+})();
+
+// Mouse-tracking radial glow on cards
+(function(){
+  document.querySelectorAll('.card,.spec-card,.stm-card').forEach(function(c){
+    c.addEventListener('mousemove',function(e){
+      var r=c.getBoundingClientRect();
+      var x=((e.clientX-r.left)/r.width*100).toFixed(1)+'%';
+      var y=((e.clientY-r.top)/r.height*100).toFixed(1)+'%';
+      c.style.setProperty('--mx',x);
+      c.style.setProperty('--my',y);
+    });
+  });
+})();
+
+// Boot sequence: stagger sections on load
+(function(){
+  var sections=document.querySelectorAll('.section');
+  sections.forEach(function(s,i){
+    s.style.opacity='0';
+    s.style.transform='translateY(16px)';
+    s.style.transition='opacity 0.55s ease,transform 0.55s ease';
+    setTimeout(function(){
+      s.style.opacity='1';
+      s.style.transform='none';
+    },200+i*80);
+  });
+})();
+
+// HUD clock in topbar
+(function(){
+  var clk=document.getElementById('hud-clock');
+  if(!clk)return;
+  function tick(){clk.textContent=new Date().toLocaleTimeString('en-GB',{hour12:false});}
+  tick();setInterval(tick,1000);
+})();
+
+// Topbar corner tag flicker
+(function(){
+  var tags=document.querySelectorAll('.topbar-tag');
+  tags.forEach(function(t,i){
+    setInterval(function(){
+      t.style.opacity='0.4';
+      setTimeout(function(){t.style.opacity='1';},80);
+    },4000+i*1300);
+  });
+})();
+
+</script>
+
 </body>
 </html>
