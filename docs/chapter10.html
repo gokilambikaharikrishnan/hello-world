@@ -558,5 +558,114 @@ pre code{background:none;border:none;padding:0;color:inherit;}
   </div>
 </section>
 
+
+<section class="section reveal" id="s104">
+  <div class="section-eyebrow">Section 10.4</div>
+  <h2 class="section-title">Future BMS Technologies</h2>
+  <p class="section-intro">The BMS of 2030 will look very different from today's design. New cell chemistries, digital twins, cloud connectivity, and AI-driven algorithms are converging to create intelligent, predictive battery management systems.</p>
+
+  <!-- Future technology timeline -->
+  <h3 class="sub">Technology Readiness Timeline</h3>
+  <div class="timeline">
+    <div class="tl-item reveal">
+      <div class="tl-dot"></div>
+      <div class="tl-year">2024–2026</div>
+      <div class="tl-title">Cloud-Connected BMS + OTA Updates</div>
+      <div class="tl-body">BMS telemetry streamed to cloud. Fleet-wide SoH analytics. Firmware updates over-the-air. Security hardening with HSM (Hardware Security Module). First commercial deployments in grid ESS and premium home systems.</div>
+    </div>
+    <div class="tl-item reveal">
+      <div class="tl-dot"></div>
+      <div class="tl-year">2025–2028</div>
+      <div class="tl-title">AI/ML State-of-Health Prediction</div>
+      <div class="tl-body">Neural network models trained on millions of cycle datasets predict remaining useful life (RUL) with &lt;5% error. Replace empirical Peukert degradation models. First deployed in grid-scale containers where accuracy justifies cost.</div>
+    </div>
+    <div class="tl-item reveal">
+      <div class="tl-dot"></div>
+      <div class="tl-year">2026–2030</div>
+      <div class="tl-title">Sodium-Ion BMS (Na-ion)</div>
+      <div class="tl-body">CATL and BYD commercialise Na-ion at scale. BMS changes: higher cell count (lower voltage ≈ 3.0V nominal), different OCV curve, no lithium plating risk, wider operating temperature range down to −40 °C. CAN protocol adaptation needed.</div>
+    </div>
+    <div class="tl-item reveal">
+      <div class="tl-dot"></div>
+      <div class="tl-year">2027–2032</div>
+      <div class="tl-title">Battery Digital Twin</div>
+      <div class="tl-body">Real-time electrochemical model running in cloud mirrors every pack. Physics-based simulation predicts cell-level degradation, optimal charge strategy, and failure risk weeks in advance. BMS becomes the data source; digital twin is the intelligence.</div>
+    </div>
+    <div class="tl-item reveal">
+      <div class="tl-dot"></div>
+      <div class="tl-year">2028–2035</div>
+      <div class="tl-title">Solid-State Battery BMS</div>
+      <div class="tl-body">Solid electrolyte eliminates runaway risk but introduces new challenges: interface resistance monitoring, mechanical stress sensing, lithium dendrite detection. BMS must monitor impedance spectroscopy in real time.</div>
+    </div>
+  </div>
+
+  <h3 class="sub">Solid-State Batteries — What the BMS Must Change</h3>
+  <p>Solid-state batteries (SSB) replace liquid electrolyte with a solid ceramic or polymer conductor. This eliminates the fire risk from electrolyte combustion — but creates entirely new BMS challenges:</p>
+  <table>
+    <thead><tr><th>Parameter</th><th>LFP (today)</th><th>Solid-State (future)</th><th>BMS Change Required</th></tr></thead>
+    <tbody>
+      <tr><td>Thermal runaway risk</td><td>Low (P-O bond)</td><td>Near-zero</td><td>Simpler protection; focus on mechanical</td></tr>
+      <tr><td>Interface resistance</td><td>Stable</td><td>Increases with cycles</td><td>EIS (impedance spectroscopy) monitoring</td></tr>
+      <tr><td>Operating temperature</td><td>−20 to +55 °C</td><td>60–80 °C required</td><td>Active heating mandatory; new OTP thresholds</td></tr>
+      <tr><td>Charge protocol</td><td>CC-CV</td><td>Constant pressure (CP)</td><td>Pressure sensor feedback to charge algorithm</td></tr>
+      <tr><td>Dendrite detection</td><td>Not applicable</td><td>Critical failure mode</td><td>Impedance monitoring at μHz frequency</td></tr>
+      <tr><td>Cell voltage range</td><td>2.5–3.65 V</td><td>3.0–4.3 V (oxide SSE)</td><td>New OVP/UVP constants; AFE recalibration</td></tr>
+    </tbody>
+  </table>
+
+  <h3 class="sub">Sodium-Ion — How BMS Differs</h3>
+  <div class="card-grid">
+    <div class="card reveal">
+      <div class="card-label">Voltage</div>
+      <div class="card-title">~3.0V Nominal</div>
+      <div class="card-body">Na-ion cells have ~0.2V lower nominal voltage than LFP. A 16S pack = 48V nominal vs 51.2V for LFP. Inverter compatibility and CAN charge limit frames need update.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">OCV Curve</div>
+      <div class="card-title">Sloped (no flat)</div>
+      <div class="card-body">Unlike LFP's flat OCV plateau, Na-ion has a sloped OCV vs SoC curve — similar to NMC. This makes OCV-based SoC anchoring much more accurate. Coulomb counter drift is less critical.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">Temperature</div>
+      <div class="card-title">−40 °C to +60 °C</div>
+      <div class="card-body">Na-ion performs well at extreme cold — no lithium plating risk at low temperature. BMS can allow charging at −20 °C without a heating stage that LFP requires.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">Current Collector</div>
+      <div class="card-title">Aluminium Both Sides</div>
+      <div class="card-body">Na-ion doesn't alloy with aluminium, allowing Al current collectors on both anode and cathode. Lower cost than LFP's copper anode foil. No BMS change — manufacturing detail only.</div>
+    </div>
+  </div>
+
+  <h3 class="sub">AI/ML for SoH Prediction</h3>
+  <p>Traditional SoH estimation uses empirical models: capacity fade as a function of equivalent full cycles (EFC) and temperature-weighted Arrhenius degradation. These models have 5–15% error by year 5. Machine learning models trained on large datasets achieve &lt;2% error:</p>
+  <pre><code># Simplified concept: ML SoH predictor (Python pseudocode)
+# Input features extracted from each charge cycle
+features = [
+    cycle_count,
+    avg_charge_temp,       # °C — Arrhenius degradation driver
+    avg_discharge_current, # C-rate — mechanical stress driver
+    delta_V_end_of_charge, # dV/dQ inflection shift — tracks Li loss
+    charge_time_ratio,     # actual vs nominal — internal resistance proxy
+    cumulative_ah,         # total charge throughput
+]
+
+# Model: LSTM trained on 10,000+ battery lifecycle datasets
+# Output: remaining_capacity_pct (SoH), RUL_cycles (remaining useful life)
+soh, rul = ml_model.predict(features)
+
+# Deploy on cloud — BMS sends feature vector via MQTT every cycle
+# Cloud returns updated SoH and RUL estimate back to BMS</code></pre>
+
+  <h3 class="sub">BMS Cybersecurity</h3>
+  <p>As BMS systems gain network connectivity (cloud telemetry, OTA updates, demand response APIs), cybersecurity becomes a safety issue. A compromised BMS could disable protection thresholds, cause overcharge, or trigger a fire.</p>
+  <div class="callout callout-future">
+    <div class="callout-title">⚡ Future Threat Vectors</div>
+    <p><strong>OTA firmware attack</strong> — unsigned firmware could disable OVP. Mitigation: secure boot with RSA/ECDSA signature verification, hardware root of trust (STM32 TrustZone).<br><br>
+    <strong>CAN bus injection</strong> — malicious CAN frames raising charge limits. Mitigation: authenticated CAN (ISO 11898-1 with MAC), message sequence counters, rate limiting.<br><br>
+    <strong>API manipulation</strong> — inverter demand response API commands exceeding safe limits. Mitigation: BMS validates every setpoint against hard-coded safety bounds regardless of source.</p>
+  </div>
+</section>
+
 </body>
 </html>
