@@ -138,6 +138,25 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 @keyframes reveal-up{0%{opacity:0;transform:translateY(20px)}100%{opacity:1;transform:none}}
 @keyframes arch-slide{0%{opacity:0;transform:translateX(-12px)}100%{opacity:1;transform:none}}
 
+
+/* === CH9 ANIM BLOCK B: topbar + hero boot animations === */
+.topbar{animation:hud-topbar-in 0.6s cubic-bezier(0.16,1,0.3,1) both;}
+.topbar::after{content:'';position:absolute;bottom:0;left:-100%;width:70%;height:1px;background:linear-gradient(90deg,transparent,var(--acc),transparent);animation:hud-line-in 2s ease 0.8s both;}
+.topbar-logo{animation:hud-flicker 8s ease 1s infinite;}
+.topbar-tag{animation:hud-fadein 0.5s ease both;}
+.topbar-tag:nth-child(1){animation-delay:0.4s;}
+.topbar-tag:nth-child(2){animation-delay:0.55s;}
+.topbar-tag:nth-child(3){animation-delay:0.7s;}
+.hero{animation:hud-boot 0.9s cubic-bezier(0.16,1,0.3,1) 0.15s both;position:relative;overflow:hidden;}
+.hero::after{content:'';position:absolute;top:-200%;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,255,136,0.5),transparent);animation:hud-scan-g 4s linear 1.5s infinite;pointer-events:none;}
+.hero-eyebrow{animation:hud-fadein 0.5s ease 0.3s both;}
+.hero-title{animation:hud-slide-up 0.7s cubic-bezier(0.16,1,0.3,1) 0.3s both;}
+.hero-subtitle{animation:hud-slide-up 0.7s cubic-bezier(0.16,1,0.3,1) 0.45s both;}
+.hero-stats{animation:hud-slide-up 0.6s cubic-bezier(0.16,1,0.3,1) 0.6s both;}
+.hero-stat{transition:transform 0.2s;}
+.hero-stat:hover{transform:translateY(-3px);}
+.hero-stat span{animation:hud-counter 0.5s ease 0.7s both;}
+
 </style>
 </head>
 <body>
