@@ -178,6 +178,28 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .section-title::after{content:'';display:block;width:0;height:1px;background:linear-gradient(90deg,var(--acc),transparent);margin-top:6px;animation:hud-line-in 1s ease 0.5s both;}
 h3.sub-title::before{content:'> ';font-family:var(--mono);font-size:0.75em;color:rgba(0,255,136,0.45);letter-spacing:0.05em;}
 
+
+/* === CH9 ANIM BLOCK D: code, callouts, tables, scanlines === */
+pre{position:relative;overflow:hidden;transition:border-color 0.2s,box-shadow 0.2s;}
+pre:hover{border-color:rgba(0,255,136,0.35);box-shadow:0 0 16px rgba(0,255,136,0.07);}
+pre::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,255,136,0.45),transparent);animation:hud-line-in 1.5s ease both;}
+code{transition:background 0.15s,color 0.15s;}
+code:hover{background:rgba(0,255,136,0.15);color:#fff;}
+.callout{position:relative;animation:hud-slide-up 0.5s ease both;border-radius:4px;}
+.callout::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px;border-radius:3px 0 0 3px;}
+.callout-info::before{background:var(--blue);box-shadow:0 0 8px rgba(10,132,255,0.4);}
+.callout-warn::before{background:var(--amber);box-shadow:0 0 8px rgba(255,200,87,0.4);}
+.callout-danger::before{background:#FF453A;box-shadow:0 0 8px rgba(255,69,58,0.4);}
+.callout-success::before{background:var(--acc);box-shadow:0 0 8px rgba(0,255,136,0.4);}
+table tr{transition:background 0.12s;}
+tr:hover td{background:rgba(0,255,136,0.04) !important;}
+/* Scanline overlay */
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,255,136,0.008) 3px,rgba(0,255,136,0.008) 4px);pointer-events:none;z-index:1;}
+/* HUD corner marks on hero */
+.hero{overflow:hidden;}
+.hero-eyebrow::before{content:'[ ';color:rgba(0,255,136,0.3);font-family:var(--mono);}
+.hero-eyebrow::after{content:' ]';color:rgba(0,255,136,0.3);font-family:var(--mono);}
+
 </style>
 </head>
 <body>
