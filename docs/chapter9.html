@@ -1262,5 +1262,30 @@ void test_SoC_OCV_Anchor_AtRest(void) {
   });
 })();
 </script>
+
+<canvas id="g-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.3;"></canvas>
+<script>
+(function(){
+  var c=document.getElementById('g-canvas');
+  if(!c)return;
+  var ctx=c.getContext('2d');
+  var W,H,pts=[];
+  function resize(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;}
+  resize();window.addEventListener('resize',resize);
+  for(var i=0;i<60;i++)pts.push({x:Math.random()*1e4%W,y:Math.random()*H,vx:(Math.random()-0.5)*0.25,vy:-Math.random()*0.5-0.15,r:Math.random()*1.3+0.3,a:Math.random()*0.45+0.08});
+  function frame(){
+    ctx.clearRect(0,0,W,H);
+    pts.forEach(function(p){
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle='rgba(0,255,136,'+p.a+')';ctx.fill();
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.y<-8){p.y=H+8;p.x=Math.random()*W;}
+      if(p.x<0)p.x=W;if(p.x>W)p.x=0;
+    });
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+</script>
 </body>
 </html>
