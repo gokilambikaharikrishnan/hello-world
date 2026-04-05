@@ -801,5 +801,102 @@ soh, rul = ml_model.predict(features)
 </div><!-- end .main-content -->
 </div><!-- end .page-wrapper -->
 
+
+<script>
+/* === CH10 JARVIS JS === */
+// Clock
+(function(){var c=document.getElementById('clk');function t(){if(c)c.textContent=new Date().toLocaleTimeString('en-GB',{hour12:false});}t();setInterval(t,1000);})();
+
+// Progress bar
+(function(){var b=document.getElementById('hud-progress');window.addEventListener('scroll',function(){var s=document.documentElement.scrollTop,h=document.documentElement.scrollHeight-window.innerHeight;if(b&&h>0)b.style.width=(s/h*100)+'%';},{passive:true});})();
+
+// Hero stat counter
+(function(){
+  function animCount(el,t,sf,dur){
+    var s=null;
+    function step(ts){
+      if(!s)s=ts;var p=Math.min((ts-s)/dur,1),e=1-Math.pow(1-p,3);
+      el.textContent=Math.round(t*e)+sf;if(p<1)requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  window.addEventListener('load',function(){
+    document.querySelectorAll('.hstat-val[data-target]').forEach(function(el){
+      var t=parseInt(el.dataset.target,10)||0,sf=el.dataset.suffix||'';
+      el.textContent='0'+sf;
+      setTimeout(function(){animCount(el,t,sf,1300);},600);
+    });
+  });
+})();
+
+// Metric bar animation on reveal
+(function(){
+  var obs=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(!e.isIntersecting)return;
+      e.target.querySelectorAll('.metric-fill').forEach(function(bar){
+        bar.style.width=(bar.dataset.w||'80%');
+      });
+      obs.unobserve(e.target);
+    });
+  },{threshold:0.2});
+  document.querySelectorAll('.metric-bar-wrap').forEach(function(w){obs.observe(w);});
+})();
+
+// Reveal on scroll
+(function(){
+  var obs=new IntersectionObserver(function(entries){
+    entries.forEach(function(e,i){
+      if(e.isIntersecting){setTimeout(function(){e.target.classList.add('visible');},i*50);obs.unobserve(e.target);}
+    });
+  },{threshold:0.08});
+  document.querySelectorAll('.reveal').forEach(function(el){obs.observe(el);});
+})();
+
+// Sidebar scroll spy
+(function(){
+  var secs=document.querySelectorAll('section[id]');
+  var links=document.querySelectorAll('.sidebar-sub');
+  new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting)links.forEach(function(l){l.classList.toggle('active',l.getAttribute('href')==='#'+e.target.id);});
+    });
+  },{rootMargin:'-25% 0px -65% 0px'}).observe&&secs.forEach(function(s){new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting)links.forEach(function(l){l.classList.toggle('active',l.getAttribute('href')==='#'+e.target.id);});});},{rootMargin:'-25% 0px -65% 0px'}).observe(s);});
+})();
+
+// Section boot stagger
+(function(){
+  document.querySelectorAll('.section').forEach(function(s,i){
+    s.style.opacity='0';s.style.transform='translateY(14px)';
+    s.style.transition='opacity 0.5s ease,transform 0.5s ease';
+    setTimeout(function(){s.style.opacity='1';s.style.transform='none';},180+i*80);
+  });
+})();
+
+// Mouse glow on cards
+(function(){
+  document.querySelectorAll('.card').forEach(function(c){
+    c.addEventListener('mousemove',function(e){
+      var r=c.getBoundingClientRect();
+      c.style.setProperty('--mx',((e.clientX-r.left)/r.width*100).toFixed(1)+'%');
+      c.style.setProperty('--my',((e.clientY-r.top)/r.height*100).toFixed(1)+'%');
+    });
+  });
+})();
+
+// Timeline dot stagger
+(function(){
+  document.querySelectorAll('.tl-dot').forEach(function(d,i){
+    d.style.animationDelay=(i*0.4)+'s';
+  });
+})();
+
+// Tag flicker
+(function(){
+  document.querySelectorAll('.topbar-tag').forEach(function(t,i){
+    setInterval(function(){t.style.opacity='0.3';setTimeout(function(){t.style.opacity='1';},90);},3800+i*1200);
+  });
+})();
+</script>
 </body>
 </html>
