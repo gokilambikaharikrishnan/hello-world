@@ -46,6 +46,26 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
 .main-content{grid-column:2;grid-row:2;min-width:0;}
 #hud-progress{position:fixed;top:0;left:0;height:2px;width:0%;background:linear-gradient(90deg,var(--acc),var(--cyan));z-index:9999;box-shadow:0 0 8px var(--acc);pointer-events:none;}
 
+
+/* chunk3: keyframe animations */
+@keyframes hud-boot{0%{opacity:0;transform:translateY(-8px) scaleX(0.97)}100%{opacity:1;transform:none}}
+@keyframes hud-fadein{0%{opacity:0}100%{opacity:1}}
+@keyframes hud-slide-up{0%{opacity:0;transform:translateY(24px)}100%{opacity:1;transform:none}}
+@keyframes hud-slide-left{0%{opacity:0;transform:translateX(-20px)}100%{opacity:1;transform:none}}
+@keyframes hud-slide-right{0%{opacity:0;transform:translateX(20px)}100%{opacity:1;transform:none}}
+@keyframes hud-glow-pulse{0%,100%{box-shadow:0 0 8px rgba(0,207,255,0.25),0 0 0 1px rgba(0,207,255,0.08)}50%{box-shadow:0 0 26px rgba(0,207,255,0.55),0 0 0 1px rgba(0,207,255,0.28)}}
+@keyframes hud-scan{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
+@keyframes hud-line-in{0%{width:0;opacity:0}100%{width:100%;opacity:1}}
+@keyframes hud-topbar-in{0%{opacity:0;transform:translateY(-44px)}100%{opacity:1;transform:none}}
+@keyframes hud-flicker{0%,100%{opacity:1}91%{opacity:1}92%{opacity:0.5}93%{opacity:1}97%{opacity:0.7}98%{opacity:1}}
+@keyframes hud-spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+@keyframes hud-orbit{0%{transform:rotate(0deg) translateX(38px) rotate(0deg)}100%{transform:rotate(360deg) translateX(38px) rotate(-360deg)}}
+@keyframes hud-dash{to{stroke-dashoffset:0}}
+@keyframes hud-width{0%{width:0}100%{width:var(--w,80%)}}
+@keyframes hud-pulse-dot{0%,100%{opacity:0.4;transform:scale(1)}50%{opacity:1;transform:scale(1.4)}}
+@keyframes float-up{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes timeline-draw{0%{height:0;opacity:0}100%{height:100%;opacity:1}}
+
 </style>
 </head>
 <body>
