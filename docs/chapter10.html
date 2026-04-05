@@ -223,5 +223,102 @@ pre code{background:none;border:none;padding:0;color:inherit;}
   </div>
 </section>
 
+
+<section class="section reveal" id="s101">
+  <div class="section-eyebrow">Section 10.1</div>
+  <h2 class="section-title">Why Energy Storage Matters</h2>
+  <p class="section-intro">The world generates electricity in real time — but demand and supply are never perfectly matched. Energy storage is the missing piece that makes renewable energy reliable, grids resilient, and the energy transition possible.</p>
+
+  <h3 class="sub">The Renewable Intermittency Problem</h3>
+  <p>Solar panels generate power only when the sun shines. Wind turbines spin only when the wind blows. Neither matches when people actually need electricity. A German solar farm produces 80% of its daily energy between 10am and 4pm — but peak demand hits at 7pm when people get home and cook dinner. Without storage, that solar energy is either wasted (curtailed) or backed up by gas peakers that defeat the purpose.</p>
+  <p>Battery storage solves this by shifting energy in time — charge when generation exceeds demand, discharge when demand exceeds generation. At the home scale, this means a solar + ESS system can be 80–90% self-sufficient. At the grid scale, 100 MW battery systems can shift gigawatt-hours across the day.</p>
+
+  <!-- SVG: Renewable intermittency + storage response -->
+  <svg viewBox="0 0 700 220" style="width:100%;max-width:700px;height:auto;margin:1.5rem 0;display:block;">
+    <defs>
+      <linearGradient id="sol-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#FFC857" stop-opacity="0.6"/>
+        <stop offset="100%" stop-color="#FFC857" stop-opacity="0.05"/>
+      </linearGradient>
+      <linearGradient id="dem-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#FF2D55" stop-opacity="0.5"/>
+        <stop offset="100%" stop-color="#FF2D55" stop-opacity="0.05"/>
+      </linearGradient>
+      <linearGradient id="bat-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#00CFFF" stop-opacity="0.55"/>
+        <stop offset="100%" stop-color="#00CFFF" stop-opacity="0.05"/>
+      </linearGradient>
+    </defs>
+    <!-- Background grid -->
+    <rect width="700" height="220" fill="rgba(0,0,0,0.3)" rx="6"/>
+    <line x1="40" y1="20" x2="40" y2="190" stroke="rgba(0,207,255,0.15)" stroke-width="1"/>
+    <line x1="40" y1="190" x2="680" y2="190" stroke="rgba(0,207,255,0.15)" stroke-width="1"/>
+    <!-- Hour labels -->
+    <text x="40" y="208" fill="rgba(0,207,255,0.4)" font-family="JetBrains Mono,monospace" font-size="9" text-anchor="middle">00h</text>
+    <text x="145" y="208" fill="rgba(0,207,255,0.4)" font-family="JetBrains Mono,monospace" font-size="9" text-anchor="middle">06h</text>
+    <text x="250" y="208" fill="rgba(0,207,255,0.4)" font-family="JetBrains Mono,monospace" font-size="9" text-anchor="middle">12h</text>
+    <text x="355" y="208" fill="rgba(0,207,255,0.4)" font-family="JetBrains Mono,monospace" font-size="9" text-anchor="middle">18h</text>
+    <text x="460" y="208" fill="rgba(0,207,255,0.4)" font-family="JetBrains Mono,monospace" font-size="9" text-anchor="middle">24h</text>
+    <!-- Solar generation area -->
+    <polyline points="40,185 100,183 145,170 180,130 220,75 250,45 280,38 310,42 340,60 370,95 400,140 430,175 460,185 680,185"
+      fill="url(#sol-grad)" stroke="#FFC857" stroke-width="2" opacity="0.9"/>
+    <!-- Demand curve -->
+    <polyline points="40,120 80,118 120,122 145,130 180,140 220,145 250,148 280,150 310,148 340,145 355,130 370,108 400,95 420,90 440,100 460,118 500,130 540,138 600,132 640,128 680,125"
+      fill="url(#dem-grad)" stroke="#FF2D55" stroke-width="2" opacity="0.85"/>
+    <!-- Battery response (fills the gap) -->
+    <polyline points="250,48 280,40 310,44 340,62 370,97 400,142"
+      fill="none" stroke="#00CFFF" stroke-width="2" stroke-dasharray="5,3" opacity="0.8">
+      <animate attributeName="stroke-dashoffset" from="100" to="0" dur="3s" repeatCount="indefinite"/>
+    </polyline>
+    <!-- Legend -->
+    <rect x="500" y="25" width="10" height="3" fill="#FFC857" rx="1"/>
+    <text x="515" y="30" fill="#FFC857" font-family="JetBrains Mono,monospace" font-size="9">Solar Gen</text>
+    <rect x="500" y="42" width="10" height="3" fill="#FF2D55" rx="1"/>
+    <text x="515" y="47" fill="#FF2D55" font-family="JetBrains Mono,monospace" font-size="9">Demand</text>
+    <line x1="500" y1="60" x2="510" y2="60" stroke="#00CFFF" stroke-width="2" stroke-dasharray="4,2"/>
+    <text x="515" y="63" fill="#00CFFF" font-family="JetBrains Mono,monospace" font-size="9">Battery Response</text>
+    <!-- Shaded surplus zone -->
+    <text x="250" y="70" fill="rgba(255,200,87,0.6)" font-family="JetBrains Mono,monospace" font-size="8">← CHARGE</text>
+    <text x="370" y="108" fill="rgba(0,207,255,0.6)" font-family="JetBrains Mono,monospace" font-size="8">DISCHARGE →</text>
+  </svg>
+
+  <h3 class="sub">Global Context — The Numbers</h3>
+  <div class="card-grid">
+    <div class="card reveal">
+      <div class="card-label">Global Stat</div>
+      <div class="card-title">~3 TWh by 2030</div>
+      <div class="card-body">BloombergNEF projects global battery storage installations will reach 3 terawatt-hours by 2030, from ~50 GWh in 2022. A 60× increase in eight years.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">Solar Curtailment</div>
+      <div class="card-title">10–30% Wasted</div>
+      <div class="card-body">Grid operators in California, Germany, and China routinely curtail 10–30% of available solar generation due to grid saturation. Battery storage captures this otherwise wasted energy.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">Frequency Stability</div>
+      <div class="card-title">Grid Inertia Crisis</div>
+      <div class="card-body">Replacing spinning generators with solar removes rotational inertia. Battery systems respond in milliseconds to frequency deviations — faster than any gas turbine.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">Data Centers</div>
+      <div class="card-title">UPS Evolution</div>
+      <div class="card-body">Hyperscale data centers are replacing VRLA UPS with LFP ESS. Google, Microsoft, and Meta use battery systems that also provide grid frequency regulation services during normal operation.</div>
+    </div>
+  </div>
+
+  <h3 class="sub">The Storage Value Stack</h3>
+  <table>
+    <thead><tr><th>Application</th><th>Scale</th><th>Discharge Duration</th><th>Revenue Stream</th></tr></thead>
+    <tbody>
+      <tr><td>Frequency Regulation (FFR)</td><td>MW–GW</td><td>Seconds–minutes</td><td>Grid ancillary services market</td></tr>
+      <tr><td>Peak Shaving</td><td>kW–MW</td><td>2–6 hours</td><td>Demand charge reduction</td></tr>
+      <tr><td>Time-of-Use Arbitrage</td><td>kWh–MWh</td><td>4–8 hours</td><td>Buy low / sell high electricity</td></tr>
+      <tr><td>Backup / UPS</td><td>kVA–MVA</td><td>Minutes–hours</td><td>Operational resilience value</td></tr>
+      <tr><td>Self-Consumption (Home)</td><td>5–20 kWh</td><td>4–12 hours</td><td>Avoided grid import cost</td></tr>
+      <tr><td>Black Start Reserve</td><td>MW</td><td>Minutes</td><td>Grid stability premium</td></tr>
+    </tbody>
+  </table>
+</section>
+
 </body>
 </html>
