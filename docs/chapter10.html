@@ -21,6 +21,31 @@ html{scroll-behavior:smooth;}
 body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:15px;line-height:1.7;display:block;min-height:100vh;}
 body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,207,255,0.018) 1px,transparent 1px),linear-gradient(90deg,rgba(0,207,255,0.018) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
 body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,207,255,0.007) 3px,rgba(0,207,255,0.007) 4px);pointer-events:none;z-index:1;}
+
+/* chunk2: layout + topbar + sidebar */
+.page-wrapper{display:grid;grid-template-columns:260px 1fr;grid-template-rows:auto 1fr;min-height:100vh;width:100%;}
+.topbar{position:sticky;top:0;width:100%;z-index:1000;background:rgba(5,5,7,0.92);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;height:44px;}
+.topbar-left{display:flex;align-items:center;gap:0.75rem;}
+.topbar-logo{font-family:var(--mono);font-size:0.72rem;font-weight:700;color:var(--acc);letter-spacing:0.18em;}
+.topbar-sep{color:rgba(255,255,255,0.18);font-family:var(--mono);}
+.topbar-chapter{font-family:var(--mono);font-size:0.65rem;color:var(--muted);letter-spacing:0.1em;}
+.topbar-right{display:flex;align-items:center;gap:0.75rem;}
+.topbar-tag{font-family:var(--mono);font-size:0.58rem;letter-spacing:0.15em;padding:0.15em 0.5em;border:1px solid rgba(0,207,255,0.25);border-radius:3px;color:rgba(0,207,255,0.6);text-transform:uppercase;}
+.topbar-clock{font-family:var(--mono);font-size:0.62rem;color:rgba(0,207,255,0.5);letter-spacing:0.1em;min-width:62px;text-align:right;}
+.sidebar{grid-column:1;grid-row:2;background:var(--bg);border-right:1px solid var(--border);position:sticky;top:44px;height:calc(100vh - 44px);overflow-y:auto;padding:1.5rem 0;align-self:start;}
+.sidebar-logo{padding:0 1.2rem 1.2rem;border-bottom:1px solid var(--border2);margin-bottom:1rem;}
+.sidebar-logo-text{font-family:var(--mono);font-size:0.62rem;letter-spacing:0.15em;color:var(--acc);text-transform:uppercase;font-weight:600;}
+.sidebar-title{font-size:0.78rem;color:var(--text);font-weight:600;margin-top:0.3rem;}
+.sidebar-nav-label{font-family:var(--mono);font-size:0.58rem;letter-spacing:0.2em;color:rgba(0,207,255,0.4);text-transform:uppercase;padding:0 1.2rem;margin:1.2rem 0 0.4rem;}
+.sidebar-link{display:flex;align-items:center;gap:0.5rem;padding:0.4rem 1.2rem;font-family:var(--mono);font-size:0.7rem;color:var(--muted);text-decoration:none;border-left:2px solid transparent;transition:all 0.15s;letter-spacing:0.04em;}
+.sidebar-link:hover{color:var(--acc);border-left-color:var(--acc);background:rgba(0,207,255,0.04);padding-left:1.4rem;}
+.sidebar-link.active{color:var(--acc);border-left-color:var(--acc);background:rgba(0,207,255,0.07);}
+.sidebar-link .dot{width:4px;height:4px;border-radius:50%;background:rgba(0,207,255,0.35);flex-shrink:0;}
+.sidebar-link.active .dot{background:var(--acc);box-shadow:0 0 6px var(--acc);}
+.sidebar-sub{padding-left:2.2rem;font-size:0.66rem;}
+.main-content{grid-column:2;grid-row:2;min-width:0;}
+#hud-progress{position:fixed;top:0;left:0;height:2px;width:0%;background:linear-gradient(90deg,var(--acc),var(--cyan));z-index:9999;box-shadow:0 0 8px var(--acc);pointer-events:none;}
+
 </style>
 </head>
 <body>
