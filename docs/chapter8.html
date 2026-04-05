@@ -788,7 +788,7 @@ function stmFilter(f){
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bangers&display=swap');
 /* GLITCH HERO TITLE */
-.hero-title{font-family:'Bangers',cursive!important;letter-spacing:.04em!important;font-size:clamp(2.5rem,8vw,5rem)!important;text-shadow:3px 3px 0 #ff006e,-3px -3px 0 #00f5ff,0 0 40px rgba(255,200,87,.6)!important;position:relative!important;display:inline-block!important;}
+.hero-title{font-family:'Bangers',cursive!important;letter-spacing:.04em!important;font-size:clamp(2.5rem,8vw,5rem)!important;color:#fff!important;text-shadow:1px 1px 0 rgba(255,0,110,0.45),-1px -1px 0 rgba(0,245,255,0.45),0 0 30px rgba(255,200,87,.4)!important;position:relative!important;display:inline-block!important;}
 /* HALFTONE */
 body{background-image:radial-gradient(circle,rgba(255,255,255,.03) 1px,transparent 1px)!important;background-size:24px 24px!important;}
 /* BTT hover */
@@ -818,7 +818,7 @@ body{background-image:radial-gradient(circle,rgba(255,255,255,.03) 1px,transpare
     el.setAttribute('data-text',el.textContent);
     if(!document.getElementById('__glitch-style')){
       var s=document.createElement('style');s.id='__glitch-style';
-      s.textContent='.hero-title::before,.hero-title::after{content:attr(data-text);position:absolute;top:0;left:0;width:100%;height:100%}.hero-title::before{color:#ff006e;clip-path:polygon(0 15%,100% 15%,100% 35%,0 35%);animation:__g1 3.5s infinite}.hero-title::after{color:#00f5ff;clip-path:polygon(0 65%,100% 65%,100% 85%,0 85%);animation:__g2 3.5s infinite}@keyframes __g1{0%,88%,100%{transform:translate(0)}89%{transform:translate(-5px,2px)}94%{transform:translate(5px,-2px)}}@keyframes __g2{0%,88%,100%{transform:translate(0)}89%{transform:translate(5px,-2px)}94%{transform:translate(-5px,2px)}}';
+      s.textContent='.hero-title{z-index:1;}.hero-title::before,.hero-title::after{content:attr(data-text);position:absolute;top:0;left:0;width:100%;height:100%;z-index:-1;opacity:0.75;pointer-events:none;}.hero-title::before{color:#ff006e;clip-path:polygon(0 20%,100% 20%,100% 30%,0 30%);animation:__g1 4s infinite;}.hero-title::after{color:#00f5ff;clip-path:polygon(0 70%,100% 70%,100% 80%,0 80%);animation:__g2 4s infinite;}@keyframes __g1{0%,85%,100%{transform:translate(0)}86%{transform:translate(-4px,1px)}92%{transform:translate(4px,-1px)}}@keyframes __g2{0%,85%,100%{transform:translate(0)}86%{transform:translate(4px,-1px)}92%{transform:translate(-4px,1px)}}';
       document.head.appendChild(s);
     }
   }
