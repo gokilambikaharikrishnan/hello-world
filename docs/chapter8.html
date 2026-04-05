@@ -126,6 +126,24 @@ pre{font-family:var(--mono);background:var(--bg2);border:1px solid var(--border)
 /* Topbar scan line */
 #ch-topbar::after{content:'';position:absolute;bottom:0;left:-100%;width:60%;height:1px;background:linear-gradient(90deg,transparent,var(--amber),transparent);animation:hud-line-in 2s ease 0.8s both,hud-scan 6s linear 3s infinite;}
 
+
+/* === JARVIS ANIMATIONS BLOCK C: cards, sections, sidebar === */
+.card{transition:transform 0.22s ease,border-color 0.22s ease,box-shadow 0.22s ease;position:relative;overflow:hidden;}
+.card::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(255,200,87,0.08),transparent 65%);opacity:0;transition:opacity 0.3s;pointer-events:none;}
+.card:hover{transform:translateY(-3px);border-color:rgba(255,200,87,0.4);box-shadow:0 0 24px rgba(255,200,87,0.12),0 8px 32px rgba(0,0,0,0.4);}
+.card:hover::after{opacity:1;}
+.spec-card{transition:transform 0.22s,border-color 0.22s,box-shadow 0.22s;}
+.spec-card:hover{transform:translateY(-3px);box-shadow:0 0 20px rgba(255,200,87,0.15);}
+.section{animation:hud-fadein 0.01s both;} /* base — JS will override */
+.reveal{opacity:0;transform:translateY(20px);transition:opacity 0.6s cubic-bezier(0.16,1,0.3,1),transform 0.6s cubic-bezier(0.16,1,0.3,1);}
+.reveal.visible{opacity:1;transform:none;}
+.reveal-left{opacity:0;transform:translateX(-20px);transition:opacity 0.5s ease,transform 0.5s ease;}
+.reveal-left.visible{opacity:1;transform:none;}
+.sidebar{animation:hud-fadein 0.5s ease 0.2s both;}
+.sidebar-link{transition:color 0.15s,border-color 0.15s,background 0.15s,letter-spacing 0.15s;}
+.sidebar-link:hover{letter-spacing:0.06em;}
+.sidebar-link.active{animation:hud-glow-pulse 3s ease-in-out infinite;}
+
 </style>
 </head>
 <body>
