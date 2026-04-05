@@ -157,6 +157,27 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .hero-stat:hover{transform:translateY(-3px);}
 .hero-stat span{animation:hud-counter 0.5s ease 0.7s both;}
 
+
+/* === CH9 ANIM BLOCK C: cards, sections, arch-layers === */
+.card{transition:transform 0.22s ease,border-color 0.22s,box-shadow 0.22s;position:relative;overflow:hidden;}
+.card::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(0,255,136,0.09),transparent 65%);opacity:0;transition:opacity 0.3s;pointer-events:none;}
+.card:hover{transform:translateY(-3px);border-color:rgba(0,255,136,0.4);box-shadow:0 0 24px rgba(0,255,136,0.12),0 8px 32px rgba(0,0,0,0.45);}
+.card:hover::after{opacity:1;}
+.reveal{opacity:0;transform:translateY(20px);transition:opacity 0.6s cubic-bezier(0.16,1,0.3,1),transform 0.6s cubic-bezier(0.16,1,0.3,1);}
+.reveal.visible{opacity:1;transform:none;}
+.arch-layer{transition:border-color 0.2s,box-shadow 0.2s;}
+.arch-layer:hover{box-shadow:0 0 20px rgba(0,255,136,0.08);}
+.layer-app{animation:arch-slide 0.5s ease 0.1s both;}
+.layer-mid{animation:arch-slide 0.5s ease 0.2s both;}
+.layer-drv{animation:arch-slide 0.5s ease 0.3s both;}
+.layer-hal{animation:arch-slide 0.5s ease 0.4s both;}
+.sidebar-link{transition:color 0.15s,border-color 0.15s,background 0.15s,padding-left 0.15s;}
+.sidebar-link:hover{padding-left:1.4rem;}
+.sidebar-link.active{animation:hud-glow-pulse-g 3s ease-in-out infinite;}
+.sidebar{animation:hud-fadein 0.5s ease 0.2s both;}
+.section-title::after{content:'';display:block;width:0;height:1px;background:linear-gradient(90deg,var(--acc),transparent);margin-top:6px;animation:hud-line-in 1s ease 0.5s both;}
+h3.sub-title::before{content:'> ';font-family:var(--mono);font-size:0.75em;color:rgba(0,255,136,0.45);letter-spacing:0.05em;}
+
 </style>
 </head>
 <body>
