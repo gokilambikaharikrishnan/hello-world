@@ -93,6 +93,24 @@ pre{font-family:var(--mono);background:var(--bg2);border:1px solid var(--border)
 .reveal{opacity:0;transform:translateY(14px);transition:opacity 0.5s,transform 0.5s;}
 .reveal.visible{opacity:1;transform:none;}
 
+
+/* === JARVIS ANIMATIONS BLOCK A: keyframes === */
+@keyframes hud-boot{0%{opacity:0;transform:translateY(-8px) scaleX(0.96)}100%{opacity:1;transform:none}}
+@keyframes hud-fadein{0%{opacity:0}100%{opacity:1}}
+@keyframes hud-slide-up{0%{opacity:0;transform:translateY(24px)}100%{opacity:1;transform:none}}
+@keyframes hud-glow-pulse{0%,100%{box-shadow:0 0 8px rgba(255,200,87,0.3),0 0 0 1px rgba(255,200,87,0.1)}50%{box-shadow:0 0 24px rgba(255,200,87,0.6),0 0 0 1px rgba(255,200,87,0.3)}}
+@keyframes hud-scan{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
+@keyframes hud-border-glow{0%,100%{border-color:rgba(255,200,87,0.15)}50%{border-color:rgba(255,200,87,0.45)}}
+@keyframes hud-counter{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:none}}
+@keyframes hud-topbar-in{0%{opacity:0;transform:translateY(-44px)}100%{opacity:1;transform:none}}
+@keyframes hud-typing{0%{width:0}100%{width:100%}}
+@keyframes hud-blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes hud-flicker{0%,100%{opacity:1}92%{opacity:1}93%{opacity:0.7}94%{opacity:1}97%{opacity:0.85}98%{opacity:1}}
+@keyframes hud-line-in{0%{width:0;opacity:0}100%{width:100%;opacity:1}}
+@keyframes reveal-left{0%{opacity:0;transform:translateX(-20px)}100%{opacity:1;transform:none}}
+@keyframes reveal-right{0%{opacity:0;transform:translateX(20px)}100%{opacity:1;transform:none}}
+@keyframes spin-slow{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+
 </style>
 </head>
 <body>
