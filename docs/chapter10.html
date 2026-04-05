@@ -91,6 +91,45 @@ h3.sub::before{content:'> ';font-family:var(--mono);font-size:0.75em;color:rgba(
 p{color:var(--text);line-height:1.82;margin-bottom:1rem;font-size:0.92rem;}
 strong{color:#fff;font-weight:600;}
 
+
+/* chunk5: cards, tables, callouts, code */
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:1rem;margin:1.2rem 0;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.4rem;position:relative;overflow:hidden;transition:transform 0.22s,border-color 0.22s,box-shadow 0.22s;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--acc);opacity:0;transition:opacity 0.2s;}
+.card::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(0,207,255,0.09),transparent 65%);opacity:0;transition:opacity 0.3s;pointer-events:none;}
+.card:hover{transform:translateY(-3px);border-color:rgba(0,207,255,0.38);box-shadow:0 0 22px rgba(0,207,255,0.12),0 8px 30px rgba(0,0,0,0.4);}
+.card:hover::before,.card:hover::after{opacity:1;}
+.card-label{font-family:var(--mono);font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--acc);margin-bottom:0.5rem;opacity:0.75;}
+.card-title{font-family:var(--head);font-size:0.95rem;font-weight:700;color:#fff;margin-bottom:0.6rem;}
+.card-body{font-size:0.82rem;color:var(--muted);line-height:1.65;}
+table{width:100%;border-collapse:collapse;margin:1.2rem 0;font-size:0.84rem;}
+th{font-family:var(--mono);font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--acc);border-bottom:1px solid rgba(0,207,255,0.3);padding:0.65rem 0.8rem;text-align:left;}
+td{padding:0.55rem 0.8rem;border-bottom:1px solid var(--border2);color:var(--text);}
+tr:hover td{background:rgba(0,207,255,0.04);}
+.callout{border-radius:6px;padding:1.1rem 1.4rem;margin:1.2rem 0;border-left:3px solid;backdrop-filter:blur(6px);position:relative;}
+.callout-info{background:rgba(10,132,255,0.07);border-color:var(--blue);}
+.callout-warn{background:rgba(255,200,87,0.07);border-color:var(--amber);}
+.callout-success{background:rgba(0,207,255,0.07);border-color:var(--acc);}
+.callout-future{background:rgba(191,90,242,0.07);border-color:var(--purple);}
+.callout-title{font-family:var(--mono);font-size:0.63rem;letter-spacing:0.2em;text-transform:uppercase;font-weight:700;margin-bottom:0.4rem;}
+.callout-info .callout-title{color:var(--blue);}
+.callout-warn .callout-title{color:var(--amber);}
+.callout-success .callout-title{color:var(--acc);}
+.callout-future .callout-title{color:var(--purple);}
+.callout p{margin:0;font-size:0.87rem;line-height:1.65;}
+pre,code{font-family:var(--mono);}
+pre{background:rgba(0,0,0,0.55);border:1px solid rgba(0,207,255,0.18);border-radius:6px;padding:1.3rem 1.5rem;overflow-x:auto;font-size:0.78rem;line-height:1.7;color:#b8e4f0;margin:1.2rem 0;position:relative;transition:border-color 0.2s,box-shadow 0.2s;}
+pre:hover{border-color:rgba(0,207,255,0.38);box-shadow:0 0 16px rgba(0,207,255,0.07);}
+pre::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,207,255,0.5),transparent);animation:hud-line-in 1.5s ease both;}
+code{background:rgba(0,207,255,0.08);border:1px solid rgba(0,207,255,0.2);border-radius:3px;padding:0.1em 0.4em;font-size:0.82em;color:var(--acc);transition:background 0.15s;}
+code:hover{background:rgba(0,207,255,0.16);}
+pre code{background:none;border:none;padding:0;color:inherit;}
+.badge{display:inline-block;font-family:var(--mono);font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.15em 0.5em;border-radius:3px;font-weight:700;}
+.badge-teal{background:rgba(0,207,255,0.15);color:var(--acc);border:1px solid rgba(0,207,255,0.3);}
+.badge-green{background:rgba(0,255,136,0.15);color:var(--green);border:1px solid rgba(0,255,136,0.3);}
+.badge-amber{background:rgba(255,200,87,0.15);color:var(--amber);border:1px solid rgba(255,200,87,0.3);}
+.badge-purple{background:rgba(191,90,242,0.15);color:var(--purple);border:1px solid rgba(191,90,242,0.3);}
+
 </style>
 </head>
 <body>
