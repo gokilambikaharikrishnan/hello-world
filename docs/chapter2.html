@@ -4857,5 +4857,67 @@ document.querySelectorAll('.sidebar-link').forEach(function(a){
 })();
 </script>
 
+
+
+<!-- CH2 SoC Algorithm Trade-off Explorer -->
+<style>
+.to-panel{background:#07070f;border:1px solid rgba(0,245,255,0.16);border-radius:12px;padding:1.5rem;margin:2rem 0}
+.to-panel h4{font-family:Orbitron,monospace;font-size:0.75rem;color:#00F5FF;letter-spacing:0.12em;margin-bottom:1rem;text-transform:uppercase}
+.to-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:0.8rem;margin:1rem 0}
+.to-method{background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:0.9rem;cursor:pointer;transition:all 0.25s;text-align:center}
+.to-method:hover,.to-method.selected{border-color:var(--mc,#00F5FF);background:rgba(0,245,255,0.06)}
+.to-method .to-name{font-family:Orbitron,monospace;font-size:0.68rem;color:var(--mc,#00F5FF);letter-spacing:0.06em;margin-bottom:0.4rem}
+.to-method .to-desc{font-size:0.72rem;color:#6b7280;line-height:1.5}
+.rnd-b2{background:rgba(0,245,255,0.04);border:1px solid rgba(0,245,255,0.18);border-left:3px solid #00F5FF;border-radius:8px;padding:1.2rem 1.4rem;margin:1.5rem 0}
+.rnd-b2 .rnd-label{font-family:Orbitron,monospace;font-size:0.6rem;color:#00F5FF;letter-spacing:0.2em;margin-bottom:0.6rem}
+.rnd-b2 p{font-size:0.88rem;color:#9ca3af;line-height:1.85;margin:0.4rem 0}
+.rnd-b2 strong{color:#e8eaf0}
+</style>
+<section style="padding:3rem 0;border-top:1px solid rgba(0,245,255,0.1)" id="ch2-sim">
+<div style="max-width:920px;margin:0 auto;padding:0 2.5rem">
+  <div style="font-family:Orbitron,monospace;font-size:0.6rem;color:#00F5FF;letter-spacing:0.2em;margin-bottom:0.5rem">INTERACTIVE LAB - CHAPTER 2</div>
+  <h2 style="font-family:Orbitron,monospace;font-size:1.3rem;color:#fff;margin-bottom:0.8rem">SoC Algorithm Trade-off Explorer</h2>
+  <p style="color:#6b7280;font-size:0.88rem;line-height:1.8;margin-bottom:1.2rem">Click any method to see how it scores on five dimensions. No single method wins all axes - that is why Kalman is a <strong style="color:#00F5FF">fusion</strong>, not a new method.</p>
+  <div class="rnd-b2">
+    <div class="rnd-label">R&D Thinking: What Does Accuracy Mean for SoC?</div>
+    <p><strong>Accuracy for SoC is not a single number.</strong> A method achieving 1% accuracy on fresh NMC at 25C may be 10% wrong on aged LFP at 0C. Always qualify: chemistry, temperature, age, rate.</p>
+    <p><strong>The flat LFP OCV region (20-80% SoC) is a 50mV window.</strong> At 1mV ADC noise, voltage alone gives you SoC resolution of roughly 50% - essentially useless. Coulomb counting is the only option in the flat region, corrected by OCV at rest.</p>
+  </div>
+  <div class="to-panel">
+    <h4>Algorithm Comparison - Click to Select</h4>
+    <div class="to-grid" id="to-methods">
+      <div class="to-method selected" style="--mc:#FFC857" data-method="voltage" onclick="toSelect(this)"><div class="to-name">Voltage Lookup</div><div class="to-desc">Read Vcell, lookup OCV table. Simple. Fails in LFP flat region.</div></div>
+      <div class="to-method" style="--mc:#00FF88" data-method="cc" onclick="toSelect(this)"><div class="to-name">Coulomb Count</div><div class="to-desc">Integrate current. Accurate short-term but drifts indefinitely.</div></div>
+      <div class="to-method" style="--mc:#A855F7" data-method="kalman" onclick="toSelect(this)"><div class="to-name">Kalman EKF</div><div class="to-desc">Fuses CC + OCV optimally. Best overall but needs DCIR model.</div></div>
+      <div class="to-method" style="--mc:#FF6B35" data-method="observer" onclick="toSelect(this)"><div class="to-name">Luenberger</div><div class="to-desc">State observer. Simpler than Kalman, no covariance matrices needed.</div></div>
+      <div class="to-method" style="--mc:#00CFFF" data-method="ml" onclick="toSelect(this)"><div class="to-name">ML Neural Net</div><div class="to-desc">Learns from data. High accuracy but black-box, hard to certify.</div></div>
+    </div>
+    <canvas id="to-radar" width="300" height="280" style="display:block;margin:0 auto"></canvas>
+    <div id="to-verdict" style="background:rgba(0,0,0,0.3);border-radius:6px;padding:0.8rem 1rem;font-size:0.82rem;color:#9ca3af;text-align:center;margin-top:0.5rem;font-family:JetBrains Mono,monospace">Select a method above.</div>
+  </div>
+</div>
+</section>
+<script>
+(function(){
+var methods={voltage:{name:'Voltage Lookup',color:'#FFC857',scores:[30,90,5,80,95],verdict:'Fails on LFP. OCV ambiguity in flat region means SoC error of plus/minus 40%. Only useful at endpoints (SoC less than 10% or greater than 90%). Never use alone for LFP.'},cc:{name:'Coulomb Count',color:'#00FF88',scores:[70,60,75,50,85],verdict:'Works well short-term. Drift kills it long-term. 0.1% current error times 1000 hours = 100% drift. Must be corrected by OCV at rest.'},kalman:{name:'Kalman EKF',color:'#A855F7',scores:[95,75,85,60,70],verdict:'Industry gold standard. Fuses CC and OCV optimally. Requires DCIR model and noise tuning. Best choice for production LFP BMS.'},observer:{name:'Luenberger',color:'#FF6B35',scores:[80,70,80,70,80],verdict:'Good balance. Simpler than EKF, no matrix inversion. Easier to certify. Slightly less accurate than Kalman but sufficient for many applications.'},ml:{name:'ML Neural Net',color:'#00CFFF',scores:[95,40,70,30,60],verdict:'Impressive accuracy on trained chemistry but black-box nature fails safety certification. Not suitable for production BMS firmware today.'}};
+var AXES=['Accuracy','Compute','Drift Resist','Tunability','Certifiable'];
+var selected='voltage';
+function drawRadar(){
+  var canvas=document.getElementById('to-radar');if(!canvas)return;
+  var ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#07070f';ctx.fillRect(0,0,W,H);
+  var cx=W/2,cy=H/2-10,R=85,N=5;
+  [0.2,0.4,0.6,0.8,1].forEach(function(r){ctx.beginPath();for(var i=0;i<N;i++){var a=Math.PI*2*i/N-Math.PI/2,x=cx+R*r*Math.cos(a),y=cy+R*r*Math.sin(a);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}ctx.closePath();ctx.strokeStyle='rgba(255,255,255,0.06)';ctx.lineWidth=1;ctx.stroke();});
+  for(var i=0;i<N;i++){var a=Math.PI*2*i/N-Math.PI/2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+R*Math.cos(a),cy+R*Math.sin(a));ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=1;ctx.stroke();ctx.fillStyle='#6b7280';ctx.font='8px Orbitron';ctx.textAlign='center';ctx.fillText(AXES[i],cx+(R+16)*Math.cos(a),cy+(R+16)*Math.sin(a)+3);}
+  Object.keys(methods).forEach(function(k){if(k===selected)return;var d=methods[k];ctx.beginPath();d.scores.forEach(function(s,i){var a=Math.PI*2*i/N-Math.PI/2,r=s/100*R;i===0?ctx.moveTo(cx+r*Math.cos(a),cy+r*Math.sin(a)):ctx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a));});ctx.closePath();ctx.strokeStyle=d.color+'33';ctx.lineWidth=1;ctx.stroke();});
+  var d=methods[selected];ctx.beginPath();d.scores.forEach(function(s,i){var a=Math.PI*2*i/N-Math.PI/2,r=s/100*R;i===0?ctx.moveTo(cx+r*Math.cos(a),cy+r*Math.sin(a)):ctx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a));});ctx.closePath();ctx.fillStyle=d.color+'28';ctx.fill();ctx.strokeStyle=d.color;ctx.lineWidth=2.5;ctx.stroke();d.scores.forEach(function(s,i){var a=Math.PI*2*i/N-Math.PI/2,r=s/100*R;ctx.beginPath();ctx.arc(cx+r*Math.cos(a),cy+r*Math.sin(a),4,0,Math.PI*2);ctx.fillStyle=d.color;ctx.fill();});
+  ctx.fillStyle=d.color;ctx.font='bold 10px Orbitron';ctx.textAlign='center';ctx.fillText(d.name,cx,H-12);
+  var vd=document.getElementById('to-verdict');if(vd)vd.innerHTML='<span style="color:'+d.color+';font-weight:600">'+d.name+':</span> '+d.verdict;
+}
+window.toSelect=function(el){document.querySelectorAll('.to-method').forEach(function(e){e.classList.remove('selected');});el.classList.add('selected');selected=el.dataset.method;drawRadar();};
+drawRadar();
+})();
+</script>
+
 </body>
 </html>
