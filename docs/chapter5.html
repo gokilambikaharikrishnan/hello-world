@@ -2143,5 +2143,133 @@ document.querySelectorAll('.sidebar-link').forEach(function(a){
 })();
 </script>
 
+<!-- ═══════════════════════════════════════════════════════════
+     CH5 — LIVE KALMAN SoC ESTIMATOR + MULTI-LAYER SIMULATOR
+═══════════════════════════════════════════════════════════════ -->
+<style>
+.rnd-block{background:rgba(0,255,136,0.04);border:1px solid rgba(0,255,136,0.2);border-left:3px solid #00FF88;border-radius:8px;padding:1.2rem 1.4rem;margin:1.8rem 0;font-family:'Space Grotesk',sans-serif}
+.rnd-block .rnd-label{font-family:'Orbitron',monospace;font-size:0.6rem;color:#00FF88;letter-spacing:0.2em;margin-bottom:0.6rem}
+.rnd-block p{font-size:0.88rem;color:#9ca3af;line-height:1.85;margin:0.4rem 0}
+.rnd-block strong{color:#e8eaf0}
+.rnd-q{background:rgba(255,200,87,0.05);border:1px solid rgba(255,200,87,0.2);border-left:3px solid #FFC857;border-radius:8px;padding:1rem 1.2rem;margin:1.5rem 0}
+.rnd-q .rnd-label{font-family:'Orbitron',monospace;font-size:0.6rem;color:#FFC857;letter-spacing:0.2em;margin-bottom:0.5rem}
+.rnd-q p{font-size:0.85rem;color:#9ca3af;line-height:1.8;margin:0.3rem 0}
+.int-panel{background:#07070f;border:1px solid rgba(0,255,136,0.15);border-radius:12px;padding:1.5rem;margin:2rem 0}
+.int-panel h4{font-family:'Orbitron',monospace;font-size:0.75rem;color:#00FF88;letter-spacing:0.12em;margin-bottom:1rem}
+.slider-row{display:flex;align-items:center;gap:1rem;margin:0.6rem 0}
+.slider-row label{font-family:'JetBrains Mono',monospace;font-size:0.76rem;color:#6b7280;width:200px;flex-shrink:0}
+.slider-row input[type=range]{flex:1;accent-color:#00FF88;cursor:pointer}
+.slider-row .val{font-family:'JetBrains Mono',monospace;font-size:0.8rem;color:#00FF88;width:60px;text-align:right}
+.kf-canvas-wrap{border:1px solid rgba(0,255,136,0.12);border-radius:8px;overflow:hidden;background:#050510;margin:1rem 0}
+.insight-box{background:rgba(0,255,136,0.05);border:1px solid rgba(0,255,136,0.15);border-radius:6px;padding:0.8rem 1rem;font-size:0.82rem;color:#9ca3af;margin-top:0.8rem;line-height:1.75}
+.insight-box span{color:#00FF88;font-weight:600}
+.btn-row{display:flex;gap:0.8rem;flex-wrap:wrap;margin:0.8rem 0}
+.sim-btn{font-family:'Orbitron',monospace;font-size:0.65rem;letter-spacing:0.1em;padding:0.5rem 1rem;border-radius:5px;cursor:pointer;transition:all 0.2s;border:1px solid;background:transparent}
+.sim-btn:hover{transform:scale(1.05)}
+</style>
+
+<section style="padding:3rem 0;border-top:1px solid rgba(0,255,136,0.12);margin-top:2rem" id="ch5-sim">
+<div style="max-width:920px;margin:0 auto;padding:0 2.5rem">
+  <div style="font-family:'Orbitron',monospace;font-size:0.6rem;color:#00FF88;letter-spacing:0.2em;margin-bottom:0.5rem">INTERACTIVE LAB · CHAPTER 5</div>
+  <h2 style="font-family:'Orbitron',monospace;font-size:1.3rem;color:#fff;margin-bottom:0.8rem">Live SoC Estimator — Watch the Kalman Filter Work</h2>
+  <p style="color:#6b7280;font-size:0.88rem;line-height:1.8;margin-bottom:1.5rem">
+    Three estimation methods run in parallel. Watch how pure Coulomb Counting drifts over time,
+    how pure OCV is noisy and wrong under load, and how the Kalman filter fuses both to stay accurate.
+    <strong style="color:#00FF88">Inject noise and drift to see why the filter exists.</strong>
+  </p>
+
+  <div class="rnd-block">
+    <div class="rnd-label">⚡ R&D Thinking — Why Is SoC Estimation Hard?</div>
+    <p><strong>Coulomb counting seems simple.</strong> Integrate current, divide by capacity. But drift is relentless.
+    A 0.1% current measurement error compounds over thousands of cycles. At 280Ah, even 0.5% shunt error means
+    1.4Ah unaccounted per full cycle — after 100 cycles, you've lost track of 140Ah of history.</p>
+    <p><strong>The Kalman filter solves this</strong> by treating both measurements as uncertain and finding the
+    optimal weighted blend — automatically trusting OCV more when current is low, and CC more during high-rate discharge.</p>
+  </div>
+
+  <div class="int-panel">
+    <h4>🔬 Parallel SoC Estimator — Live Running</h4>
+    <div class="slider-row">
+      <label>True SoC (ground truth)</label>
+      <input type="range" id="true-soc" min="5" max="95" value="60" oninput="kfUpdate()">
+      <div class="val" id="true-soc-v">60%</div>
+    </div>
+    <div class="slider-row">
+      <label>ADC current noise</label>
+      <input type="range" id="i-noise" min="0" max="100" value="20" oninput="kfUpdate()">
+      <div class="val" id="i-noise-v">20%</div>
+    </div>
+    <div class="slider-row">
+      <label>CC accumulated drift</label>
+      <input type="range" id="cc-drift" min="0" max="30" value="8" oninput="kfUpdate()">
+      <div class="val" id="cc-drift-v">8%</div>
+    </div>
+    <div class="slider-row">
+      <label>Kalman gain (Q/R)</label>
+      <input type="range" id="kf-gain" min="1" max="100" value="40" oninput="kfUpdate()">
+      <div class="val" id="kf-gain-v">0.40</div>
+    </div>
+    <div class="btn-row">
+      <button class="sim-btn" style="color:#FF4757;border-color:#FF4757" onclick="injectDrift()">⚡ Inject CC Drift</button>
+      <button class="sim-btn" style="color:#FFC857;border-color:#FFC857" onclick="injectNoise()">🔊 Spike ADC Noise</button>
+      <button class="sim-btn" style="color:#00FF88;border-color:#00FF88" onclick="resetKF()">↺ Reset</button>
+    </div>
+    <div class="kf-canvas-wrap">
+      <canvas id="kf-canvas" width="860" height="240" style="width:100%;display:block"></canvas>
+    </div>
+    <div class="insight-box" id="kf-insight">Simulator running — adjust sliders or inject events.</div>
+  </div>
+
+  <div class="rnd-q">
+    <div class="rnd-label">🤔 Pause &amp; Think</div>
+    <p><strong>High Kalman gain → trusts measurements → fast but noisy. Low gain → trusts model → smooth but slow.</strong></p>
+    <p>For LFP in the flat OCV region (30–70%), optimal strategy: low gain (OCV tells you almost nothing here).
+    At endpoints (&lt;15% or &gt;90%), OCV slope is steep → raise gain, let OCV correct CC drift. This adaptive
+    gain is what makes EKF "extended."</p>
+  </div>
+</div>
+</section>
+
+<script>
+(function(){
+  const canvas=document.getElementById('kf-canvas');if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  let extraDrift=0,extraNoise=0;
+  const history={truth:[],cc:[],ocv:[],kf:[]};const MAX=60;
+  function ocvLookup(s){const t=[[0,2.5],[10,3.1],[20,3.25],[30,3.28],[50,3.295],[70,3.315],[80,3.33],[90,3.38],[100,3.65]];for(let i=0;i<t.length-1;i++){if(s>=t[i][0]&&s<=t[i+1][0]){const f=(s-t[i][0])/(t[i+1][0]-t[i][0]);return t[i][1]+f*(t[i+1][1]-t[i][1]);}}return 3.3;}
+  function invOCV(v){const t=[[0,2.5],[10,3.1],[20,3.25],[30,3.28],[50,3.295],[70,3.315],[80,3.33],[90,3.38],[100,3.65]];for(let i=0;i<t.length-1;i++){if(v>=t[i][1]&&v<=t[i+1][1]){const f=(v-t[i][1])/(t[i+1][1]-t[i][1]);return t[i][0]+f*(t[i+1][0]-t[i][0]);}}return 50;}
+  function draw(ts,in_,cd,kg){
+    ts=+ts;in_=+in_;cd=+cd;kg=+kg;
+    const nCC=Math.max(0,Math.min(100,ts+(cd+extraDrift)+(Math.random()-0.5)*in_*0.3+extraNoise*(Math.random()-0.5)));
+    const nOCV=Math.max(0,Math.min(100,invOCV(ocvLookup(ts)+(Math.random()-0.5)*in_*0.0008)));
+    const K=kg/100;
+    const kf=Math.max(0,Math.min(100,nCC+K*(nOCV-nCC)));
+    history.truth.push(ts);history.cc.push(nCC);history.ocv.push(nOCV);history.kf.push(kf);
+    if(history.truth.length>MAX)Object.keys(history).forEach(k=>history[k].shift());
+    const W=canvas.width,H=canvas.height;
+    ctx.clearRect(0,0,W,H);ctx.fillStyle='#050510';ctx.fillRect(0,0,W,H);
+    ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;
+    [0,25,50,75,100].forEach(s=>{const y=H-20-(s/100)*(H-30);ctx.beginPath();ctx.moveTo(40,y);ctx.lineTo(W-10,y);ctx.stroke();ctx.fillStyle='#2d3748';ctx.font='9px JetBrains Mono';ctx.textAlign='right';ctx.fillText(s+'%',36,y+3);});
+    function dl(data,color,dash=[]){if(data.length<2)return;ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=2;ctx.setLineDash(dash);data.forEach((v,i)=>{const x=40+(i/(MAX-1))*(W-50);const y=H-20-(v/100)*(H-30);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.stroke();ctx.setLineDash([]);}
+    dl(history.truth,'rgba(255,255,255,0.3)',[5,3]);dl(history.cc,'#FF4757');dl(history.ocv,'rgba(0,245,255,0.5)',[2,2]);dl(history.kf,'#00FF88');
+    const items=[['Truth','rgba(255,255,255,0.5)',[5,3]],['CC Count','#FF4757',[]],['OCV est','rgba(0,245,255,0.7)',[2,2]],['Kalman ✓','#00FF88',[]]];
+    items.forEach(([lbl,col,dsh],i)=>{const lx=48+i*175,ly=15;ctx.strokeStyle=col;ctx.lineWidth=2;ctx.setLineDash(dsh);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(lx+24,ly);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=col;ctx.font='9px JetBrains Mono';ctx.textAlign='left';ctx.fillText(lbl,lx+28,ly+3);});
+    ctx.fillStyle='#2d3748';ctx.font='8px Orbitron';ctx.textAlign='center';ctx.fillText('← TIME (each frame = one 10ms MCU tick) →',W/2,H-2);
+    const l=history.cc.length-1;if(l>=0){const ce=Math.abs(history.cc[l]-history.truth[l]).toFixed(1);const ke=Math.abs(history.kf[l]-history.truth[l]).toFixed(1);ctx.fillStyle='rgba(255,200,87,0.7)';ctx.font='9px JetBrains Mono';ctx.textAlign='right';ctx.fillText(`CC err:±${ce}%  Kalman err:±${ke}%`,W-8,H-8);}
+    const ce2=Math.abs((history.cc[history.cc.length-1]||ts)-ts).toFixed(1);const ke2=Math.abs((history.kf[history.kf.length-1]||ts)-ts).toFixed(1);
+    let msg='';if(+ce2>10)msg=`<span>CC drifted ${ce2}%!</span> Exactly why pure coulomb counting fails. Kalman: ±${ke2}%.`;else if(+kg>70)msg=`<span>High gain:</span> filter trusts noisy OCV heavily. Fast but jittery — bad in LFP flat region.`;else if(+kg<20)msg=`<span>Low gain:</span> trusts CC model. Smooth but can't correct drift. Fine short-term.`;else msg=`<span>Balanced EKF:</span> CC err ±${ce2}%. Kalman err ±${ke2}%. Kalman consistently wins.`;
+    const ins=document.getElementById('kf-insight');if(ins)ins.innerHTML=msg;
+  }
+  window.kfUpdate=function(){const ts=document.getElementById('true-soc').value;const in_=document.getElementById('i-noise').value;const cd=document.getElementById('cc-drift').value;const kg=document.getElementById('kf-gain').value;document.getElementById('true-soc-v').textContent=ts+'%';document.getElementById('i-noise-v').textContent=in_+'%';document.getElementById('cc-drift-v').textContent=cd+'%';document.getElementById('kf-gain-v').textContent=(kg/100).toFixed(2);draw(ts,in_,cd,kg);};
+  window.injectDrift=function(){extraDrift+=6;kfUpdate();setTimeout(()=>{extraDrift=Math.max(0,extraDrift-6);},2500);};
+  window.injectNoise=function(){extraNoise=18;kfUpdate();setTimeout(()=>{extraNoise=0;},1500);};
+  window.resetKF=function(){Object.keys(history).forEach(k=>history[k]=[]);extraDrift=0;extraNoise=0;kfUpdate();};
+  let iv=setInterval(kfUpdate,180);
+  const sec=document.getElementById('ch5-sim');
+  if(sec){sec.addEventListener('mouseenter',()=>clearInterval(iv));sec.addEventListener('mouseleave',()=>{iv=setInterval(kfUpdate,180);});}
+  kfUpdate();
+})();
+</script>
+
 </body>
 </html>
