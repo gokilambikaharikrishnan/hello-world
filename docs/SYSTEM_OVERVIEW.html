@@ -551,3 +551,178 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);display
   </div>
 </div>
 </section>
+
+<!-- ═══════════════════════════════════ SECTION 2 ═══════════════ -->
+<section class="section reveal" id="s-realflow">
+<div class="section-inner">
+  <div class="section-label">Section 02</div>
+  <h2 class="section-title">Real Operation Flow — What Happens From Power-ON</h2>
+  <p class="section-intro">
+    This is not theory. This is what the MCU firmware actually runs, step by step, the moment you
+    connect power. The BMS is a state machine with a deterministic boot sequence. If you understand this
+    sequence, you understand the entire embedded system.
+  </p>
+
+  <!-- ANIMATED BOOT/OPERATION SVG -->
+  <div style="overflow-x:auto;margin:1.5rem 0">
+  <svg viewBox="0 0 880 400" width="860" style="display:block;margin:0 auto;font-family:'JetBrains Mono',monospace;">
+    <rect width="880" height="400" fill="#020204" rx="12"/>
+    <text x="440" y="24" fill="#00ff88" font-size="10" text-anchor="middle" font-weight="bold" font-family="Orbitron">BMS POWER-ON → STEADY STATE — COMPLETE SEQUENCE</text>
+
+    <!-- 8 phase boxes in a flow -->
+    <!-- Phase 1: Power ON -->
+    <rect x="20" y="45" width="96" height="68" rx="6" fill="#080e08" stroke="#00ff88" stroke-width="1.8">
+      <animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" begin="0s"/>
+    </rect>
+    <text x="68" y="67" fill="#00ff88" font-size="8" text-anchor="middle" font-weight="bold">POWER ON</text>
+    <text x="68" y="81" fill="#888" font-size="7" text-anchor="middle">3.3V rail stable</text>
+    <text x="68" y="93" fill="#888" font-size="7" text-anchor="middle">Clock → 170MHz</text>
+    <text x="68" y="105" fill="#555" font-size="7" text-anchor="middle">~2ms</text>
+
+    <!-- Phase 2: Init -->
+    <rect x="130" y="45" width="96" height="68" rx="6" fill="#0a0820" stroke="#A855F7" stroke-width="1.5">
+      <animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" begin="0.3s"/>
+    </rect>
+    <text x="178" y="67" fill="#A855F7" font-size="8" text-anchor="middle" font-weight="bold">HAL INIT</text>
+    <text x="178" y="81" fill="#888" font-size="7" text-anchor="middle">GPIO, SPI, I²C</text>
+    <text x="178" y="93" fill="#888" font-size="7" text-anchor="middle">CAN, UART, ADC</text>
+    <text x="178" y="105" fill="#555" font-size="7" text-anchor="middle">~5ms</text>
+
+    <!-- Phase 3: NVM restore -->
+    <rect x="240" y="45" width="96" height="68" rx="6" fill="#14100a" stroke="#FFC857" stroke-width="1.5">
+      <animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" begin="0.6s"/>
+    </rect>
+    <text x="288" y="67" fill="#FFC857" font-size="8" text-anchor="middle" font-weight="bold">NVM LOAD</text>
+    <text x="288" y="81" fill="#888" font-size="7" text-anchor="middle">SoC from EEPROM</text>
+    <text x="288" y="93" fill="#888" font-size="7" text-anchor="middle">DCIR table, logs</text>
+    <text x="288" y="105" fill="#555" font-size="7" text-anchor="middle">~10ms</text>
+
+    <!-- Phase 4: AFE startup -->
+    <rect x="350" y="45" width="96" height="68" rx="6" fill="#080e14" stroke="#00F5FF" stroke-width="1.5">
+      <animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" begin="0.9s"/>
+    </rect>
+    <text x="398" y="67" fill="#00F5FF" font-size="8" text-anchor="middle" font-weight="bold">AFE WAKE</text>
+    <text x="398" y="81" fill="#888" font-size="7" text-anchor="middle">BQ76952 config</text>
+    <text x="398" y="93" fill="#888" font-size="7" text-anchor="middle">OVP/UVP thresh</text>
+    <text x="398" y="105" fill="#555" font-size="7" text-anchor="middle">~20ms</text>
+
+    <!-- Phase 5: Pre-charge -->
+    <rect x="460" y="45" width="96" height="68" rx="6" fill="#14080a" stroke="#FF6B35" stroke-width="1.8">
+      <animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite" begin="1.2s"/>
+    </rect>
+    <text x="508" y="67" fill="#FF6B35" font-size="8" text-anchor="middle" font-weight="bold">PRE-CHARGE</text>
+    <text x="508" y="81" fill="#888" font-size="7" text-anchor="middle">10Ω resistor</text>
+    <text x="508" y="93" fill="#888" font-size="7" text-anchor="middle">Cap charge 100ms</text>
+    <text x="508" y="105" fill="#555" font-size="7" text-anchor="middle">~100–500ms</text>
+
+    <!-- Phase 6: DSG close -->
+    <rect x="570" y="45" width="96" height="68" rx="6" fill="#0a1408" stroke="#00FF88" stroke-width="1.5">
+      <animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" begin="1.5s"/>
+    </rect>
+    <text x="618" y="67" fill="#00FF88" font-size="8" text-anchor="middle" font-weight="bold">DSG ON</text>
+    <text x="618" y="81" fill="#888" font-size="7" text-anchor="middle">DSG FET closes</text>
+    <text x="618" y="93" fill="#888" font-size="7" text-anchor="middle">Load sees Vbat</text>
+    <text x="618" y="105" fill="#555" font-size="7" text-anchor="middle">~1ms switch</text>
+
+    <!-- Phase 7: Normal loop -->
+    <rect x="680" y="45" width="96" height="68" rx="6" fill="#080e14" stroke="#00F5FF" stroke-width="2">
+      <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite" begin="1.8s"/>
+    </rect>
+    <text x="728" y="62" fill="#00F5FF" font-size="8" text-anchor="middle" font-weight="bold">NORMAL</text>
+    <text x="728" y="74" fill="#00F5FF" font-size="8" text-anchor="middle" font-weight="bold">LOOP ∞</text>
+    <text x="728" y="88" fill="#888" font-size="7" text-anchor="middle">Measure→Decide</text>
+    <text x="728" y="100" fill="#888" font-size="7" text-anchor="middle">every 10ms</text>
+    <text x="728" y="112" fill="#555" font-size="7" text-anchor="middle">forever</text>
+
+    <!-- Phase 8: Fault path -->
+    <rect x="790" y="45" width="80" height="68" rx="6" fill="#140808" stroke="#FF4757" stroke-width="1.5">
+      <animate attributeName="stroke-opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite" begin="2.1s"/>
+    </rect>
+    <text x="830" y="67" fill="#FF4757" font-size="8" text-anchor="middle" font-weight="bold">FAULT</text>
+    <text x="830" y="81" fill="#888" font-size="7" text-anchor="middle">FET trip</text>
+    <text x="830" y="93" fill="#888" font-size="7" text-anchor="middle">CAN alarm</text>
+    <text x="830" y="105" fill="#555" font-size="7" text-anchor="middle">&lt;500µs</text>
+
+    <!-- sequential arrows -->
+    <line x1="116" y1="79" x2="128" y2="79" stroke="#555" stroke-width="1.5" marker-end="url(#p-arr)"/>
+    <line x1="226" y1="79" x2="238" y2="79" stroke="#555" stroke-width="1.5" marker-end="url(#p-arr)"/>
+    <line x1="336" y1="79" x2="348" y2="79" stroke="#555" stroke-width="1.5" marker-end="url(#p-arr)"/>
+    <line x1="446" y1="79" x2="458" y2="79" stroke="#555" stroke-width="1.5" marker-end="url(#p-arr)"/>
+    <line x1="556" y1="79" x2="568" y2="79" stroke="#555" stroke-width="1.5" marker-end="url(#p-arr)"/>
+    <line x1="666" y1="79" x2="678" y2="79" stroke="#555" stroke-width="1.5" marker-end="url(#p-arr)"/>
+    <line x1="776" y1="79" x2="788" y2="79" stroke="#ff4757" stroke-width="1.5" marker-end="url(#p-arr)"/>
+
+    <!-- animated boot progress packet -->
+    <circle r="5" fill="#00ff88" opacity="0">
+      <animateMotion dur="5s" repeatCount="indefinite" begin="0.5s"
+        path="M68,79 L178,79 L288,79 L398,79 L508,79 L618,79 L728,79"/>
+      <animate attributeName="opacity" values="0;1;1;1;1;0.8;0" keyTimes="0;0.05;0.3;0.6;0.8;0.95;1" dur="5s" repeatCount="indefinite" begin="0.5s"/>
+    </circle>
+
+    <!-- NORMAL LOOP expanded detail -->
+    <rect x="20" y="145" width="650" height="230" rx="8" fill="#050508" stroke="rgba(0,245,255,0.12)" stroke-width="1"/>
+    <text x="345" y="168" fill="#00f5ff" font-size="10" text-anchor="middle" font-weight="bold" font-family="Orbitron">INSIDE THE NORMAL LOOP (runs every 10ms)</text>
+
+    <!-- left column: what runs -->
+    <text x="40" y="190" fill="#00ff88" font-size="8.5" font-weight="bold">1ms TICK (ISR)</text>
+    <text x="40" y="204" fill="#555" font-size="7.5">→ Watchdog kick</text>
+    <text x="40" y="216" fill="#555" font-size="7.5">→ AFE data ready flag</text>
+    <text x="40" y="228" fill="#555" font-size="7.5">→ Coulomb counter update</text>
+
+    <text x="40" y="248" fill="#00f5ff" font-size="8.5" font-weight="bold">10ms TICK (main loop)</text>
+    <text x="40" y="262" fill="#555" font-size="7.5">→ Read I²C: 16× Vcell, 5× Temp, Ibat</text>
+    <text x="40" y="274" fill="#555" font-size="7.5">→ IIR filter all readings</text>
+    <text x="40" y="286" fill="#555" font-size="7.5">→ Run Kalman → update SoC</text>
+    <text x="40" y="298" fill="#555" font-size="7.5">→ Check protection thresholds</text>
+    <text x="40" y="310" fill="#555" font-size="7.5">→ Update FET state if needed</text>
+    <text x="40" y="322" fill="#555" font-size="7.5">→ Build CAN frame 0x355 (SoC)</text>
+    <text x="40" y="334" fill="#555" font-size="7.5">→ Transmit CAN @ 100ms gate</text>
+    <text x="40" y="346" fill="#555" font-size="7.5">→ Check UART rx (debug cmd?)</text>
+    <text x="40" y="358" fill="#555" font-size="7.5">→ NVM write if SoC changed &gt;1%</text>
+
+    <!-- right column: 1s tick -->
+    <text x="360" y="190" fill="#ffc857" font-size="8.5" font-weight="bold">100ms GATE</text>
+    <text x="360" y="204" fill="#555" font-size="7.5">→ CAN 0x351 (V limits)</text>
+    <text x="360" y="216" fill="#555" font-size="7.5">→ CAN 0x359 (fault bits)</text>
+    <text x="360" y="228" fill="#555" font-size="7.5">→ Balancer threshold check</text>
+
+    <text x="360" y="248" fill="#a855f7" font-size="8.5" font-weight="bold">1 SECOND</text>
+    <text x="360" y="262" fill="#555" font-size="7.5">→ SoH update from DCIR trend</text>
+    <text x="360" y="274" fill="#555" font-size="7.5">→ RTC timestamp sync</text>
+    <text x="360" y="286" fill="#555" font-size="7.5">→ CAN 0x356 (Vbat/Ibat/T)</text>
+
+    <text x="360" y="306" fill="#ff6b35" font-size="8.5" font-weight="bold">1 MINUTE</text>
+    <text x="360" y="320" fill="#555" font-size="7.5">→ Write event log entry to NVM</text>
+    <text x="360" y="332" fill="#555" font-size="7.5">→ Check for drift: recalibrate SoC</text>
+
+    <text x="360" y="352" fill="#00cfff" font-size="8.5" font-weight="bold">60 SECONDS</text>
+    <text x="360" y="366" fill="#555" font-size="7.5">→ MQTT push to cloud dashboard</text>
+
+    <!-- FAULT path detail (right side) -->
+    <rect x="685" y="145" width="180" height="230" rx="8" fill="#0d0508" stroke="rgba(255,71,87,0.2)" stroke-width="1"/>
+    <text x="775" y="168" fill="#FF4757" font-size="9" text-anchor="middle" font-weight="bold" font-family="Orbitron">FAULT PATH</text>
+    <text x="695" y="190" fill="#ff6b35" font-size="8" font-weight="bold">Detection:</text>
+    <text x="695" y="204" fill="#555" font-size="7.5">Vcell &gt; OVP threshold</text>
+    <text x="695" y="216" fill="#555" font-size="7.5">OR HW comparator fires</text>
+    <text x="695" y="232" fill="#ff4757" font-size="8" font-weight="bold">SW Action (&lt;1ms):</text>
+    <text x="695" y="246" fill="#555" font-size="7.5">→ Trip CHG FET</text>
+    <text x="695" y="258" fill="#555" font-size="7.5">→ Set fault flag in RAM</text>
+    <text x="695" y="270" fill="#555" font-size="7.5">→ Build CAN alarm frame</text>
+    <text x="695" y="286" fill="#ff4757" font-size="8" font-weight="bold">HW Action (&lt;500µs):</text>
+    <text x="695" y="300" fill="#555" font-size="7.5">BQ76952 OVP pin</text>
+    <text x="695" y="312" fill="#555" font-size="7.5">→ Gate driver OFF</text>
+    <text x="695" y="324" fill="#555" font-size="7.5">independent of MCU</text>
+    <text x="695" y="344" fill="#00ff88" font-size="8" font-weight="bold">Recovery:</text>
+    <text x="695" y="358" fill="#555" font-size="7.5">Hysteresis 3s clear</text>
+    <text x="695" y="370" fill="#555" font-size="7.5">→ NORMAL resume</text>
+  </svg>
+  </div>
+
+  <div class="callout callout-amber">
+    <strong>Why pre-charge?</strong> The inverter/load has large input capacitors (100–1000µF).
+    Without pre-charge, closing the DSG FET directly creates a current spike of I = C × dV/dt — easily
+    hundreds of amps for microseconds. This welds the FET contacts or destroys the gate driver.
+    The 10Ω pre-charge resistor limits inrush to safe levels during cap charging.
+  </div>
+</div>
+</section>
