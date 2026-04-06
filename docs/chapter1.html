@@ -3933,6 +3933,16 @@ document.querySelectorAll('.sidebar-link').forEach(function(a){
   if(first && first.parentNode)first.parentNode.insertBefore(wrap,first.nextSibling);
 })();
 </script>
+
+<style>
+.ch-journey{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%);z-index:9000;background:rgba(2,2,10,0.92);border:1px solid rgba(255,255,255,0.12);border-radius:2rem;padding:.4rem 1rem;display:flex;align-items:center;gap:.25rem;font-family:'Orbitron',monospace;font-size:.58rem;letter-spacing:.04em;backdrop-filter:blur(12px);box-shadow:0 4px 24px rgba(0,0,0,.5);flex-wrap:nowrap;overflow-x:auto;max-width:calc(100vw - 2rem);}
+.cj-stop{padding:.25rem .55rem;border-radius:1rem;text-decoration:none;transition:all .2s;white-space:nowrap;}
+.cj-done{color:#00F5FF;opacity:.65;}.cj-done:hover{opacity:1;background:rgba(0,245,255,.12);}
+.cj-current{background:rgba(255,200,87,.15);color:#FFC857;border:1px solid rgba(255,200,87,.4);cursor:default;}
+.cj-future{color:#333;cursor:default;}
+.cj-arrow{color:#222;font-size:.75rem;}
+</style>
+<div class="ch-journey"><span class="cj-stop cj-current" title="Fundamentals">CH1</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="Cell Physics">CH2</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="Thermal">CH3</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="Protection">CH4</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="Standards">CH5</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="Architecture">CH6</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="UPS & ESS">CH7</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="Hardware">CH8</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="Firmware">CH9</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="Future">CH10</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="System View">SYS</span></div>
 </body>
 </html>
 

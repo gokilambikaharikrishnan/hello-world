@@ -4945,62 +4945,18 @@ drawRadar();
 </script>
 
 
-<!-- Chapter Journey Navigator -->
+>
+
+
+
 <style>
-.ch-journey{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%);z-index:9000;background:rgba(2,2,10,0.92);border:1px solid rgba(255,255,255,0.12);border-radius:2rem;padding:.45rem 1.2rem;display:flex;align-items:center;gap:.3rem;font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:.05em;backdrop-filter:blur(12px);box-shadow:0 4px 24px rgba(0,0,0,.5);}
-.cj-stop{padding:.28rem .65rem;border-radius:1rem;text-decoration:none;transition:all .2s;white-space:nowrap;}
-.cj-done{color:#00F5FF;opacity:.7;}.cj-done:hover{opacity:1;background:rgba(0,245,255,.12);}
+.ch-journey{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%);z-index:9000;background:rgba(2,2,10,0.92);border:1px solid rgba(255,255,255,0.12);border-radius:2rem;padding:.4rem 1rem;display:flex;align-items:center;gap:.25rem;font-family:'Orbitron',monospace;font-size:.58rem;letter-spacing:.04em;backdrop-filter:blur(12px);box-shadow:0 4px 24px rgba(0,0,0,.5);flex-wrap:nowrap;overflow-x:auto;max-width:calc(100vw - 2rem);}
+.cj-stop{padding:.25rem .55rem;border-radius:1rem;text-decoration:none;transition:all .2s;white-space:nowrap;}
+.cj-done{color:#00F5FF;opacity:.65;}.cj-done:hover{opacity:1;background:rgba(0,245,255,.12);}
 .cj-current{background:rgba(255,200,87,.15);color:#FFC857;border:1px solid rgba(255,200,87,.4);cursor:default;}
-.cj-future{color:#444;cursor:default;}
-.cj-arrow{color:#333;font-size:.8rem;}
+.cj-future{color:#333;cursor:default;}
+.cj-arrow{color:#222;font-size:.75rem;}
 </style>
-
-
-<style>
-.xref-callout{display:inline-flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:.3rem;padding:.3rem .75rem;font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:.07em;color:#aaa;text-decoration:none;margin:.2rem .3rem .2rem 0;transition:all .15s;cursor:pointer;}
-.xref-callout:hover{background:rgba(255,255,255,.08);color:#fff;}
-.xref-callout .xr-badge{padding:.12rem .4rem;border-radius:.2rem;font-size:.58rem;font-weight:700;}
-.xref-ch1 .xr-badge{background:rgba(255,200,87,.2);color:#FFC857;}
-.xref-ch2 .xr-badge{background:rgba(0,245,255,.2);color:#00F5FF;}
-.xref-ch3 .xr-badge{background:rgba(255,107,53,.2);color:#FF6B35;}
-.xref-ch4 .xr-badge{background:rgba(0,245,255,.2);color:#00F5FF;}
-.xref-ch5 .xr-badge{background:rgba(0,255,136,.2);color:#00FF88;}
-.xref-ch6 .xr-badge{background:rgba(168,85,247,.2);color:#A855F7;}
-.xref-ch7 .xr-badge{background:rgba(255,200,87,.2);color:#FFC857;}
-.xref-sys .xr-badge{background:rgba(0,207,255,.2);color:#00CFFF;}
-.xref-block{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07);border-radius:.4rem;padding:.6rem 1rem;margin:1rem 0;font-size:.78rem;color:#888;}
-.xref-block .xr-title{font-family:'Orbitron',monospace;font-size:.58rem;letter-spacing:.1em;color:#555;margin-bottom:.4rem;}
-</style>
-
-<div class="xref-block">
-  <div class="xr-title">↗ CONNECTS TO</div>
-  <a href="chapter1.html" class="xref-callout xref-ch1"><span class="xr-badge">CH1</span> OCV/SoC curve source data</a>
-  <a href="chapter5.html" class="xref-callout xref-ch5"><span class="xr-badge">CH5</span> Kalman EKF firmware implementation</a>
-  <a href="chapter6.html" class="xref-callout xref-ch6"><span class="xr-badge">CH6</span> SoC update slot in 10ms super-loop</a>
-</div>
-
-<!-- Bridge Section -->
-<section style="padding:2.5rem 0;border-top:1px solid rgba(0,245,255,0.12);">
-<div class="content-main" style="max-width:900px;margin:0 auto;padding:0 1.5rem;">
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
-  <div style="background:rgba(0,245,255,0.04);border:1px solid rgba(0,245,255,0.15);border-radius:.6rem;padding:1.2rem 1.5rem;">
-    <div style="font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:.12em;color:#00F5FF;margin-bottom:.7rem;">✓ WHAT YOU LEARNED IN THIS CHAPTER</div>
-    <ul style="list-style:none;padding:0;margin:0;font-size:.83rem;line-height:1.7;">
-      <li style="margin-bottom:.4rem;color:#aaa;">Five SoC estimation methods — each with specific accuracy, drift, and compute trade-offs</li><li style="margin-bottom:.4rem;color:#aaa;">The Extended Kalman Filter fuses coulomb counting and OCV with adaptive gain that de-emphasises OCV in the flat plateau</li><li style="margin-bottom:.4rem;color:#aaa;">SoH tracks capacity fade and impedance rise — your BMS must recalibrate thresholds as cells age</li><li style="margin-bottom:.4rem;color:#aaa;">Coulomb counting drifts; OCV is noisy in the flat region; only fusion gives you both accuracy and robustness</li>
-    </ul>
-  </div>
-  <div style="background:rgba(0,245,255,0.06);border:1px solid rgba(0,245,255,0.25);border-radius:.6rem;padding:1.2rem 1.5rem;display:flex;flex-direction:column;justify-content:space-between;">
-    <div>
-      <div style="font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:.12em;color:#00F5FF;margin-bottom:.7rem;">→ NEXT CHAPTER</div>
-      <p style="font-size:.88rem;color:#bbb;line-height:1.7;">Chapter 3: Thermal physics — why heat is the primary failure mode and how the BMS must manage it at both cell and pack level</p>
-    </div>
-    <a href="chapter3.html" style="display:inline-block;margin-top:1rem;background:rgba(0,245,255,0.15);border:1px solid rgba(0,245,255,0.4);color:#00F5FF;font-family:'Orbitron',monospace;font-size:.68rem;letter-spacing:.08em;padding:.6rem 1.2rem;border-radius:.4rem;text-decoration:none;transition:all .2s;text-align:center;">Continue → CH3</a>
-  </div>
-</div>
-</div>
-</section>
-
-<div class="ch-journey"><a href="chapter1.html" class="cj-stop cj-done" title="Fundamentals">CH1</a><span class="cj-arrow">›</span><span class="cj-stop cj-current" title="SoC/SoH">CH2</span><span class="cj-arrow">›</span><a href="chapter3.html" class="cj-stop cj-future" title="Pack Design">CH3</a><span class="cj-arrow">›</span><a href="chapter4.html" class="cj-stop cj-future" title="Sensing">CH4</a><span class="cj-arrow">›</span><a href="chapter5.html" class="cj-stop cj-future" title="Algorithms">CH5</a><span class="cj-arrow">›</span><a href="chapter6.html" class="cj-stop cj-future" title="Firmware">CH6</a><span class="cj-arrow">›</span><a href="chapter7.html" class="cj-stop cj-future" title="Applications">CH7</a><span class="cj-arrow">›</span><a href="SYSTEM_OVERVIEW.html" class="cj-stop cj-future" title="System View">SYS</a></div>
-
+<div class="ch-journey"><a href="chapter1.html" class="cj-stop cj-done" title="Fundamentals">CH1</a><span class="cj-arrow">›</span><span class="cj-stop cj-current" title="Cell Physics">CH2</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="Thermal">CH3</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="Protection">CH4</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="Standards">CH5</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="Architecture">CH6</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="UPS & ESS">CH7</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="Hardware">CH8</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="Firmware">CH9</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="Future">CH10</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="System View">SYS</span></div>
 </body>
 </html>
