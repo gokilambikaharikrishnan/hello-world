@@ -682,3 +682,127 @@ SoH_dcir = <span class="code-fn">CLAMP</span>(SoH_dcir, <span class="code-num">0
     </div>
   </div>
 </section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION 11.3 — FORMATION CYCLING & CELL GRADING
+═══════════════════════════════════════════════════════════════ -->
+<section class="section reveal" id="s11-3">
+  <div class="section-inner">
+    <div class="section-label">Section 11.3</div>
+    <h2 class="section-title">Formation Cycling &amp; Cell Grading</h2>
+    <p class="section-intro">
+      Formation is the first-ever charge of a lithium-ion cell. During this process the SEI (Solid
+      Electrolyte Interphase) layer forms on the anode — permanently consuming some lithium and setting
+      the cell's irreversible capacity loss. A poor formation protocol results in an unstable SEI that
+      continues growing throughout the cell's life, causing faster capacity fade and higher DCIR.
+    </p>
+
+    <!-- Formation Protocol SVG -->
+    <h3 class="subsection-title">Formation Protocol — 6-Step Sequence</h3>
+    <div style="overflow-x:auto;margin:1rem 0">
+    <svg viewBox="0 0 820 260" width="800" style="display:block;margin:0 auto;font-family:'JetBrains Mono',monospace;">
+      <rect width="820" height="260" fill="#08080e" rx="10"/>
+      <text x="410" y="22" fill="#ff4757" font-size="10" text-anchor="middle" font-weight="bold" font-family="Orbitron">LFP CELL FORMATION PROTOCOL (3-cycle)</text>
+
+      <!-- Step boxes with animation -->
+      <!-- Step 1: C/20 slow charge -->
+      <rect x="20" y="40" width="120" height="80" rx="6" fill="#0d0a14" stroke="#a855f7" stroke-width="1.5">
+        <animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite"/>
+      </rect>
+      <text x="80" y="62" fill="#a855f7" font-size="8" text-anchor="middle" font-weight="bold">STEP 1</text>
+      <text x="80" y="76" fill="#a855f7" font-size="8" text-anchor="middle">C/20 Charge</text>
+      <text x="80" y="90" fill="#888" font-size="7.5" text-anchor="middle">→ 3.65V/cell</text>
+      <text x="80" y="104" fill="#888" font-size="7.5" text-anchor="middle">~14h @ 14A</text>
+      <text x="80" y="116" fill="#555" font-size="7" text-anchor="middle">SEI nucleation</text>
+
+      <!-- Arrow 1→2 -->
+      <line x1="140" y1="80" x2="158" y2="80" stroke="#555" stroke-width="1.5" marker-end="url(#ft-arr)"/>
+
+      <!-- Step 2: Rest -->
+      <rect x="160" y="40" width="110" height="80" rx="6" fill="#0d0a14" stroke="#00f5ff" stroke-width="1.5"/>
+      <text x="215" y="62" fill="#00f5ff" font-size="8" text-anchor="middle" font-weight="bold">STEP 2</text>
+      <text x="215" y="76" fill="#00f5ff" font-size="8" text-anchor="middle">Rest 2h</text>
+      <text x="215" y="90" fill="#888" font-size="7.5" text-anchor="middle">Open circuit</text>
+      <text x="215" y="104" fill="#888" font-size="7.5" text-anchor="middle">T stabilise</text>
+      <text x="215" y="116" fill="#555" font-size="7" text-anchor="middle">OCV record</text>
+
+      <!-- Arrow 2→3 -->
+      <line x1="270" y1="80" x2="288" y2="80" stroke="#555" stroke-width="1.5" marker-end="url(#ft-arr)"/>
+
+      <!-- Step 3: C/5 discharge -->
+      <rect x="290" y="40" width="110" height="80" rx="6" fill="#0d0a14" stroke="#ffc857" stroke-width="1.5"/>
+      <text x="345" y="62" fill="#ffc857" font-size="8" text-anchor="middle" font-weight="bold">STEP 3</text>
+      <text x="345" y="76" fill="#ffc857" font-size="8" text-anchor="middle">C/5 Discharge</text>
+      <text x="345" y="90" fill="#888" font-size="7.5" text-anchor="middle">→ 2.50V</text>
+      <text x="345" y="104" fill="#888" font-size="7.5" text-anchor="middle">~5h @ 56A</text>
+      <text x="345" y="116" fill="#555" font-size="7" text-anchor="middle">Capacity check</text>
+
+      <!-- Arrow 3→4 -->
+      <line x1="400" y1="80" x2="418" y2="80" stroke="#555" stroke-width="1.5" marker-end="url(#ft-arr)"/>
+
+      <!-- Step 4: C/10 charge -->
+      <rect x="420" y="40" width="110" height="80" rx="6" fill="#0d0a14" stroke="#00ff88" stroke-width="1.5"/>
+      <text x="475" y="62" fill="#00ff88" font-size="8" text-anchor="middle" font-weight="bold">STEP 4</text>
+      <text x="475" y="76" fill="#00ff88" font-size="8" text-anchor="middle">C/10 Charge</text>
+      <text x="475" y="90" fill="#888" font-size="7.5" text-anchor="middle">→ 3.65V</text>
+      <text x="475" y="104" fill="#888" font-size="7.5" text-anchor="middle">~10h @ 28A</text>
+      <text x="475" y="116" fill="#555" font-size="7" text-anchor="middle">SEI densify</text>
+
+      <!-- Arrow 4→5 -->
+      <line x1="530" y1="80" x2="548" y2="80" stroke="#555" stroke-width="1.5" marker-end="url(#ft-arr)"/>
+
+      <!-- Step 5: Repeat x3 -->
+      <rect x="550" y="40" width="110" height="80" rx="6" fill="#0d0a14" stroke="#ff4757" stroke-width="1.5"/>
+      <text x="605" y="62" fill="#ff4757" font-size="8" text-anchor="middle" font-weight="bold">STEP 5</text>
+      <text x="605" y="76" fill="#ff4757" font-size="8" text-anchor="middle">Repeat ×3</text>
+      <text x="605" y="90" fill="#888" font-size="7.5" text-anchor="middle">Cycles 2 &amp; 3</text>
+      <text x="605" y="104" fill="#888" font-size="7.5" text-anchor="middle">1C rate now OK</text>
+      <text x="605" y="116" fill="#555" font-size="7" text-anchor="middle">SEI mature</text>
+
+      <!-- Arrow 5→6 -->
+      <line x1="660" y1="80" x2="678" y2="80" stroke="#555" stroke-width="1.5" marker-end="url(#ft-arr)"/>
+
+      <!-- Step 6: HPPC + Grade -->
+      <rect x="680" y="40" width="120" height="80" rx="6" fill="#0d0a14" stroke="#ff4757" stroke-width="2">
+        <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite"/>
+      </rect>
+      <text x="740" y="62" fill="#ff4757" font-size="8" text-anchor="middle" font-weight="bold">STEP 6</text>
+      <text x="740" y="76" fill="#ff4757" font-size="8" text-anchor="middle">HPPC + Grade</text>
+      <text x="740" y="90" fill="#888" font-size="7.5" text-anchor="middle">Capacity sort</text>
+      <text x="740" y="104" fill="#888" font-size="7.5" text-anchor="middle">DCIR sort</td>
+      <text x="740" y="116" fill="#555" font-size="7" text-anchor="middle">Ship / reject</text>
+
+      <!-- Total time label -->
+      <rect x="20" y="150" width="780" height="90" rx="8" fill="#0a080d" stroke="rgba(168,85,247,0.2)" stroke-width="1"/>
+      <text x="410" y="172" fill="#a855f7" font-size="9" text-anchor="middle" font-weight="bold" font-family="Orbitron">CELL GRADING TIERS — AFTER FORMATION</text>
+
+      <rect x="40" y="182" width="160" height="44" rx="5" fill="#0a140a" stroke="#00ff88" stroke-width="1"/>
+      <text x="120" y="200" fill="#00ff88" font-size="8" text-anchor="middle" font-weight="bold">GRADE A — PRIME</text>
+      <text x="120" y="214" fill="#888" font-size="7.5" text-anchor="middle">Cap ≥98% · DCIR ≤ 0.26mΩ</text>
+      <text x="120" y="224" fill="#555" font-size="7" text-anchor="middle">EV / premium ESS use</text>
+
+      <rect x="220" y="182" width="160" height="44" rx="5" fill="#0d1008" stroke="#ffc857" stroke-width="1"/>
+      <text x="300" y="200" fill="#ffc857" font-size="8" text-anchor="middle" font-weight="bold">GRADE B — STANDARD</text>
+      <text x="300" y="214" fill="#888" font-size="7.5" text-anchor="middle">Cap 95–98% · DCIR ≤ 0.35mΩ</text>
+      <text x="300" y="224" fill="#555" font-size="7" text-anchor="middle">Home ESS / UPS use</text>
+
+      <rect x="400" y="182" width="160" height="44" rx="5" fill="#0d0808" stroke="#ff4757" stroke-width="1"/>
+      <text x="480" y="200" fill="#ff4757" font-size="8" text-anchor="middle" font-weight="bold">GRADE C — SECONDARY</text>
+      <text x="480" y="214" fill="#888" font-size="7.5" text-anchor="middle">Cap 90–95% · DCIR ≤ 0.50mΩ</text>
+      <text x="480" y="224" fill="#555" font-size="7" text-anchor="middle">Low-power / stationary</text>
+
+      <rect x="580" y="182" width="200" height="44" rx="5" fill="#100808" stroke="#555" stroke-width="1"/>
+      <text x="680" y="200" fill="#888" font-size="8" text-anchor="middle" font-weight="bold">REJECT</text>
+      <text x="680" y="214" fill="#555" font-size="7.5" text-anchor="middle">Cap &lt;90% OR DCIR &gt;0.50mΩ</text>
+      <text x="680" y="224" fill="#555" font-size="7" text-anchor="middle">Recycle — do not use</text>
+    </svg>
+    </div>
+
+    <div class="callout callout-info">
+      <strong>Pack Matching Rule:</strong> Never mix cells from different grade tiers in the same pack.
+      A single Grade C cell in a Grade A pack becomes the weakest link — its higher DCIR means it hits
+      voltage limits first on every charge/discharge cycle, taking 3× more cycles than identical cells.
+      Always match Capacity within ±2% and DCIR within ±15% across the pack.
+    </div>
+  </div>
+</section>
