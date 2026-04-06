@@ -4204,6 +4204,22 @@ draw();
   <a href="chapter7.html" class="xref-callout xref-ch7"><span class="xr-badge">CH7</span> CAN stack → UPS/ESS inverter handshake</a>
 </div>
 
+
+<style>
+.pt-purple{background:rgba(168,85,247,.04);border:1px solid rgba(168,85,247,.2);border-radius:.5rem;padding:1rem 1.4rem;margin:1.5rem 0;font-size:.9rem;}
+.pt-purple .pt-label{font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:.1em;color:#A855F7;margin-bottom:.5rem;}
+.pt-purple ol{margin:.3rem 0 0 1rem;color:#aaa;line-height:1.8;}
+</style>
+<div class="pt-purple">
+  <div class="pt-label">⏸ Pause &amp; Think — Firmware Timing</div>
+  <ol>
+    <li>If your AFE I²C read takes 2.5ms instead of 2ms due to bus contention, what task gets squeezed in the 10ms loop? How do you handle this?</li>
+    <li>The protection state machine uses 30-tick hysteresis (3s). For a UPS that must reconnect within 20ms of grid return, is this hysteresis window appropriate? Why or why not?</li>
+    <li>Your CAN bus TX fails (bus-off state). The BMS has no way to tell the inverter to stop discharging. What hardware-level fallback should exist?</li>
+    <li>You're debugging a firmware crash that happens only at high temperature. What data should the BMS log to NVM on every watchdog reset?</li>
+  </ol>
+</div>
+
 <!-- Bridge Section -->
 <section style="padding:2.5rem 0;border-top:1px solid rgba(168,85,247,0.12);">
 <div class="content-main" style="max-width:900px;margin:0 auto;padding:0 1.5rem;">
