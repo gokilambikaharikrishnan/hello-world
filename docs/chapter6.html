@@ -4046,5 +4046,128 @@ document.querySelectorAll('.sidebar-link').forEach(function(a){
 })();
 </script>
 
+<!-- ═══════════════════════════════════════════════════════════
+     CH6 — LIVE FIRMWARE TASK VISUALIZER + R&D BLOCKS
+═══════════════════════════════════════════════════════════════ -->
+<style>
+.fw-panel{background:#07070f;border:1px solid rgba(168,85,247,0.18);border-radius:12px;padding:1.5rem;margin:2rem 0}
+.fw-panel h4{font-family:'Orbitron',monospace;font-size:0.75rem;color:#A855F7;letter-spacing:0.12em;margin-bottom:1rem;text-transform:uppercase}
+.fw-canvas-wrap{border:1px solid rgba(168,85,247,0.12);border-radius:8px;overflow:hidden;background:#030308;margin:1rem 0}
+.rnd-vi{background:rgba(168,85,247,0.04);border:1px solid rgba(168,85,247,0.2);border-left:3px solid #A855F7;border-radius:8px;padding:1.2rem 1.4rem;margin:1.5rem 0}
+.rnd-vi .rnd-label{font-family:'Orbitron',monospace;font-size:0.6rem;color:#A855F7;letter-spacing:0.2em;margin-bottom:0.6rem}
+.rnd-vi p{font-size:0.88rem;color:#9ca3af;line-height:1.85;margin:0.4rem 0}
+.rnd-vi strong{color:#e8eaf0}
+.fw-btn{font-family:'Orbitron',monospace;font-size:0.65rem;letter-spacing:0.1em;padding:0.45rem 0.9rem;border-radius:5px;cursor:pointer;border:1px solid #A855F7;color:#A855F7;background:rgba(168,85,247,0.08);transition:all 0.2s;margin:0 0.4rem 0.4rem 0}
+.fw-btn:hover{background:rgba(168,85,247,0.2)}
+.fw-btn.active{background:rgba(168,85,247,0.3);box-shadow:0 0 12px rgba(168,85,247,0.3)}
+.task-legend{display:flex;flex-wrap:wrap;gap:0.5rem;margin:0.5rem 0}
+.tl-item-fw{display:flex;align-items:center;gap:0.4rem;font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:#6b7280}
+.tl-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.fw-insight{background:rgba(168,85,247,0.06);border:1px solid rgba(168,85,247,0.15);border-radius:6px;padding:0.8rem 1rem;font-size:0.82rem;color:#9ca3af;margin-top:0.6rem;line-height:1.75}
+.fw-insight span{color:#A855F7;font-weight:600}
+</style>
+
+<section style="padding:3rem 0;border-top:1px solid rgba(168,85,247,0.12)" id="ch6-sim">
+<div style="max-width:920px;margin:0 auto;padding:0 2.5rem">
+  <div style="font-family:Orbitron,monospace;font-size:0.6rem;color:#A855F7;letter-spacing:0.2em;margin-bottom:0.5rem">INTERACTIVE LAB - CHAPTER 6</div>
+  <h2 style="font-family:Orbitron,monospace;font-size:1.3rem;color:#fff;margin-bottom:0.8rem">Live Firmware Scheduler - Watch What The MCU Does Every Tick</h2>
+  <p style="color:#6b7280;font-size:0.88rem;line-height:1.8;margin-bottom:1.2rem">
+    The MCU runs a deterministic task scheduler. Every bar below represents real CPU time.
+    <strong style="color:#A855F7">Switch modes to see how task timing shifts under fault conditions.</strong>
+  </p>
+  <div class="rnd-vi">
+    <div class="rnd-label">R&D Thinking: Why Super-Loop Over RTOS?</div>
+    <p><strong>RTOS seems right</strong> but for a single-core BMS doing one job, a preemptive scheduler can interrupt
+    your OVP check mid-execution to handle a UART event. Worst-case OVP response time becomes undefined.</p>
+    <p><strong>Super-loop with SysTick gate gives determinism:</strong> WCET is measurable, certifiable, MISRA-C compatible.
+    OVP checked at t=0, t=10ms, t=20ms - always. No priority inversion, no heap, no stack overflow risk.</p>
+  </div>
+  <div class="fw-panel">
+    <h4>Firmware Task Execution Timeline</h4>
+    <div style="display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;margin-bottom:0.8rem">
+      <button class="fw-btn active" id="fw-btn-normal" onclick="fwSetMode('normal')">NORMAL OPS</button>
+      <button class="fw-btn" id="fw-btn-fault" onclick="fwSetMode('fault')">FAULT ACTIVE</button>
+      <button class="fw-btn" id="fw-btn-stress" onclick="fwSetMode('stress')">HIGH LOAD</button>
+    </div>
+    <div class="task-legend">
+      <div class="tl-item-fw"><div class="tl-dot" style="background:#FFC857"></div>ISR/Watchdog</div>
+      <div class="tl-item-fw"><div class="tl-dot" style="background:#00F5FF"></div>AFE I2C Read</div>
+      <div class="tl-item-fw"><div class="tl-dot" style="background:#A855F7"></div>Filter+Kalman</div>
+      <div class="tl-item-fw"><div class="tl-dot" style="background:#FF6B35"></div>Prot State Machine</div>
+      <div class="tl-item-fw"><div class="tl-dot" style="background:#00FF88"></div>CAN TX</div>
+      <div class="tl-item-fw"><div class="tl-dot" style="background:#00CFFF"></div>UART/NVM</div>
+      <div class="tl-item-fw"><div class="tl-dot" style="background:#FF4757"></div>FAULT handler</div>
+    </div>
+    <div class="fw-canvas-wrap">
+      <canvas id="fw-canvas" width="860" height="260" style="width:100%;display:block"></canvas>
+    </div>
+    <div class="fw-insight" id="fw-insight">Firmware running in NORMAL mode.</div>
+  </div>
+</div>
+</section>
+
+<script>
+(function(){
+var canvas=document.getElementById('fw-canvas');if(!canvas)return;
+var ctx=canvas.getContext('2d');
+var mode='normal',frame=0;
+var TASKS={
+  normal:[{n:'ISR/WDG',c:'#FFC857',dur:0.1,period:1,lane:0},{n:'AFE I2C',c:'#00F5FF',dur:2.0,period:10,lane:1},{n:'IIR+Kalman',c:'#A855F7',dur:1.5,period:10,lane:2},{n:'Prot SM',c:'#FF6B35',dur:0.3,period:10,lane:3},{n:'CAN TX',c:'#00FF88',dur:0.8,period:100,lane:4},{n:'UART',c:'#00CFFF',dur:0.2,period:100,lane:5}],
+  fault:[{n:'ISR/WDG',c:'#FFC857',dur:0.1,period:1,lane:0},{n:'AFE I2C',c:'#00F5FF',dur:2.0,period:10,lane:1},{n:'IIR+Kalman',c:'#A855F7',dur:1.5,period:10,lane:2},{n:'Prot SM',c:'#FF6B35',dur:0.6,period:10,lane:3},{n:'FAULT HND',c:'#FF4757',dur:1.5,period:10,lane:3},{n:'CAN ALARM',c:'#FF4757',dur:1.2,period:10,lane:4},{n:'NVM Write',c:'#00CFFF',dur:3.0,period:10,lane:5}],
+  stress:[{n:'ISR/WDG',c:'#FFC857',dur:0.1,period:1,lane:0},{n:'AFE I2C',c:'#00F5FF',dur:2.2,period:10,lane:1},{n:'Kalman EKF',c:'#A855F7',dur:1.8,period:10,lane:2},{n:'Prot SM',c:'#FF6B35',dur:0.4,period:10,lane:3},{n:'CAN x4',c:'#00FF88',dur:1.5,period:10,lane:4},{n:'Balancer',c:'#00CFFF',dur:0.5,period:10,lane:5}]
+};
+var LLBL=['ISR 1ms','AFE Read','Filt/KF','Prot SM','CAN','UART/NVM'];
+function draw(){
+  var W=canvas.width,H=canvas.height,tasks=TASKS[mode];
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#030308';ctx.fillRect(0,0,W,H);
+  var LPAD=72,RPAD=8,TOP=18,BOT=20,LANES=6,WINDOW=100;
+  var laneH=(H-TOP-BOT)/LANES;
+  var t_now=(frame*14)%2000;var t_start=Math.max(0,t_now-WINDOW);
+  var msToX=function(ms){return LPAD+(ms-t_start)/WINDOW*(W-LPAD-RPAD);};
+  ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;
+  for(var ms=Math.ceil(t_start/10)*10;ms<=t_start+WINDOW;ms+=10){
+    var x=msToX(ms);ctx.beginPath();ctx.moveTo(x,TOP);ctx.lineTo(x,H-BOT);ctx.stroke();
+    ctx.fillStyle='#2d3748';ctx.font='8px JetBrains Mono';ctx.textAlign='center';ctx.fillText(ms+'ms',x,H-4);
+  }
+  LLBL.forEach(function(lbl,i){
+    var y=TOP+i*laneH;
+    if(i%2===0){ctx.fillStyle='rgba(255,255,255,0.02)';ctx.fillRect(LPAD,y,W-LPAD-RPAD,laneH);}
+    ctx.fillStyle='#374151';ctx.font='7px Orbitron';ctx.textAlign='right';ctx.fillText(lbl,LPAD-3,y+laneH/2+3);
+  });
+  tasks.forEach(function(task){
+    for(var o=0;o<Math.ceil(WINDOW/task.period)+2;o++){
+      var ts=Math.ceil(t_start/task.period)*task.period+o*task.period;
+      var te=ts+task.dur;
+      if(te<t_start||ts>t_start+WINDOW)continue;
+      var x1=Math.max(LPAD,msToX(ts)),x2=Math.min(W-RPAD,msToX(te));
+      if(x2<=x1+1)continue;
+      var y=TOP+task.lane*laneH+2,h=laneH-4;
+      ctx.shadowColor=task.c;ctx.shadowBlur=4;
+      ctx.fillStyle=task.c+'bb';ctx.fillRect(x1,y,x2-x1,h);
+      ctx.shadowBlur=0;
+      if(x2-x1>18){ctx.fillStyle='rgba(0,0,0,0.8)';ctx.font='7px JetBrains Mono';ctx.textAlign='left';ctx.fillText(task.n,x1+2,y+h/2+3);}
+    }
+  });
+  var totalCpu=tasks.reduce(function(a,t){return a+t.dur/t.period;},0)*100;
+  var cpuCol=totalCpu>80?'#FF4757':totalCpu>50?'#FFC857':'#00FF88';
+  ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(LPAD,2,W-LPAD-RPAD,12);
+  ctx.fillStyle=cpuCol;ctx.fillRect(LPAD,2,(W-LPAD-RPAD)*Math.min(1,totalCpu/100),12);
+  ctx.fillStyle='#fff';ctx.font='7px Orbitron';ctx.textAlign='left';ctx.fillText('CPU: '+totalCpu.toFixed(1)+'%',LPAD+4,12);
+  var cnow=msToX(t_now);
+  if(cnow>LPAD&&cnow<W-RPAD){ctx.strokeStyle='rgba(255,200,87,0.5)';ctx.lineWidth=1.5;ctx.setLineDash([3,2]);ctx.beginPath();ctx.moveTo(cnow,TOP);ctx.lineTo(cnow,H-BOT);ctx.stroke();ctx.setLineDash([]);}
+  frame++;requestAnimationFrame(draw);
+}
+window.fwSetMode=function(m){
+  mode=m;
+  ['normal','fault','stress'].forEach(function(x){var el=document.getElementById('fw-btn-'+x);if(el)el.classList.toggle('active',x===m);});
+  var ins=document.getElementById('fw-insight');if(!ins)return;
+  if(m==='fault')ins.innerHTML='<span>FAULT MODE:</span> Prot SM 2x longer. FAULT handler adds 1.5ms. NVM write blocks 3ms. CAN alarm every 10ms.';
+  else if(m==='stress')ins.innerHTML='<span>HIGH LOAD:</span> Kalman EKF full matrix = 1.8ms. Balancer active. CAN 4 frames/cycle. CPU ~70%.';
+  else ins.innerHTML='<span>NORMAL MODE:</span> AFE read = 2ms dominant. Kalman+filter = 1.5ms. Prot SM = 0.3ms. Total CPU < 50%.';
+};
+draw();
+})();
+</script>
+
 </body>
 </html>
