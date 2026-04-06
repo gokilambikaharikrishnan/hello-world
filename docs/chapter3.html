@@ -1757,7 +1757,30 @@ pre{border-left:4px solid #fb923c!important;border-radius:0!important;box-shadow
         </div>
       </div>
     </div>
-  </section>
+  
+<style>
+.rnd-block{background:linear-gradient(135deg,rgba(255,107,53,.06),rgba(255,107,53,.02));border-left:3px solid #FF6B35;border-radius:.5rem;padding:1.2rem 1.5rem;margin:1.5rem 0;font-size:.92rem;line-height:1.7;}
+.rnd-block .rnd-label{font-family:'Orbitron',monospace;font-size:.65rem;letter-spacing:.12em;color:#FF6B35;text-transform:uppercase;margin-bottom:.6rem;}
+.pause-think{background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.2);border-radius:.5rem;padding:1rem 1.4rem;margin:1.5rem 0;font-size:.9rem;}
+.pause-think .pt-label{font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:.1em;color:#00FF88;margin-bottom:.5rem;}
+.pause-think ol{margin:.3rem 0 0 1rem;color:#aaa;}
+</style>
+
+<div class="rnd-block">
+  <div class="rnd-label">⚗ R&amp;D Thinking — Why Thermal Runaway Is Unstoppable Once Started</div>
+  <p>The core problem isn't temperature — it's <strong>self-acceleration</strong>. Every joule of heat released by the separator breakdown drives more electrolyte decomposition, which releases more heat. The reaction rate doubles every ~10°C (Arrhenius). So by the time you detect 80°C, the cell is already committed to destruction in 200–400ms.</p>
+  <p>This is why the BMS can't "stop" thermal runaway. It can only <em>prevent</em> the conditions that start it (OVP, OTP, short circuit) and <em>contain</em> propagation by opening the pack contactor before adjacent cells are heated.</p>
+  <p>The 130°C separator melt is the point of no return — beyond that, the internal short is mechanical, not electrical. No firmware action can help.</p>
+</div>
+<div class="pause-think">
+  <div class="pt-label">⏸ Pause &amp; Think</div>
+  <ol>
+    <li>If a cell reaches 95°C, what should the BMS do first — disconnect load, disconnect charger, or alert CAN?</li>
+    <li>Why does a 16S pack have 16× the thermal runaway risk compared to a single-cell design?</li>
+    <li>A UPS pack is in a sealed cabinet. How does this change your thermal management strategy?</li>
+  </ol>
+</div>
+</section>
 
 
   <!-- ============================================================

@@ -1303,7 +1303,29 @@ pre{border-left:4px solid #22d3ee!important;border-radius:0!important;box-shadow
         </div>
       </div>
     </div>
-  </section>
+  
+<style>
+.rnd-block{background:linear-gradient(135deg,rgba(0,245,255,.06),rgba(0,245,255,.02));border-left:3px solid #00F5FF;border-radius:.5rem;padding:1.2rem 1.5rem;margin:1.5rem 0;font-size:.92rem;line-height:1.7;}
+.rnd-block .rnd-label{font-family:'Orbitron',monospace;font-size:.65rem;letter-spacing:.12em;color:#00F5FF;text-transform:uppercase;margin-bottom:.6rem;}
+.pause-think{background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.2);border-radius:.5rem;padding:1rem 1.4rem;margin:1.5rem 0;font-size:.9rem;}
+.pause-think .pt-label{font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:.1em;color:#00FF88;margin-bottom:.5rem;}
+.pause-think ol{margin:.3rem 0 0 1rem;color:#aaa;}
+</style>
+<div class="rnd-block">
+  <div class="rnd-label">⚗ R&amp;D Thinking — Why Passive Balancing Wastes Energy (and Why That's OK)</div>
+  <p>Passive balancing bleeds off excess charge as heat through a resistor. A 100mΩ bleed resistor at 50mA dissipates 0.25mW — tiny. Over a full 10-hour balance session that's 9 joules, or about 0.002% of the pack's energy. The "waste" argument is mostly theoretical.</p>
+  <p>The real trade-off: active balancing (flying capacitor, inductive) adds complexity, failure modes, and BOM cost. For stationary ESS at 0.1C or less, passive is almost always correct. Active balancing pays off only at high C-rates (>0.5C continuous) where cell-to-cell current mismatch causes measurable capacity loss.</p>
+  <p>Bottom line: choose balancing complexity proportional to your cycle rate and pack utilisation window.</p>
+</div>
+<div class="pause-think">
+  <div class="pt-label">⏸ Pause &amp; Think</div>
+  <ol>
+    <li>A 16S pack has one cell at 3.41V and the rest at 3.38V. At what point should the BMS trigger balancing?</li>
+    <li>If your passive balance current is 50mA and your charge current is 20A, will balancing keep up during fast charging?</li>
+    <li>Why is it safer to balance at top-of-charge rather than mid-SoC for LFP chemistry?</li>
+  </ol>
+</div>
+</section>
 
 
   <!-- ═══════════════════════════════════════════════════

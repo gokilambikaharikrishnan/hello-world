@@ -470,7 +470,30 @@ pre{border-left:4px solid #fde68a!important;border-radius:0!important;box-shadow
         <div class="hero-stat-label">Chapters Complete</div>
       </div>
     </div>
-  </section>
+  
+<style>
+.rnd-block{background:linear-gradient(135deg,rgba(255,200,87,.06),rgba(255,200,87,.02));border-left:3px solid #FFC857;border-radius:.5rem;padding:1.2rem 1.5rem;margin:1.5rem 0;font-size:.92rem;line-height:1.7;}
+.rnd-block .rnd-label{font-family:'Orbitron',monospace;font-size:.65rem;letter-spacing:.12em;color:#FFC857;text-transform:uppercase;margin-bottom:.6rem;}
+.pause-think{background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.2);border-radius:.5rem;padding:1rem 1.4rem;margin:1.5rem 0;font-size:.9rem;}
+.pause-think .pt-label{font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:.1em;color:#00FF88;margin-bottom:.5rem;}
+.pause-think ol{margin:.3rem 0 0 1rem;color:#aaa;}
+</style>
+<div class="rnd-block">
+  <div class="rnd-label">⚗ R&amp;D Thinking — The UPS vs ESS Firmware Fork</div>
+  <p>A UPS and a home ESS share almost identical hardware — same pack, same AFE, same MCU. But the firmware diverges at one critical design choice: <strong>discharge gate default state</strong>.</p>
+  <p>In a UPS: DSG FET defaults <em>closed</em> (conducting). It opens only on fault. Because the load expects power within milliseconds of grid failure — any FET delay means downtime. Reliability = staying on, not turning off.</p>
+  <p>In an ESS: DSG FET defaults <em>open</em>. It closes when the inverter signals readiness. Because the system operates on a schedule, not in an emergency, and an accidental discharge into an unready inverter can cause inrush damage.</p>
+  <p>This one firmware boolean (DSG_DEFAULT_CLOSED vs OPEN) ripples through fault handling, power-on sequencing, CAN handshake order, and safety certification path. It's never just "one switch."</p>
+</div>
+<div class="pause-think">
+  <div class="pt-label">⏸ Pause &amp; Think</div>
+  <ol>
+    <li>Your UPS has been on float charge at 3.390V/cell for 3 years. How has the SoH likely changed, and what parameter should you re-calibrate?</li>
+    <li>A home ESS is programmed to discharge from 90% to 20% SoC daily. Over 10 years (3650 cycles), is that within LFP's rated cycle life?</li>
+    <li>Why might NFPA 855 require a specific clearance distance between ESS modules that a UPS standard (IEC 62040) doesn't mention?</li>
+  </ol>
+</div>
+</section>
 
   <!-- ═══════════════════════════════════════════════════════════
        SECTION 7.1 — UPS SPECIFIC REQUIREMENTS
