@@ -1635,5 +1635,176 @@ window.addEventListener('scroll',()=>{
   hero.appendChild(scan);
 })();
 </script>
+
+<!-- ═══════════════════════════════════════════════════════
+     SYSTEM SANDBOX — Multi-variable BMS Explorer
+═══════════════════════════════════════════════════════════ -->
+<style>
+.sandbox-panel{background:#06060e;border:1px solid rgba(0,245,255,0.18);border-radius:14px;padding:1.8rem;margin:2rem 0;font-family:'Space Grotesk',sans-serif}
+.sandbox-panel h3{font-family:'Orbitron',monospace;font-size:0.78rem;color:#00F5FF;letter-spacing:0.12em;margin-bottom:1.2rem;text-transform:uppercase}
+.sb-grid{display:grid;grid-template-columns:320px 1fr;gap:1.5rem;align-items:start}
+@media(max-width:700px){.sb-grid{grid-template-columns:1fr}}
+.sb-controls{display:flex;flex-direction:column;gap:0.7rem}
+.sb-slider{background:rgba(0,245,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:0.8rem 1rem}
+.sb-slider label{font-family:'Orbitron',monospace;font-size:0.6rem;letter-spacing:0.1em;display:block;margin-bottom:0.4rem}
+.sb-slider input[type=range]{width:100%;accent-color:var(--sc,#00F5FF);cursor:pointer}
+.sb-slider .sb-val{font-family:'JetBrains Mono',monospace;font-size:0.82rem;text-align:right;display:block;color:var(--sc,#00F5FF)}
+.sb-canvas-wrap{border:1px solid rgba(0,245,255,0.1);border-radius:8px;overflow:hidden}
+.system-state-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-top:1rem}
+.ss-card{background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.05);border-radius:6px;padding:0.6rem 0.8rem;text-align:center;transition:all 0.4s}
+.ss-card .ss-label{font-family:'Orbitron',monospace;font-size:0.55rem;color:#4a5568;letter-spacing:0.1em;margin-bottom:0.3rem}
+.ss-card .ss-val{font-family:'JetBrains Mono',monospace;font-size:0.92rem;font-weight:600}
+.ss-card.alert{border-color:rgba(255,71,87,0.5);background:rgba(255,71,87,0.08)}
+.ss-card.alert .ss-val{color:#FF4757}
+.ss-card.warn{border-color:rgba(255,200,87,0.4);background:rgba(255,200,87,0.06)}
+.ss-card.warn .ss-val{color:#FFC857}
+.ss-card.ok .ss-val{color:#00FF88}
+.cause-chain{margin-top:1rem;font-size:0.8rem;color:#4a5568;font-family:'JetBrains Mono',monospace;line-height:2;padding:0.8rem 1rem;background:rgba(0,0,0,0.2);border-radius:6px;min-height:48px;transition:all 0.3s}
+.cause-chain span{color:#00F5FF}
+</style>
+
+<section class="section" id="s-sandbox" style="background:rgba(0,245,255,0.015)">
+<div class="section-inner">
+  <div class="section-label">System Sandbox</div>
+  <h2 class="section-title">BMS System Sandbox — Change One Thing, Watch Everything React</h2>
+  <p class="section-intro">
+    This is the whole system in one view. Move any slider and watch the cascade: how one variable
+    affects the SoC estimate, protection thresholds, FET states, and CAN outputs simultaneously.
+    <strong style="color:var(--c2)">This is how a senior engineer mentally models the system.</strong>
+  </p>
+
+  <div class="sandbox-panel">
+    <h3>⚡ Live BMS System State — Manipulate All Variables</h3>
+    <div class="sb-grid">
+      <!-- CONTROLS -->
+      <div class="sb-controls">
+        <div class="sb-slider" style="--sc:#FFC857">
+          <label style="color:#FFC857">CELL VOLTAGE (max cell)</label>
+          <input type="range" id="sb-vcell" min="2500" max="3700" value="3295" oninput="sbUpdate()">
+          <span class="sb-val" id="sb-vcell-v">3.295V</span>
+        </div>
+        <div class="sb-slider" style="--sc:#00F5FF">
+          <label style="color:#00F5FF">CURRENT (+ = charge, - = disch)</label>
+          <input type="range" id="sb-ibat" min="-280" max="280" value="-50" oninput="sbUpdate()">
+          <span class="sb-val" id="sb-ibat-v">-50A</span>
+        </div>
+        <div class="sb-slider" style="--sc:#FF6B35">
+          <label style="color:#FF6B35">TEMPERATURE (max sensor)</label>
+          <input type="range" id="sb-temp" min="-15" max="70" value="28" oninput="sbUpdate()">
+          <span class="sb-val" id="sb-temp-v">28°C</span>
+        </div>
+        <div class="sb-slider" style="--sc:#00FF88">
+          <label style="color:#00FF88">STATE OF CHARGE</label>
+          <input type="range" id="sb-soc" min="0" max="100" value="65" oninput="sbUpdate()">
+          <span class="sb-val" id="sb-soc-v">65%</span>
+        </div>
+        <div class="sb-slider" style="--sc:#A855F7">
+          <label style="color:#A855F7">CELL IMBALANCE (ΔV max)</label>
+          <input type="range" id="sb-dv" min="0" max="200" value="5" oninput="sbUpdate()">
+          <span class="sb-val" id="sb-dv-v">5mV</span>
+        </div>
+      </div>
+
+      <!-- CANVAS + STATE -->
+      <div>
+        <div class="sb-canvas-wrap">
+          <canvas id="sb-canvas" width="560" height="200" style="width:100%;display:block;background:#050510"></canvas>
+        </div>
+        <div class="system-state-grid" id="ss-grid">
+          <div class="ss-card ok" id="ss-chg"><div class="ss-label">CHG FET</div><div class="ss-val" id="ss-chg-v">ON</div></div>
+          <div class="ss-card ok" id="ss-dsg"><div class="ss-label">DSG FET</div><div class="ss-val" id="ss-dsg-v">ON</div></div>
+          <div class="ss-card ok" id="ss-bal"><div class="ss-label">BALANCER</div><div class="ss-val" id="ss-bal-v">OFF</div></div>
+          <div class="ss-card ok" id="ss-prot"><div class="ss-label">PROT STATE</div><div class="ss-val" id="ss-prot-v">NORMAL</div></div>
+          <div class="ss-card ok" id="ss-can"><div class="ss-label">CAN 0x351</div><div class="ss-val" id="ss-can-v">56A max</div></div>
+          <div class="ss-card ok" id="ss-soh"><div class="ss-label">SoH EST.</div><div class="ss-val" id="ss-soh-v">98%</div></div>
+        </div>
+        <div class="cause-chain" id="sb-chain">← Move sliders to see cause→effect chain</div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<script>
+(function(){
+const canvas=document.getElementById('sb-canvas');if(!canvas)return;
+const ctx=canvas.getContext('2d');
+
+function ocvLookup(s){const t=[[0,2.5],[10,3.1],[20,3.25],[30,3.28],[50,3.295],[70,3.315],[80,3.33],[90,3.38],[100,3.65]];for(let i=0;i<t.length-1;i++){if(s>=t[i][0]&&s<=t[i+1][0]){const f=(s-t[i][0])/(t[i+1][0]-t[i][0]);return t[i][1]+f*(t[i+1][1]-t[i][1]);}}return 3.3;}
+
+function drawGauge(ctx,cx,cy,r,val,min,max,label,color,unit){
+  const start=Math.PI*0.75,end=Math.PI*2.25;
+  const ang=start+(val-min)/(max-min)*(end-start);
+  ctx.beginPath();ctx.arc(cx,cy,r,start,end);ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=8;ctx.lineCap='round';ctx.stroke();
+  const dangerAng=start+(0.85)*(end-start);
+  ctx.beginPath();ctx.arc(cx,cy,r,start,ang);ctx.strokeStyle=color;ctx.lineWidth=8;ctx.stroke();
+  ctx.fillStyle=color;ctx.font=`bold 13px JetBrains Mono`;ctx.textAlign='center';
+  ctx.fillText(val+(unit||''),cx,cy+5);
+  ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='7px Orbitron';ctx.fillText(label,cx,cy+18);
+}
+
+window.sbUpdate=function(){
+  const vc=+document.getElementById('sb-vcell').value/1000;
+  const ib=+document.getElementById('sb-ibat').value;
+  const te=+document.getElementById('sb-temp').value;
+  const sc=+document.getElementById('sb-soc').value;
+  const dv=+document.getElementById('sb-dv').value;
+
+  document.getElementById('sb-vcell-v').textContent=vc.toFixed(3)+'V';
+  document.getElementById('sb-ibat-v').textContent=(ib>=0?'+':'')+ib+'A';
+  document.getElementById('sb-temp-v').textContent=te+'°C';
+  document.getElementById('sb-soc-v').textContent=sc+'%';
+  document.getElementById('sb-dv-v').textContent=dv+'mV';
+
+  // compute system state
+  const ovp=vc>=3.65;const uvp=vc<=2.8;const otp=te>=55;const utc=te<0&&ib>0;
+  const ocp=Math.abs(ib)>280;const lowSoc=sc<20;const nearFull=sc>90;
+  const balOn=dv>=10;
+  let chgOn=true,dsgOn=true,protState='NORMAL';
+  if(ovp){chgOn=false;protState='OVP_TRIP';}
+  if(uvp){dsgOn=false;protState='DSG_TRIP';}
+  if(otp){dsgOn=false;protState='OTP_TRIP';}
+  if(utc){chgOn=false;protState='UTC_TRIP';}
+  if(ocp){dsgOn=false;protState='OCP_TRIP';}
+  if(lowSoc&&vc<2.5){dsgOn=false;protState='DEEP_DSCH';}
+  const canMax=chgOn?(nearFull?'5A max':(ovp?'0A':'56A max')):'0A — FAULT';
+  const soh=Math.max(60,98-Math.max(0,(dv-5)*0.3)-Math.max(0,(te-45)*0.4)).toFixed(0);
+
+  // update state cards
+  const chgEl=document.getElementById('ss-chg');chgEl.className='ss-card '+(chgOn?'ok':'alert');document.getElementById('ss-chg-v').textContent=chgOn?'ON':'OFF';
+  const dsgEl=document.getElementById('ss-dsg');dsgEl.className='ss-card '+(dsgOn?'ok':'alert');document.getElementById('ss-dsg-v').textContent=dsgOn?'ON':'OFF';
+  const balEl=document.getElementById('ss-bal');balEl.className='ss-card '+(balOn?'warn':'ok');document.getElementById('ss-bal-v').textContent=balOn?'ACTIVE':'OFF';
+  const protEl=document.getElementById('ss-prot');protEl.className='ss-card '+(protState==='NORMAL'?'ok':(protState.includes('TRIP')?'alert':'warn'));document.getElementById('ss-prot-v').textContent=protState;
+  const canEl=document.getElementById('ss-can');canEl.className='ss-card '+(canMax==='0A — FAULT'?'alert':(nearFull?'warn':'ok'));document.getElementById('ss-can-v').textContent=canMax;
+  const sohEl=document.getElementById('ss-soh');sohEl.className='ss-card '+(+soh<80?'alert':(+soh<90?'warn':'ok'));document.getElementById('ss-soh-v').textContent=soh+'%';
+
+  // draw gauges
+  const W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#050510';ctx.fillRect(0,0,W,H);
+  const vcCol=ovp?'#FF4757':(uvp?'#FF6B35':(nearFull?'#FFC857':'#00F5FF'));
+  const ibCol=ocp?'#FF4757':(Math.abs(ib)>200?'#FFC857':(ib<0?'#A855F7':'#00FF88'));
+  const teCol=otp?'#FF4757':(te>45?'#FFC857':(te<0?'#00CFFF':'#00FF88'));
+  const scCol=lowSoc?'#FF4757':(sc<30?'#FFC857':(nearFull?'#FFC857':'#00FF88'));
+  drawGauge(ctx,90,H/2,62,vc.toFixed(2),2.5,3.7,'VCELL',vcCol,'V');
+  drawGauge(ctx,230,H/2,62,Math.abs(ib),0,280,'|IBAT|',ibCol,'A');
+  drawGauge(ctx,370,H/2,62,te,-20,70,'TEMP',teCol,'°C');
+  drawGauge(ctx,500,H/2,62,sc,0,100,'SoC',scCol,'%');
+
+  // cause chain
+  let chain='';
+  if(ovp)chain=`<span>Vcell=${vc.toFixed(3)}V > 3.65V</span> → OVP detected → CHG FET OFF → CAN fault 0x359 → Inverter stops charging`;
+  else if(uvp)chain=`<span>Vcell=${vc.toFixed(3)}V < 2.8V</span> → UVP detected → DSG FET OFF → Inverter switches to grid`;
+  else if(otp)chain=`<span>T=${te}°C > 55°C</span> → OTP detected → DSG FET OFF → thermal recovery begins`;
+  else if(utc)chain=`<span>T=${te}°C < 0°C</span> → UTC: charging blocked → cell lithium plating risk avoided`;
+  else if(ocp)chain=`<span>|I|=${Math.abs(ib)}A > 280A</span> → OCP detected → DSG FET OFF → 30s lockout`;
+  else if(balOn)chain=`<span>ΔV=${dv}mV > 10mV</span> → Balancer activates on highest cell → bleeds ${Math.round(dv/100*100)}mA → ΔV will reduce`;
+  else if(lowSoc)chain=`<span>SoC=${sc}%</span> → Low battery → CAN 0x351: Ichrg_max increased → Inverter prioritises charging`;
+  else if(nearFull)chain=`<span>SoC=${sc}%</span> → Near full → CAN 0x351: Ichrg_max throttled to 5A → CV float mode`;
+  else chain=`All parameters normal. <span>NORMAL state</span> — Measuring → Estimating → Communicating every 10ms.`;
+  document.getElementById('sb-chain').innerHTML=chain;
+};
+sbUpdate();
+})();
+</script>
 </body>
 </html>
