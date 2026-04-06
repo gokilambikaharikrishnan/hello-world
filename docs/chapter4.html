@@ -2574,5 +2574,39 @@ draw();
 })();
 </script>
 
+
+<style>
+.xref-callout{display:inline-flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:.3rem;padding:.3rem .75rem;font-family:'Orbitron',monospace;font-size:.6rem;letter-spacing:.06em;color:#aaa;text-decoration:none;margin:.2rem .3rem .2rem 0;transition:all .15s;}
+.xref-callout:hover{background:rgba(255,255,255,.08);color:#fff;}
+.xref-callout .xr-badge{padding:.1rem .35rem;border-radius:.2rem;font-size:.56rem;font-weight:700;margin-right:.2rem;}
+.xref-block{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07);border-radius:.4rem;padding:.6rem 1rem;margin:1rem 0;font-size:.78rem;color:#888;}
+.xref-block .xr-title{font-family:'Orbitron',monospace;font-size:.56rem;letter-spacing:.1em;color:#444;margin-bottom:.4rem;}
+</style>
+<div class="xref-block" style="max-width:900px;margin:0 auto;">
+  <div class="xr-title">↗ CONNECTS TO</div>
+  <a href="chapter3.html" class="xref-callout" style="border-color:rgba(255,255,255,.15);" title="OTP physics — why the 45°C cell limit exists"><span class="xr-badge" style="background:rgba(255,107,53,0.2);color:#FF6B35;">CH3</span>OTP physics — why the 45°C cell limit exists</a>
+<a href="chapter6.html" class="xref-callout" style="border-color:rgba(255,255,255,.15);" title="BQ76952 AFE → I²C read sequence in firmware"><span class="xr-badge" style="background:rgba(168,85,247,0.2);color:#A855F7;">CH6</span>BQ76952 AFE → I²C read sequence in firmware</a>
+<a href="SYSTEM_OVERVIEW.html" class="xref-callout" style="border-color:rgba(255,255,255,.15);" title="Signal chain: Cell → AFE → MCU → FET → CAN"><span class="xr-badge" style="background:rgba(0,207,255,0.2);color:#00CFFF;">SYS</span>Signal chain: Cell → AFE → MCU → FET → CAN</a>
+
+</div>
+
+<!-- Bridge Section -->
+<section style="padding:2rem 0;border-top:1px solid rgba(0,245,255,0.1);">
+<div style="max-width:900px;margin:0 auto;padding:0 1.5rem;">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+  <div style="background:rgba(0,245,255,0.04);border:1px solid rgba(0,245,255,0.15);border-radius:.6rem;padding:1.2rem 1.5rem;">
+    <div style="font-family:'Orbitron',monospace;font-size:.6rem;letter-spacing:.12em;color:#00F5FF;margin-bottom:.7rem;">✓ WHAT YOU LEARNED IN THIS CHAPTER</div>
+    <ul style="list-style:none;padding:0;margin:0;font-size:.82rem;line-height:1.8;"><li style="margin-bottom:.4rem;color:#aaa;">Voltage, current, and temperature protection all need hardware (comparator) AND firmware (state machine) layers</li><li style="margin-bottom:.4rem;color:#aaa;">The BQ76952 AFE handles OVP/OCP in &lt;500µs — independent of MCU firmware speed</li><li style="margin-bottom:.4rem;color:#aaa;">Passive cell balancing dissipates excess charge as heat — correct for ESS at low C-rate</li><li style="margin-bottom:.4rem;color:#aaa;">MOSFET Rds_on, SOA, and gate charge all affect protection speed and conduction loss</li></ul>
+  </div>
+  <div style="background:rgba(0,245,255,0.06);border:1px solid rgba(0,245,255,0.25);border-radius:.6rem;padding:1.2rem 1.5rem;display:flex;flex-direction:column;justify-content:space-between;">
+    <div>
+      <div style="font-family:'Orbitron',monospace;font-size:.6rem;letter-spacing:.12em;color:#00F5FF;margin-bottom:.7rem;">→ NEXT</div>
+      <p style="font-size:.86rem;color:#bbb;line-height:1.7;">Chapter 5: Standards &amp; Compliance — IEC 62133, UL 1973, UN 38.3, and how BMS design maps to certification requirements</p>
+    </div>
+    <a href="chapter5.html" style="display:inline-block;margin-top:1rem;background:rgba(0,245,255,0.15);border:1px solid rgba(0,245,255,0.4);color:#00F5FF;font-family:'Orbitron',monospace;font-size:.68rem;letter-spacing:.08em;padding:.6rem 1.2rem;border-radius:.4rem;text-decoration:none;text-align:center;">Continue → Chapter 5: Standards</a>
+  </div>
+</div>
+</div>
+</section>
 </body>
 </html>

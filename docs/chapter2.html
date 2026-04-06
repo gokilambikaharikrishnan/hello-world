@@ -4949,6 +4949,40 @@ drawRadar();
 
 
 
+
+<style>
+.xref-callout{display:inline-flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:.3rem;padding:.3rem .75rem;font-family:'Orbitron',monospace;font-size:.6rem;letter-spacing:.06em;color:#aaa;text-decoration:none;margin:.2rem .3rem .2rem 0;transition:all .15s;}
+.xref-callout:hover{background:rgba(255,255,255,.08);color:#fff;}
+.xref-callout .xr-badge{padding:.1rem .35rem;border-radius:.2rem;font-size:.56rem;font-weight:700;margin-right:.2rem;}
+.xref-block{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07);border-radius:.4rem;padding:.6rem 1rem;margin:1rem 0;font-size:.78rem;color:#888;}
+.xref-block .xr-title{font-family:'Orbitron',monospace;font-size:.56rem;letter-spacing:.1em;color:#444;margin-bottom:.4rem;}
+</style>
+<div class="xref-block" style="max-width:900px;margin:0 auto;">
+  <div class="xr-title">↗ CONNECTS TO</div>
+  <a href="chapter1.html" class="xref-callout" style="border-color:rgba(255,255,255,.15);" title="OCV/SoC curve — source data for Kalman initialisation"><span class="xr-badge" style="background:rgba(255,200,87,0.2);color:#FFC857;">CH1</span>OCV/SoC curve — source data for Kalman initialisation</a>
+<a href="chapter5.html" class="xref-callout" style="border-color:rgba(255,255,255,.15);" title="Standards that specify SoC accuracy requirements"><span class="xr-badge" style="background:rgba(0,255,136,0.2);color:#00FF88;">CH5</span>Standards that specify SoC accuracy requirements</a>
+<a href="chapter6.html" class="xref-callout" style="border-color:rgba(255,255,255,.15);" title="Kalman EKF slot in the 10ms firmware super-loop"><span class="xr-badge" style="background:rgba(168,85,247,0.2);color:#A855F7;">CH6</span>Kalman EKF slot in the 10ms firmware super-loop</a>
+
+</div>
+
+<!-- Bridge Section -->
+<section style="padding:2rem 0;border-top:1px solid rgba(0,245,255,0.1);">
+<div style="max-width:900px;margin:0 auto;padding:0 1.5rem;">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+  <div style="background:rgba(0,245,255,0.04);border:1px solid rgba(0,245,255,0.15);border-radius:.6rem;padding:1.2rem 1.5rem;">
+    <div style="font-family:'Orbitron',monospace;font-size:.6rem;letter-spacing:.12em;color:#00F5FF;margin-bottom:.7rem;">✓ WHAT YOU LEARNED IN THIS CHAPTER</div>
+    <ul style="list-style:none;padding:0;margin:0;font-size:.82rem;line-height:1.8;"><li style="margin-bottom:.4rem;color:#aaa;">Five SoC estimation methods — each with specific accuracy, drift, and compute trade-offs</li><li style="margin-bottom:.4rem;color:#aaa;">The Extended Kalman Filter fuses CC and OCV with gain that de-emphasises OCV in the flat LFP plateau</li><li style="margin-bottom:.4rem;color:#aaa;">SoH tracks capacity fade and impedance rise — BMS must recalibrate thresholds as cells age</li><li style="margin-bottom:.4rem;color:#aaa;">Coulomb counting drifts; OCV is noisy in the flat region; only fusion gives you both</li></ul>
+  </div>
+  <div style="background:rgba(0,245,255,0.06);border:1px solid rgba(0,245,255,0.25);border-radius:.6rem;padding:1.2rem 1.5rem;display:flex;flex-direction:column;justify-content:space-between;">
+    <div>
+      <div style="font-family:'Orbitron',monospace;font-size:.6rem;letter-spacing:.12em;color:#00F5FF;margin-bottom:.7rem;">→ NEXT</div>
+      <p style="font-size:.86rem;color:#bbb;line-height:1.7;">Chapter 3: Thermal &amp; Mechanical — I²R heat generation, thermal runaway physics, and why temperature is the primary failure mode</p>
+    </div>
+    <a href="chapter3.html" style="display:inline-block;margin-top:1rem;background:rgba(0,245,255,0.15);border:1px solid rgba(0,245,255,0.4);color:#00F5FF;font-family:'Orbitron',monospace;font-size:.68rem;letter-spacing:.08em;padding:.6rem 1.2rem;border-radius:.4rem;text-decoration:none;text-align:center;">Continue → Chapter 3: Thermal</a>
+  </div>
+</div>
+</div>
+</section>
 <style>
 .ch-journey{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%);z-index:9000;background:rgba(2,2,10,0.92);border:1px solid rgba(255,255,255,0.12);border-radius:2rem;padding:.4rem 1rem;display:flex;align-items:center;gap:.25rem;font-family:'Orbitron',monospace;font-size:.58rem;letter-spacing:.04em;backdrop-filter:blur(12px);box-shadow:0 4px 24px rgba(0,0,0,.5);flex-wrap:nowrap;overflow-x:auto;max-width:calc(100vw - 2rem);}
 .cj-stop{padding:.25rem .55rem;border-radius:1rem;text-decoration:none;transition:all .2s;white-space:nowrap;}
