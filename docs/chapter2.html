@@ -605,7 +605,29 @@ pre{border-left:4px solid #60a5fa!important;border-radius:0!important;box-shadow
           <span class="hero-meta-value">Chapter 1</span>
         </div>
       </div>
-    </section>
+    
+<style>
+.rnd-block-ch2{background:linear-gradient(135deg,rgba(0,245,255,.06),rgba(0,245,255,.02));border-left:3px solid #00F5FF;border-radius:.5rem;padding:1.2rem 1.5rem;margin:1.5rem 0;font-size:.92rem;line-height:1.7;}
+.rnd-block-ch2 .rnd-label{font-family:'Orbitron',monospace;font-size:.65rem;letter-spacing:.12em;color:#00F5FF;text-transform:uppercase;margin-bottom:.6rem;}
+.pause-think-ch2{background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.2);border-radius:.5rem;padding:1rem 1.4rem;margin:1.5rem 0;font-size:.9rem;}
+.pause-think-ch2 .pt-label{font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:.1em;color:#00FF88;margin-bottom:.5rem;}
+.pause-think-ch2 ol{margin:.3rem 0 0 1rem;color:#aaa;}
+</style>
+<div class="rnd-block-ch2">
+  <div class="rnd-label">⚗ R&amp;D Thinking — The Flat LFP Plateau Is a SoC Nightmare</div>
+  <p>LFP's flat OCV plateau (3.28–3.33V across 20–80% SoC) is a gift for cycle life and a curse for estimation. That's 50mV spanning 60% of the pack's usable range. Your 12-bit ADC has ~0.81mV resolution — which maps to roughly ±1.6% SoC resolution at best, under ideal noise conditions.</p>
+  <p>In practice: thermal noise, cable resistance, and RC relaxation add another ±5–10mV. So voltage alone gives you ±10–20% SoC accuracy in the flat region. For a 14.3kWh pack, that's ±1.4–2.8 kWh of uncertainty — enough to miss a load-shedding decision entirely.</p>
+  <p>This is why coulomb counting exists. But coulomb counting drifts. So you need both. The Kalman filter exists specifically to fuse imprecise-but-current CC with noisy-but-absolute OCV, with gain weights that automatically de-emphasize OCV in the flat region. That's not a hack — it's the mathematically optimal solution to this exact sensor fusion problem.</p>
+</div>
+<div class="pause-think-ch2">
+  <div class="pt-label">⏸ Pause &amp; Think</div>
+  <ol>
+    <li>If OCV changes only 2mV per 1% SoC in the plateau, what ADC resolution (bits) would you need to get ±1% SoC accuracy from voltage alone?</li>
+    <li>Your Coulomb counter has 0.1% current measurement error. After 1000 charge/discharge cycles, how much SoC drift could accumulate?</li>
+    <li>When is the best time to do an OCV re-calibration? Why can't you do it during active charge or discharge?</li>
+  </ol>
+</div>
+</section>
 
     <!-- TOC -->
     <div class="toc-card">
