@@ -950,3 +950,159 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);display
   </div>
 </div>
 </section>
+
+<!-- ═══════════════════════════════════ SECTION 4 ═══════════════ -->
+<section class="section reveal" id="s-chapters">
+<div class="section-inner">
+  <div class="section-label">Section 04</div>
+  <h2 class="section-title">Chapter Connection Map — Where Each Chapter Lives in the System</h2>
+  <p class="section-intro">
+    Every chapter in this knowledge base owns one or more stages in the BMS signal chain. This map shows
+    you exactly which chapter to open when you hit a question at any stage of the system. No more guessing
+    which chapter covers what.
+  </p>
+
+  <!-- CHAPTER MAP SVG -->
+  <div style="overflow-x:auto;margin:1.5rem 0">
+  <svg viewBox="0 0 920 560" width="900" style="display:block;margin:0 auto;font-family:'JetBrains Mono',monospace;">
+    <rect width="920" height="560" fill="#020204" rx="12"/>
+    <text x="460" y="26" fill="#00f5ff" font-size="11" text-anchor="middle" font-weight="bold" font-family="Orbitron" letter-spacing="2">KNOWLEDGE BASE — CHAPTER COVERAGE MAP</text>
+
+    <!-- CENTER SPINE: BMS system pipeline labels -->
+    <rect x="60" y="50" width="800" height="32" rx="5" fill="#060610" stroke="rgba(0,245,255,0.2)" stroke-width="1"/>
+    <text x="460" y="71" fill="#00f5ff" font-size="8.5" text-anchor="middle" font-family="Orbitron" letter-spacing="3">CELL → SENSE → AFE → FILTER → SoC/SoH → PROT → FET → CAN → CLOUD</text>
+
+    <!-- Stage dots on spine -->
+    <circle cx="110" cy="66" r="5" fill="#FFC857"><animate attributeName="r" values="4;7;4" dur="3s" repeatCount="indefinite" begin="0s"/></circle>
+    <circle cx="195" cy="66" r="5" fill="#00F5FF"><animate attributeName="r" values="4;7;4" dur="3s" repeatCount="indefinite" begin="0.3s"/></circle>
+    <circle cx="290" cy="66" r="5" fill="#00F5FF"><animate attributeName="r" values="4;7;4" dur="3s" repeatCount="indefinite" begin="0.6s"/></circle>
+    <circle cx="385" cy="66" r="5" fill="#A855F7"><animate attributeName="r" values="4;7;4" dur="3s" repeatCount="indefinite" begin="0.9s"/></circle>
+    <circle cx="480" cy="66" r="5" fill="#00FF88"><animate attributeName="r" values="4;7;4" dur="3s" repeatCount="indefinite" begin="1.2s"/></circle>
+    <circle cx="575" cy="66" r="5" fill="#FF6B35"><animate attributeName="r" values="4;7;4" dur="3s" repeatCount="indefinite" begin="1.5s"/></circle>
+    <circle cx="665" cy="66" r="5" fill="#FFC857"><animate attributeName="r" values="4;7;4" dur="3s" repeatCount="indefinite" begin="1.8s"/></circle>
+    <circle cx="755" cy="66" r="5" fill="#00F5FF"><animate attributeName="r" values="4;7;4" dur="3s" repeatCount="indefinite" begin="2.1s"/></circle>
+    <circle cx="840" cy="66" r="5" fill="#00CFFF"><animate attributeName="r" values="4;7;4" dur="3s" repeatCount="indefinite" begin="2.4s"/></circle>
+
+    <!-- ── CHAPTER CARDS (arranged around spine) ── -->
+
+    <!-- CH1: Cell Chemistry → CELL stage -->
+    <rect x="55" y="110" width="130" height="80" rx="7" fill="#120e04" stroke="#FFC857" stroke-width="1.8"/>
+    <text x="120" y="132" fill="#FFC857" font-size="9.5" text-anchor="middle" font-weight="bold">CH 1</text>
+    <text x="120" y="146" fill="#FFC857" font-size="8" text-anchor="middle">Cell Chemistry</text>
+    <text x="120" y="162" fill="#888" font-size="7.5" text-anchor="middle">Why LFP? P-O bonds</text>
+    <text x="120" y="175" fill="#888" font-size="7.5" text-anchor="middle">flat OCV, cycle life</text>
+    <line x1="110" y1="82" x2="110" y2="109" stroke="#FFC857" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.6"/>
+
+    <!-- CH2: Electrochemistry → SoC stage -->
+    <rect x="420" y="110" width="130" height="80" rx="7" fill="#04100e" stroke="#00FF88" stroke-width="1.8"/>
+    <text x="485" y="132" fill="#00FF88" font-size="9.5" text-anchor="middle" font-weight="bold">CH 2</text>
+    <text x="485" y="146" fill="#00FF88" font-size="8" text-anchor="middle">Electrochemistry</text>
+    <text x="485" y="162" fill="#888" font-size="7.5" text-anchor="middle">SoC/SoH equations</text>
+    <text x="485" y="175" fill="#888" font-size="7.5" text-anchor="middle">Butler-Volmer, EIS</text>
+    <line x1="480" y1="82" x2="480" y2="109" stroke="#00FF88" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.6"/>
+
+    <!-- CH3: Pack Architecture → CELL + FET -->
+    <rect x="55" y="220" width="130" height="80" rx="7" fill="#120804" stroke="#FF6B35" stroke-width="1.8"/>
+    <text x="120" y="242" fill="#FF6B35" font-size="9.5" text-anchor="middle" font-weight="bold">CH 3</text>
+    <text x="120" y="256" fill="#FF6B35" font-size="8" text-anchor="middle">Pack Architecture</text>
+    <text x="120" y="272" fill="#888" font-size="7.5" text-anchor="middle">S/P config, busbar</text>
+    <text x="120" y="285" fill="#888" font-size="7.5" text-anchor="middle">thermal management</text>
+    <line x1="110" y1="195" x2="110" y2="219" stroke="#FF6B35" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.6"/>
+    <!-- connecting to FET stage -->
+    <path d="M185,260 Q430,260 610,82" fill="none" stroke="#FF6B35" stroke-width="0.8" stroke-dasharray="4,3" opacity="0.3"/>
+
+    <!-- CH4: AFE & Sensing → SENSE + AFE -->
+    <rect x="155" y="110" width="130" height="80" rx="7" fill="#04080e" stroke="#00F5FF" stroke-width="1.8"/>
+    <text x="220" y="132" fill="#00F5FF" font-size="9.5" text-anchor="middle" font-weight="bold">CH 4</text>
+    <text x="220" y="146" fill="#00F5FF" font-size="8" text-anchor="middle">AFE &amp; Sensing</text>
+    <text x="220" y="162" fill="#888" font-size="7.5" text-anchor="middle">BQ76952, ADC</text>
+    <text x="220" y="175" fill="#888" font-size="7.5" text-anchor="middle">NTC, shunt, I²C</text>
+    <line x1="200" y1="82" x2="200" y2="109" stroke="#00F5FF" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.6"/>
+    <line x1="280" y1="82" x2="260" y2="109" stroke="#00F5FF" stroke-width="0.8" stroke-dasharray="3,3" opacity="0.4"/>
+
+    <!-- CH5: Algorithms → FILTER + SoC -->
+    <rect x="310" y="110" width="130" height="80" rx="7" fill="#04100a" stroke="#00FF88" stroke-width="1.8"/>
+    <text x="375" y="132" fill="#00FF88" font-size="9.5" text-anchor="middle" font-weight="bold">CH 5</text>
+    <text x="375" y="146" fill="#00FF88" font-size="8" text-anchor="middle">Algorithms</text>
+    <text x="375" y="162" fill="#888" font-size="7.5" text-anchor="middle">Kalman filter, EKF</text>
+    <text x="375" y="175" fill="#888" font-size="7.5" text-anchor="middle">IIR, SoH DCIR</text>
+    <line x1="385" y1="82" x2="385" y2="109" stroke="#00FF88" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.6"/>
+
+    <!-- CH6: Firmware → ALL MCU stages -->
+    <rect x="55" y="330" width="130" height="90" rx="7" fill="#080420" stroke="#A855F7" stroke-width="1.8"/>
+    <text x="120" y="352" fill="#A855F7" font-size="9.5" text-anchor="middle" font-weight="bold">CH 6</text>
+    <text x="120" y="366" fill="#A855F7" font-size="8" text-anchor="middle">Firmware</text>
+    <text x="120" y="382" fill="#888" font-size="7.5" text-anchor="middle">MISRA-C, HAL</text>
+    <text x="120" y="395" fill="#888" font-size="7.5" text-anchor="middle">state machine, RTOS</text>
+    <text x="120" y="408" fill="#555" font-size="7" text-anchor="middle">CAN, NVM, WDG</text>
+    <!-- spanning line under pipeline -->
+    <line x1="185" y1="375" x2="870" y2="375" stroke="#A855F7" stroke-width="0.8" stroke-dasharray="6,4" opacity="0.25"/>
+    <text x="530" y="395" fill="#A855F7" font-size="7" text-anchor="middle" opacity="0.4">CH 6 underlies ALL MCU stages above this line</text>
+
+    <!-- CH7: Applications → CAN + Cloud -->
+    <rect x="680" y="110" width="130" height="80" rx="7" fill="#120e04" stroke="#FFC857" stroke-width="1.8"/>
+    <text x="745" y="132" fill="#FFC857" font-size="9.5" text-anchor="middle" font-weight="bold">CH 7</text>
+    <text x="745" y="146" fill="#FFC857" font-size="8" text-anchor="middle">Applications</text>
+    <text x="745" y="162" fill="#888" font-size="7.5" text-anchor="middle">UPS, home ESS</text>
+    <text x="745" y="175" fill="#888" font-size="7.5" text-anchor="middle">CAN frames, VoC</text>
+    <line x1="755" y1="82" x2="755" y2="109" stroke="#FFC857" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.6"/>
+
+    <!-- CH8: HW Design → AFE + FET -->
+    <rect x="205" y="220" width="130" height="80" rx="7" fill="#120e04" stroke="#FFC857" stroke-width="1.8"/>
+    <text x="270" y="242" fill="#FFC857" font-size="9.5" text-anchor="middle" font-weight="bold">CH 8</text>
+    <text x="270" y="256" fill="#FFC857" font-size="8" text-anchor="middle">HW Design</text>
+    <text x="270" y="272" fill="#888" font-size="7.5" text-anchor="middle">PCB, FET sizing</text>
+    <text x="270" y="285" fill="#888" font-size="7.5" text-anchor="middle">gate driver, shunt</text>
+    <line x1="270" y1="195" x2="270" y2="219" stroke="#FFC857" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.5"/>
+    <path d="M335,260 Q440,240 630,82" fill="none" stroke="#FFC857" stroke-width="0.8" stroke-dasharray="4,3" opacity="0.3"/>
+
+    <!-- CH9: Protection → PROT + FET -->
+    <rect x="510" y="220" width="130" height="80" rx="7" fill="#0e0810" stroke="#FF6B35" stroke-width="1.8"/>
+    <text x="575" y="242" fill="#FF6B35" font-size="9.5" text-anchor="middle" font-weight="bold">CH 9</text>
+    <text x="575" y="256" fill="#FF6B35" font-size="8" text-anchor="middle">Protection</text>
+    <text x="575" y="272" fill="#888" font-size="7.5" text-anchor="middle">OVP/UVP/OCP/OTP</text>
+    <text x="575" y="285" fill="#888" font-size="7.5" text-anchor="middle">SCC, prot SM</text>
+    <line x1="575" y1="195" x2="575" y2="219" stroke="#FF6B35" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.6"/>
+
+    <!-- CH10: Sustainability → Cloud -->
+    <rect x="770" y="220" width="130" height="80" rx="7" fill="#04100e" stroke="#00CFFF" stroke-width="1.8"/>
+    <text x="835" y="242" fill="#00CFFF" font-size="9.5" text-anchor="middle" font-weight="bold">CH 10</text>
+    <text x="835" y="256" fill="#00CFFF" font-size="8" text-anchor="middle">Sustainability</text>
+    <text x="835" y="272" fill="#888" font-size="7.5" text-anchor="middle">V2G, Na-ion, SSB</text>
+    <text x="835" y="285" fill="#888" font-size="7.5" text-anchor="middle">grid-scale ESS</text>
+    <line x1="840" y1="195" x2="840" y2="219" stroke="#00CFFF" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.6"/>
+
+    <!-- QUICK REFERENCE row at bottom -->
+    <rect x="55" y="450" width="810" height="90" rx="8" fill="#060608" stroke="rgba(0,245,255,0.1)" stroke-width="1"/>
+    <text x="460" y="473" fill="#00f5ff" font-size="9" text-anchor="middle" font-weight="bold" font-family="Orbitron">WHICH CHAPTER TO OPEN — QUICK LOOKUP</text>
+    <text x="80" y="495" fill="#FFC857" font-size="8" font-weight="bold">Cell behaviour?</text><text x="80" y="508" fill="#888" font-size="7.5">→ Ch 1 + Ch 2</text>
+    <text x="210" y="495" fill="#00F5FF" font-size="8" font-weight="bold">ADC / sensing issue?</text><text x="210" y="508" fill="#888" font-size="7.5">→ Ch 4 + Ch 8</text>
+    <text x="360" y="495" fill="#00FF88" font-size="8" font-weight="bold">SoC drift?</text><text x="360" y="508" fill="#888" font-size="7.5">→ Ch 2 + Ch 5</text>
+    <text x="480" y="495" fill="#A855F7" font-size="8" font-weight="bold">Firmware / loop?</text><text x="480" y="508" fill="#888" font-size="7.5">→ Ch 6</text>
+    <text x="590" y="495" fill="#FF6B35" font-size="8" font-weight="bold">FET tripping?</text><text x="590" y="508" fill="#888" font-size="7.5">→ Ch 9 + Ch 3</text>
+    <text x="720" y="495" fill="#FFC857" font-size="8" font-weight="bold">UPS / ESS tuning?</text><text x="720" y="508" fill="#888" font-size="7.5">→ Ch 7</text>
+    <text x="80" y="528" fill="#FF4757" font-size="8" font-weight="bold">CAN not talking?</text><text x="80" y="541" fill="#888" font-size="7.5">→ Ch 6 + Ch 7</text>
+    <text x="210" y="528" fill="#00CFFF" font-size="8" font-weight="bold">Future tech?</text><text x="210" y="541" fill="#888" font-size="7.5">→ Ch 10</text>
+    <text x="360" y="528" fill="#888" font-size="8" font-weight="bold">Pack layout?</text><text x="360" y="541" fill="#888" font-size="7.5">→ Ch 3 + Ch 8</text>
+    <text x="480" y="528" fill="#888" font-size="8" font-weight="bold">Thermal runaway?</text><text x="480" y="541" fill="#888" font-size="7.5">→ Ch 9 + Ch 1</text>
+    <text x="620" y="528" fill="#888" font-size="8" font-weight="bold">HPPC / DCIR?</text><text x="620" y="541" fill="#888" font-size="7.5">→ Ch 2 + Ch 5</text>
+    <text x="760" y="528" fill="#888" font-size="8" font-weight="bold">Standards?</text><text x="760" y="541" fill="#888" font-size="7.5">→ Ch 9 + Ch 10</text>
+  </svg>
+  </div>
+
+  <!-- chapter badges clickable row -->
+  <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin:1rem 0;align-items:center">
+    <span style="font-family:var(--font-hud);font-size:0.65rem;color:var(--text-muted);margin-right:0.5rem">JUMP TO:</span>
+    <a href="chapter1.html" class="ch-badge b1">Ch1 · Chemistry</a>
+    <a href="chapter2.html" class="ch-badge b2">Ch2 · Electrochemistry</a>
+    <a href="chapter3.html" class="ch-badge b3">Ch3 · Pack Architecture</a>
+    <a href="chapter4.html" class="ch-badge b4">Ch4 · AFE &amp; Sensing</a>
+    <a href="chapter5.html" class="ch-badge b5">Ch5 · Algorithms</a>
+    <a href="chapter6.html" class="ch-badge b6">Ch6 · Firmware</a>
+    <a href="chapter7.html" class="ch-badge b7">Ch7 · Applications</a>
+    <a href="chapter8.html" class="ch-badge b8">Ch8 · HW Design</a>
+    <a href="chapter9.html" class="ch-badge b9">Ch9 · Protection</a>
+    <a href="chapter10.html" class="ch-badge b10">Ch10 · Sustainability</a>
+  </div>
+</div>
+</section>
