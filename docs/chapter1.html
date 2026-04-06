@@ -3560,6 +3560,257 @@ document.querySelectorAll('.sidebar-link').forEach(function(a){
 </script>
 
 <!-- ════════════════════════════════════════════════════════════════
+     CH1 INTERACTIVE OCV/SOC SIMULATOR
+     ════════════════════════════════════════════════════════════════ -->
+<section style="padding:3rem 0;border-top:1px solid rgba(255,200,87,0.15);margin-top:2rem" id="ch1-sim">
+<div style="max-width:900px;margin:0 auto;padding:0 2.5rem">
+  <div style="font-family:'Orbitron',monospace;font-size:0.6rem;color:#FFC857;letter-spacing:0.2em;margin-bottom:0.5rem">INTERACTIVE LAB · SECTION 1.X</div>
+  <h2 style="font-family:'Orbitron',monospace;font-size:1.3rem;color:#fff;margin-bottom:0.8rem">LFP OCV/SoC Explorer — Touch The Data</h2>
+  <p style="color:#6b7280;font-size:0.88rem;line-height:1.8;margin-bottom:1.5rem">
+    The flat OCV curve is LFP's biggest challenge for SoC estimation. Move the slider and watch
+    why a voltmeter alone cannot tell you how much charge remains. <strong style="color:#FFC857">This is the core problem that Ch5 (Kalman filter) must solve.</strong>
+  </p>
+
+  <div class="rnd-block">
+    <div class="rnd-label">⚡ R&D Thinking</div>
+    <p><strong>What goes wrong without OCV mapping?</strong> If you estimate SoC purely from voltage on an LFP cell,
+    a 200mV range (3.2V→3.4V) covers SoC 10%→90%. That's &lt;2.5mV per percentage point.
+    Your ADC noise floor is likely 1–2mV. You're trying to read a ruler with a blurry eye.
+    That's why coulomb counting + Kalman exists — voltage alone is nearly useless for LFP in the mid-range.</p>
+  </div>
+
+  <div class="int-panel">
+    <h4>⚡ Interactive: LFP OCV vs SoC — Drag to Explore</h4>
+    <div class="slider-row">
+      <label>SoC Level</label>
+      <input type="range" id="soc-slider" min="0" max="100" value="50" oninput="updateOCV()">
+      <div class="val" id="soc-val">50%</div>
+    </div>
+    <div class="slider-row">
+      <label>Temperature</label>
+      <input type="range" id="temp-slider" min="-10" max="45" value="25" oninput="updateOCV()">
+      <div class="val" id="temp-val">25°C</div>
+    </div>
+    <div class="slider-row">
+      <label>Discharge Rate</label>
+      <input type="range" id="rate-slider" min="0" max="100" value="0" oninput="updateOCV()">
+      <div class="val" id="rate-val">Rest</div>
+    </div>
+
+    <div class="ocv-canvas-wrap">
+      <canvas id="ocv-canvas" width="820" height="220" style="width:100%;display:block"></canvas>
+    </div>
+
+    <div class="state-pills" id="ocv-pills">
+      <div class="state-pill" style="border-color:#FF4757;color:#FF4757" id="pill-uvp">UVP RISK</div>
+      <div class="state-pill" style="border-color:#FFC857;color:#FFC857" id="pill-low">LOW SoC</div>
+      <div class="state-pill" style="border-color:#00FF88;color:#00FF88" id="pill-ok">NORMAL</div>
+      <div class="state-pill" style="border-color:#FFC857;color:#FFC857" id="pill-high">NEAR FULL</div>
+      <div class="state-pill" style="border-color:#FF4757;color:#FF4757" id="pill-ovp">OVP RISK</div>
+    </div>
+
+    <div class="insight-box" id="ocv-insight">Move the slider to see how OCV changes with SoC.</div>
+  </div>
+
+  <div class="rnd-q">
+    <div class="rnd-label">🤔 Pause &amp; Think</div>
+    <p><strong>Q: Why does the OCV curve flatten so dramatically in the 20–80% SoC range for LFP?</strong></p>
+    <p>Hint: It has to do with the olivine crystal structure — the lithium intercalation is a two-phase reaction,
+    not a single-phase solid solution. The flat region is a coexistence zone where both phases exist simultaneously.
+    Unlike NMC (single-phase, graded OCV), LFP switches between two discrete crystal phases.</p>
+    <p><strong>Consequence:</strong> The SoC estimator (Ch5) must rely almost entirely on coulomb counting in the flat region,
+    using OCV only at the endpoints for calibration. This is why the Kalman filter gain K is low in the flat region
+    — voltage measurements carry very little information there.</p>
+  </div>
+
+  <div class="rnd-block" style="border-color:rgba(255,107,53,0.3);background:rgba(255,107,53,0.04)">
+    <div class="rnd-label" style="color:#FF6B35">⚠ Common Misconception</div>
+    <p><strong>"Just read the voltage to know SoC."</strong> — This fails for LFP because the flat OCV means
+    3.28V could be anywhere from 20% to 80% SoC. A simple voltmeter-based SoC display on an LFP pack is
+    effectively useless in the midrange. This is why cheap BMS modules show wildly inaccurate SoC
+    readouts — they use voltage lookup without coulomb counting integration.</p>
+    <p>The fix isn't better voltage measurement. It's a <strong>state estimator</strong> that combines current
+    integration + voltage correction + temperature compensation. That's the entire subject of Ch5.</p>
+  </div>
+</div>
+</section>
+
+<script>
+/* OCV/SoC Simulator */
+(function(){
+  const canvas=document.getElementById('ocv-canvas');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+
+  // LFP OCV lookup table (SoC% → V)
+  const ocvTable=[
+    [0,2.50],[5,2.80],[10,3.10],[15,3.20],[20,3.25],
+    [25,3.27],[30,3.28],[35,3.285],[40,3.29],[45,3.292],
+    [50,3.295],[55,3.30],[60,3.305],[65,3.31],[70,3.315],
+    [75,3.32],[80,3.33],[85,3.35],[90,3.38],[95,3.50],
+    [100,3.65]
+  ];
+
+  function getOCV(soc,tempC,ratePercent){
+    let v=2.5;
+    for(let i=0;i<ocvTable.length-1;i++){
+      if(soc>=ocvTable[i][0]&&soc<=ocvTable[i+1][0]){
+        const t=(soc-ocvTable[i][0])/(ocvTable[i+1][0]-ocvTable[i][0]);
+        v=ocvTable[i][1]+t*(ocvTable[i+1][1]-ocvTable[i][1]);
+        break;
+      }
+    }
+    v+=((tempC-25)*-0.0008); // temp coefficient
+    v-=(ratePercent/100*0.08); // IR drop under load
+    return Math.max(2.4,Math.min(3.7,v));
+  }
+
+  function draw(currentSoc,tempC,rate){
+    const W=canvas.width,H=canvas.height;
+    ctx.clearRect(0,0,W,H);
+
+    // background
+    ctx.fillStyle='#050510';ctx.fillRect(0,0,W,H);
+
+    // grid
+    ctx.strokeStyle='rgba(0,245,255,0.06)';ctx.lineWidth=1;
+    for(let v=2.5;v<=3.7;v+=0.1){
+      const y=H-20-(v-2.5)/(3.7-2.5)*(H-40);
+      ctx.beginPath();ctx.moveTo(40,y);ctx.lineTo(W-20,y);ctx.stroke();
+    }
+    for(let s=0;s<=100;s+=10){
+      const x=40+(s/100)*(W-60);
+      ctx.beginPath();ctx.moveTo(x,10);ctx.lineTo(x,H-20);ctx.stroke();
+    }
+
+    // voltage axis labels
+    ctx.fillStyle='#4a5568';ctx.font='10px JetBrains Mono';ctx.textAlign='right';
+    [2.5,2.8,3.0,3.1,3.2,3.3,3.5,3.65].forEach(v=>{
+      const y=H-20-(v-2.5)/(3.7-2.5)*(H-40);
+      ctx.fillText(v.toFixed(2)+'V',36,y+4);
+    });
+    ctx.textAlign='center';
+    [0,20,40,60,80,100].forEach(s=>{
+      const x=40+(s/100)*(W-60);
+      ctx.fillText(s+'%',x,H-4);
+    });
+
+    // danger zones
+    ctx.fillStyle='rgba(255,71,87,0.06)';
+    const uvpY=H-20-(3.0-2.5)/(3.7-2.5)*(H-40);
+    ctx.fillRect(40,uvpY,W-60,H-20-uvpY);
+    const ovpY=H-20-(3.6-2.5)/(3.7-2.5)*(H-40);
+    ctx.fillRect(40,10,W-60,ovpY-10);
+
+    // OCV curve (rest, ambient)
+    ctx.beginPath();ctx.strokeStyle='rgba(0,245,255,0.3)';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+    ocvTable.forEach(([s,v],i)=>{
+      const x=40+(s/100)*(W-60);
+      const y=H-20-(v-2.5)/(3.7-2.5)*(H-40);
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });
+    ctx.stroke();ctx.setLineDash([]);
+
+    // Live curve (with temp + rate)
+    ctx.beginPath();ctx.strokeStyle='#00F5FF';ctx.lineWidth=2.5;
+    for(let s=0;s<=100;s+=1){
+      const v=getOCV(s,tempC,rate);
+      const x=40+(s/100)*(W-60);
+      const y=H-20-(v-2.5)/(3.7-2.5)*(H-40);
+      s===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+
+    // Current SoC marker
+    const curV=getOCV(currentSoc,tempC,rate);
+    const mx=40+(currentSoc/100)*(W-60);
+    const my=H-20-(curV-2.5)/(3.7-2.5)*(H-40);
+
+    // vertical drop line
+    ctx.strokeStyle='rgba(255,200,87,0.4)';ctx.lineWidth=1;ctx.setLineDash([3,2]);
+    ctx.beginPath();ctx.moveTo(mx,H-20);ctx.lineTo(mx,my);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(40,my);ctx.lineTo(mx,my);ctx.stroke();
+    ctx.setLineDash([]);
+
+    // uncertainty band (shows why SoC estimation is hard)
+    const vLo=getOCV(Math.max(0,currentSoc-8),tempC,rate);
+    const vHi=getOCV(Math.min(100,currentSoc+8),tempC,rate);
+    const yLo=H-20-(vLo-2.5)/(3.7-2.5)*(H-40);
+    const yHi=H-20-(vHi-2.5)/(3.7-2.5)*(H-40);
+    ctx.fillStyle='rgba(255,200,87,0.08)';
+    ctx.fillRect(40,yHi,W-60,yLo-yHi);
+
+    // marker dot
+    ctx.fillStyle='#FFC857';
+    ctx.beginPath();ctx.arc(mx,my,7,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#020204';
+    ctx.beginPath();ctx.arc(mx,my,3,0,Math.PI*2);ctx.fill();
+
+    // labels
+    ctx.fillStyle='#FFC857';ctx.font='bold 11px JetBrains Mono';ctx.textAlign='left';
+    ctx.fillText(`SoC: ${currentSoc}%  OCV: ${curV.toFixed(3)}V`,mx+12,my-8);
+
+    const spread=(vHi-vLo)*1000;
+    ctx.fillStyle='rgba(255,200,87,0.6)';ctx.font='9px JetBrains Mono';
+    ctx.fillText(`±8% SoC → ±${spread.toFixed(0)}mV (harder to distinguish in flat region)`,mx+12,my+12);
+
+    // label axes
+    ctx.fillStyle='rgba(0,245,255,0.4)';ctx.font='9px Orbitron';ctx.textAlign='center';
+    ctx.fillText('State of Charge (%)',W/2,H-0);
+    ctx.save();ctx.translate(10,H/2);ctx.rotate(-Math.PI/2);
+    ctx.fillText('Open Circuit Voltage (V)',0,0);ctx.restore();
+
+    // legend
+    ctx.setLineDash([4,3]);ctx.strokeStyle='rgba(0,245,255,0.3)';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(W-200,18);ctx.lineTo(W-170,18);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='rgba(0,245,255,0.5)';ctx.font='9px JetBrains Mono';ctx.textAlign='left';
+    ctx.fillText('Rest @ 25°C',W-165,22);
+    ctx.strokeStyle='#00F5FF';ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.moveTo(W-200,34);ctx.lineTo(W-170,34);ctx.stroke();
+    ctx.fillStyle='#00F5FF';ctx.fillText(`T=${tempC}°C, ${rate===0?'Rest':rate+'% rate'}`,W-165,38);
+  }
+
+  window.updateOCV=function(){
+    const soc=+document.getElementById('soc-slider').value;
+    const temp=+document.getElementById('temp-slider').value;
+    const rate=+document.getElementById('rate-slider').value;
+    document.getElementById('soc-val').textContent=soc+'%';
+    document.getElementById('temp-val').textContent=temp+'°C';
+    document.getElementById('rate-val').textContent=rate===0?'Rest':(rate/100*1).toFixed(2)+'C';
+    draw(soc,temp,rate);
+
+    // update pills
+    const pills=['pill-uvp','pill-low','pill-ok','pill-high','pill-ovp'];
+    pills.forEach(id=>document.getElementById(id).classList.remove('active'));
+    if(soc<10)document.getElementById('pill-uvp').classList.add('active');
+    else if(soc<25)document.getElementById('pill-low').classList.add('active');
+    else if(soc<80)document.getElementById('pill-ok').classList.add('active');
+    else if(soc<95)document.getElementById('pill-high').classList.add('active');
+    else document.getElementById('pill-ovp').classList.add('active');
+
+    // insight
+    const ocv=getOCV(soc,temp,rate);
+    const spread=(getOCV(Math.min(100,soc+8),temp,rate)-getOCV(Math.max(0,soc-8),temp,rate))*1000;
+    let msg='';
+    if(soc<10)msg=`<span>DANGER:</span> At ${soc}% SoC, Vcell=${ocv.toFixed(3)}V. Deep discharge imminent. BMS must trip DSG FET before cell hits 2.5V.`;
+    else if(soc<25)msg=`<span>WARNING:</span> ${soc}% SoC. Voltage=${ocv.toFixed(3)}V. BMS should warn inverter via CAN now, not when it trips.`;
+    else if(soc>90)msg=`<span>NEAR FULL:</span> ${soc}% SoC. Voltage=${ocv.toFixed(3)}V — rising fast here. OVP trip at 3.65V is close. BMS throttles charge current.`;
+    else msg=`<span>FLAT REGION:</span> ${soc}% SoC. OCV=${ocv.toFixed(3)}V. Voltage ambiguity ±${spread.toFixed(0)}mV covers ±8% SoC — this is why a voltmeter alone fails for LFP.`;
+    document.getElementById('ocv-insight').innerHTML=msg;
+  };
+
+  function getOCV(soc,t,r){
+    const tbl=[[0,2.50],[5,2.80],[10,3.10],[15,3.20],[20,3.25],[25,3.27],[30,3.28],[35,3.285],[40,3.29],[45,3.292],[50,3.295],[55,3.30],[60,3.305],[65,3.31],[70,3.315],[75,3.32],[80,3.33],[85,3.35],[90,3.38],[95,3.50],[100,3.65]];
+    let v=2.5;
+    for(let i=0;i<tbl.length-1;i++){if(soc>=tbl[i][0]&&soc<=tbl[i+1][0]){const f=(soc-tbl[i][0])/(tbl[i+1][0]-tbl[i][0]);v=tbl[i][1]+f*(tbl[i+1][1]-tbl[i][1]);break;}}
+    return Math.max(2.4,Math.min(3.7,v+((t-25)*-0.0008)-(r/100*0.08)));
+  }
+
+  updateOCV();
+})();
+</script>
+
+<!-- ════════════════════════════════════════════════════════════════
      CH1 ENHANCEMENTS — Interactive OCV Simulator + R&D Blocks
      ════════════════════════════════════════════════════════════════ -->
 <style>
