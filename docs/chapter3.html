@@ -3265,5 +3265,148 @@ document.querySelectorAll('.sidebar-link').forEach(function(a){
 .cj-arrow{color:#222;font-size:.75rem;}
 </style>
 <div class="ch-journey"><a href="chapter1.html" class="cj-stop cj-done" title="Fundamentals">CH1</a><span class="cj-arrow">›</span><a href="chapter2.html" class="cj-stop cj-done" title="Cell Physics">CH2</a><span class="cj-arrow">›</span><span class="cj-stop cj-current" title="Thermal">CH3</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="Protection">CH4</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="Standards">CH5</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="Architecture">CH6</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="UPS & ESS">CH7</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="Hardware">CH8</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="Firmware">CH9</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="Future">CH10</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="System View">SYS</span></div>
+
+<!-- CH3 Interactive: Thermal Power Calculator -->
+<style>
+#ch3-sim{padding:3rem 0;border-top:1px solid rgba(255,107,53,0.15);}
+.th-panel{background:#07070f;border:1px solid rgba(255,107,53,.2);border-radius:.75rem;padding:1.5rem;margin-bottom:1.5rem;}
+.th-panel h3{font-family:'Orbitron',monospace;font-size:.85rem;color:#FF6B35;letter-spacing:.08em;margin-bottom:1rem;}
+.th-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
+@media(max-width:640px){.th-grid{grid-template-columns:1fr;}}
+.th-slider-row{margin-bottom:1rem;}
+.th-slider-row label{display:flex;justify-content:space-between;font-size:.8rem;color:#aaa;margin-bottom:.3rem;}
+.th-slider-row label span{color:#FF6B35;font-family:'JetBrains Mono',monospace;font-weight:700;}
+.th-slider-row input[type=range]{width:100%;accent-color:#FF6B35;}
+.th-result-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.8rem;margin-top:.8rem;}
+.th-result-card{background:rgba(255,107,53,.06);border:1px solid rgba(255,107,53,.2);border-radius:.5rem;padding:.8rem;text-align:center;}
+.th-result-card .val{font-family:'Orbitron',monospace;font-size:1.3rem;color:#FF6B35;}
+.th-result-card .unit{font-size:.68rem;color:#666;margin-top:.2rem;}
+.th-result-card .lbl{font-size:.7rem;color:#aaa;margin-top:.2rem;}
+.th-warn{background:rgba(255,107,53,.12);border:1px solid rgba(255,107,53,.5);border-radius:.4rem;padding:.6rem 1rem;font-size:.82rem;color:#FF9A6C;margin-top:.8rem;display:none;}
+.th-warn.show{display:block;}
+.th-ok{background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.3);border-radius:.4rem;padding:.6rem 1rem;font-size:.82rem;color:#00FF88;margin-top:.8rem;display:none;}
+.th-ok.show{display:block;}
+</style>
+
+<section id="ch3-sim" style="padding:3rem 0;border-top:1px solid rgba(255,107,53,0.15)">
+<div style="max-width:900px;margin:0 auto;padding:0 1.5rem;">
+<h2 style="font-family:'Orbitron',monospace;font-size:1.05rem;color:#FF6B35;letter-spacing:.1em;margin-bottom:.4rem;">🌡 INTERACTIVE — THERMAL POWER CALCULATOR</h2>
+<p style="color:#888;font-size:.86rem;margin-bottom:1.4rem;">Adjust pack parameters and see how I²R heat scales. This is why thermal design cannot be an afterthought.</p>
+
+<div class="th-grid">
+  <div class="th-panel">
+    <h3>Pack Parameters</h3>
+    <div class="th-slider-row"><label>Discharge Current (A) <span id="v-I">50</span> A</label><input type="range" id="sl-I" min="1" max="280" value="50" oninput="th_update()"></div>
+    <div class="th-slider-row"><label>Cell Internal Resistance (mΩ) <span id="v-R">1.5</span> mΩ</label><input type="range" id="sl-R" min="0.5" max="5" step="0.1" value="1.5" oninput="th_update()"></div>
+    <div class="th-slider-row"><label>Cells in Series <span id="v-S">16</span> S</label><input type="range" id="sl-S" min="4" max="32" value="16" oninput="th_update()"></div>
+    <div class="th-slider-row"><label>Cells in Parallel <span id="v-P">1</span> P</label><input type="range" id="sl-P" min="1" max="8" value="1" oninput="th_update()"></div>
+    <div class="th-slider-row"><label>Ambient Temperature (°C) <span id="v-T">25</span> °C</label><input type="range" id="sl-T" min="-20" max="50" value="25" oninput="th_update()"></div>
+  </div>
+  <div class="th-panel">
+    <h3>Thermal Outputs</h3>
+    <div class="th-result-grid">
+      <div class="th-result-card"><div class="val" id="r-Pcell">—</div><div class="unit">mW/cell</div><div class="lbl">I²R per cell</div></div>
+      <div class="th-result-card"><div class="val" id="r-Ptot">—</div><div class="unit">W total</div><div class="lbl">Pack heat</div></div>
+      <div class="th-result-card"><div class="val" id="r-Tcell">—</div><div class="unit">°C cell</div><div class="lbl">Est. cell temp</div></div>
+      <div class="th-result-card"><div class="val" id="r-Crate">—</div><div class="unit">C-rate</div><div class="lbl">Discharge rate</div></div>
+      <div class="th-result-card"><div class="val" id="r-Vnom">—</div><div class="unit">V nominal</div><div class="lbl">Pack voltage</div></div>
+      <div class="th-result-card"><div class="val" id="r-Eff">—</div><div class="unit">%</div><div class="lbl">Coulombic eff.</div></div>
+    </div>
+    <div class="th-warn" id="th-warn">⚠ High heat — active cooling recommended above this C-rate.</div>
+    <div class="th-ok" id="th-ok">✓ Thermal load within passive cooling limits.</div>
+  </div>
+</div>
+
+<div class="th-panel" style="margin-top:0;">
+  <h3>Cell Temperature vs C-Rate (your pack)</h3>
+  <canvas id="ch3-canvas" width="860" height="190" style="width:100%;border-radius:.4rem;display:block;"></canvas>
+  <p style="font-size:.7rem;color:#666;margin-top:.4rem;">Green band = safe zone (15–45°C). Red dashed = thermal limit. Cyan dot = current operating point.</p>
+</div>
+</div>
+</section>
+
+<script>
+(function(){
+function th_update(){
+  var I=+document.getElementById('sl-I').value;
+  var Rm=+document.getElementById('sl-R').value;
+  var S=+document.getElementById('sl-S').value;
+  var P=+document.getElementById('sl-P').value;
+  var Ta=+document.getElementById('sl-T').value;
+  document.getElementById('v-I').textContent=I;
+  document.getElementById('v-R').textContent=Rm.toFixed(1);
+  document.getElementById('v-S').textContent=S;
+  document.getElementById('v-P').textContent=P;
+  document.getElementById('v-T').textContent=Ta;
+  var R=Rm/1000;
+  var Icell=I/P;
+  var Pcell=Icell*Icell*R*1000;
+  var Ptot=Icell*Icell*R*S*P;
+  var Crate=Icell/280;
+  var dT=Pcell*0.0025;
+  var Tcell=Ta+dT;
+  var Vnom=S*3.2;
+  var Ploss=Ptot/(I*Vnom)*100;
+  var Eff=100-Ploss;
+  document.getElementById('r-Pcell').textContent=Pcell.toFixed(1);
+  document.getElementById('r-Ptot').textContent=Ptot.toFixed(2);
+  document.getElementById('r-Tcell').textContent=Tcell.toFixed(1);
+  document.getElementById('r-Crate').textContent=Crate.toFixed(3);
+  document.getElementById('r-Vnom').textContent=Vnom.toFixed(0);
+  document.getElementById('r-Eff').textContent=Eff.toFixed(2);
+  var warn=document.getElementById('th-warn'),ok=document.getElementById('th-ok');
+  if(Ptot>20||Tcell>45){warn.classList.add('show');ok.classList.remove('show');}
+  else{ok.classList.add('show');warn.classList.remove('show');}
+  drawChart(Rm,P,Ta,Icell);
+}
+window.th_update=th_update;
+
+function drawChart(Rm,P,Ta,curIcell){
+  var cv=document.getElementById('ch3-canvas');
+  if(!cv||!cv.getContext)return;
+  var W=cv.width,H=cv.height;
+  var ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#02020c';ctx.fillRect(0,0,W,H);
+  var R=Rm/1000,maxC=2,LPAD=50,RPAD=20,TPAD=12,BPAD=28;
+  var gw=W-LPAD-RPAD,gh=H-TPAD-BPAD;
+  var minT=Ta-5,maxT=Ta+80;
+  function xOf(c){return LPAD+c/maxC*gw;}
+  function yOf(t){return TPAD+gh-(t-minT)/(maxT-minT)*gh;}
+  // Safe band
+  ctx.fillStyle='rgba(0,255,136,0.07)';
+  ctx.fillRect(LPAD,yOf(Math.min(45,maxT)),gw,yOf(Math.max(15,minT))-yOf(Math.min(45,maxT)));
+  // Grid
+  ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=1;
+  for(var t=Math.ceil(minT/10)*10;t<=maxT;t+=10){
+    ctx.beginPath();ctx.moveTo(LPAD,yOf(t));ctx.lineTo(W-RPAD,yOf(t));ctx.stroke();
+    ctx.fillStyle='#444';ctx.font='10px monospace';ctx.fillText(t+'°C',2,yOf(t)+4);
+  }
+  // 45°C limit
+  ctx.strokeStyle='rgba(255,80,80,0.6)';ctx.lineWidth=1.5;ctx.setLineDash([4,4]);
+  ctx.beginPath();ctx.moveTo(LPAD,yOf(45));ctx.lineTo(W-RPAD,yOf(45));ctx.stroke();
+  ctx.setLineDash([]);
+  // Temp curve
+  ctx.strokeStyle='#FF6B35';ctx.lineWidth=2;ctx.beginPath();
+  var first=true;
+  for(var c=0;c<=maxC;c+=0.02){
+    var Ic=c*280/P,Pc=Ic*Ic*R*1000,Tc=Ta+Pc*0.0025;
+    var x=xOf(c),y=yOf(Tc);
+    if(first){ctx.moveTo(x,y);first=false;}else{ctx.lineTo(x,y);}
+  }
+  ctx.stroke();
+  // Operating point
+  var curC=curIcell/280,curPc=curIcell*curIcell*R*1000,curTc=Ta+curPc*0.0025;
+  ctx.fillStyle='#00F5FF';
+  ctx.beginPath();ctx.arc(xOf(curC),yOf(curTc),6,0,Math.PI*2);ctx.fill();
+  // Axis labels
+  ctx.fillStyle='#555';ctx.font='10px monospace';
+  ctx.fillText('0C',LPAD-5,H-8);ctx.fillText('1C',xOf(1)-5,H-8);ctx.fillText('2C',xOf(2)-5,H-8);
+  ctx.fillText('← C-rate →',W/2-30,H-8);
+}
+th_update();
+})();
+</script>
+
 </body>
 </html>

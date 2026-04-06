@@ -2759,5 +2759,121 @@ document.querySelectorAll('.sidebar-link').forEach(function(a){
 .cj-arrow{color:#222;font-size:.75rem;}
 </style>
 <div class="ch-journey"><a href="chapter1.html" class="cj-stop cj-done" title="Fundamentals">CH1</a><span class="cj-arrow">›</span><a href="chapter2.html" class="cj-stop cj-done" title="Cell Physics">CH2</a><span class="cj-arrow">›</span><a href="chapter3.html" class="cj-stop cj-done" title="Thermal">CH3</a><span class="cj-arrow">›</span><a href="chapter4.html" class="cj-stop cj-done" title="Protection">CH4</a><span class="cj-arrow">›</span><a href="chapter5.html" class="cj-stop cj-done" title="Standards">CH5</a><span class="cj-arrow">›</span><a href="chapter6.html" class="cj-stop cj-done" title="Architecture">CH6</a><span class="cj-arrow">›</span><span class="cj-stop cj-current" title="UPS & ESS">CH7</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="Hardware">CH8</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="Firmware">CH9</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="Future">CH10</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="System View">SYS</span></div>
+
+<!-- CH7 Interactive: CAN Bus Protocol Visualizer -->
+<section id="ch7-sim" style="padding:3rem 0;border-top:1px solid rgba(255,200,87,0.15)">
+<style>
+.can-panel{background:#07070f;border:1px solid rgba(255,200,87,.2);border-radius:.75rem;padding:1.4rem;margin-bottom:1.2rem;}
+.can-panel h3{font-family:'Orbitron',monospace;font-size:.82rem;color:#FFC857;letter-spacing:.08em;margin-bottom:1rem;}
+.can-bus-vis{display:flex;flex-direction:column;gap:.5rem;margin:.8rem 0;}
+.can-node{display:flex;align-items:center;gap:.8rem;padding:.5rem .8rem;background:rgba(255,200,87,.06);border:1px solid rgba(255,200,87,.15);border-radius:.4rem;}
+.can-node-id{font-family:'Orbitron',monospace;font-size:.65rem;color:#FFC857;min-width:80px;}
+.can-node-bar{flex:1;height:10px;background:#111;border-radius:3px;overflow:hidden;}
+.can-node-fill{height:100%;background:#FFC857;width:0%;transition:width .3s;border-radius:3px;}
+.can-node-val{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:#aaa;min-width:120px;text-align:right;}
+.can-frame-list{max-height:180px;overflow-y:auto;background:#020208;border:1px solid rgba(255,200,87,.1);border-radius:.4rem;padding:.5rem;font-family:'JetBrains Mono',monospace;font-size:.68rem;}
+.can-frame{padding:.18rem .3rem;border-radius:.2rem;margin-bottom:.1rem;animation:cf-in .2s ease;}
+@keyframes cf-in{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
+.cf-351{color:#FFC857;}.cf-355{color:#00F5FF;}.cf-356{color:#00FF88;}.cf-35C{color:#FF6B35;}.cf-35E{color:#A855F7;}
+.can-btns{display:flex;gap:.7rem;flex-wrap:wrap;margin-top:.8rem;}
+.can-btn{background:rgba(255,200,87,.1);border:1px solid rgba(255,200,87,.3);color:#FFC857;font-family:'Orbitron',monospace;font-size:.63rem;letter-spacing:.07em;padding:.4rem .9rem;border-radius:.3rem;cursor:pointer;}
+.can-btn:hover{background:rgba(255,200,87,.2);}
+.can-stat{display:grid;grid-template-columns:repeat(4,1fr);gap:.7rem;margin-top:.8rem;}
+.can-stat-card{background:rgba(255,200,87,.06);border:1px solid rgba(255,200,87,.15);border-radius:.4rem;padding:.6rem;text-align:center;}
+.can-stat-card .v{font-family:'Orbitron',monospace;font-size:1.1rem;color:#FFC857;}
+.can-stat-card .l{font-size:.65rem;color:#666;margin-top:.2rem;}
+</style>
+<div style="max-width:900px;margin:0 auto;padding:0 1.5rem;">
+<h2 style="font-family:'Orbitron',monospace;font-size:1.05rem;color:#FFC857;letter-spacing:.1em;margin-bottom:.4rem;">📡 INTERACTIVE — LIVE CAN BUS SIMULATOR (PYLONTECH PROTOCOL)</h2>
+<p style="color:#888;font-size:.86rem;margin-bottom:1.4rem;">BMS transmitting PYLONTECH-compatible CAN frames at 250kbps. Inject faults to see how the message set changes in real time.</p>
+
+<div class="can-panel">
+  <h3>Live CAN Bus — BMS → Inverter</h3>
+  <div class="can-bus-vis">
+    <div class="can-node"><span class="can-node-id">0x351 CHG</span><div class="can-node-bar"><div class="can-node-fill" id="cb351"></div></div><span class="can-node-val" id="cv351">CV:56.8V IL:50.0A</span></div>
+    <div class="can-node"><span class="can-node-id">0x355 SoC</span><div class="can-node-bar"><div class="can-node-fill" id="cb355"></div></div><span class="can-node-val" id="cv355">SoC:75% SoH:98%</span></div>
+    <div class="can-node"><span class="can-node-id">0x356 V/I/T</span><div class="can-node-bar"><div class="can-node-fill" id="cb356"></div></div><span class="can-node-val" id="cv356">48.0V 12.5A 28°C</span></div>
+    <div class="can-node"><span class="can-node-id">0x35C FLAGS</span><div class="can-node-bar"><div class="can-node-fill" id="cb35C"></div></div><span class="can-node-val" id="cv35C">CHG_EN DSG_EN</span></div>
+    <div class="can-node"><span class="can-node-id">0x35E MFR</span><div class="can-node-bar"><div class="can-node-fill" id="cb35E"></div></div><span class="can-node-val" id="cv35E">BMS_REF_16S</span></div>
+  </div>
+  <div class="can-btns">
+    <button class="can-btn" onclick="can_fault('ovp')">Inject OVP</button>
+    <button class="can-btn" onclick="can_fault('uvp')">Inject UVP</button>
+    <button class="can-btn" onclick="can_fault('otp')">Inject OTP</button>
+    <button class="can-btn" onclick="can_fault('normal')">Clear Fault</button>
+  </div>
+</div>
+
+<div class="can-panel">
+  <h3>Frame Log — Raw Hex</h3>
+  <div class="can-frame-list" id="can-log"></div>
+  <div class="can-stat">
+    <div class="can-stat-card"><div class="v" id="cs-fps">—</div><div class="l">frames/sec</div></div>
+    <div class="can-stat-card"><div class="v" id="cs-util">—</div><div class="l">bus util %</div></div>
+    <div class="can-stat-card"><div class="v" id="cs-soc">—</div><div class="l">SoC %</div></div>
+    <div class="can-stat-card"><div class="v" id="cs-mode">NORMAL</div><div class="l">BMS mode</div></div>
+  </div>
+</div>
+
+<div style="background:rgba(255,200,87,.04);border-left:3px solid #FFC857;border-radius:.4rem;padding:1rem 1.4rem;margin-top:1rem;font-size:.88rem;line-height:1.7;">
+  <div style="font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:.1em;color:#FFC857;margin-bottom:.5rem;">⚗ R&D THINKING — CAN IS A CONTROL PATH, NOT MONITORING</div>
+  <p>The 0x35C FLAGS frame controls the inverter — CHG_EN bit drop stops charging immediately. Miss 3 consecutive 0x351 frames (750ms blackout) and a PYLON-compatible inverter reverts to safe mode. Your firmware must guarantee CAN TX even inside fault-handling state machine paths.</p>
+</div>
+</div>
+</section>
+
+<script>
+(function(){
+var state={soc:75,soh:98,vpack:48.0,ibat:12.5,temp:28,chgV:56.8,chgI:50,dsgI:100,flags:'CHG_EN DSG_EN',mode:'NORMAL',fault:null};
+var frameCount=0,lastFpsTime=Date.now();
+var logEl=document.getElementById('can-log');
+function can_fault(type){
+  state.fault=type;
+  if(type==='ovp'){state.flags='CHG_DIS DSG_EN';state.chgI=0;state.mode='OVP_FAULT';}
+  else if(type==='uvp'){state.flags='CHG_EN DSG_DIS';state.dsgI=0;state.mode='UVP_FAULT';}
+  else if(type==='otp'){state.flags='CHG_DIS DSG_DIS';state.chgI=0;state.dsgI=0;state.mode='OTP_FAULT';}
+  else{state.flags='CHG_EN DSG_EN';state.chgI=50;state.dsgI=100;state.mode='NORMAL';state.fault=null;}
+  document.getElementById('cs-mode').textContent=state.mode;
+}
+window.can_fault=can_fault;
+function toHex(v,b){return('0000'+Math.round(v).toString(16).toUpperCase()).slice(-b*2);}
+function tick(){
+  state.soc=Math.max(10,Math.min(99,state.soc+(state.fault?0:-0.02+(Math.random()-0.5)*0.05)));
+  state.vpack=48.0+state.soc*0.04+(Math.random()-0.5)*0.05;
+  state.ibat=state.fault==='uvp'?-5:12.5+(Math.random()-0.5)*1;
+  state.temp=28+(Math.random()-0.5)*0.3;
+  var frames=[
+    {id:'0x351',cls:'cf-351',fill:state.chgI/50,disp:'CV:'+state.chgV.toFixed(1)+'V IL:'+state.chgI+'A',hex:toHex(state.chgV*10,2)+' '+toHex(state.chgI*10,2)+' 0000'},
+    {id:'0x355',cls:'cf-355',fill:state.soc/100,disp:'SoC:'+state.soc.toFixed(0)+'% SoH:'+state.soh+'%',hex:toHex(state.soc,1)+' '+toHex(state.soh,1)+' 0000'},
+    {id:'0x356',cls:'cf-356',fill:Math.min(1,state.ibat/50),disp:state.vpack.toFixed(1)+'V '+state.ibat.toFixed(1)+'A '+state.temp.toFixed(0)+'°C',hex:toHex(state.vpack*100,2)+' '+toHex(state.ibat*10,2)+' '+toHex(state.temp*10,2)},
+    {id:'0x35C',cls:'cf-35C',fill:1,disp:state.flags,hex:(state.fault==='ovp'||state.fault==='otp')?'00 08':'80 08'},
+    {id:'0x35E',cls:'cf-35E',fill:1,disp:'BMS_REF_16S',hex:'424D53 5F524546'},
+  ];
+  frames.forEach(function(fr){
+    var bar=document.getElementById('cb'+fr.id.slice(2));
+    var val=document.getElementById('cv'+fr.id.slice(2));
+    if(bar)bar.style.width=(fr.fill*100)+'%';
+    if(val)val.textContent=fr.disp;
+    var div=document.createElement('div');
+    div.className='can-frame '+fr.cls;
+    var t=new Date();
+    div.textContent='['+t.toISOString().slice(11,23)+'] '+fr.id+'  8  '+fr.hex+'  ; '+fr.disp;
+    logEl.insertBefore(div,logEl.firstChild);
+    frameCount++;
+  });
+  while(logEl.children.length>80)logEl.removeChild(logEl.lastChild);
+  var now=Date.now();
+  if(now-lastFpsTime>1000){
+    var fps=Math.round(frameCount/(now-lastFpsTime)*1000);
+    lastFpsTime=now;frameCount=0;
+    document.getElementById('cs-fps').textContent=fps*5;
+    document.getElementById('cs-util').textContent=((fps*5*111/250000)*100).toFixed(2);
+  }
+  document.getElementById('cs-soc').textContent=state.soc.toFixed(0);
+}
+setInterval(tick,200);
+})();
+</script>
+
 </body>
 </html>
