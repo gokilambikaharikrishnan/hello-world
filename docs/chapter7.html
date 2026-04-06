@@ -26,7 +26,8 @@
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
-    body { background: var(--bg-base); color: var(--text-primary); font-family: var(--font-body); line-height: 1.6; display: flex; }
+    body { background: var(--bg-base); color: var(--text-primary); font-family: var(--font-body); line-height: 1.6; display: flex; 
+      padding-bottom: 3.5rem;}
 
     /* ── Sidebar ────────────────────────────────────────────── */
     .sidebar { width: var(--sidebar-w); min-height: 100vh; background: #080d13; border-right: 1px solid var(--border); position: fixed; top: 0; left: 0; display: flex; flex-direction: column; padding: 1.2rem 0; overflow-y: auto; z-index: 100; }
@@ -416,7 +417,7 @@ pre{border-left:4px solid #fde68a!important;border-radius:0!important;box-shadow
 
   <div class="sidebar-nav-label">Other Chapters</div>
   <a class="sidebar-link" href="chapter1.html"><span class="dot"></span> Ch 1: Li-ion & LFP</a>
-  <a class="sidebar-link" href="chapter2.html"><span class="dot"></span> Ch 2: Li-ion Cell</a>
+  <a class="sidebar-link" href="chapter2.html"><span class="dot"></span> Ch 2: Cell Physics</a>
   <a class="sidebar-link" href="chapter3.html"><span class="dot"></span> Ch 3: Thermal</a>
   <a class="sidebar-link" href="chapter4.html"><span class="dot"></span> Ch 4: Protection</a>
   <a class="sidebar-link" href="chapter5.html"><span class="dot"></span> Ch 5: Standards</a>
@@ -425,7 +426,8 @@ pre{border-left:4px solid #fde68a!important;border-radius:0!important;box-shadow
   <a class="sidebar-link" href="chapter9.html"><span class="dot"></span> Ch 9: Firmware</a>
   <a class="sidebar-link" href="chapter10.html"><span class="dot"></span> Ch 10: Future</a>
   <a class="sidebar-link" href="SYSTEM_OVERVIEW.html"><span class="dot"></span> System Overview</a>
-  sidebar-nav-label">Chapter 7</div>
+
+<div class="sidebar-nav-label">Chapter 7</div>
   <a class="sidebar-link active" href="#hero"><span class="dot"></span> Overview</a>
   <a class="sidebar-link" href="#s7-1"><span class="dot"></span> 7.1 UPS Requirements</a>
   <a class="sidebar-link" href="#s7-1-float"><span class="dot"></span> &nbsp;&nbsp;Float Charging</a>
@@ -439,7 +441,7 @@ pre{border-left:4px solid #fde68a!important;border-radius:0!important;box-shadow
   <a class="sidebar-link" href="#s7-5"><span class="dot"></span> 7.5 Full System View</a>
   <a class="sidebar-link" href="#s7-summary"><span class="dot"></span> Summary &amp; Closing</a>
   <a class="sidebar-link" href="#s7-ref"><span class="dot"></span> Quick Reference</a>
-</nav>
+</nav></nav>
 
 <!-- ═══════════════════════════════ MAIN ══════════════════════ -->
 <div class="main-wrap">
@@ -2750,15 +2752,7 @@ document.querySelectorAll('.sidebar-link').forEach(function(a){
 
 
 
-<style>
-.ch-journey{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%);z-index:9000;background:rgba(2,2,10,0.92);border:1px solid rgba(255,255,255,0.12);border-radius:2rem;padding:.4rem 1rem;display:flex;align-items:center;gap:.25rem;font-family:'Orbitron',monospace;font-size:.58rem;letter-spacing:.04em;backdrop-filter:blur(12px);box-shadow:0 4px 24px rgba(0,0,0,.5);flex-wrap:nowrap;overflow-x:auto;max-width:calc(100vw - 2rem);}
-.cj-stop{padding:.25rem .55rem;border-radius:1rem;text-decoration:none;transition:all .2s;white-space:nowrap;}
-.cj-done{color:#00F5FF;opacity:.65;}.cj-done:hover{opacity:1;background:rgba(0,245,255,.12);}
-.cj-current{background:rgba(255,200,87,.15);color:#FFC857;border:1px solid rgba(255,200,87,.4);cursor:default;}
-.cj-future{color:#333;cursor:default;}
-.cj-arrow{color:#222;font-size:.75rem;}
-</style>
-<div class="ch-journey"><a href="chapter1.html" class="cj-stop cj-done" title="Fundamentals">CH1</a><span class="cj-arrow">›</span><a href="chapter2.html" class="cj-stop cj-done" title="Cell Physics">CH2</a><span class="cj-arrow">›</span><a href="chapter3.html" class="cj-stop cj-done" title="Thermal">CH3</a><span class="cj-arrow">›</span><a href="chapter4.html" class="cj-stop cj-done" title="Protection">CH4</a><span class="cj-arrow">›</span><a href="chapter5.html" class="cj-stop cj-done" title="Standards">CH5</a><span class="cj-arrow">›</span><a href="chapter6.html" class="cj-stop cj-done" title="Architecture">CH6</a><span class="cj-arrow">›</span><span class="cj-stop cj-current" title="UPS & ESS">CH7</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="Hardware">CH8</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="Firmware">CH9</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="Future">CH10</span><span class="cj-arrow">›</span><span class="cj-stop cj-future" title="System View">SYS</span></div>
+
 
 <!-- CH7 Interactive: CAN Bus Protocol Visualizer -->
 <section id="ch7-sim" style="padding:3rem 0;border-top:1px solid rgba(255,200,87,0.15)">
@@ -2909,5 +2903,16 @@ setInterval(tick,200);
 </div>
 </div>
 </section>
+
+<style>
+.ch-journey{position:fixed;bottom:0;left:0;width:100%;z-index:9999;background:rgba(2,2,10,0.96);border-top:1px solid rgba(255,255,255,0.08);padding:.4rem 1rem;display:flex;align-items:center;justify-content:center;gap:.2rem;font-family:'Orbitron',monospace;font-size:.58rem;letter-spacing:.04em;backdrop-filter:blur(16px);box-shadow:0 -2px 20px rgba(0,0,0,.6);flex-wrap:nowrap;overflow-x:auto;}
+.cj-stop{padding:.28rem .6rem;border-radius:.3rem;text-decoration:none;transition:all .2s;white-space:nowrap;color:#444;}
+.cj-stop:hover{background:rgba(255,255,255,.08);color:#aaa;}
+.cj-current{background:rgba(255,200,87,.15)!important;color:#FFC857!important;border:1px solid rgba(255,200,87,.4);cursor:default;}
+.cj-link{color:#555;}.cj-link:hover{color:#ccc;background:rgba(255,255,255,.08);}
+.cj-arrow{color:#1a1a1a;font-size:.7rem;flex-shrink:0;}
+@media(max-width:768px){.ch-journey{font-size:.5rem;gap:.1rem;}.cj-stop{padding:.2rem .4rem;}.cj-arrow{display:none;}}
+</style>
+<div class="ch-journey"><a href="chapter1.html" class="cj-stop cj-link" title="Fundamentals">CH1</a><span class="cj-arrow">›</span><a href="chapter2.html" class="cj-stop cj-link" title="Cell Physics">CH2</a><span class="cj-arrow">›</span><a href="chapter3.html" class="cj-stop cj-link" title="Thermal">CH3</a><span class="cj-arrow">›</span><a href="chapter4.html" class="cj-stop cj-link" title="Protection">CH4</a><span class="cj-arrow">›</span><a href="chapter5.html" class="cj-stop cj-link" title="Standards">CH5</a><span class="cj-arrow">›</span><a href="chapter6.html" class="cj-stop cj-link" title="Architecture">CH6</a><span class="cj-arrow">›</span><span class="cj-stop cj-current" title="UPS & ESS">CH7</span><span class="cj-arrow">›</span><a href="chapter8.html" class="cj-stop cj-link" title="Hardware">CH8</a><span class="cj-arrow">›</span><a href="chapter9.html" class="cj-stop cj-link" title="Firmware">CH9</a><span class="cj-arrow">›</span><a href="chapter10.html" class="cj-stop cj-link" title="Future">CH10</a><span class="cj-arrow">›</span><a href="SYSTEM_OVERVIEW.html" class="cj-stop cj-link" title="System View">SYS</a></div>
 </body>
 </html>
