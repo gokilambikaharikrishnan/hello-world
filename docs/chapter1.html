@@ -3559,6 +3559,77 @@ document.querySelectorAll('.sidebar-link').forEach(function(a){
 })();
 </script>
 
+<!-- ════════════════════════════════════════════════════════════════
+     CH1 ENHANCEMENTS — Interactive OCV Simulator + R&D Blocks
+     ════════════════════════════════════════════════════════════════ -->
+<style>
+/* ── SHARED ENHANCEMENT STYLES (ch1) ── */
+.rnd-block{background:rgba(0,245,255,0.04);border:1px solid rgba(0,245,255,0.2);border-left:3px solid #00F5FF;border-radius:8px;padding:1.2rem 1.4rem;margin:1.8rem 0;font-family:'Space Grotesk',sans-serif}
+.rnd-block .rnd-label{font-family:'Orbitron',monospace;font-size:0.6rem;color:#00F5FF;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:0.6rem}
+.rnd-block p{font-size:0.88rem;color:#9ca3af;line-height:1.85;margin:0.4rem 0}
+.rnd-block strong{color:#e8eaf0}
+.rnd-q{background:rgba(255,200,87,0.05);border:1px solid rgba(255,200,87,0.2);border-left:3px solid #FFC857;border-radius:8px;padding:1rem 1.2rem;margin:1.5rem 0}
+.rnd-q .rnd-label{font-family:'Orbitron',monospace;font-size:0.6rem;color:#FFC857;letter-spacing:0.2em;margin-bottom:0.5rem}
+.rnd-q p{font-size:0.85rem;color:#9ca3af;line-height:1.8;margin:0.3rem 0}
+.int-panel{background:#07070f;border:1px solid rgba(0,245,255,0.18);border-radius:12px;padding:1.5rem;margin:2rem 0;font-family:'Space Grotesk',sans-serif}
+.int-panel h4{font-family:'Orbitron',monospace;font-size:0.75rem;color:#00F5FF;letter-spacing:0.12em;margin-bottom:1rem;text-transform:uppercase}
+.slider-row{display:flex;align-items:center;gap:1rem;margin:0.7rem 0}
+.slider-row label{font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:#6b7280;width:120px;flex-shrink:0}
+.slider-row input[type=range]{flex:1;accent-color:#00F5FF;height:4px;cursor:pointer}
+.slider-row .val{font-family:'JetBrains Mono',monospace;font-size:0.82rem;color:#00F5FF;width:60px;text-align:right}
+.ocv-canvas-wrap{margin:1rem 0;border:1px solid rgba(0,245,255,0.12);border-radius:8px;overflow:hidden;background:#050510}
+.state-pills{display:flex;flex-wrap:wrap;gap:0.5rem;margin:0.8rem 0}
+.state-pill{padding:0.3rem 0.8rem;border-radius:20px;font-size:0.72rem;font-family:'JetBrains Mono',monospace;border:1px solid;transition:all 0.3s;opacity:0.4}
+.state-pill.active{opacity:1;box-shadow:0 0 12px currentColor}
+.insight-box{background:rgba(0,255,136,0.05);border:1px solid rgba(0,255,136,0.2);border-radius:6px;padding:0.8rem 1rem;font-size:0.82rem;color:#9ca3af;margin-top:0.8rem;line-height:1.75}
+.insight-box span{color:#00FF88;font-weight:600}
+/* chapter journey nav */
+.ch-journey{background:#06060e;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:1rem 1.2rem;margin:2rem 0;display:flex;align-items:center;gap:0;flex-wrap:wrap}
+.cj-step{flex:1;min-width:80px;text-align:center;position:relative;padding:0.5rem 0.3rem}
+.cj-step:not(:last-child)::after{content:'›';position:absolute;right:-4px;top:50%;transform:translateY(-50%);color:#2d3748;font-size:1rem}
+.cj-step .cj-num{font-family:'Orbitron',monospace;font-size:0.55rem;display:block;margin-bottom:0.2rem;letter-spacing:0.1em}
+.cj-step .cj-name{font-size:0.65rem;color:#4a5568}
+.cj-step.cj-current .cj-num{color:#FFC857}
+.cj-step.cj-current .cj-name{color:#e8eaf0;font-weight:600}
+.cj-step.cj-done .cj-num{color:#00FF88}
+.cj-step.cj-done .cj-name{color:#6b7280}
+.cj-step.cj-next .cj-num{color:#4a5568}
+</style>
+
+<script>
+/* ════ CHAPTER JOURNEY NAVIGATOR ════ */
+(function(){
+  const chapters=[
+    {num:'CH1',name:'Chemistry',url:'chapter1.html'},
+    {num:'CH2',name:'Electrochemistry',url:'chapter2.html'},
+    {num:'CH3',name:'Architecture',url:'chapter3.html'},
+    {num:'CH4',name:'AFE/Sensing',url:'chapter4.html'},
+    {num:'CH5',name:'Algorithms',url:'chapter5.html'},
+    {num:'CH6',name:'Firmware',url:'chapter6.html'},
+    {num:'CH7',name:'Applications',url:'chapter7.html'},
+    {num:'CH8',name:'HW Design',url:'chapter8.html'},
+    {num:'CH9',name:'Protection',url:'chapter9.html'},
+    {num:'CH10',name:'Future',url:'chapter10.html'},
+    {num:'SYS',name:'Overview',url:'SYSTEM_OVERVIEW.html'}
+  ];
+  const current=1; // ch1 = index 0
+  const wrap=document.createElement('div');wrap.className='ch-journey';
+  wrap.innerHTML='<div style="font-family:Orbitron,monospace;font-size:0.55rem;color:#2d3748;letter-spacing:0.12em;margin-right:0.8rem;flex-shrink:0">YOUR<br>PATH</div>';
+  chapters.forEach((c,i)=>{
+    const div=document.createElement('div');div.className='cj-step';
+    if(i<current-1)div.classList.add('cj-done');
+    else if(i===current-1)div.classList.add('cj-current');
+    else div.classList.add('cj-next');
+    div.innerHTML=`<span class="cj-num">${c.num}</span><span class="cj-name">${c.name}</span>`;
+    div.style.cursor=i<current?'pointer':'default';
+    if(i<current)div.onclick=()=>location.href=c.url;
+    wrap.appendChild(div);
+  });
+  // insert after first section
+  const first=document.querySelector('.chapter-section, .content-main section');
+  if(first && first.parentNode)first.parentNode.insertBefore(wrap,first.nextSibling);
+})();
+</script>
 </body>
 </html>
 
