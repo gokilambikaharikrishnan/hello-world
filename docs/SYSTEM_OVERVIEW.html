@@ -1277,3 +1277,208 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);display
   </div>
 </div>
 </section>
+
+<!-- ═══════════════════════════════════ SECTION 6 ═══════════════ -->
+<section class="section reveal" id="s-intuition">
+<div class="section-inner">
+  <div class="section-label">Section 06</div>
+  <h2 class="section-title">The Intuition — What Is The BMS Really Doing?</h2>
+  <p class="section-intro">
+    Forget the registers for a second. Here is what the BMS is doing at the highest level, in plain language.
+    These four verbs are the soul of the system.
+  </p>
+
+  <div class="card-grid" style="grid-template-columns:repeat(4,1fr);gap:1.2rem;margin:1.5rem 0">
+
+    <!-- WATCHING -->
+    <div class="card" style="border-color:rgba(0,245,255,0.3);background:rgba(0,245,255,0.04);position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--c2),transparent);animation:hud-scan 3s linear infinite;opacity:0.4"></div>
+      <div class="card-icon">👁</div>
+      <div class="card-title" style="color:var(--c2);font-size:0.9rem">WATCHING</div>
+      <div class="card-body" style="margin-top:0.5rem">
+        <strong style="color:var(--text)">Every 10ms:</strong><br>
+        — Is any cell above 3.65V?<br>
+        — Is any cell below 2.8V?<br>
+        — Is current above 1C?<br>
+        — Is any sensor above 55°C?<br><br>
+        The BMS never sleeps. It is always watching. 100 times per second.
+      </div>
+    </div>
+
+    <!-- PREDICTING -->
+    <div class="card" style="border-color:rgba(0,255,136,0.3);background:rgba(0,255,136,0.04);position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--c4),transparent);animation:hud-scan 3.5s linear infinite;opacity:0.4"></div>
+      <div class="card-icon">🧠</div>
+      <div class="card-title" style="color:var(--c4);font-size:0.9rem">PREDICTING</div>
+      <div class="card-body" style="margin-top:0.5rem">
+        <strong style="color:var(--text)">Every 10ms:</strong><br>
+        — What is SoC right now?<br>
+        — How much energy remains?<br>
+        — How healthy is this pack?<br>
+        — When will this cell hit UVP?<br><br>
+        The Kalman filter is an educated guess engine. It never knows — it <em>estimates</em>.
+      </div>
+    </div>
+
+    <!-- PROTECTING -->
+    <div class="card" style="border-color:rgba(255,107,53,0.3);background:rgba(255,107,53,0.04);position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--c3),transparent);animation:hud-scan 2.8s linear infinite;opacity:0.4"></div>
+      <div class="card-icon">🛡</div>
+      <div class="card-title" style="color:var(--c3);font-size:0.9rem">PROTECTING</div>
+      <div class="card-body" style="margin-top:0.5rem">
+        <strong style="color:var(--text)">When threshold crossed:</strong><br>
+        — Trip FET in &lt;500µs<br>
+        — Log with timestamp<br>
+        — Notify inverter via CAN<br>
+        — Apply hysteresis before reset<br><br>
+        Protection is the BMS's immune system. It should rarely fire — but when it does, it must be instant.
+      </div>
+    </div>
+
+    <!-- CONTROLLING -->
+    <div class="card" style="border-color:rgba(168,85,247,0.3);background:rgba(168,85,247,0.04);position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--c5),transparent);animation:hud-scan 4s linear infinite;opacity:0.4"></div>
+      <div class="card-icon">⚡</div>
+      <div class="card-title" style="color:var(--c5);font-size:0.9rem">CONTROLLING</div>
+      <div class="card-body" style="margin-top:0.5rem">
+        <strong style="color:var(--text)">Every 100ms:</strong><br>
+        — Tell inverter max charge current<br>
+        — Tell inverter min cell voltage<br>
+        — Balance cells if ΔV &gt; 10mV<br>
+        — Throttle load at low SoC<br><br>
+        The BMS is not just reactive — it actively shapes how the battery is used.
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-green" style="font-size:0.9rem;line-height:2">
+    <strong>The mental model in one sentence:</strong><br>
+    A BMS is a <span style="color:var(--c2)">real-time measurement system</span> wrapped around a
+    <span style="color:var(--c4)">state estimator</span> wrapped around a
+    <span style="color:var(--c3)">protection system</span> wrapped around a
+    <span style="color:var(--c5)">communication protocol</span> —
+    all running on a microcontroller that must never crash, never drift, and never miss a deadline.
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════ SECTION 7 ═══════════════ -->
+<section class="section reveal" id="s-scenario">
+<div class="section-inner">
+  <div class="section-label">Section 07</div>
+  <h2 class="section-title">Mini Scenario — Full Charge Cycle Walkthrough</h2>
+  <p class="section-intro">
+    One complete event, traced across the entire system. The scenario: a home ESS pack at 30% SoC
+    starts charging from solar. We follow the data from the first electron to the inverter's dashboard.
+    This is what it feels like to understand the system end-to-end.
+  </p>
+
+  <div class="timeline">
+    <div class="tl-item" style="--dot-color:var(--c1)">
+      <h4>t=0s — Solar ramp begins. Ibat goes positive.</h4>
+      <p>Solar inverter starts pushing current into pack. <code>Ibat = +12A</code> detected by shunt.
+      CC2 coulomb counter begins integrating. Kalman filter receives new I measurement.
+      <a href="chapter4.html" class="ch-badge b4">Ch4 — Shunt sensing</a>
+      <a href="chapter5.html" class="ch-badge b5">Ch5 — Kalman update</a></p>
+    </div>
+
+    <div class="tl-item">
+      <h4>t=10ms — First AFE read. Vcell[0..15] = 3.28–3.30V. SoC = 30.2%</h4>
+      <p>All 16 cells sampled via I²C. IIR filter applied. OCV model cross-checked against CC estimate.
+      Kalman blend: SoC_kalman = 30.2%. No threshold breach — state stays NORMAL.
+      <a href="chapter4.html" class="ch-badge b4">Ch4 — AFE</a>
+      <a href="chapter5.html" class="ch-badge b5">Ch5 — EKF</a></p>
+    </div>
+
+    <div class="tl-item">
+      <h4>t=100ms — First CAN frame sent. Inverter receives SoC=30%.</h4>
+      <p>0x355 frame: SoC=30, SoH=98. 0x351 frame: max cell V=3.65V, max charge A=56A.
+      Inverter reads this and knows it can push up to 56A. It decides on 12A (solar limited).
+      <a href="chapter6.html" class="ch-badge b6">Ch6 — CAN builder</a>
+      <a href="chapter7.html" class="ch-badge b7">Ch7 — PYLON protocol</a></p>
+    </div>
+
+    <div class="tl-item">
+      <h4>t=2h — SoC reaches 80%. Cells now 3.35V average.</h4>
+      <p>Kalman confidence high — CC and OCV agree within 1%. SoC=80.3%. Balancer
+      detects cell #11 at 3.38V vs average 3.35V → bypass resistor activates for cell #11.
+      <a href="chapter3.html" class="ch-badge b3">Ch3 — Balancer</a>
+      <a href="chapter5.html" class="ch-badge b5">Ch5 — SoC</a></p>
+    </div>
+
+    <div class="tl-item">
+      <h4>t=3h20m — Cell #11 hits 3.63V. Approaching OVP threshold (3.65V).</h4>
+      <p>Protection state machine enters WARN state. CAN 0x351 updated: max_charge_A drops to 20A.
+      Inverter sees the new limit and reduces solar charge current. Cell #11 slows its rise.
+      <a href="chapter9.html" class="ch-badge b9">Ch9 — Protection SM</a>
+      <a href="chapter7.html" class="ch-badge b7">Ch7 — Ichrg control</a></p>
+    </div>
+
+    <div class="tl-item">
+      <h4>t=3h45m — Cell #11 still rising. Hits 3.65V. OVP TRIP.</h4>
+      <p>State machine: NORMAL → WARN → OVP_TRIP. CHG FET opens in 500µs. Charging stops entirely.
+      CAN 0x359 fault bit set. NVM writes event: <code>OVP cell#11 3.652V Ibat=+8A T=27.3C ts=2026-04-06T14:22:11</code>.
+      <a href="chapter9.html" class="ch-badge b9">Ch9 — OVP trip</a>
+      <a href="chapter6.html" class="ch-badge b6">Ch6 — NVM log</a></p>
+    </div>
+
+    <div class="tl-item">
+      <h4>t=3h45m + 30s — Hysteresis clears. SoC = 96%.</h4>
+      <p>Cell #11 relaxes to 3.638V (30s open circuit). OVP clear threshold = 3.64V → met after 3s.
+      But protection SM requires 30 consecutive clear ticks before re-enabling. After 30s: CHG FET re-closes.
+      <a href="chapter9.html" class="ch-badge b9">Ch9 — Hysteresis</a></p>
+    </div>
+
+    <div class="tl-item">
+      <h4>t=4h — SoC = 100%. Inverter switches to float mode.</h4>
+      <p>BMS sends 0x351 with max_charge_A = 0 (SoC ≥ 99%). Inverter stops charging.
+      Pack enters FLOAT: tiny trickle current to compensate self-discharge.
+      Cloud dashboard shows SoC=100%, SoH=98%, all cells balanced within 8mV.
+      <a href="chapter7.html" class="ch-badge b7">Ch7 — Float charging</a>
+      <a href="chapter10.html" class="ch-badge b10">Ch10 — Cloud / dashboard</a></p>
+    </div>
+  </div>
+
+  <div class="callout callout-cyan">
+    <strong>Notice what just happened:</strong> The BMS never needed to be "told" anything by a human.
+    It measured, estimated, protected, and communicated autonomously for 4 hours. The inverter adjusted
+    based on CAN data. The cells stayed safe. The logs captured everything. That is the complete
+    system working as designed.
+  </div>
+
+  <!-- Summary stat grid -->
+  <h3 class="subsection-title">System Design Principles — The 10 Non-Negotiables</h3>
+  <div class="card-grid" style="grid-template-columns:repeat(5,1fr);gap:0.8rem">
+    <div class="card" style="padding:0.9rem;text-align:center"><div style="font-family:var(--font-hud);font-size:0.7rem;color:var(--c2);margin-bottom:0.3rem">NEVER GUESS</div><div style="font-size:0.72rem;color:var(--text-muted)">Always estimate with confidence bounds. Kalman &gt; open-loop CC.</div></div>
+    <div class="card" style="padding:0.9rem;text-align:center"><div style="font-family:var(--font-hud);font-size:0.7rem;color:var(--c4);margin-bottom:0.3rem">HARDWARE FIRST</div><div style="font-size:0.72rem;color:var(--text-muted)">HW OVP fires in 500µs. SW is backup, not primary protection.</div></div>
+    <div class="card" style="padding:0.9rem;text-align:center"><div style="font-family:var(--font-hud);font-size:0.7rem;color:var(--c3);margin-bottom:0.3rem">LOG EVERYTHING</div><div style="font-size:0.72rem;color:var(--text-muted)">Every fault needs a timestamp. NVM must survive power loss.</div></div>
+    <div class="card" style="padding:0.9rem;text-align:center"><div style="font-family:var(--font-hud);font-size:0.7rem;color:var(--c1);margin-bottom:0.3rem">HYSTERESIS</div><div style="font-size:0.72rem;color:var(--text-muted)">No chattering FETs. 5°C band. 30s clear timer. Always.</div></div>
+    <div class="card" style="padding:0.9rem;text-align:center"><div style="font-family:var(--font-hud);font-size:0.7rem;color:var(--c5);margin-bottom:0.3rem">DETERMINISM</div><div style="font-size:0.72rem;color:var(--text-muted)">Worst-case timing is the only timing that matters. No malloc.</div></div>
+    <div class="card" style="padding:0.9rem;text-align:center"><div style="font-family:var(--font-hud);font-size:0.7rem;color:var(--c2);margin-bottom:0.3rem">COMMUNICATE</div><div style="font-size:0.72rem;color:var(--text-muted)">Tell the inverter before tripping. CAN warning saves load uptime.</div></div>
+    <div class="card" style="padding:0.9rem;text-align:center"><div style="font-family:var(--font-hud);font-size:0.7rem;color:var(--c4);margin-bottom:0.3rem">BALANCE</div><div style="font-size:0.72rem;color:var(--text-muted)">ΔV &gt; 10mV means one cell takes all the stress. Balance continuously.</div></div>
+    <div class="card" style="padding:0.9rem;text-align:center"><div style="font-family:var(--font-hud);font-size:0.7rem;color:var(--c3);margin-bottom:0.3rem">PERSIST STATE</div><div style="font-size:0.72rem;color:var(--text-muted)">SoC must survive a power cut. Write NVM on every 1% change.</div></div>
+    <div class="card" style="padding:0.9rem;text-align:center"><div style="font-family:var(--font-hud);font-size:0.7rem;color:var(--c1);margin-bottom:0.3rem">WATCHDOG</div><div style="font-size:0.72rem;color:var(--text-muted)">If firmware hangs for 200ms → both FETs off. No exceptions.</div></div>
+    <div class="card" style="padding:0.9rem;text-align:center"><div style="font-family:var(--font-hud);font-size:0.7rem;color:var(--c7);margin-bottom:0.3rem">KNOW YOUR CELL</div><div style="font-size:0.72rem;color:var(--text-muted)">DCIR table, OCV curve, capacity — your algorithms are only as good as your characterisation data.</div></div>
+  </div>
+
+  <!-- Navigation footer -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:3rem;
+    padding-top:1.5rem;border-top:1px solid var(--border);flex-wrap:wrap;gap:1rem">
+    <a href="chapter10.html" style="display:flex;align-items:center;gap:0.5rem;color:var(--text-muted);
+      font-family:var(--font-hud);font-size:0.72rem;text-decoration:none;
+      padding:0.6rem 1.2rem;border:1px solid var(--border);border-radius:6px;transition:all 0.2s"
+      onmouseover="this.style.borderColor='var(--c7)';this.style.color='var(--c7)'"
+      onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
+      ← Ch 10: Sustainability
+    </a>
+    <a href="index.html" style="display:flex;align-items:center;gap:0.5rem;color:var(--c2);
+      font-family:var(--font-hud);font-size:0.72rem;text-decoration:none;
+      padding:0.6rem 1.4rem;border:1px solid var(--c2);border-radius:6px;
+      background:rgba(0,245,255,0.06);transition:all 0.2s"
+      onmouseover="this.style.background='rgba(0,245,255,0.15)'"
+      onmouseout="this.style.background='rgba(0,245,255,0.06)'">
+      ⌂ Return to Knowledge Base Index
+    </a>
+  </div>
+</div>
+</section>
