@@ -300,3 +300,254 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);display
     <p class="hero-tagline">CELL → MEASURE → THINK → DECIDE → ACT → COMMUNICATE → REPEAT</p>
   </div>
 </div>
+
+<!-- ═══════════════════════════════════ SECTION 1 ═══════════════ -->
+<section class="section reveal" id="s-pipeline">
+<div class="section-inner">
+  <div class="section-label">Section 01</div>
+  <h2 class="section-title">The Big Picture — Cell to Cloud</h2>
+  <p class="section-intro">
+    Strip away all the complexity and a BMS does exactly one thing repeatedly, forever:
+    <strong style="color:var(--c2)">measure → think → act</strong>.
+    Everything else — CAN frames, Kalman filters, FET drivers — is just detail inside those three words.
+    Here is the full pipeline from raw electrons to a cloud dashboard in nine stages.
+  </p>
+
+  <!-- 9-STAGE ANIMATED PIPELINE SVG -->
+  <div style="overflow-x:auto;margin:1.5rem 0">
+  <svg id="pipeline-svg" viewBox="0 0 960 520" width="940" style="display:block;margin:0 auto;font-family:'JetBrains Mono',monospace;">
+    <defs>
+      <marker id="p-arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#00f5ff"/></marker>
+      <filter id="p-glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <linearGradient id="pipe-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#FFC857"/>
+        <stop offset="25%" stop-color="#00F5FF"/>
+        <stop offset="50%" stop-color="#A855F7"/>
+        <stop offset="75%" stop-color="#00FF88"/>
+        <stop offset="100%" stop-color="#00CFFF"/>
+      </linearGradient>
+    </defs>
+
+    <!-- bg -->
+    <rect width="960" height="520" fill="#020204" rx="12"/>
+    <!-- subtle grid -->
+    <g opacity="0.04" stroke="#00f5ff" stroke-width="0.5">
+      <line x1="0" y1="65" x2="960" y2="65"/><line x1="0" y1="130" x2="960" y2="130"/>
+      <line x1="0" y1="195" x2="960" y2="195"/><line x1="0" y1="260" x2="960" y2="260"/>
+      <line x1="0" y1="325" x2="960" y2="325"/><line x1="0" y1="390" x2="960" y2="390"/>
+      <line x1="0" y1="455" x2="960" y2="455"/>
+      <line x1="96" y1="0" x2="96" y2="520"/><line x1="192" y1="0" x2="192" y2="520"/>
+      <line x1="288" y1="0" x2="288" y2="520"/><line x1="384" y1="0" x2="384" y2="520"/>
+      <line x1="480" y1="0" x2="480" y2="520"/><line x1="576" y1="0" x2="576" y2="520"/>
+      <line x1="672" y1="0" x2="672" y2="520"/><line x1="768" y1="0" x2="768" y2="520"/>
+      <line x1="864" y1="0" x2="864" y2="520"/>
+    </g>
+
+    <!-- TITLE -->
+    <text x="480" y="26" fill="#00f5ff" font-size="11" text-anchor="middle" font-weight="bold" font-family="Orbitron" letter-spacing="2">COMPLETE BMS SIGNAL CHAIN — 16S1P LFP REFERENCE</text>
+
+    <!-- MAIN PIPELINE SPINE (animated gradient line) -->
+    <line x1="60" y1="120" x2="900" y2="120" stroke="url(#pipe-grad)" stroke-width="3" opacity="0.3"/>
+    <line x1="60" y1="120" x2="900" y2="120" stroke="url(#pipe-grad)" stroke-width="3" opacity="0.6"
+      stroke-dasharray="900" stroke-dashoffset="900">
+      <animate attributeName="stroke-dashoffset" from="900" to="0" dur="2.5s" fill="freeze" begin="0.3s"/>
+    </line>
+
+    <!-- ── NODE 1: CELL STACK ── -->
+    <rect x="20" y="75" width="88" height="90" rx="7" fill="#0d1208" stroke="#FFC857" stroke-width="1.8" filter="url(#p-glow)"/>
+    <text x="64" y="98" fill="#FFC857" font-size="9" text-anchor="middle" font-weight="bold">CELL</text>
+    <text x="64" y="110" fill="#FFC857" font-size="9" text-anchor="middle" font-weight="bold">STACK</text>
+    <text x="64" y="127" fill="#888" font-size="7.5" text-anchor="middle">16 × LFP</text>
+    <text x="64" y="139" fill="#888" font-size="7.5" text-anchor="middle">3.2V / 280Ah</text>
+    <text x="64" y="152" fill="#555" font-size="7" text-anchor="middle">Ch 1+3</text>
+    <!-- pulse ring -->
+    <circle cx="64" cy="115" r="38" fill="none" stroke="#FFC857" stroke-width="1" opacity="0">
+      <animate attributeName="r" values="30;50" dur="2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.6;0" dur="2s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- ── NODE 2: SENSING ── -->
+    <rect x="125" y="75" width="88" height="90" rx="7" fill="#080d14" stroke="#00F5FF" stroke-width="1.8" filter="url(#p-glow)"/>
+    <text x="169" y="98" fill="#00F5FF" font-size="9" text-anchor="middle" font-weight="bold">VOLTAGE</text>
+    <text x="169" y="110" fill="#00F5FF" font-size="9" text-anchor="middle" font-weight="bold">+ TEMP</text>
+    <text x="169" y="127" fill="#888" font-size="7.5" text-anchor="middle">NTC × 5</text>
+    <text x="169" y="139" fill="#888" font-size="7.5" text-anchor="middle">±1mV / ±0.5°C</text>
+    <text x="169" y="152" fill="#555" font-size="7" text-anchor="middle">Ch 4</text>
+
+    <!-- ── NODE 3: AFE ADC ── -->
+    <rect x="230" y="75" width="88" height="90" rx="7" fill="#08100d" stroke="#00F5FF" stroke-width="1.8" filter="url(#p-glow)"/>
+    <text x="274" y="98" fill="#00F5FF" font-size="9" text-anchor="middle" font-weight="bold">AFE / ADC</text>
+    <text x="274" y="110" fill="#00F5FF" font-size="9" text-anchor="middle" font-weight="bold">BQ76952</text>
+    <text x="274" y="127" fill="#888" font-size="7.5" text-anchor="middle">16-ch @ 1ms</text>
+    <text x="274" y="139" fill="#888" font-size="7.5" text-anchor="middle">I²C → MCU</text>
+    <text x="274" y="152" fill="#555" font-size="7" text-anchor="middle">Ch 4+8</text>
+
+    <!-- ── NODE 4: FILTER ── -->
+    <rect x="335" y="75" width="88" height="90" rx="7" fill="#0d0820" stroke="#A855F7" stroke-width="1.8" filter="url(#p-glow)"/>
+    <text x="379" y="98" fill="#A855F7" font-size="9" text-anchor="middle" font-weight="bold">DIGITAL</text>
+    <text x="379" y="110" fill="#A855F7" font-size="9" text-anchor="middle" font-weight="bold">FILTER</text>
+    <text x="379" y="127" fill="#888" font-size="7.5" text-anchor="middle">IIR low-pass</text>
+    <text x="379" y="139" fill="#888" font-size="7.5" text-anchor="middle">α = 0.1</text>
+    <text x="379" y="152" fill="#555" font-size="7" text-anchor="middle">Ch 5+6</text>
+
+    <!-- ── NODE 5: SOC/SOH ── -->
+    <rect x="440" y="75" width="88" height="90" rx="7" fill="#081408" stroke="#00FF88" stroke-width="1.8" filter="url(#p-glow)"/>
+    <text x="484" y="98" fill="#00FF88" font-size="9" text-anchor="middle" font-weight="bold">SoC / SoH</text>
+    <text x="484" y="110" fill="#00FF88" font-size="9" text-anchor="middle" font-weight="bold">KALMAN</text>
+    <text x="484" y="127" fill="#888" font-size="7.5" text-anchor="middle">EKF 10ms</text>
+    <text x="484" y="139" fill="#888" font-size="7.5" text-anchor="middle">±2% SoC</text>
+    <text x="484" y="152" fill="#555" font-size="7" text-anchor="middle">Ch 2+5</text>
+
+    <!-- ── NODE 6: PROTECTION ── -->
+    <rect x="545" y="75" width="88" height="90" rx="7" fill="#14080a" stroke="#FF6B35" stroke-width="1.8" filter="url(#p-glow)"/>
+    <text x="589" y="98" fill="#FF6B35" font-size="9" text-anchor="middle" font-weight="bold">PROT</text>
+    <text x="589" y="110" fill="#FF6B35" font-size="9" text-anchor="middle" font-weight="bold">STATE M/C</text>
+    <text x="589" y="127" fill="#888" font-size="7.5" text-anchor="middle">6 states</text>
+    <text x="589" y="139" fill="#888" font-size="7.5" text-anchor="middle">hysteresis 3s</text>
+    <text x="589" y="152" fill="#555" font-size="7" text-anchor="middle">Ch 6+9</text>
+
+    <!-- ── NODE 7: FET CONTROL ── -->
+    <rect x="650" y="75" width="88" height="90" rx="7" fill="#140e08" stroke="#FFC857" stroke-width="1.8" filter="url(#p-glow)"/>
+    <text x="694" y="98" fill="#FFC857" font-size="9" text-anchor="middle" font-weight="bold">FET / CONT</text>
+    <text x="694" y="110" fill="#FFC857" font-size="9" text-anchor="middle" font-weight="bold">CONTROL</text>
+    <text x="694" y="127" fill="#888" font-size="7.5" text-anchor="middle">CHG + DSG</text>
+    <text x="694" y="139" fill="#888" font-size="7.5" text-anchor="middle">&lt;500µs trip</text>
+    <text x="694" y="152" fill="#555" font-size="7" text-anchor="middle">Ch 3+8+9</text>
+
+    <!-- ── NODE 8: CAN BUS ── -->
+    <rect x="755" y="75" width="88" height="90" rx="7" fill="#08100e" stroke="#00F5FF" stroke-width="1.8" filter="url(#p-glow)"/>
+    <text x="799" y="98" fill="#00F5FF" font-size="9" text-anchor="middle" font-weight="bold">CAN BUS</text>
+    <text x="799" y="110" fill="#00F5FF" font-size="9" text-anchor="middle" font-weight="bold">0x351–35F</text>
+    <text x="799" y="127" fill="#888" font-size="7.5" text-anchor="middle">250 kbps</text>
+    <text x="799" y="139" fill="#888" font-size="7.5" text-anchor="middle">PYLON compat</text>
+    <text x="799" y="152" fill="#555" font-size="7" text-anchor="middle">Ch 6+7</text>
+
+    <!-- ── NODE 9: CLOUD/LOG ── -->
+    <rect x="860" y="75" width="88" height="90" rx="7" fill="#080e10" stroke="#00CFFF" stroke-width="1.8" filter="url(#p-glow)"/>
+    <text x="904" y="98" fill="#00CFFF" font-size="9" text-anchor="middle" font-weight="bold">LOG /</text>
+    <text x="904" y="110" fill="#00CFFF" font-size="9" text-anchor="middle" font-weight="bold">CLOUD</text>
+    <text x="904" y="127" fill="#888" font-size="7.5" text-anchor="middle">NVM + MQTT</text>
+    <text x="904" y="139" fill="#888" font-size="7.5" text-anchor="middle">Grafana dash</text>
+    <text x="904" y="152" fill="#555" font-size="7" text-anchor="middle">Ch 6+10</text>
+
+    <!-- CONNECTOR ARROWS -->
+    <line x1="108" y1="120" x2="123" y2="120" stroke="#00f5ff" stroke-width="1.5" marker-end="url(#p-arr)"/>
+    <line x1="213" y1="120" x2="228" y2="120" stroke="#00f5ff" stroke-width="1.5" marker-end="url(#p-arr)"/>
+    <line x1="318" y1="120" x2="333" y2="120" stroke="#a855f7" stroke-width="1.5" marker-end="url(#p-arr)"/>
+    <line x1="423" y1="120" x2="438" y2="120" stroke="#00ff88" stroke-width="1.5" marker-end="url(#p-arr)"/>
+    <line x1="528" y1="120" x2="543" y2="120" stroke="#ff6b35" stroke-width="1.5" marker-end="url(#p-arr)"/>
+    <line x1="633" y1="120" x2="648" y2="120" stroke="#ffc857" stroke-width="1.5" marker-end="url(#p-arr)"/>
+    <line x1="738" y1="120" x2="753" y2="120" stroke="#00f5ff" stroke-width="1.5" marker-end="url(#p-arr)"/>
+    <line x1="843" y1="120" x2="858" y2="120" stroke="#00cfff" stroke-width="1.5" marker-end="url(#p-arr)"/>
+
+    <!-- ANIMATED DATA PACKETS travelling the pipeline -->
+    <!-- Packet 1 (amber) -->
+    <circle r="5" fill="#FFC857" opacity="0">
+      <animateMotion dur="4s" repeatCount="indefinite" begin="0s"
+        path="M64,120 L169,120 L274,120 L379,120 L484,120 L589,120 L694,120 L799,120 L904,120"/>
+      <animate attributeName="opacity" values="0;1;1;1;1;1;1;1;0" keyTimes="0;0.05;0.2;0.4;0.6;0.75;0.85;0.95;1" dur="4s" repeatCount="indefinite"/>
+    </circle>
+    <!-- Packet 2 (cyan, offset) -->
+    <circle r="4" fill="#00F5FF" opacity="0">
+      <animateMotion dur="4s" repeatCount="indefinite" begin="1.3s"
+        path="M64,120 L169,120 L274,120 L379,120 L484,120 L589,120 L694,120 L799,120 L904,120"/>
+      <animate attributeName="opacity" values="0;1;1;1;1;1;1;1;0" keyTimes="0;0.05;0.2;0.4;0.6;0.75;0.85;0.95;1" dur="4s" repeatCount="indefinite" begin="1.3s"/>
+    </circle>
+    <!-- Packet 3 (green, offset) -->
+    <circle r="4" fill="#00FF88" opacity="0">
+      <animateMotion dur="4s" repeatCount="indefinite" begin="2.6s"
+        path="M64,120 L169,120 L274,120 L379,120 L484,120 L589,120 L694,120 L799,120 L904,120"/>
+      <animate attributeName="opacity" values="0;1;1;1;1;1;1;1;0" keyTimes="0;0.05;0.2;0.4;0.6;0.75;0.85;0.95;1" dur="4s" repeatCount="indefinite" begin="2.6s"/>
+    </circle>
+
+    <!-- FEEDBACK LOOP (bottom arc) -->
+    <path d="M904,165 Q480,240 64,165" fill="none" stroke="rgba(0,245,255,0.25)" stroke-width="1.5" stroke-dasharray="8,4"/>
+    <text x="480" y="235" fill="#00f5ff" font-size="8.5" text-anchor="middle" opacity="0.5" font-style="italic">← feedback: FET state & SoC update loops back to algorithm ←</text>
+    <!-- animated feedback packet -->
+    <circle r="3.5" fill="#A855F7" opacity="0">
+      <animateMotion dur="5s" repeatCount="indefinite" begin="2s"
+        path="M904,165 Q480,240 64,165"/>
+      <animate attributeName="opacity" values="0;0.8;0.8;0" keyTimes="0;0.1;0.9;1" dur="5s" repeatCount="indefinite" begin="2s"/>
+    </circle>
+
+    <!-- LOWER DETAIL PANEL -->
+    <rect x="20" y="280" width="920" height="220" rx="8" fill="#050508" stroke="rgba(0,245,255,0.1)" stroke-width="1"/>
+    <text x="480" y="304" fill="#00f5ff" font-size="10" text-anchor="middle" font-weight="bold" font-family="Orbitron" letter-spacing="1">WHAT EACH STAGE ACTUALLY DOES</text>
+
+    <!-- col 1 -->
+    <text x="40" y="326" fill="#FFC857" font-size="8.5" font-weight="bold">① CELL STACK</text>
+    <text x="40" y="340" fill="#555" font-size="7.5">Source of all electrical energy.</text>
+    <text x="40" y="353" fill="#555" font-size="7.5">V varies 2.5–3.65V/cell.</text>
+    <text x="40" y="366" fill="#555" font-size="7.5">T varies –20 to +60°C.</text>
+    <text x="40" y="379" fill="#555" font-size="7.5">Flat OCV = hard to know SoC.</text>
+
+    <!-- col 2 -->
+    <text x="165" y="326" fill="#00F5FF" font-size="8.5" font-weight="bold">② SENSE</text>
+    <text x="165" y="340" fill="#555" font-size="7.5">NTC gives analogue voltage.</text>
+    <text x="165" y="353" fill="#555" font-size="7.5">Cell taps → differential mux.</text>
+    <text x="165" y="366" fill="#555" font-size="7.5">Shunt → bidirectional Ibat.</text>
+    <text x="165" y="379" fill="#555" font-size="7.5">Accuracy limits everything.</text>
+
+    <!-- col 3 -->
+    <text x="280" y="326" fill="#00F5FF" font-size="8.5" font-weight="bold">③ AFE / ADC</text>
+    <text x="280" y="340" fill="#555" font-size="7.5">Sigma-delta ADC 16-bit.</text>
+    <text x="280" y="353" fill="#555" font-size="7.5">All 16 cells in &lt;1ms cycle.</text>
+    <text x="280" y="366" fill="#555" font-size="7.5">CC2 integrates charge/sec.</text>
+    <text x="280" y="379" fill="#555" font-size="7.5">OVP/UVP hardware trip.</text>
+
+    <!-- col 4 -->
+    <text x="390" y="326" fill="#A855F7" font-size="8.5" font-weight="bold">④ FILTER</text>
+    <text x="390" y="340" fill="#555" font-size="7.5">ADC noise → IIR smooth.</text>
+    <text x="390" y="353" fill="#555" font-size="7.5">α=0.1 cuts 90% noise.</text>
+    <text x="390" y="366" fill="#555" font-size="7.5">Also catches glitches.</text>
+    <text x="390" y="379" fill="#555" font-size="7.5">No filter = chattering FETs.</text>
+
+    <!-- col 5 -->
+    <text x="500" y="326" fill="#00FF88" font-size="8.5" font-weight="bold">⑤ SoC/SoH</text>
+    <text x="500" y="340" fill="#555" font-size="7.5">Kalman fuses CC + OCV.</text>
+    <text x="500" y="353" fill="#555" font-size="7.5">DCIR lookup → SoH.</text>
+    <text x="500" y="366" fill="#555" font-size="7.5">Runs every 10ms.</text>
+    <text x="500" y="379" fill="#555" font-size="7.5">Feeds protection + CAN.</text>
+
+    <!-- col 6 -->
+    <text x="610" y="326" fill="#FF6B35" font-size="8.5" font-weight="bold">⑥ PROTECTION</text>
+    <text x="610" y="340" fill="#555" font-size="7.5">6-state state machine.</text>
+    <text x="610" y="353" fill="#555" font-size="7.5">OVP/UVP/OCP/OTP.</text>
+    <text x="610" y="366" fill="#555" font-size="7.5">Hysteresis prevents chatter.</text>
+    <text x="610" y="379" fill="#555" font-size="7.5">Fastest path to FET trip.</text>
+
+    <!-- col 7 -->
+    <text x="718" y="326" fill="#FFC857" font-size="8.5" font-weight="bold">⑦ FET CTRL</text>
+    <text x="718" y="340" fill="#555" font-size="7.5">CHG FET + DSG FET.</text>
+    <text x="718" y="353" fill="#555" font-size="7.5">HW trip: &lt;500µs.</text>
+    <text x="718" y="366" fill="#555" font-size="7.5">Precharge 10Ω/100ms.</text>
+    <text x="718" y="379" fill="#555" font-size="7.5">Watchdog → both off.</text>
+
+    <!-- col 8 -->
+    <text x="820" y="326" fill="#00CFFF" font-size="8.5" font-weight="bold">⑧+⑨ OUT</text>
+    <text x="820" y="340" fill="#555" font-size="7.5">CAN 0x351–0x359.</text>
+    <text x="820" y="353" fill="#555" font-size="7.5">UART debug stream.</text>
+    <text x="820" y="366" fill="#555" font-size="7.5">NVM event log.</text>
+    <text x="820" y="379" fill="#555" font-size="7.5">Cloud MQTT/Grafana.</text>
+
+    <!-- bottom note -->
+    <text x="480" y="458" fill="#2a2a3a" font-size="8.5" text-anchor="middle">The entire loop runs every 10ms on the MCU. 100 times per second. Forever. Until power is removed.</text>
+    <text x="480" y="472" fill="#2a2a3a" font-size="8.5" text-anchor="middle">That is what a BMS is: a real-time control system wrapped around electrochemistry.</text>
+    <text x="480" y="488" fill="#333" font-size="8" text-anchor="middle" font-family="Orbitron">MEASURE → THINK → ACT · REPEAT 100×/SECOND</text>
+  </svg>
+  </div>
+
+  <div class="callout callout-cyan">
+    <strong>The one thing to remember:</strong> The BMS never "knows" the battery state perfectly. It
+    <em>estimates</em> it — using voltage, current, temperature, and a mathematical model. Every design
+    decision in chapters 1–10 is about making that estimate more accurate, more reliable, and faster to react.
+  </div>
+
+  <!-- 9 stage cards quick summary -->
+  <div class="card-grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="card"><div class="card-title" style="color:var(--c1)">MEASURE (Stages 1–3)</div><div class="card-body">Cells generate voltage. Sensors capture it. AFE digitises every cell every millisecond with ±1mV accuracy. This raw data is the foundation of everything.</div></div>
+    <div class="card"><div class="card-title" style="color:var(--c4)">THINK (Stages 4–5)</div><div class="card-body">Filter removes noise. Kalman filter fuses coulomb counting + voltage model → SoC ±2%. DCIR trend → SoH. This is the intelligence layer.</div></div>
+    <div class="card"><div class="card-title" style="color:var(--c3)">ACT (Stages 6–9)</div><div class="card-body">Protection state machine decides. FETs execute in &lt;500µs. CAN tells the inverter. NVM logs every event. Cloud visualises. System reacts.</div></div>
+  </div>
+</div>
+</section>
