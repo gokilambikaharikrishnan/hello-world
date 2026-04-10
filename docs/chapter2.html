@@ -4546,225 +4546,7 @@ T (°C)  | f_T   | Notes
     </script>
 
     <!-- Chapter Navigation Footer -->
-    <div class="chapter-footer">
-      <a class="nav-btn" href="chapter1.html">← Chapter 1: The Case for Li-ion</a>
-      <div style="text-align:center;">
-        <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.3rem;">You are reading</div>
-        <div style="font-size:0.9rem; color:var(--text-primary); font-weight:700;">Chapter 2: Understanding the Li-ion Cell</div>
-      </div>
-      <a class="nav-btn nav-btn-next" href="chapter3.html">Chapter 3: Thermal Management →</a>
-    </div>
-
-  </main>
-</div>
-
-<script>
-/* ============================================================
-   SOC METHOD BAR CHART
-============================================================ */
-const socMetrics = {
-  accuracy: {
-    label: 'SOC Accuracy for LFP (% error, lower = better)',
-    unit: '% error (lower better)',
-    note: 'Mid-SoC accuracy (20–80% range). OCV poor due to flat curve. EKF best but complex.',
-    max: 25,
-    bars: [
-      { label: 'T1: OCV',      value: 20,  color: '#ed8936', display: '±20%' },
-      { label: 'T2: Coul.Cnt', value: 5,   color: '#63b3ed', display: '±5% drifts' },
-      { label: 'T3: ECM',      value: 6,   color: '#b794f4', display: '±6%' },
-      { label: 'T4: EKF',      value: 3,   color: '#48bb78', display: '±3%' },
-      { label: 'T5: Hybrid',   value: 5,   color: '#00d9ff', display: '±5%' },
-    ]
-  },
-  complexity: {
-    label: 'Implementation Complexity (1=trivial, 10=very complex)',
-    unit: '/10',
-    note: 'Development effort, tuning difficulty, risk of bugs. Hybrid is the engineering sweet spot.',
-    max: 10,
-    bars: [
-      { label: 'T1: OCV',      value: 1, color: '#48bb78', display: '1/10' },
-      { label: 'T2: Coul.Cnt', value: 2, color: '#48bb78', display: '2/10' },
-      { label: 'T3: ECM',      value: 4, color: '#63b3ed', display: '4/10' },
-      { label: 'T4: EKF',      value: 9, color: '#fc8181', display: '9/10' },
-      { label: 'T5: Hybrid',   value: 3, color: '#48bb78', display: '3/10' },
-    ]
-  },
-  drift: {
-    label: 'SOC Drift Rate (% per 24h without correction, lower = better)',
-    unit: '%/24h',
-    note: 'How much SOC error accumulates over 24h of continuous operation. OCV has no drift (static). EKF self-corrects.',
-    max: 12,
-    bars: [
-      { label: 'T1: OCV',      value: 0, color: '#48bb78', display: 'None' },
-      { label: 'T2: Coul.Cnt', value: 8, color: '#fc8181', display: '~8%/day' },
-      { label: 'T3: ECM',      value: 4, color: '#ed8936', display: '~4%/day' },
-      { label: 'T4: EKF',      value: 1, color: '#48bb78', display: '~1%/day' },
-      { label: 'T5: Hybrid',   value: 2, color: '#63b3ed', display: '~2%/day' },
-    ]
-  },
-  ram: {
-    label: 'RAM Usage per Cell (bytes, 16-cell pack)',
-    unit: 'bytes/cell',
-    note: 'Approximate RAM needed to maintain state for one cell. OCV lookup table itself is ~400 bytes (separate).',
-    max: 900,
-    bars: [
-      { label: 'T1: OCV',      value: 40,  color: '#48bb78', display: '~40B' },
-      { label: 'T2: Coul.Cnt', value: 20,  color: '#48bb78', display: '~20B' },
-      { label: 'T3: ECM',      value: 140, color: '#63b3ed', display: '~140B' },
-      { label: 'T4: EKF',      value: 880, color: '#ed8936', display: '~880B' },
-      { label: 'T5: Hybrid',   value: 80,  color: '#48bb78', display: '~80B' },
-    ]
-  }
-};
-
-function showSOCMetric(key, tabEl) {
-  document.querySelectorAll('#socBarChart .bar-chart-tab').forEach(t => t.classList.remove('active'));
-  if(tabEl) tabEl.classList.add('active');
-  const m = socMetrics[key];
-  const container = document.getElementById('socChartContent');
-  container.innerHTML = `
-    <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:1rem; font-family:var(--font-mono);">${m.note}</div>
-    ${m.bars.map(bar => `
-      <div class="bar-chart-row">
-        <div class="bar-label">${bar.label}</div>
-        <div class="bar-track">
-          <div class="bar-fill" style="width:0%; background:${bar.color};" data-target="${Math.max(4, (bar.value / m.max * 100)).toFixed(1)}">
-            ${bar.display}
-          </div>
-        </div>
-        <div class="bar-value">${bar.display} ${m.unit}</div>
-      </div>
-    `).join('')}
-  `;
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    container.querySelectorAll('.bar-fill').forEach(b => { b.style.width = b.dataset.target + '%'; });
-  }));
-}
-
-/* ============================================================
-   SIDEBAR SCROLL OBSERVER
-============================================================ */
-document.addEventListener('DOMContentLoaded', () => {
-  // Init SOC chart
-  showSOCMetric('accuracy', null);
-  document.querySelector('#socBarChart .bar-chart-tab').classList.add('active');
-
-  // Sidebar active highlight
-  const sections = document.querySelectorAll('section[id], div[id]');
-  const links = document.querySelectorAll('.sidebar-link');
-  const obs = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if(e.isIntersecting) {
-        const id = e.target.id;
-        links.forEach(l => {
-          l.classList.remove('active');
-          if(l.getAttribute('href') === '#'+id) l.classList.add('active');
-        });
-      }
-    });
-  }, { rootMargin: '-20% 0px -70% 0px' });
-  sections.forEach(s => obs.observe(s));
-});
-</script>
-<script>
-/* Glitch effect on hero title */
-(function(){
-  var el = document.querySelector('.hero-title');
-  if(!el) return;
-  el.setAttribute('data-text', el.textContent);
-  el.style.position = 'relative';
-  el.style.display = 'inline-block';
-  // inject glitch pseudo keyframes via style tag
-  if(!document.getElementById('__glitch-style')){
-    var s = document.createElement('style');
-    s.id = '__glitch-style';
-    s.textContent = `
-      .hero-title::before,.hero-title::after{content:attr(data-text);position:absolute;top:0;left:0;width:100%;height:100%}
-      .hero-title::before{color:#ff006e;clip-path:polygon(0 15%,100% 15%,100% 35%,0 35%);animation:__g1 3.5s infinite}
-      .hero-title::after{color:#00f5ff;clip-path:polygon(0 65%,100% 65%,100% 85%,0 85%);animation:__g2 3.5s infinite}
-      @keyframes __g1{0%,88%,100%{transform:translate(0)}89%{transform:translate(-5px,2px)}94%{transform:translate(5px,-2px)}}
-      @keyframes __g2{0%,88%,100%{transform:translate(0)}89%{transform:translate(5px,-2px)}94%{transform:translate(-5px,2px)}}
-    `;
-    document.head.appendChild(s);
-  }
-})();
-/* Animate section h2s in with neon flash */
-(function(){
-  var obs = new IntersectionObserver(function(entries){
-    entries.forEach(function(e){
-      if(e.isIntersecting){
-        e.target.style.animation='__h2flash .6s ease forwards';
-        obs.unobserve(e.target);
-      }
-    });
-  },{threshold:.3});
-  if(!document.getElementById('__h2flash')){
-    var s=document.createElement('style');s.id='__h2flash';
-    s.textContent='@keyframes __h2flash{0%{opacity:0;transform:translateX(-20px)}60%{opacity:1;transform:translateX(4px)}100%{opacity:1;transform:translateX(0)}}';
-    document.head.appendChild(s);
-  }
-  document.querySelectorAll('.content-main h2').forEach(function(h){
-    h.style.opacity='0';obs.observe(h);
-  });
-})();
-/* Speed lines flash on load */
-(function(){
-  var style=document.createElement('style');
-  style.textContent=`
-    #__speedlines{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2;overflow:hidden}
-    .__sl{position:absolute;top:50%;left:50%;height:1px;background:rgba(255,255,255,.4);transform-origin:left center;animation:__slout 1s ease-out forwards;opacity:0}
-    @keyframes __slout{0%{width:0;opacity:.7}100%{width:200vw;opacity:0}}
-  `;
-  document.head.appendChild(style);
-  var div=document.createElement('div');div.id='__speedlines';document.body.appendChild(div);
-  for(var i=0;i<16;i++){
-    var l=document.createElement('div');l.className='__sl';
-    var angle=Math.random()*360;
-    l.style.cssText+=';transform:rotate('+angle+'deg);animation-delay:'+(i*0.06)+'s';
-    div.appendChild(l);
-  }
-  setTimeout(function(){if(div.parentNode)div.parentNode.removeChild(div);},2500);
-})();
-</script>
-<script id="__comic-js-extra">
-/* Tilt effect on hero meta items */
-document.querySelectorAll('.hero-meta-item').forEach(function(el){
-  el.addEventListener('mousemove',function(e){
-    var r=el.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
-    el.style.transform='translate(-2px,-2px) rotateX('+(-y*10)+'deg) rotateY('+(x*10)+'deg)';
-  });
-  el.addEventListener('mouseleave',function(){el.style.transform='';});
-});
-/* Neon flash on sidebar active link change */
-document.querySelectorAll('.sidebar-link').forEach(function(a){
-  a.addEventListener('click',function(){
-    a.style.boxShadow='0 0 15px #60a5fa';
-    setTimeout(function(){a.style.boxShadow='';},500);
-  });
-});
-/* Comic pop on h3 appear */
-(function(){
-  var obs=new IntersectionObserver(function(entries){
-    entries.forEach(function(e){
-      if(e.isIntersecting){
-        e.target.style.animation='__h3pop .5s cubic-bezier(.34,1.56,.64,1) forwards';
-        obs.unobserve(e.target);
-      }
-    });
-  },{threshold:.4});
-  if(!document.getElementById('__h3pop')){
-    var s=document.createElement('style');s.id='__h3pop';
-    s.textContent='@keyframes __h3pop{0%{opacity:0;transform:scale(.85) translateX(-10px)}100%{opacity:1;transform:scale(1) translateX(0)}}';
-    document.head.appendChild(s);
-  }
-  document.querySelectorAll('.content-main h3').forEach(function(h){
-    h.style.opacity='0';obs.observe(h);
-  });
-})();
-</script>
-
-
-
+    
 <!-- CH2 SoC Algorithm Trade-off Explorer -->
 <style>
 .to-panel{background:#07070f;border:1px solid rgba(0,245,255,0.16);border-radius:12px;padding:1.5rem;margin:2rem 0}
@@ -4779,7 +4561,7 @@ document.querySelectorAll('.sidebar-link').forEach(function(a){
 .rnd-b2 p{font-size:0.88rem;color:#9ca3af;line-height:1.85;margin:0.4rem 0}
 .rnd-b2 strong{color:#e8eaf0}
 </style>
-<section style="margin-left:280px;padding:3rem 0;border-top:1px solid rgba(0,245,255,0.1)" id="ch2-sim">
+<section style="padding:3rem 0;border-top:1px solid rgba(0,245,255,0.1)" id="ch2-sim">
 <div style="max-width:920px;margin:0 auto;padding:0 2.5rem">
   <div style="font-family:Orbitron,monospace;font-size:0.6rem;color:#00F5FF;letter-spacing:0.2em;margin-bottom:0.5rem">INTERACTIVE LAB - CHAPTER 2</div>
   <h2 style="font-family:Orbitron,monospace;font-size:1.3rem;color:#fff;margin-bottom:0.8rem">SoC Algorithm Trade-off Explorer</h2>
@@ -4849,7 +4631,7 @@ drawRadar();
 .sim-btn:hover{transform:scale(1.05)}
 </style>
 
-<section style="margin-left:280px;padding:3rem 0;border-top:1px solid rgba(0,245,255,0.12);margin-top:2rem" id="ch2-kalman-sim">
+<section style="padding:3rem 0;border-top:1px solid rgba(0,245,255,0.12);margin-top:2rem" id="ch2-kalman-sim">
 <div style="max-width:920px;margin:0 auto;padding:0 2.5rem">
   <div style="font-family:'Orbitron',monospace;font-size:0.6rem;color:#00F5FF;letter-spacing:0.2em;margin-bottom:0.5rem">INTERACTIVE LAB · CHAPTER 2</div>
   <h2 style="font-family:'Orbitron',monospace;font-size:1.3rem;color:#fff;margin-bottom:0.8rem">Live SoC Estimator — Watch the Kalman Filter Work</h2>
@@ -4960,7 +4742,7 @@ drawRadar();
 .xref-block{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07);border-radius:.4rem;padding:.6rem 1rem;margin:1rem 0;font-size:.78rem;color:#888;}
 .xref-block .xr-title{font-family:'Orbitron',monospace;font-size:.56rem;letter-spacing:.1em;color:#444;margin-bottom:.4rem;}
 </style>
-<div class="xref-block" style="margin-left:280px;max-width:900px;">
+<div class="xref-block" style="max-width:900px;">
   <div class="xr-title">↗ CONNECTS TO</div>
   <a href="chapter1.html" class="xref-callout" style="border-color:rgba(255,255,255,.15);" title="OCV/SoC curve — source data for Kalman initialisation"><span class="xr-badge" style="background:rgba(255,200,87,0.2);color:#FFC857;">CH1</span>OCV/SoC curve — source data for Kalman initialisation</a>
 <a href="chapter5.html" class="xref-callout" style="border-color:rgba(255,255,255,.15);" title="Standards that specify SoC accuracy requirements"><span class="xr-badge" style="background:rgba(0,255,136,0.2);color:#00FF88;">CH5</span>Standards that specify SoC accuracy requirements</a>
@@ -4969,7 +4751,7 @@ drawRadar();
 </div>
 
 <!-- Bridge Section -->
-<section style="margin-left:280px;padding:2rem 0;border-top:1px solid rgba(0,245,255,0.1);">
+<section style="padding:2rem 0;border-top:1px solid rgba(0,245,255,0.1);">
 <div style="max-width:900px;margin:0 auto;padding:0 1.5rem;">
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
   <div style="background:rgba(0,245,255,0.04);border:1px solid rgba(0,245,255,0.15);border-radius:.6rem;padding:1.2rem 1.5rem;">
@@ -4986,8 +4768,124 @@ drawRadar();
 </div>
 </div>
 </section>
+<div class="chapter-footer">
+      <a class="nav-btn" href="chapter1.html">← Chapter 1: The Case for Li-ion</a>
+      <div style="text-align:center;">
+        <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.3rem;">You are reading</div>
+        <div style="font-size:0.9rem; color:var(--text-primary); font-weight:700;">Chapter 2: Understanding the Li-ion Cell</div>
+      </div>
+      <a class="nav-btn nav-btn-next" href="chapter3.html">Chapter 3: Thermal Management →</a>
+    </div>
 
+  </main>
+</div><script>
+/* ============================================================
+   SOC METHOD BAR CHART
+============================================================ */
+const socMetrics = {
+  accuracy: {
+    label: 'SOC Accuracy for LFP (% error, lower = better)',
+    unit: '% error (lower better)',
+    note: 'Mid-SoC accuracy (20–80% range). OCV poor due to flat curve. EKF best but complex.',
+    max: 25,
+    bars: [
+      { label: 'T1: OCV',      value: 20,  color: '#ed8936', display: '±20%' },
+      { label: 'T2: Coul.Cnt', value: 5,   color: '#63b3ed', display: '±5% drifts' },
+      { label: 'T3: ECM',      value: 6,   color: '#b794f4', display: '±6%' },
+      { label: 'T4: EKF',      value: 3,   color: '#48bb78', display: '±3%' },
+      { label: 'T5: Hybrid',   value: 5,   color: '#00d9ff', display: '±5%' },
+    ]
+  },
+  complexity: {
+    label: 'Implementation Complexity (1=trivial, 10=very complex)',
+    unit: '/10',
+    note: 'Development effort, tuning difficulty, risk of bugs. Hybrid is the engineering sweet spot.',
+    max: 10,
+    bars: [
+      { label: 'T1: OCV',      value: 1, color: '#48bb78', display: '1/10' },
+      { label: 'T2: Coul.Cnt', value: 2, color: '#48bb78', display: '2/10' },
+      { label: 'T3: ECM',      value: 4, color: '#63b3ed', display: '4/10' },
+      { label: 'T4: EKF',      value: 9, color: '#fc8181', display: '9/10' },
+      { label: 'T5: Hybrid',   value: 3, color: '#48bb78', display: '3/10' },
+    ]
+  },
+  drift: {
+    label: 'SOC Drift Rate (% per 24h without correction, lower = better)',
+    unit: '%/24h',
+    note: 'How much SOC error accumulates over 24h of continuous operation. OCV has no drift (static). EKF self-corrects.',
+    max: 12,
+    bars: [
+      { label: 'T1: OCV',      value: 0, color: '#48bb78', display: 'None' },
+      { label: 'T2: Coul.Cnt', value: 8, color: '#fc8181', display: '~8%/day' },
+      { label: 'T3: ECM',      value: 4, color: '#ed8936', display: '~4%/day' },
+      { label: 'T4: EKF',      value: 1, color: '#48bb78', display: '~1%/day' },
+      { label: 'T5: Hybrid',   value: 2, color: '#63b3ed', display: '~2%/day' },
+    ]
+  },
+  ram: {
+    label: 'RAM Usage per Cell (bytes, 16-cell pack)',
+    unit: 'bytes/cell',
+    note: 'Approximate RAM needed to maintain state for one cell. OCV lookup table itself is ~400 bytes (separate).',
+    max: 900,
+    bars: [
+      { label: 'T1: OCV',      value: 40,  color: '#48bb78', display: '~40B' },
+      { label: 'T2: Coul.Cnt', value: 20,  color: '#48bb78', display: '~20B' },
+      { label: 'T3: ECM',      value: 140, color: '#63b3ed', display: '~140B' },
+      { label: 'T4: EKF',      value: 880, color: '#ed8936', display: '~880B' },
+      { label: 'T5: Hybrid',   value: 80,  color: '#48bb78', display: '~80B' },
+    ]
+  }
+};
 
+function showSOCMetric(key, tabEl) {
+  document.querySelectorAll('#socBarChart .bar-chart-tab').forEach(t => t.classList.remove('active'));
+  if(tabEl) tabEl.classList.add('active');
+  const m = socMetrics[key];
+  const container = document.getElementById('socChartContent');
+  container.innerHTML = `
+    <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:1rem; font-family:var(--font-mono);">${m.note}</div>
+    ${m.bars.map(bar => `
+      <div class="bar-chart-row">
+        <div class="bar-label">${bar.label}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:0%; background:${bar.color};" data-target="${Math.max(4, (bar.value / m.max * 100)).toFixed(1)}">
+            ${bar.display}
+          </div>
+        </div>
+        <div class="bar-value">${bar.display} ${m.unit}</div>
+      </div>
+    `).join('')}
+  `;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    container.querySelectorAll('.bar-fill').forEach(b => { b.style.width = b.dataset.target + '%'; });
+  }));
+}
+
+/* ============================================================
+   SIDEBAR SCROLL OBSERVER
+============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  // Init SOC chart
+  showSOCMetric('accuracy', null);
+  document.querySelector('#socBarChart .bar-chart-tab').classList.add('active');
+
+  // Sidebar active highlight
+  const sections = document.querySelectorAll('section[id], div[id]');
+  const links = document.querySelectorAll('.sidebar-link');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if(e.isIntersecting) {
+        const id = e.target.id;
+        links.forEach(l => {
+          l.classList.remove('active');
+          if(l.getAttribute('href') === '#'+id) l.classList.add('active');
+        });
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => obs.observe(s));
+});
+</script>
 <style>
 .ch-journey{position:fixed;bottom:0;left:0;width:100%;z-index:9999;background:rgba(2,2,10,0.96);border-top:1px solid rgba(255,255,255,0.08);padding:.4rem 1rem;display:flex;align-items:center;justify-content:center;gap:.2rem;font-family:'Orbitron',monospace;font-size:.58rem;letter-spacing:.04em;backdrop-filter:blur(16px);box-shadow:0 -2px 20px rgba(0,0,0,.6);flex-wrap:nowrap;overflow-x:auto;}
 .cj-stop{padding:.28rem .6rem;border-radius:.3rem;text-decoration:none;transition:all .2s;white-space:nowrap;color:#444;}
