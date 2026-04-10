@@ -457,135 +457,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
 /* HUD PROGRESS BAR */
 #hud-progress{position:fixed;top:0;left:0;height:2px;width:0%;background:linear-gradient(90deg,#00F5FF,#0A84FF);z-index:9999;box-shadow:0 0 8px #00F5FF;pointer-events:none;}
 </style>
-<style id="__comic-extra">
-/* ---- NEON TABLE ---- */
-.content-main table{border-collapse:collapse!important;border:3px solid #c4b5fd!important;box-shadow:0 0 20px rgba(196,181,253,.2)!important;width:100%;}
-.content-main th{background:rgba(196,181,253,.2)!important;color:#c4b5fd!important;border:2px solid #c4b5fd!important;font-family:Bangers,cursive!important;letter-spacing:.07em!important;font-size:1rem!important;padding:.6rem 1rem!important;text-transform:uppercase!important;}
-.content-main td{border:1px solid rgba(196,181,253,.25)!important;padding:.55rem 1rem!important;}
-.content-main tr:hover td{background:rgba(196,181,253,.06)!important;}
 
-/* ---- COMIC HERO META ITEMS ---- */
-.hero-meta-item{border:2px solid rgba(196,181,253,.35)!important;border-radius:0!important;background:rgba(196,181,253,.06)!important;box-shadow:3px 3px 0 rgba(196,181,253,.15)!important;transition:transform .2s,box-shadow .2s!important;}
-.hero-meta-item:hover{transform:translate(-2px,-2px)!important;box-shadow:5px 5px 0 rgba(196,181,253,.25)!important;}
-.hero-meta-label{font-family:Bangers,cursive!important;letter-spacing:.1em!important;font-size:.8rem!important;}
-
-/* ---- NEON SECTION LABELS ---- */
-.section-intro,.chapter-intro{border-left:5px solid #c4b5fd!important;padding-left:1.2rem!important;}
-
-/* ---- KEY VALUE / FORMULA HIGHLIGHTS ---- */
-.formula,.math-block,code.formula{font-family:Bangers,cursive!important;font-size:1.1em!important;color:#c4b5fd!important;letter-spacing:.04em!important;background:rgba(196,181,253,.08)!important;border:2px solid rgba(196,181,253,.3)!important;padding:.3rem .8rem!important;border-radius:0!important;}
-
-/* ---- SIDEBAR LOGO PULSE ---- */
-.sidebar-logo::after{content:'◆';color:#c4b5fd;animation:__pulse 2s ease infinite;margin-left:.4rem;font-size:.8rem;}
-@keyframes __pulse{0%,100%{opacity:1;text-shadow:0 0 8px #c4b5fd}50%{opacity:.3;text-shadow:none}}
-
-/* ---- STAT BOXES ---- */
-.stat-card,.spec-item,.metric-card{border:2px solid rgba(196,181,253,.4)!important;border-radius:0!important;background:rgba(196,181,253,.06)!important;box-shadow:4px 4px 0 rgba(196,181,253,.2)!important;transition:transform .15s!important;}
-.stat-card:hover,.spec-item:hover,.metric-card:hover{transform:translate(-2px,-2px)!important;}
-
-/* ---- HERO SUBTITLE NEON LINE ---- */
-.hero-subtitle{border-left:4px solid #c4b5fd!important;padding-left:1rem!important;}
-
-/* ---- PROGRESS BARS ---- */
-.progress-bar-wrap,.progress-fill-bar{border-radius:0!important;}
-
-/* ---- MOBILE FIXES ---- */
-@media(max-width:768px){
-  #chapter-navbar{padding:.4rem .5rem;gap:.3rem;}
-  #chapter-navbar a{font-size:.8rem;padding:.25rem .5rem;}
-  .content-main h2{font-size:2rem!important;}
-}
-</style>
-<style id="__zap-style">
-/* DANGER boxes get a comic ZAP label */
-.danger-box,.warning-box,.danger-callout,.critical-callout{position:relative;overflow:visible!important;}
-.danger-box::before,.danger-callout::before{content:'⚡ DANGER';font-family:Bangers,cursive!important;font-size:.75rem;letter-spacing:.12em;background:#ef4444;color:#fff;padding:.15rem .6rem;position:absolute;top:-.8rem;left:1rem;z-index:5;box-shadow:2px 2px 0 rgba(0,0,0,.5);}
-.warning-box::before,.critical-callout::before{content:'⚠ WARNING';font-family:Bangers,cursive!important;font-size:.75rem;letter-spacing:.12em;background:#f97316;color:#fff;padding:.15rem .6rem;position:absolute;top:-.8rem;left:1rem;z-index:5;box-shadow:2px 2px 0 rgba(0,0,0,.5);}
-.info-box::before,.note-box::before{content:'ℹ INFO';font-family:Bangers,cursive!important;font-size:.75rem;letter-spacing:.12em;background:#c4b5fd;color:#000;padding:.15rem .6rem;position:absolute;top:-.8rem;left:1rem;z-index:5;box-shadow:2px 2px 0 rgba(0,0,0,.5);}
-.info-box,.note-box{position:relative;overflow:visible!important;}
-.success-box{position:relative;overflow:visible!important;}
-.success-box::before{content:'✓ SUCCESS';font-family:Bangers,cursive!important;font-size:.75rem;letter-spacing:.12em;background:#22c55e;color:#000;padding:.15rem .6rem;position:absolute;top:-.8rem;left:1rem;z-index:5;box-shadow:2px 2px 0 rgba(0,0,0,.5);}
-.physics-box{position:relative;overflow:visible!important;}
-.physics-box::before{content:'⚛ PHYSICS';font-family:Bangers,cursive!important;font-size:.75rem;letter-spacing:.12em;background:#b44eff;color:#fff;padding:.15rem .6rem;position:absolute;top:-.8rem;left:1rem;z-index:5;box-shadow:2px 2px 0 rgba(0,0,0,.5);}
-/* Add margin-top to all callout boxes so labels don't overlap content above */
-.danger-box,.warning-box,.info-box,.success-box,.physics-box,.note-box,.danger-callout,.warning-callout,.critical-callout{margin-top:1.8rem!important;}
-/* COMIC BOOK PANEL BORDER on main sections */
-.content-section,.section-block{border:2px solid rgba(255,255,255,.06)!important;border-radius:0!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.02)!important;}
-/* Hero badge BLINK */
-.hero-badge{animation:__badge-pulse 2.5s ease infinite!important;}
-@keyframes __badge-pulse{0%,100%{box-shadow:0 0 0 0 rgba(196,181,253,.5)}50%{box-shadow:0 0 0 14px rgba(196,181,253,0)}}
-</style>
->
-
-<!-- ═══ GEN-Z COMIC STYLE ═══ -->
-<div id="scroll-progress" style="position:fixed;top:0;left:0;height:4px;width:0%;background:linear-gradient(90deg,#ff006e,#00f5ff,#aaff00);z-index:9999;pointer-events:none"></div>
-<div id="particles-c" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden"></div>
-<button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" style="position:fixed;bottom:2rem;right:2rem;background:#ff006e;color:#fff;border:3px solid #fff;width:50px;height:50px;font-family:'Bangers',cursive;font-size:1.5rem;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:9999;transition:transform .2s">↑</button>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Bangers&family=Space+Grotesk:wght@400;700;900&display=swap');
-/* SCANLINES */
-body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);pointer-events:none;z-index:1;animation:__scanline 8s linear infinite}
-@keyframes __scanline{0%{background-position:0 0}100%{background-position:0 100px}}
-/* HALFTONE BG */
-body{background-image:radial-gradient(circle,rgba(255,255,255,.045) 1px,transparent 1px)!important;background-size:22px 22px!important;}
-/* COMIC SIDEBAR */
-.sidebar{border-right:3px solid #c4b5fd!important;box-shadow:6px 0 30px rgba(196,181,253,.2)!important;}
-/* HERO GLITCH */
-.hero-title{font-family:'Bangers',cursive!important;letter-spacing:.04em!important;font-size:clamp(2.5rem,8vw,5.5rem)!important;text-shadow:3px 3px 0 #ff006e,-3px -3px 0 #00f5ff,0 0 40px rgba(196,181,253,.6)!important;}
-.hero-badge{font-family:'Bangers',cursive!important;letter-spacing:.12em!important;border:3px solid #c4b5fd!important;background:rgba(196,181,253,.12)!important;box-shadow:0 0 20px rgba(196,181,253,.35),inset 0 0 20px rgba(196,181,253,.05)!important;border-radius:0!important;}
-.hero-chapter{font-family:'Bangers',cursive!important;font-size:1.2rem!important;letter-spacing:.15em!important;color:#c4b5fd!important;}
-/* SECTION HEADINGS */
-.content-main h2{font-family:'Bangers',cursive!important;letter-spacing:.04em!important;font-size:2.6rem!important;color:#c4b5fd!important;text-shadow:0 0 25px rgba(196,181,253,.5)!important;border-left:6px solid #c4b5fd!important;padding-left:1rem!important;line-height:1.1!important;}
-.content-main h3{font-family:'Bangers',cursive!important;letter-spacing:.03em!important;font-size:1.9rem!important;color:#c4b5fd!important;text-shadow:0 0 15px rgba(196,181,253,.4)!important;}
-/* CALLOUT COMIC BORDERS */
-.info-box,.warning-box,.danger-box,.success-box,.physics-box,.callout,.note-box,.tech-callout,.concept-card,.spec-card,.highlight-box,.formula-box,.definition-box,.key-concept,.alert-box{border-width:3px!important;border-radius:0!important;box-shadow:5px 5px 0 rgba(255,255,255,.12)!important;}
-/* SIDEBAR ACTIVE */
-.sidebar-link.active{color:#c4b5fd!important;border-left-color:#c4b5fd!important;background:rgba(196,181,253,.12)!important;font-family:'Bangers',cursive!important;letter-spacing:.05em!important;font-size:1rem!important;}
-.sidebar-link:hover{color:#c4b5fd!important;border-left-color:#c4b5fd!important;transition:all .15s!important;}
-.sidebar-logo{border-bottom:2px dashed rgba(255,255,255,.25)!important;}
-.sidebar-logo span{font-family:'Bangers',cursive!important;font-size:1.4rem!important;letter-spacing:.05em!important;color:#c4b5fd!important;}
-/* TABLE HEADERS */
-th{font-family:'Bangers',cursive!important;letter-spacing:.06em!important;font-size:1rem!important;}
-/* CHAPTER FOOTER */
-.chapter-footer{border-top:4px solid!important;border-image:linear-gradient(90deg,#ff006e,#c4b5fd,#00f5ff) 1!important;}
-.chapter-footer a,.footer-nav a{font-family:'Bangers',cursive!important;letter-spacing:.08em!important;border:2px solid currentColor!important;border-radius:0!important;transition:all .2s!important;}
-.chapter-footer a:hover,.footer-nav a:hover{box-shadow:4px 4px 0 rgba(255,255,255,.2)!important;transform:translate(-2px,-2px)!important;}
-/* COMIC CODE BLOCKS */
-pre{border-left:4px solid #c4b5fd!important;border-radius:0!important;box-shadow:4px 4px 0 rgba(196,181,253,.2)!important;}
-/* HERO META */
-.hero-meta-value{color:#c4b5fd!important;font-family:'Bangers',cursive!important;letter-spacing:.05em!important;font-size:1.3rem!important;}
-/* NEON SCROLL */
-::-webkit-scrollbar-thumb{background:#c4b5fd!important;border-radius:0!important;}
-/* STATS */
-.stat-value,.stat-number{font-family:'Bangers',cursive!important;color:#c4b5fd!important;text-shadow:0 0 15px rgba(196,181,253,.5)!important;}
-/* BACK TO TOP */
-#btt:hover{transform:scale(1.15) rotate(8deg)!important;}
-/* SECTION DIVIDERS */
-.section-label,.content-label,.subsection-tag{font-family:'Bangers',cursive!important;letter-spacing:.1em!important;color:#c4b5fd!important;}
-</style>
-<script>
-(function(){
-  /* scroll progress + back to top */
-  var sp=document.getElementById('scroll-progress'),btt=document.getElementById('btt');
-  window.addEventListener('scroll',function(){
-    var p=document.documentElement.scrollTop/(document.documentElement.scrollHeight-document.documentElement.clientHeight)*100;
-    if(sp)sp.style.width=p+'%';
-    if(btt)btt.style.display=window.scrollY>500?'flex':'none';
-  });
-  /* particles */
-  var pc=document.getElementById('particles-c');
-  if(pc){
-    var cols=['#ff006e','#00f5ff','#aaff00','#b44eff','#ff6b00','#c4b5fd'];
-    if(!document.getElementById('__fp')){var s=document.createElement('style');s.id='__fp';s.textContent='@keyframes __fp{0%{transform:translateY(0) rotate(0);opacity:.9}100%{transform:translateY(-110vh) rotate(720deg);opacity:0}}';document.head.appendChild(s);}
-    setInterval(function(){
-      var d=document.createElement('div');
-      var sz=Math.random()*4+2;
-      d.style.cssText='position:absolute;border-radius:50%;pointer-events:none;width:'+sz+'px;height:'+sz+'px;background:'+cols[Math.floor(Math.random()*cols.length)]+';left:'+Math.random()*100+'%;bottom:-10px;animation:__fp '+(Math.random()*10+8)+'s linear forwards;';
-      pc.appendChild(d);setTimeout(function(){d.remove()},18000);
-    },500);
-  }
-})();
-</script>
 
 
 <!-- ═══════════════════════ SIDEBAR ════════════════════════════ -->
@@ -625,7 +497,7 @@ pre{border-left:4px solid #c4b5fd!important;border-radius:0!important;box-shadow
   <a class="sidebar-link" href="#s6-6"><span class="dot"></span> 6.6 SOX State Estimation</a>
   <a class="sidebar-link" href="#s6-summary"><span class="dot"></span> Summary</a>
   <a class="sidebar-link" href="#s6-ref"><span class="dot"></span> Quick Reference</a>
-</nav></nav>
+</nav>
 
 <!-- ═══════════════════════ MAIN ════════════════════════════════ -->
 <div class="main-wrap">
@@ -3855,102 +3727,7 @@ document.querySelectorAll('.arch-block').forEach(b => {
 /* Init — show IDLE state by default */
 window.addEventListener('DOMContentLoaded', () => selectState('IDLE'));
 </script>
-<script>
-/* Glitch effect on hero title */
-(function(){
-  var el = document.querySelector('.hero-title');
-  if(!el) return;
-  el.setAttribute('data-text', el.textContent);
-  el.style.position = 'relative';
-  el.style.display = 'inline-block';
-  // inject glitch pseudo keyframes via style tag
-  if(!document.getElementById('__glitch-style')){
-    var s = document.createElement('style');
-    s.id = '__glitch-style';
-    s.textContent = `
-      .hero-title::before,.hero-title::after{content:attr(data-text);position:absolute;top:0;left:0;width:100%;height:100%}
-      .hero-title::before{color:#ff006e;clip-path:polygon(0 15%,100% 15%,100% 35%,0 35%);animation:__g1 3.5s infinite}
-      .hero-title::after{color:#00f5ff;clip-path:polygon(0 65%,100% 65%,100% 85%,0 85%);animation:__g2 3.5s infinite}
-      @keyframes __g1{0%,88%,100%{transform:translate(0)}89%{transform:translate(-5px,2px)}94%{transform:translate(5px,-2px)}}
-      @keyframes __g2{0%,88%,100%{transform:translate(0)}89%{transform:translate(5px,-2px)}94%{transform:translate(-5px,2px)}}
-    `;
-    document.head.appendChild(s);
-  }
-})();
-/* Animate section h2s in with neon flash */
-(function(){
-  var obs = new IntersectionObserver(function(entries){
-    entries.forEach(function(e){
-      if(e.isIntersecting){
-        e.target.style.animation='__h2flash .6s ease forwards';
-        obs.unobserve(e.target);
-      }
-    });
-  },{threshold:.3});
-  if(!document.getElementById('__h2flash')){
-    var s=document.createElement('style');s.id='__h2flash';
-    s.textContent='@keyframes __h2flash{0%{opacity:0;transform:translateX(-20px)}60%{opacity:1;transform:translateX(4px)}100%{opacity:1;transform:translateX(0)}}';
-    document.head.appendChild(s);
-  }
-  document.querySelectorAll('.content-main h2').forEach(function(h){
-    h.style.opacity='0';obs.observe(h);
-  });
-})();
-/* Speed lines flash on load */
-(function(){
-  var style=document.createElement('style');
-  style.textContent=`
-    #__speedlines{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2;overflow:hidden}
-    .__sl{position:absolute;top:50%;left:50%;height:1px;background:rgba(255,255,255,.4);transform-origin:left center;animation:__slout 1s ease-out forwards;opacity:0}
-    @keyframes __slout{0%{width:0;opacity:.7}100%{width:200vw;opacity:0}}
-  `;
-  document.head.appendChild(style);
-  var div=document.createElement('div');div.id='__speedlines';document.body.appendChild(div);
-  for(var i=0;i<16;i++){
-    var l=document.createElement('div');l.className='__sl';
-    var angle=Math.random()*360;
-    l.style.cssText+=';transform:rotate('+angle+'deg);animation-delay:'+(i*0.06)+'s';
-    div.appendChild(l);
-  }
-  setTimeout(function(){if(div.parentNode)div.parentNode.removeChild(div);},2500);
-})();
-</script>
-<script id="__comic-js-extra">
-/* Tilt effect on hero meta items */
-document.querySelectorAll('.hero-meta-item').forEach(function(el){
-  el.addEventListener('mousemove',function(e){
-    var r=el.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
-    el.style.transform='translate(-2px,-2px) rotateX('+(-y*10)+'deg) rotateY('+(x*10)+'deg)';
-  });
-  el.addEventListener('mouseleave',function(){el.style.transform='';});
-});
-/* Neon flash on sidebar active link change */
-document.querySelectorAll('.sidebar-link').forEach(function(a){
-  a.addEventListener('click',function(){
-    a.style.boxShadow='0 0 15px #c4b5fd';
-    setTimeout(function(){a.style.boxShadow='';},500);
-  });
-});
-/* Comic pop on h3 appear */
-(function(){
-  var obs=new IntersectionObserver(function(entries){
-    entries.forEach(function(e){
-      if(e.isIntersecting){
-        e.target.style.animation='__h3pop .5s cubic-bezier(.34,1.56,.64,1) forwards';
-        obs.unobserve(e.target);
-      }
-    });
-  },{threshold:.4});
-  if(!document.getElementById('__h3pop')){
-    var s=document.createElement('style');s.id='__h3pop';
-    s.textContent='@keyframes __h3pop{0%{opacity:0;transform:scale(.85) translateX(-10px)}100%{opacity:1;transform:scale(1) translateX(0)}}';
-    document.head.appendChild(s);
-  }
-  document.querySelectorAll('.content-main h3').forEach(function(h){
-    h.style.opacity='0';obs.observe(h);
-  });
-})();
-</script>
+
 
 <!-- ═══════════════════════════════════════════════════════════
      CH6 — LIVE FIRMWARE TASK VISUALIZER + R&D BLOCKS
@@ -4074,11 +3851,6 @@ window.fwSetMode=function(m){
 draw();
 })();
 </script>
-
-
->
-
-
 
 
 <style>
