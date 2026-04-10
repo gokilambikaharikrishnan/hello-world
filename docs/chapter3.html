@@ -55,9 +55,12 @@
       font-family: var(--font-sans);
       font-size: 16px;
       line-height: 1.7;
-      display: flex;
-      min-height: 100vh;
+      display: block;
     }
+
+
+    /* Page layout wrapper — same pattern as ch1/ch2 */
+    .page-wrapper { display: flex; min-height: calc(100vh - 44px); margin-top: 44px; }
 
     /* ============================================================
        SIDEBAR
@@ -137,7 +140,7 @@
     /* ============================================================
        MAIN CONTENT
     ============================================================ */
-    .main { flex: 1; min-width: 0; padding: 3rem 3rem; }
+    .main { flex: 1; min-width: 0; padding: 3rem 3rem; max-width: none; }
     @media (max-width: 900px) { .main { padding: 2rem 1.5rem; } }
 
     /* ============================================================
@@ -841,31 +844,6 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
 </style>
 
 
-<style id="layout-grid">
-/* Sidebar + main grid layout */
-body {
-  display: grid !important;
-  grid-template-columns: var(--sidebar-w) 1fr;
-  align-items: start;
-  min-height: 100vh;
-}
-nav.sidebar, nav#sidebar, .sidebar {
-  grid-column: 1;
-  grid-row: 1;
-  position: sticky !important;
-  top: 0 !important;
-  max-height: 100vh !important;
-  overflow-y: auto !important;
-  align-self: start !important;
-}
-main.main, main#main {
-  grid-column: 2;
-  grid-row: 1;
-  min-width: 0;
-  width: 100%;
-}
-body > script, body > style { display: none !important; }
-</style>
 </head>
 <body>
 
@@ -894,6 +872,7 @@ body > script, body > style { display: none !important; }
 <!-- ============================================================
      SIDEBAR
 ============================================================ -->
+<div class="page-wrapper">
 <nav class="sidebar" id="sidebar">
   <div class="sidebar-logo">
     <div class="sidebar-logo-text">LFP BMS Knowledge Base</div>
@@ -3068,6 +3047,7 @@ th_update();
   </section>
 
 </main>
+</div><!-- end .page-wrapper -->
 </div>
 
 <script>
