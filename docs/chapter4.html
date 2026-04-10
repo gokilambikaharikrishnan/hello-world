@@ -77,7 +77,7 @@
     .sidebar-link.active .dot { opacity: 1; }
 
     /* ── MAIN ─────────────────────────────────────────── */
-    .main { flex: 1; min-width: 0; padding: 3rem 4rem; max-width: 1000px; }
+    .main { flex: 1; min-width: 0; padding: 3rem 3rem; }
     @media (max-width: 900px) { .main { padding: 2rem 1.5rem; } .sidebar { display: none; } }
 
     /* ── HERO ─────────────────────────────────────────── */
@@ -304,77 +304,6 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
 </style>
 
 
-<style id="__layout-fix">
-/* ── LAYOUT FIX: body was display:flex making chapter-navbar a flex sibling ── */
-body {
-  display: grid !important;
-  grid-template-columns: 260px 1fr !important;
-  grid-template-rows: auto 1fr !important;
-  min-height: 100vh;
-}
-/* Navbar spans both columns = full width top bar */
-#chapter-navbar {
-  grid-column: 1 / -1 !important;
-  grid-row: 1 !important;
-  position: sticky !important;
-  top: 0 !important;
-  z-index: 9998 !important;
-}
-/* Sidebar goes in col 1, row 2 */
-nav.sidebar, .sidebar {
-  grid-column: 1 !important;
-  grid-row: 2 !important;
-  position: sticky !important;
-  top: 0 !important;
-  height: 100vh !important;
-  overflow-y: auto !important;
-}
-/* Main content fills col 2, row 2 */
-main.main, main.main-content, main {
-  grid-column: 2 !important;
-  grid-row: 2 !important;
-  min-width: 0 !important;
-  overflow-x: hidden !important;
-}
-/* Fixed/absolute elements stay out of grid flow */
-#scroll-progress, #particles-c, #btt { grid-column: auto; }
-</style>
-<style id="__layout-fix3">
-/* Stronger grid + sticky sidebar fix */
-html { height: 100%; }
-body {
-  display: grid !important;
-  grid-template-columns: 260px 1fr !important;
-  grid-template-rows: auto 1fr !important;
-  min-height: 100vh !important;
-  align-items: start !important;
-}
-#chapter-navbar {
-  grid-column: 1 / -1 !important;
-  grid-row: 1 !important;
-  position: sticky !important;
-  top: 0 !important;
-  z-index: 9998 !important;
-  width: 100% !important;
-}
-nav.sidebar, nav#sidebar, .sidebar {
-  grid-column: 1 !important;
-  grid-row: 2 !important;
-  position: sticky !important;
-  top: 0 !important;
-  max-height: 100vh !important;
-  overflow-y: auto !important;
-  align-self: start !important;
-}
-main.main, main#main, div.main-wrap {
-  grid-column: 2 !important;
-  grid-row: 2 !important;
-  min-width: 0 !important;
-  width: 100% !important;
-}
-/* Prevent style/script tags from being visible grid items */
-body > style, body > script { display: none !important; }
-</style>
 </head>
 <body>
 
@@ -2110,99 +2039,10 @@ body > style, body > script { display: none !important; }
     };
     </script>
 
-    <div class="chapter-footer">
-      <a class="nav-btn" href="chapter3.html">← Chapter 3: Thermal &amp; Mechanical</a>
-      <div style="text-align:center;">
-        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.3rem;">You are reading</div>
-        <div style="font-size:0.9rem;color:var(--text-primary);font-weight:700;">Chapter 4: Electrical &amp; Protection</div>
-      </div>
-      <a class="nav-btn nav-btn-next" href="chapter5.html">Chapter 5: Standards &amp; Compliance →</a>
-    </div>
-  </section>
 
-</main>
-</div>
-
-<script>
-/* ── CURRENT PROTECTION CHART ───────────────────────── */
-const currData = {
-  current: {
-    max: 5600, unit: 'A', note: 'Peak current for each protection event (280Ah LFP cell)',
-    bars: [
-      { label: 'Float / OCC',   value: 280,  color: '#48bb78', display: '280A (1C)' },
-      { label: 'OCD-Cont.',     value: 308,  color: '#63b3ed', display: '308A (1.1C)' },
-      { label: 'OCD-Pulse',     value: 840,  color: '#f6ad55', display: '840A (3C)' },
-      { label: 'SCD threshold', value: 1400, color: '#fc8181', display: '1400A (5C)' },
-      { label: 'Hard short',    value: 5500, color: '#ff1744', display: '~5500A' },
-    ]
-  },
-  time: {
-    max: 10, unit: 's max allowed', note: 'Maximum allowed duration at this current before protection fires',
-    bars: [
-      { label: 'Float / OCC',   value: 9.9, color: '#48bb78', display: 'continuous' },
-      { label: 'OCD-Cont.',     value: 5,   color: '#63b3ed', display: '5s max' },
-      { label: 'OCD-Pulse',     value: 0.05,color: '#f6ad55', display: '50ms' },
-      { label: 'SCD threshold', value: 0.005,color:'#fc8181', display: '5ms' },
-      { label: 'Hard short',    value: 0.0005,color:'#ff1744',display: '500μs' },
-    ]
-  },
-  heat: {
-    max: 17000, unit: 'W peak', note: 'Instantaneous Joule heat = I² × R_pack (R=8mΩ for 16S pack)',
-    bars: [
-      { label: 'Float / OCC',   value: 627,   color: '#48bb78', display: '627W' },
-      { label: 'OCD-Cont.',     value: 760,   color: '#63b3ed', display: '760W' },
-      { label: 'OCD-Pulse',     value: 5645,  color: '#f6ad55', display: '5.6kW' },
-      { label: 'SCD threshold', value: 15680, color: '#fc8181', display: '15.7kW' },
-      { label: 'Hard short',    value: 16900, color: '#ff1744', display: '~17kW' },
-    ]
-  }
-};
-
-function showCurr(key, tabEl) {
-  document.querySelectorAll('#currChart .bar-chart-tab').forEach(t => t.classList.remove('active'));
-  if (tabEl) tabEl.classList.add('active');
-  const m = currData[key];
-  const c = document.getElementById('currChartContent');
-  c.innerHTML = `
-    <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:1rem;font-family:var(--font-mono);">${m.note}</div>
-    ${m.bars.map(b => `
-      <div class="bar-row">
-        <div class="bar-lbl">${b.label}</div>
-        <div class="bar-track">
-          <div class="bar-fill" style="width:0%;background:${b.color};"
-               data-target="${Math.max(4,(b.value/m.max*100)).toFixed(1)}">${b.display}</div>
-        </div>
-        <div class="bar-val">${b.display}</div>
-      </div>`).join('')}`;
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    c.querySelectorAll('.bar-fill').forEach(b => { b.style.width = b.dataset.target + '%'; });
-  }));
-}
-
-/* ── SIDEBAR SCROLL OBSERVER ────────────────────────── */
-document.addEventListener('DOMContentLoaded', () => {
-  showCurr('current', null);
-  document.querySelector('#currChart .bar-chart-tab').classList.add('active');
-
-  const sections = document.querySelectorAll('section[id], div[id]');
-  const links    = document.querySelectorAll('.sidebar-link');
-  const obs = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        const id = e.target.id;
-        links.forEach(l => {
-          l.classList.remove('active');
-          if (l.getAttribute('href') === '#' + id) l.classList.add('active');
-        });
-      }
-    });
-  }, { rootMargin: '-20% 0px -70% 0px' });
-  sections.forEach(s => obs.observe(s));
-});
-</script>
 
 <!-- CH4 Interactive: ADC IIR Digital Filter Demo -->
-<section id="ch4-sim" style="grid-column:2;padding:3rem 0;border-top:1px solid rgba(0,245,255,0.15)">
+<section id="ch4-sim" style="padding:3rem 0;border-top:1px solid rgba(0,245,255,0.15)">
 <style>
 .adc-panel{background:#07070f;border:1px solid rgba(0,245,255,.2);border-radius:.75rem;padding:1.4rem;margin-bottom:1.2rem;}
 .adc-panel h3{font-family:'Orbitron',monospace;font-size:.82rem;color:#00F5FF;letter-spacing:.08em;margin-bottom:1rem;}
@@ -2218,7 +2058,7 @@ document.addEventListener('DOMContentLoaded', () => {
 .adc-stat span{font-size:.75rem;color:#aaa;font-family:'JetBrains Mono',monospace;}
 .adc-stat span b{color:#00F5FF;}
 </style>
-<div style="max-width:1100px;padding:0 3rem;">
+<div style="max-width:1100px;">
 <h2 style="font-family:'Orbitron',monospace;font-size:1.05rem;color:#00F5FF;letter-spacing:.1em;margin-bottom:.4rem;">📡 INTERACTIVE — ADC NOISE & IIR DIGITAL FILTER</h2>
 <p style="color:#888;font-size:.86rem;margin-bottom:1.4rem;">Watch raw ADC vs IIR-filtered signal in real time. Tune α and see noise collapse — at the cost of response speed.</p>
 
@@ -2350,7 +2190,7 @@ draw();
 .xref-block{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07);border-radius:.4rem;padding:.6rem 1rem;margin:1rem 0;font-size:.78rem;color:#888;}
 .xref-block .xr-title{font-family:'Orbitron',monospace;font-size:.56rem;letter-spacing:.1em;color:#444;margin-bottom:.4rem;}
 </style>
-<div class="xref-block" style="grid-column:2;padding:0 3rem;">
+<div class="xref-block">
   <div class="xr-title">↗ CONNECTS TO</div>
   <a href="chapter3.html" class="xref-callout" style="border-color:rgba(255,255,255,.15);" title="OTP physics — why the 45°C cell limit exists"><span class="xr-badge" style="background:rgba(255,107,53,0.2);color:#FF6B35;">CH3</span>OTP physics — why the 45°C cell limit exists</a>
 <a href="chapter6.html" class="xref-callout" style="border-color:rgba(255,255,255,.15);" title="BQ76952 AFE → I²C read sequence in firmware"><span class="xr-badge" style="background:rgba(168,85,247,0.2);color:#A855F7;">CH6</span>BQ76952 AFE → I²C read sequence in firmware</a>
@@ -2359,8 +2199,8 @@ draw();
 </div>
 
 <!-- Bridge Section -->
-<section style="grid-column:2;padding:2rem 0;border-top:1px solid rgba(0,245,255,0.1);">
-<div style="padding:0 3rem;">
+<section style="padding:2rem 0;border-top:1px solid rgba(0,245,255,0.1);">
+<div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
   <div style="background:rgba(0,245,255,0.04);border:1px solid rgba(0,245,255,0.15);border-radius:.6rem;padding:1.2rem 1.5rem;">
     <div style="font-family:'Orbitron',monospace;font-size:.6rem;letter-spacing:.12em;color:#00F5FF;margin-bottom:.7rem;">✓ WHAT YOU LEARNED IN THIS CHAPTER</div>
@@ -2376,6 +2216,97 @@ draw();
 </div>
 </div>
 </section>
+
+        <div class="chapter-footer">
+      <a class="nav-btn" href="chapter3.html">← Chapter 3: Thermal &amp; Mechanical</a>
+      <div style="text-align:center;">
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.3rem;">You are reading</div>
+        <div style="font-size:0.9rem;color:var(--text-primary);font-weight:700;">Chapter 4: Electrical &amp; Protection</div>
+      </div>
+      <a class="nav-btn nav-btn-next" href="chapter5.html">Chapter 5: Standards &amp; Compliance →</a>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<script>
+/* ── CURRENT PROTECTION CHART ───────────────────────── */
+const currData = {
+  current: {
+    max: 5600, unit: 'A', note: 'Peak current for each protection event (280Ah LFP cell)',
+    bars: [
+      { label: 'Float / OCC',   value: 280,  color: '#48bb78', display: '280A (1C)' },
+      { label: 'OCD-Cont.',     value: 308,  color: '#63b3ed', display: '308A (1.1C)' },
+      { label: 'OCD-Pulse',     value: 840,  color: '#f6ad55', display: '840A (3C)' },
+      { label: 'SCD threshold', value: 1400, color: '#fc8181', display: '1400A (5C)' },
+      { label: 'Hard short',    value: 5500, color: '#ff1744', display: '~5500A' },
+    ]
+  },
+  time: {
+    max: 10, unit: 's max allowed', note: 'Maximum allowed duration at this current before protection fires',
+    bars: [
+      { label: 'Float / OCC',   value: 9.9, color: '#48bb78', display: 'continuous' },
+      { label: 'OCD-Cont.',     value: 5,   color: '#63b3ed', display: '5s max' },
+      { label: 'OCD-Pulse',     value: 0.05,color: '#f6ad55', display: '50ms' },
+      { label: 'SCD threshold', value: 0.005,color:'#fc8181', display: '5ms' },
+      { label: 'Hard short',    value: 0.0005,color:'#ff1744',display: '500μs' },
+    ]
+  },
+  heat: {
+    max: 17000, unit: 'W peak', note: 'Instantaneous Joule heat = I² × R_pack (R=8mΩ for 16S pack)',
+    bars: [
+      { label: 'Float / OCC',   value: 627,   color: '#48bb78', display: '627W' },
+      { label: 'OCD-Cont.',     value: 760,   color: '#63b3ed', display: '760W' },
+      { label: 'OCD-Pulse',     value: 5645,  color: '#f6ad55', display: '5.6kW' },
+      { label: 'SCD threshold', value: 15680, color: '#fc8181', display: '15.7kW' },
+      { label: 'Hard short',    value: 16900, color: '#ff1744', display: '~17kW' },
+    ]
+  }
+};
+
+function showCurr(key, tabEl) {
+  document.querySelectorAll('#currChart .bar-chart-tab').forEach(t => t.classList.remove('active'));
+  if (tabEl) tabEl.classList.add('active');
+  const m = currData[key];
+  const c = document.getElementById('currChartContent');
+  c.innerHTML = `
+    <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:1rem;font-family:var(--font-mono);">${m.note}</div>
+    ${m.bars.map(b => `
+      <div class="bar-row">
+        <div class="bar-lbl">${b.label}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:0%;background:${b.color};"
+               data-target="${Math.max(4,(b.value/m.max*100)).toFixed(1)}">${b.display}</div>
+        </div>
+        <div class="bar-val">${b.display}</div>
+      </div>`).join('')}`;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    c.querySelectorAll('.bar-fill').forEach(b => { b.style.width = b.dataset.target + '%'; });
+  }));
+}
+
+/* ── SIDEBAR SCROLL OBSERVER ────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  showCurr('current', null);
+  document.querySelector('#currChart .bar-chart-tab').classList.add('active');
+
+  const sections = document.querySelectorAll('section[id], div[id]');
+  const links    = document.querySelectorAll('.sidebar-link');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        links.forEach(l => {
+          l.classList.remove('active');
+          if (l.getAttribute('href') === '#' + id) l.classList.add('active');
+        });
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => obs.observe(s));
+});
+</script>
 
 <style>
 .ch-journey{position:fixed;bottom:0;left:0;width:100%;z-index:9999;background:rgba(2,2,10,0.96);border-top:1px solid rgba(255,255,255,0.08);padding:.4rem 1rem;display:flex;align-items:center;justify-content:center;gap:.2rem;font-family:'Orbitron',monospace;font-size:.58rem;letter-spacing:.04em;backdrop-filter:blur(16px);box-shadow:0 -2px 20px rgba(0,0,0,.6);flex-wrap:nowrap;overflow-x:auto;}

@@ -68,7 +68,7 @@
     .sidebar-link.active .dot { opacity: 1; }
 
     /* ── MAIN ──────────────────────────── */
-    .main { flex: 1; min-width: 0; padding: 3rem 4rem; max-width: 1000px; }
+    .main { flex: 1; min-width: 0; padding: 3rem 3rem; }
     @media (max-width: 900px) { .main { padding: 2rem 1.5rem; } .sidebar { display: none; } }
 
     /* ── HERO ──────────────────────────── */
@@ -278,77 +278,6 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
 </style>
 
 
-<style id="__layout-fix">
-/* ── LAYOUT FIX: body was display:flex making chapter-navbar a flex sibling ── */
-body {
-  display: grid !important;
-  grid-template-columns: 260px 1fr !important;
-  grid-template-rows: auto 1fr !important;
-  min-height: 100vh;
-}
-/* Navbar spans both columns = full width top bar */
-#chapter-navbar {
-  grid-column: 1 / -1 !important;
-  grid-row: 1 !important;
-  position: sticky !important;
-  top: 0 !important;
-  z-index: 9998 !important;
-}
-/* Sidebar goes in col 1, row 2 */
-nav.sidebar, .sidebar {
-  grid-column: 1 !important;
-  grid-row: 2 !important;
-  position: sticky !important;
-  top: 0 !important;
-  height: 100vh !important;
-  overflow-y: auto !important;
-}
-/* Main content fills col 2, row 2 */
-main.main, main.main-content, main {
-  grid-column: 2 !important;
-  grid-row: 2 !important;
-  min-width: 0 !important;
-  overflow-x: hidden !important;
-}
-/* Fixed/absolute elements stay out of grid flow */
-#scroll-progress, #particles-c, #btt { grid-column: auto; }
-</style>
-<style id="__layout-fix3">
-/* Stronger grid + sticky sidebar fix */
-html { height: 100%; }
-body {
-  display: grid !important;
-  grid-template-columns: 260px 1fr !important;
-  grid-template-rows: auto 1fr !important;
-  min-height: 100vh !important;
-  align-items: start !important;
-}
-#chapter-navbar {
-  grid-column: 1 / -1 !important;
-  grid-row: 1 !important;
-  position: sticky !important;
-  top: 0 !important;
-  z-index: 9998 !important;
-  width: 100% !important;
-}
-nav.sidebar, nav#sidebar, .sidebar {
-  grid-column: 1 !important;
-  grid-row: 2 !important;
-  position: sticky !important;
-  top: 0 !important;
-  max-height: 100vh !important;
-  overflow-y: auto !important;
-  align-self: start !important;
-}
-main.main, main#main, div.main-wrap {
-  grid-column: 2 !important;
-  grid-row: 2 !important;
-  min-width: 0 !important;
-  width: 100% !important;
-}
-/* Prevent style/script tags from being visible grid items */
-body > style, body > script { display: none !important; }
-</style>
 </head>
 <body>
 
@@ -1863,6 +1792,49 @@ body > style, body > script { display: none !important; }
     </div>
   </section>
 
+
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     CH5 — LIVE KALMAN SoC ESTIMATOR + MULTI-LAYER SIMULATOR
+═══════════════════════════════════════════════════════════════ -->
+
+
+
+
+<style>
+.xref-callout{display:inline-flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:.3rem;padding:.3rem .75rem;font-family:'Orbitron',monospace;font-size:.6rem;letter-spacing:.06em;color:#aaa;text-decoration:none;margin:.2rem .3rem .2rem 0;transition:all .15s;}
+.xref-callout:hover{background:rgba(255,255,255,.08);color:#fff;}
+.xref-callout .xr-badge{padding:.1rem .35rem;border-radius:.2rem;font-size:.56rem;font-weight:700;margin-right:.2rem;}
+.xref-block{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07);border-radius:.4rem;padding:.6rem 1rem;margin:1rem 0;font-size:.78rem;color:#888;}
+.xref-block .xr-title{font-family:'Orbitron',monospace;font-size:.56rem;letter-spacing:.1em;color:#444;margin-bottom:.4rem;}
+</style>
+<div class="xref-block">
+  <div class="xr-title">↗ CONNECTS TO</div>
+  <a href="chapter4.html" class="xref-callout" style="border-color:rgba(255,255,255,.15);" title="Protection thresholds → test conditions in IEC 62133"><span class="xr-badge" style="background:rgba(0,245,255,0.2);color:#00F5FF;">CH4</span>Protection thresholds → test conditions in IEC 62133</a>
+<a href="chapter7.html" class="xref-callout" style="border-color:rgba(255,255,255,.15);" title="UPS & ESS → application-specific standards (IEC 62040, NFPA 855)"><span class="xr-badge" style="background:rgba(255,200,87,0.2);color:#FFC857;">CH7</span>UPS & ESS → application-specific standards (IEC 62040, NFPA 855)</a>
+<a href="SYSTEM_OVERVIEW.html" class="xref-callout" style="border-color:rgba(255,255,255,.15);" title="How all chapters connect to form a certified BMS design"><span class="xr-badge" style="background:rgba(0,207,255,0.2);color:#00CFFF;">SYS</span>How all chapters connect to form a certified BMS design</a>
+
+</div>
+
+<!-- Bridge Section -->
+<section style="padding:2rem 0;border-top:1px solid rgba(0,255,136,0.1);">
+<div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+  <div style="background:rgba(0,255,136,0.04);border:1px solid rgba(0,255,136,0.15);border-radius:.6rem;padding:1.2rem 1.5rem;">
+    <div style="font-family:'Orbitron',monospace;font-size:.6rem;letter-spacing:.12em;color:#00FF88;margin-bottom:.7rem;">✓ WHAT YOU LEARNED IN THIS CHAPTER</div>
+    <ul style="list-style:none;padding:0;margin:0;font-size:.82rem;line-height:1.8;"><li style="margin-bottom:.4rem;color:#aaa;">IEC 62133 covers safety testing — mechanical, thermal, and electrical abuse scenarios</li><li style="margin-bottom:.4rem;color:#aaa;">UL 1973 is the primary certification path for stationary ESS in North America</li><li style="margin-bottom:.4rem;color:#aaa;">UN 38.3 governs transport — every shipped battery must pass altitude, temperature, vibration tests</li><li style="margin-bottom:.4rem;color:#aaa;">Standards don't specify how to build — they specify what failure modes your design must survive</li></ul>
+  </div>
+  <div style="background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.25);border-radius:.6rem;padding:1.2rem 1.5rem;display:flex;flex-direction:column;justify-content:space-between;">
+    <div>
+      <div style="font-family:'Orbitron',monospace;font-size:.6rem;letter-spacing:.12em;color:#00FF88;margin-bottom:.7rem;">→ NEXT</div>
+      <p style="font-size:.86rem;color:#bbb;line-height:1.7;">Chapter 6: BMS Architecture — hardware block diagram, firmware super-loop, protection state machine, and full AFE integration</p>
+    </div>
+    <a href="chapter6.html" style="display:inline-block;margin-top:1rem;background:rgba(0,255,136,0.15);border:1px solid rgba(0,255,136,0.4);color:#00FF88;font-family:'Orbitron',monospace;font-size:.68rem;letter-spacing:.08em;padding:.6rem 1.2rem;border-radius:.4rem;text-decoration:none;text-align:center;">Continue → Chapter 6: Architecture</a>
+  </div>
+</div>
+</div>
+</section>
 </main>
 </div>
 
@@ -1926,48 +1898,6 @@ document.querySelectorAll('[data-tags]').forEach(row => {
   row.style.transition = 'background 0.2s';
 });
 </script>
-
-
-<!-- ═══════════════════════════════════════════════════════════
-     CH5 — LIVE KALMAN SoC ESTIMATOR + MULTI-LAYER SIMULATOR
-═══════════════════════════════════════════════════════════════ -->
-
-
-
-
-<style>
-.xref-callout{display:inline-flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:.3rem;padding:.3rem .75rem;font-family:'Orbitron',monospace;font-size:.6rem;letter-spacing:.06em;color:#aaa;text-decoration:none;margin:.2rem .3rem .2rem 0;transition:all .15s;}
-.xref-callout:hover{background:rgba(255,255,255,.08);color:#fff;}
-.xref-callout .xr-badge{padding:.1rem .35rem;border-radius:.2rem;font-size:.56rem;font-weight:700;margin-right:.2rem;}
-.xref-block{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07);border-radius:.4rem;padding:.6rem 1rem;margin:1rem 0;font-size:.78rem;color:#888;}
-.xref-block .xr-title{font-family:'Orbitron',monospace;font-size:.56rem;letter-spacing:.1em;color:#444;margin-bottom:.4rem;}
-</style>
-<div class="xref-block" style="grid-column:2;padding:0 3rem;">
-  <div class="xr-title">↗ CONNECTS TO</div>
-  <a href="chapter4.html" class="xref-callout" style="border-color:rgba(255,255,255,.15);" title="Protection thresholds → test conditions in IEC 62133"><span class="xr-badge" style="background:rgba(0,245,255,0.2);color:#00F5FF;">CH4</span>Protection thresholds → test conditions in IEC 62133</a>
-<a href="chapter7.html" class="xref-callout" style="border-color:rgba(255,255,255,.15);" title="UPS & ESS → application-specific standards (IEC 62040, NFPA 855)"><span class="xr-badge" style="background:rgba(255,200,87,0.2);color:#FFC857;">CH7</span>UPS & ESS → application-specific standards (IEC 62040, NFPA 855)</a>
-<a href="SYSTEM_OVERVIEW.html" class="xref-callout" style="border-color:rgba(255,255,255,.15);" title="How all chapters connect to form a certified BMS design"><span class="xr-badge" style="background:rgba(0,207,255,0.2);color:#00CFFF;">SYS</span>How all chapters connect to form a certified BMS design</a>
-
-</div>
-
-<!-- Bridge Section -->
-<section style="grid-column:2;padding:2rem 0;border-top:1px solid rgba(0,255,136,0.1);">
-<div style="padding:0 3rem;">
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
-  <div style="background:rgba(0,255,136,0.04);border:1px solid rgba(0,255,136,0.15);border-radius:.6rem;padding:1.2rem 1.5rem;">
-    <div style="font-family:'Orbitron',monospace;font-size:.6rem;letter-spacing:.12em;color:#00FF88;margin-bottom:.7rem;">✓ WHAT YOU LEARNED IN THIS CHAPTER</div>
-    <ul style="list-style:none;padding:0;margin:0;font-size:.82rem;line-height:1.8;"><li style="margin-bottom:.4rem;color:#aaa;">IEC 62133 covers safety testing — mechanical, thermal, and electrical abuse scenarios</li><li style="margin-bottom:.4rem;color:#aaa;">UL 1973 is the primary certification path for stationary ESS in North America</li><li style="margin-bottom:.4rem;color:#aaa;">UN 38.3 governs transport — every shipped battery must pass altitude, temperature, vibration tests</li><li style="margin-bottom:.4rem;color:#aaa;">Standards don't specify how to build — they specify what failure modes your design must survive</li></ul>
-  </div>
-  <div style="background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.25);border-radius:.6rem;padding:1.2rem 1.5rem;display:flex;flex-direction:column;justify-content:space-between;">
-    <div>
-      <div style="font-family:'Orbitron',monospace;font-size:.6rem;letter-spacing:.12em;color:#00FF88;margin-bottom:.7rem;">→ NEXT</div>
-      <p style="font-size:.86rem;color:#bbb;line-height:1.7;">Chapter 6: BMS Architecture — hardware block diagram, firmware super-loop, protection state machine, and full AFE integration</p>
-    </div>
-    <a href="chapter6.html" style="display:inline-block;margin-top:1rem;background:rgba(0,255,136,0.15);border:1px solid rgba(0,255,136,0.4);color:#00FF88;font-family:'Orbitron',monospace;font-size:.68rem;letter-spacing:.08em;padding:.6rem 1.2rem;border-radius:.4rem;text-decoration:none;text-align:center;">Continue → Chapter 6: Architecture</a>
-  </div>
-</div>
-</div>
-</section>
 
 
 <style>
