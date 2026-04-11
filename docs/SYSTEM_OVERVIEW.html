@@ -353,11 +353,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);display
     <text x="64" y="127" fill="#888" font-size="7.5" text-anchor="middle">16 × LFP</text>
     <text x="64" y="139" fill="#888" font-size="7.5" text-anchor="middle">3.2V / 280Ah</text>
     <text x="64" y="152" fill="#555" font-size="7" text-anchor="middle">Ch 1+3</text>
-    <!-- pulse ring -->
-    <circle cx="64" cy="115" r="38" fill="none" stroke="#FFC857" stroke-width="1" opacity="0">
-      <animate attributeName="r" values="30;50" dur="2s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="0.6;0" dur="2s" repeatCount="indefinite"/>
-    </circle>
 
     <!-- ── NODE 2: SENSING ── -->
     <rect x="125" y="75" width="88" height="90" rx="7" fill="#080d14" stroke="#00F5FF" stroke-width="1.8" filter="url(#p-glow)"/>
@@ -433,35 +428,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);display
     <line x1="738" y1="120" x2="753" y2="120" stroke="#00f5ff" stroke-width="1.5" marker-end="url(#p-arr)"/>
     <line x1="843" y1="120" x2="858" y2="120" stroke="#00cfff" stroke-width="1.5" marker-end="url(#p-arr)"/>
 
-    <!-- ANIMATED DATA PACKETS travelling the pipeline -->
-    <!-- Packet 1 (amber) -->
-    <circle r="5" fill="#FFC857" opacity="0">
-      <animateMotion dur="4s" repeatCount="indefinite" begin="0s"
-        path="M64,120 L169,120 L274,120 L379,120 L484,120 L589,120 L694,120 L799,120 L904,120"/>
-      <animate attributeName="opacity" values="0;1;1;1;1;1;1;1;0" keyTimes="0;0.05;0.2;0.4;0.6;0.75;0.85;0.95;1" dur="4s" repeatCount="indefinite"/>
-    </circle>
-    <!-- Packet 2 (cyan, offset) -->
-    <circle r="4" fill="#00F5FF" opacity="0">
-      <animateMotion dur="4s" repeatCount="indefinite" begin="1.3s"
-        path="M64,120 L169,120 L274,120 L379,120 L484,120 L589,120 L694,120 L799,120 L904,120"/>
-      <animate attributeName="opacity" values="0;1;1;1;1;1;1;1;0" keyTimes="0;0.05;0.2;0.4;0.6;0.75;0.85;0.95;1" dur="4s" repeatCount="indefinite" begin="1.3s"/>
-    </circle>
-    <!-- Packet 3 (green, offset) -->
-    <circle r="4" fill="#00FF88" opacity="0">
-      <animateMotion dur="4s" repeatCount="indefinite" begin="2.6s"
-        path="M64,120 L169,120 L274,120 L379,120 L484,120 L589,120 L694,120 L799,120 L904,120"/>
-      <animate attributeName="opacity" values="0;1;1;1;1;1;1;1;0" keyTimes="0;0.05;0.2;0.4;0.6;0.75;0.85;0.95;1" dur="4s" repeatCount="indefinite" begin="2.6s"/>
-    </circle>
-
     <!-- FEEDBACK LOOP (bottom arc) -->
     <path d="M904,165 Q480,240 64,165" fill="none" stroke="rgba(0,245,255,0.25)" stroke-width="1.5" stroke-dasharray="8,4"/>
     <text x="480" y="235" fill="#00f5ff" font-size="8.5" text-anchor="middle" opacity="0.5" font-style="italic">← feedback: FET state & SoC update loops back to algorithm ←</text>
-    <!-- animated feedback packet -->
-    <circle r="3.5" fill="#A855F7" opacity="0">
-      <animateMotion dur="5s" repeatCount="indefinite" begin="2s"
-        path="M904,165 Q480,240 64,165"/>
-      <animate attributeName="opacity" values="0;0.8;0.8;0" keyTimes="0;0.1;0.9;1" dur="5s" repeatCount="indefinite" begin="2s"/>
-    </circle>
 
     <!-- LOWER DETAIL PANEL -->
     <rect x="20" y="280" width="920" height="220" rx="8" fill="#050508" stroke="rgba(0,245,255,0.1)" stroke-width="1"/>
@@ -1284,8 +1253,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);display
   <div class="card-grid" style="grid-template-columns:repeat(4,1fr);gap:1.2rem;margin:1.5rem 0">
 
     <!-- WATCHING -->
-    <div class="card" style="border-color:rgba(0,245,255,0.3);background:rgba(0,245,255,0.04);position:relative;overflow:hidden">
-      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--c2),transparent);animation:hud-scan 3s linear infinite;opacity:0.4"></div>
+    <div class="card" style="border-color:rgba(0,245,255,0.3);background:rgba(0,245,255,0.04)">
       <div class="card-icon">👁</div>
       <div class="card-title" style="color:var(--c2);font-size:0.9rem">WATCHING</div>
       <div class="card-body" style="margin-top:0.5rem">
@@ -1299,8 +1267,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);display
     </div>
 
     <!-- PREDICTING -->
-    <div class="card" style="border-color:rgba(0,255,136,0.3);background:rgba(0,255,136,0.04);position:relative;overflow:hidden">
-      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--c4),transparent);animation:hud-scan 3.5s linear infinite;opacity:0.4"></div>
+    <div class="card" style="border-color:rgba(0,255,136,0.3);background:rgba(0,255,136,0.04)">
       <div class="card-icon">🧠</div>
       <div class="card-title" style="color:var(--c4);font-size:0.9rem">PREDICTING</div>
       <div class="card-body" style="margin-top:0.5rem">
@@ -1314,8 +1281,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);display
     </div>
 
     <!-- PROTECTING -->
-    <div class="card" style="border-color:rgba(255,107,53,0.3);background:rgba(255,107,53,0.04);position:relative;overflow:hidden">
-      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--c3),transparent);animation:hud-scan 2.8s linear infinite;opacity:0.4"></div>
+    <div class="card" style="border-color:rgba(255,107,53,0.3);background:rgba(255,107,53,0.04)">
       <div class="card-icon">🛡</div>
       <div class="card-title" style="color:var(--c3);font-size:0.9rem">PROTECTING</div>
       <div class="card-body" style="margin-top:0.5rem">
@@ -1329,8 +1295,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);display
     </div>
 
     <!-- CONTROLLING -->
-    <div class="card" style="border-color:rgba(168,85,247,0.3);background:rgba(168,85,247,0.04);position:relative;overflow:hidden">
-      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--c5),transparent);animation:hud-scan 4s linear infinite;opacity:0.4"></div>
+    <div class="card" style="border-color:rgba(168,85,247,0.3);background:rgba(168,85,247,0.04)">
       <div class="card-icon">⚡</div>
       <div class="card-title" style="color:var(--c5);font-size:0.9rem">CONTROLLING</div>
       <div class="card-body" style="margin-top:0.5rem">
@@ -1579,14 +1544,6 @@ window.addEventListener('scroll',()=>{
   },2000);
 })();
 
-/* ── HUD SCAN LINE on hero ── */
-(function(){
-  const hero=document.querySelector('.hero');
-  if(!hero)return;
-  const scan=document.createElement('div');
-  scan.style.cssText='position:absolute;left:0;width:100%;height:2px;background:linear-gradient(90deg,transparent,rgba(0,245,255,0.6),transparent);animation:hud-scan 3s linear infinite;z-index:4;pointer-events:none';
-  hero.appendChild(scan);
-})();
 </script>
 
 <!-- ═══════════════════════════════════════════════════════
