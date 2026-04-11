@@ -40,7 +40,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);display
   padding:0 1.5rem;z-index:1000;font-family:var(--font-hud);
   font-size:0.7rem;letter-spacing:0.12em;animation:hud-topbar-in 0.6s ease both}
 .topbar-dot{width:8px;height:8px;border-radius:50%;background:var(--c2);
-  box-shadow:0 0 8px var(--c2);animation:hud-glow-pulse 2s ease-in-out infinite}
+  box-shadow:0 0 8px var(--c2);}
 .topbar-left{display:flex;align-items:center;gap:1rem;color:var(--c2)}
 .topbar-right{margin-left:auto;display:flex;align-items:center;gap:1.5rem;
   color:var(--text-muted);font-size:0.65rem}
@@ -181,7 +181,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);display
 .tl-item{position:relative;margin-bottom:1.4rem}
 .tl-item::before{content:'';position:absolute;left:-1.9rem;top:0.35rem;width:10px;height:10px;
   border-radius:50%;background:var(--c2);box-shadow:0 0 8px var(--c2);
-  animation:hud-glow-pulse 2s ease-in-out infinite}
+  }
 .tl-item h4{font-family:var(--font-hud);font-size:0.82rem;color:var(--c2);margin-bottom:0.3rem;letter-spacing:0.04em}
 .tl-item p{font-size:0.85rem;color:var(--text-muted);line-height:1.7}
 .tl-item code{font-family:var(--font-mono);font-size:0.78rem;color:var(--c4);
@@ -534,8 +534,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);display
     <!-- 8 phase boxes in a flow -->
     <!-- Phase 1: Power ON -->
     <rect x="20" y="45" width="96" height="68" rx="6" fill="#080e08" stroke="#00ff88" stroke-width="1.8">
-      <animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" begin="0s"/>
-    </rect>
+      </rect>
     <text x="68" y="67" fill="#00ff88" font-size="8" text-anchor="middle" font-weight="bold">POWER ON</text>
     <text x="68" y="81" fill="#888" font-size="7" text-anchor="middle">3.3V rail stable</text>
     <text x="68" y="93" fill="#888" font-size="7" text-anchor="middle">Clock → 170MHz</text>
@@ -543,8 +542,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);display
 
     <!-- Phase 2: Init -->
     <rect x="130" y="45" width="96" height="68" rx="6" fill="#0a0820" stroke="#A855F7" stroke-width="1.5">
-      <animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" begin="0.3s"/>
-    </rect>
+      </rect>
     <text x="178" y="67" fill="#A855F7" font-size="8" text-anchor="middle" font-weight="bold">HAL INIT</text>
     <text x="178" y="81" fill="#888" font-size="7" text-anchor="middle">GPIO, SPI, I²C</text>
     <text x="178" y="93" fill="#888" font-size="7" text-anchor="middle">CAN, UART, ADC</text>
@@ -552,8 +550,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);display
 
     <!-- Phase 3: NVM restore -->
     <rect x="240" y="45" width="96" height="68" rx="6" fill="#14100a" stroke="#FFC857" stroke-width="1.5">
-      <animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" begin="0.6s"/>
-    </rect>
+      </rect>
     <text x="288" y="67" fill="#FFC857" font-size="8" text-anchor="middle" font-weight="bold">NVM LOAD</text>
     <text x="288" y="81" fill="#888" font-size="7" text-anchor="middle">SoC from EEPROM</text>
     <text x="288" y="93" fill="#888" font-size="7" text-anchor="middle">DCIR table, logs</text>
@@ -561,8 +558,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);display
 
     <!-- Phase 4: AFE startup -->
     <rect x="350" y="45" width="96" height="68" rx="6" fill="#080e14" stroke="#00F5FF" stroke-width="1.5">
-      <animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" begin="0.9s"/>
-    </rect>
+      </rect>
     <text x="398" y="67" fill="#00F5FF" font-size="8" text-anchor="middle" font-weight="bold">AFE WAKE</text>
     <text x="398" y="81" fill="#888" font-size="7" text-anchor="middle">BQ76952 config</text>
     <text x="398" y="93" fill="#888" font-size="7" text-anchor="middle">OVP/UVP thresh</text>
@@ -570,8 +566,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);display
 
     <!-- Phase 5: Pre-charge -->
     <rect x="460" y="45" width="96" height="68" rx="6" fill="#14080a" stroke="#FF6B35" stroke-width="1.8">
-      <animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite" begin="1.2s"/>
-    </rect>
+      </rect>
     <text x="508" y="67" fill="#FF6B35" font-size="8" text-anchor="middle" font-weight="bold">PRE-CHARGE</text>
     <text x="508" y="81" fill="#888" font-size="7" text-anchor="middle">10Ω resistor</text>
     <text x="508" y="93" fill="#888" font-size="7" text-anchor="middle">Cap charge 100ms</text>
@@ -579,8 +574,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);display
 
     <!-- Phase 6: DSG close -->
     <rect x="570" y="45" width="96" height="68" rx="6" fill="#0a1408" stroke="#00FF88" stroke-width="1.5">
-      <animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" begin="1.5s"/>
-    </rect>
+      </rect>
     <text x="618" y="67" fill="#00FF88" font-size="8" text-anchor="middle" font-weight="bold">DSG ON</text>
     <text x="618" y="81" fill="#888" font-size="7" text-anchor="middle">DSG FET closes</text>
     <text x="618" y="93" fill="#888" font-size="7" text-anchor="middle">Load sees Vbat</text>
@@ -588,8 +582,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);display
 
     <!-- Phase 7: Normal loop -->
     <rect x="680" y="45" width="96" height="68" rx="6" fill="#080e14" stroke="#00F5FF" stroke-width="2">
-      <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite" begin="1.8s"/>
-    </rect>
+      </rect>
     <text x="728" y="62" fill="#00F5FF" font-size="8" text-anchor="middle" font-weight="bold">NORMAL</text>
     <text x="728" y="74" fill="#00F5FF" font-size="8" text-anchor="middle" font-weight="bold">LOOP ∞</text>
     <text x="728" y="88" fill="#888" font-size="7" text-anchor="middle">Measure→Decide</text>
@@ -598,8 +591,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);display
 
     <!-- Phase 8: Fault path -->
     <rect x="790" y="45" width="80" height="68" rx="6" fill="#140808" stroke="#FF4757" stroke-width="1.5">
-      <animate attributeName="stroke-opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite" begin="2.1s"/>
-    </rect>
+      </rect>
     <text x="830" y="67" fill="#FF4757" font-size="8" text-anchor="middle" font-weight="bold">FAULT</text>
     <text x="830" y="81" fill="#888" font-size="7" text-anchor="middle">FET trip</text>
     <text x="830" y="93" fill="#888" font-size="7" text-anchor="middle">CAN alarm</text>
@@ -613,13 +605,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);display
     <line x1="556" y1="79" x2="568" y2="79" stroke="#555" stroke-width="1.5" marker-end="url(#p-arr)"/>
     <line x1="666" y1="79" x2="678" y2="79" stroke="#555" stroke-width="1.5" marker-end="url(#p-arr)"/>
     <line x1="776" y1="79" x2="788" y2="79" stroke="#ff4757" stroke-width="1.5" marker-end="url(#p-arr)"/>
-
-    <!-- animated boot progress packet -->
-    <circle r="5" fill="#00ff88" opacity="0">
-      <animateMotion dur="5s" repeatCount="indefinite" begin="0.5s"
-        path="M68,79 L178,79 L288,79 L398,79 L508,79 L618,79 L728,79"/>
-      <animate attributeName="opacity" values="0;1;1;1;1;0.8;0" keyTimes="0;0.05;0.3;0.6;0.8;0.95;1" dur="5s" repeatCount="indefinite" begin="0.5s"/>
-    </circle>
 
     <!-- NORMAL LOOP expanded detail -->
     <rect x="20" y="145" width="650" height="230" rx="8" fill="#050508" stroke="rgba(0,245,255,0.12)" stroke-width="1"/>
@@ -769,19 +754,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);display
       <line x1="735" y1="55" x2="748" y2="55" stroke="#555" stroke-width="1.2" marker-end="url(#p-arr)" stroke-dasharray="3,2"/>
 
       <rect x="750" y="25" width="98" height="60" rx="5" fill="#0a0808" stroke="#00FF88" stroke-width="1.3">
-        <animate attributeName="stroke-opacity" values="0.3;1;0.3" dur="1.5s" repeatCount="indefinite"/>
       </rect>
       <text x="799" y="48" fill="#00FF88" font-size="7.5" text-anchor="middle" font-weight="bold">RECOVERY</text>
       <text x="799" y="61" fill="#888" font-size="7" text-anchor="middle">Vcell drops</text>
       <text x="799" y="74" fill="#888" font-size="7" text-anchor="middle">below 3.64V</text>
       <text x="799" y="87" fill="#555" font-size="6.5" text-anchor="middle">→ CHG FET on</text>
-
-      <!-- animated event packet -->
-      <circle r="4" fill="#FF4757" opacity="0">
-        <animateMotion dur="3s" repeatCount="indefinite"
-          path="M52,55 L155,55 L260,55 L370,55 L480,55 L585,55 L690,55 L799,55"/>
-        <animate attributeName="opacity" values="0;1;1;1;1;1;1;0" keyTimes="0;0.05;0.2;0.4;0.6;0.75;0.9;1" dur="3s" repeatCount="indefinite"/>
-      </circle>
     </svg>
     </div>
     <p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem">
@@ -832,11 +809,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);display
       <text x="665" y="51" fill="#888" font-size="7" text-anchor="middle">T &lt; 50°C (5°C hyst)</text>
       <text x="665" y="64" fill="#888" font-size="7" text-anchor="middle">after 30s clear ticks</text>
       <text x="665" y="77" fill="#555" font-size="6.5" text-anchor="middle">DSG FET re-closes</text>
-      <circle r="4" fill="#FF6B35" opacity="0">
-        <animateMotion dur="2.5s" repeatCount="indefinite" begin="0.5s"
-          path="M60,45 L175,45 L290,45 L405,45 L520,45 L665,45"/>
-        <animate attributeName="opacity" values="0;1;1;1;1;0" keyTimes="0;0.05;0.3;0.7;0.9;1" dur="2.5s" repeatCount="indefinite" begin="0.5s"/>
-      </circle>
     </svg>
     </div>
     <p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem">
@@ -890,17 +862,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);display
       <text x="655" y="77" fill="#555" font-size="6.5" text-anchor="middle">6 steps, hrs</text>
       <line x1="705" y1="45" x2="718" y2="45" stroke="#555" stroke-width="1.2" marker-end="url(#p-arr)" stroke-dasharray="3,2"/>
       <rect x="720" y="15" width="128" height="60" rx="5" fill="#080e08" stroke="#00FF88" stroke-width="1.3">
-        <animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite"/>
       </rect>
       <text x="784" y="38" fill="#00FF88" font-size="7.5" text-anchor="middle" font-weight="bold">SoC RESTORED</text>
       <text x="784" y="51" fill="#888" font-size="7" text-anchor="middle">SoC &gt; 20%</text>
       <text x="784" y="64" fill="#888" font-size="7" text-anchor="middle">normal ops resume</text>
       <text x="784" y="77" fill="#555" font-size="6.5" text-anchor="middle">cell life preserved</text>
-      <circle r="4" fill="#00FF88" opacity="0">
-        <animateMotion dur="3.5s" repeatCount="indefinite" begin="1s"
-          path="M60,45 L175,45 L290,45 L410,45 L535,45 L655,45 L784,45"/>
-        <animate attributeName="opacity" values="0;1;1;1;1;1;0" keyTimes="0;0.05;0.2;0.5;0.75;0.9;1" dur="3.5s" repeatCount="indefinite" begin="1s"/>
-      </circle>
     </svg>
     </div>
     <p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem">
@@ -935,15 +901,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);display
     <text x="460" y="71" fill="#00f5ff" font-size="8.5" text-anchor="middle" font-family="Orbitron" letter-spacing="3">CELL → SENSE → AFE → FILTER → SoC/SoH → PROT → FET → CAN → CLOUD</text>
 
     <!-- Stage dots on spine -->
-    <circle cx="110" cy="66" r="5" fill="#FFC857"><animate attributeName="r" values="4;7;4" dur="3s" repeatCount="indefinite" begin="0s"/></circle>
-    <circle cx="195" cy="66" r="5" fill="#00F5FF"><animate attributeName="r" values="4;7;4" dur="3s" repeatCount="indefinite" begin="0.3s"/></circle>
-    <circle cx="290" cy="66" r="5" fill="#00F5FF"><animate attributeName="r" values="4;7;4" dur="3s" repeatCount="indefinite" begin="0.6s"/></circle>
-    <circle cx="385" cy="66" r="5" fill="#A855F7"><animate attributeName="r" values="4;7;4" dur="3s" repeatCount="indefinite" begin="0.9s"/></circle>
-    <circle cx="480" cy="66" r="5" fill="#00FF88"><animate attributeName="r" values="4;7;4" dur="3s" repeatCount="indefinite" begin="1.2s"/></circle>
-    <circle cx="575" cy="66" r="5" fill="#FF6B35"><animate attributeName="r" values="4;7;4" dur="3s" repeatCount="indefinite" begin="1.5s"/></circle>
-    <circle cx="665" cy="66" r="5" fill="#FFC857"><animate attributeName="r" values="4;7;4" dur="3s" repeatCount="indefinite" begin="1.8s"/></circle>
-    <circle cx="755" cy="66" r="5" fill="#00F5FF"><animate attributeName="r" values="4;7;4" dur="3s" repeatCount="indefinite" begin="2.1s"/></circle>
-    <circle cx="840" cy="66" r="5" fill="#00CFFF"><animate attributeName="r" values="4;7;4" dur="3s" repeatCount="indefinite" begin="2.4s"/></circle>
+    <circle cx="110" cy="66" r="5" fill="#FFC857"></circle>
+    <circle cx="195" cy="66" r="5" fill="#00F5FF"></circle>
+    <circle cx="290" cy="66" r="5" fill="#00F5FF"></circle>
+    <circle cx="385" cy="66" r="5" fill="#A855F7"></circle>
+    <circle cx="480" cy="66" r="5" fill="#00FF88"></circle>
+    <circle cx="575" cy="66" r="5" fill="#FF6B35"></circle>
+    <circle cx="665" cy="66" r="5" fill="#FFC857"></circle>
+    <circle cx="755" cy="66" r="5" fill="#00F5FF"></circle>
+    <circle cx="840" cy="66" r="5" fill="#00CFFF"></circle>
 
     <!-- ── CHAPTER CARDS (arranged around spine) ── -->
 
