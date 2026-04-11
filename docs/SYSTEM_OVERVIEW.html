@@ -187,10 +187,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);display
 .tl-item code{font-family:var(--font-mono);font-size:0.78rem;color:var(--c4);
   background:rgba(0,255,136,0.08);padding:0.1rem 0.4rem;border-radius:3px}
 
-/* ── HUD ELEMENTS ── */
-#hud-canvas{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:0.3}
-#particles-c{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden}
-@keyframes __fp{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(-100vh) rotate(720deg);opacity:0}}
 
 /* ── BTT ── */
 #btt{position:fixed;bottom:1.5rem;right:1.5rem;width:42px;height:42px;border-radius:50%;
@@ -230,9 +226,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);display
   <div class="boot-line" id="bl4">[ STATUS ] You are about to see everything connect.</div>
   <div id="boot-bar-wrap"><div id="boot-bar"></div></div>
 </div>
-
-<canvas id="hud-canvas"></canvas>
-<div id="particles-c"></div>
 
 <!-- TOPBAR -->
 <div class="topbar">
@@ -1513,26 +1506,6 @@ function updateClock(){
 }
 setInterval(updateClock,1000);updateClock();
 
-/* ── HUD CANVAS PARTICLES (cyan dots) ── */
-(function(){
-  const c=document.getElementById('hud-canvas');
-  if(!c)return;
-  const ctx=c.getContext('2d');
-  let W,H,pts=[];
-  function resize(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;
-    pts=Array.from({length:60},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.5+0.5,vx:(Math.random()-.5)*0.5,vy:(Math.random()-.5)*0.5,op:Math.random()*0.5+0.2}));}
-  resize();window.addEventListener('resize',resize);
-  function draw(){
-    ctx.clearRect(0,0,W,H);
-    pts.forEach(p=>{
-      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-      ctx.fillStyle=`rgba(0,245,255,${p.op})`;ctx.fill();
-      p.x+=p.vx;p.y+=p.vy;
-      if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;
-    });
-    requestAnimationFrame(draw);
-  }draw();
-})();
 
 /* ── MOUSE TRACKING GLOW ── */
 (function(){
@@ -1581,26 +1554,6 @@ window.addEventListener('scroll',()=>{
   document.getElementById('btt').classList.toggle('show',window.scrollY>400);
 });
 
-/* ── DOM PARTICLE SYSTEM (colorful rising particles matching ch1-7) ── */
-(function(){
-  const pc=document.getElementById('particles-c');
-  if(!pc)return;
-  if(!document.getElementById('__sys-fp-style')){
-    const s=document.createElement('style');s.id='__sys-fp-style';
-    s.textContent='@keyframes __fp{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(-100vh) rotate(720deg);opacity:0}}';
-    document.head.appendChild(s);
-  }
-  const cols=['#00F5FF','#FFC857','#00FF88','#A855F7','#FF6B35','#00CFFF','#FF4757'];
-  setInterval(()=>{
-    const p=document.createElement('div');
-    const sz=Math.random()*10+5;
-    const col=cols[Math.floor(Math.random()*cols.length)];
-    const dur=Math.random()*4+3;
-    p.style.cssText=`position:absolute;left:${Math.random()*100}%;bottom:0;width:${sz}px;height:${sz}px;border-radius:${Math.random()>0.5?'50%':'3px'};background:${col};opacity:0.8;animation:__fp ${dur}s ease-out forwards;pointer-events:none;box-shadow:0 0 ${sz}px ${col}`;
-    pc.appendChild(p);
-    setTimeout(()=>p.remove(),(dur+0.5)*1000);
-  },500);
-})();
 
 /* ── GLITCH HERO TITLE ── */
 (function(){
