@@ -164,19 +164,9 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
 <div id="hud-progress"></div>
 <button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
 
-<!-- TOPBAR -->
-<div id="topbar">
-  <span class="topbar-left">// LFP-BMS-KB &nbsp;·&nbsp; JARVIS INTERFACE v2.0</span>
-  <div class="topbar-right">
-    <span class="topbar-chip online">● ALL SYSTEMS NOMINAL</span>
-    <span class="topbar-chip">MODULES: 7</span>
-    <span class="topbar-chip">BUILD: v2.0</span>
-  </div>
-</div>
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-eyebrow">// INITIALIZING KNOWLEDGE BASE INTERFACE</div>
   <h1 class="hero-title">LFP <span>BMS</span></h1>
   <div class="hero-sub-title">KNOWLEDGE BASE</div>
   <p class="hero-desc">The complete engineering reference for lithium iron phosphate battery management systems. From electrochemistry to firmware — 7 modules, one mission.</p>
@@ -188,33 +178,10 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
     <div class="hstat"><span class="hstat-val" data-target="100" data-suffix="%">0</span><span class="hstat-lbl">COMPLETE</span></div>
   </div>
 
-  <div class="search-wrap">
-    <span class="search-label">// QUERY KNOWLEDGE BASE</span>
-    <div class="search-inner">
-      <span class="search-prefix">&gt;_</span>
-      <input id="search" type="text" placeholder="Search: SoC, thermal, CAN bus, float charging..."/>
-    </div>
-  </div>
 </section>
 
 <!-- CHAPTERS -->
 <div class="container section-wrap">
-  <div class="reveal">
-    <div class="s-label">// KNOWLEDGE MODULES</div>
-    <div class="s-title">10 CHAPTERS + SYSTEM OVERVIEW. ONE MISSION.</div>
-    <div class="s-line"></div>
-  </div>
-
-  <div class="progress-panel reveal">
-    <span class="progress-panel-label">// SYSTEM COMPLETION STATUS</span>
-    <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:0.65rem;color:var(--muted);">
-      <span>OVERALL PROGRESS</span><span style="color:var(--cyan)">100% — ALL MODULES ONLINE</span>
-    </div>
-    <div class="prog-track"><div class="prog-fill" id="main-progress"></div></div>
-    <div class="prog-modules">
-      <span class="prog-mod">✓ MOD_01</span><span class="prog-mod">✓ MOD_02</span><span class="prog-mod">✓ MOD_03</span><span class="prog-mod">✓ MOD_04</span><span class="prog-mod">✓ MOD_05</span><span class="prog-mod">✓ MOD_06</span><span class="prog-mod">✓ MOD_07</span><span class="prog-mod">✓ MOD_08</span><span class="prog-mod">✓ MOD_09</span><span class="prog-mod">✓ MOD_10</span><span class="prog-mod" style="color:#00f5ff;border-color:rgba(0,245,255,0.4)">◈ SYS_OV</span>
-    </div>
-  </div>
 
   <div class="chapters-grid">
     <a href="chapter1.html" class="chapter-card reveal" style="color:#FFC857;">
@@ -321,43 +288,6 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
 </div>
 
 
-<!-- POV SECTION -->
-<div style="background:rgba(0,245,255,0.02);border-top:1px solid var(--border2);border-bottom:1px solid var(--border2);padding:4rem 0;">
-<div class="container">
-  <div class="reveal">
-    <div class="s-label">// ROLE-SPECIFIC DEEP DIVES</div>
-    <div class="s-title">POV DOCUMENTS</div>
-    <div style="font-family:var(--mono);font-size:0.72rem;color:var(--muted);margin-bottom:2rem;letter-spacing:0.06em;">Same knowledge base — your engineering lens. Coming soon.</div>
-    <div class="s-line"></div>
-  </div>
-  <div class="pov-grid reveal">
-    <div class="pov-card">
-      <span class="pov-badge">COMING SOON</span>
-      <span class="pov-icon">💾</span>
-      <div class="pov-title" style="color:var(--cyan);">FW Engineer</div>
-      <div class="pov-desc">State machine, timing budgets, CAN stack, NVM management, EKF tuning in embedded C.</div>
-    </div>
-    <div class="pov-card">
-      <span class="pov-badge">COMING SOON</span>
-      <span class="pov-icon">⚡</span>
-      <div class="pov-title" style="color:var(--amber);">HW Engineer</div>
-      <div class="pov-desc">Schematic checklist, AFE layout, MOSFET selection, shunt sizing, PCB thermal, EMI.</div>
-    </div>
-    <div class="pov-card">
-      <span class="pov-badge">COMING SOON</span>
-      <span class="pov-icon">🔥</span>
-      <div class="pov-title" style="color:var(--red);">Thermal Engineer</div>
-      <div class="pov-desc">Heat modelling, Rth calculations, NTC placement, derating generation, TR propagation.</div>
-    </div>
-    <div class="pov-card">
-      <span class="pov-badge">COMING SOON</span>
-      <span class="pov-icon">🏗️</span>
-      <div class="pov-title" style="color:var(--green);">System Engineer</div>
-      <div class="pov-desc">Integration spec, commissioning, inverter compatibility matrix, NFPA 855, acceptance test.</div>
-    </div>
-  </div>
-</div>
-</div>
 
 <!-- FOOTER -->
 <footer class="site-footer">
