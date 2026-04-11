@@ -1,0 +1,49 @@
+{
+  "name": "bms-doc-gen",
+  "displayName": "BMS DocGen",
+  "description": "Generates engineering documentation for BMS embedded C codebases using GitHub Copilot",
+  "version": "0.1.0",
+  "publisher": "bms-team",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "BMS",
+    "embedded",
+    "documentation",
+    "STM32",
+    "C"
+  ],
+  "activationEvents": [
+    "onUri",
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "bms-doc-gen.openPanel",
+        "title": "BMS DocGen: Open Documentation Generator"
+      }
+    ],
+    "uriHandler": {
+      "id": "bms-doc-gen"
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "npx esbuild src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
+    "watch": "npx esbuild src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --watch",
+    "compile": "tsc --noEmit",
+    "package": "npx vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.90.0",
+    "esbuild": "^0.21.0",
+    "typescript": "^5.4.0"
+  }
+}
