@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BMS DocGen</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    header {
+      border-bottom: 1px solid #30363d;
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+    }
+
+    header h1 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #f0f6fc;
+    }
+
+    header p {
+      font-size: 13px;
+      color: #8b949e;
+      margin-top: 4px;
+    }
+
+    #status-bar {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: #8b949e;
+    }
+
+    #status-bar.ready { color: #3fb950; border-color: #238636; }
+    #status-bar.error { color: #f85149; border-color: #da3633; }
+
+    #folder-section h2 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #c9d1d9;
+    }
+
+    #folder-list {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      max-height: 320px;
+      overflow-y: auto;
+      margin-bottom: 16px;
+    }
+
+    .folder-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      border-bottom: 1px solid #21262d;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+
+    .folder-item:last-child { border-bottom: none; }
+    .folder-item:hover { background: #1c2128; }
+
+    .folder-item input[type="checkbox"] {
+      width: 15px;
+      height: 15px;
+      accent-color: #238636;
+      cursor: pointer;
+    }
+
+    .folder-item label {
+      font-size: 13px;
+      cursor: pointer;
+      color: #e6edf3;
+      font-family: 'Consolas', monospace;
+    }
+
+    .folder-item .layer-badge {
+      margin-left: auto;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 500;
+    }
+
+    .badge-driver { background: #1f3a5f; color: #58a6ff; }
+    .badge-interface { background: #3a2a1a; color: #d29922; }
+    .badge-application { background: #1a2f1a; color: #3fb950; }
+    .badge-unknown { background: #21262d; color: #8b949e; }
+
+    #select-controls {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: 1px solid;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.1s;
+    }
+
+    #btn-select-all {
+      background: #21262d;
+      border-color: #30363d;
+      color: #c9d1d9;
+    }
+    #btn-select-all:hover { background: #30363d; }
+
+    #btn-deselect-all {
+      background: #21262d;
+      border-color: #30363d;
+      color: #c9d1d9;
+    }
+    #btn-deselect-all:hover { background: #30363d; }
+
+    #btn-generate {
+      background: #238636;
+      border-color: #2ea043;
+      color: #ffffff;
+      padding: 8px 24px;
+    }
+    #btn-generate:hover:not(:disabled) { background: #2ea043; }
+    #btn-generate:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    #progress-section {
+      display: none;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+
+    #progress-section h3 {
+      font-size: 14px;
+      color: #c9d1d9;
+      margin-bottom: 12px;
+    }
+
+    .progress-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 0;
+      font-size: 13px;
+      color: #8b949e;
+    }
+
+    .progress-item.done { color: #3fb950; }
+    .progress-item.active { color: #58a6ff; }
+    .progress-item.error-item { color: #f85149; }
+
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid #30363d;
+      border-top-color: #58a6ff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .checkmark { color: #3fb950; font-size: 14px; }
+    .crossmark { color: #f85149; font-size: 14px; }
+
+    #log-section {
+      display: none;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 20px;
+      font-family: 'Consolas', monospace;
+      font-size: 12px;
+      color: #8b949e;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    #log-section p { margin-bottom: 3px; }
+    #log-section .log-info { color: #58a6ff; }
+    #log-section .log-ok { color: #3fb950; }
+    #log-section .log-err { color: #f85149; }
+
+    #results-section {
+      display: none;
+    }
+
+    #results-section h2 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #c9d1d9;
+    }
+
+    .result-item {
+      background: #161b22;
+      border: 1px solid #238636;
+      border-radius: 6px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .result-item .result-name {
+      font-family: 'Consolas', monospace;
+      font-size: 13px;
+      color: #3fb950;
+    }
+
+    .result-item .result-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-open-browser {
+      background: #1f3a5f;
+      border-color: #388bfd;
+      color: #58a6ff;
+      font-size: 12px;
+      padding: 5px 12px;
+    }
+    .btn-open-browser:hover { background: #264673; }
+
+    #loading-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(13, 17, 23, 0.8);
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+      z-index: 100;
+    }
+
+    #loading-overlay .big-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #30363d;
+      border-top-color: #58a6ff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    #loading-overlay p {
+      font-size: 14px;
+      color: #8b949e;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>BMS DocGen</h1>
+    <p>Generate engineering documentation for BMS firmware modules using GitHub Copilot</p>
+  </header>
+
+  <div id="status-bar">Initializing...</div>
+
+  <div id="folder-section">
+    <h2>Select modules to document</h2>
+    <div id="folder-list">
+      <div class="folder-item" style="color:#8b949e; font-size:13px; justify-content:center;">
+        Loading folders...
+      </div>
+    </div>
+    <div id="select-controls">
+      <button id="btn-select-all">Select All</button>
+      <button id="btn-deselect-all">Deselect All</button>
+      <button id="btn-generate" disabled>Generate Documentation</button>
+    </div>
+  </div>
+
+  <div id="progress-section">
+    <h3>Generation progress</h3>
+    <div id="progress-list"></div>
+  </div>
+
+  <div id="log-section" id="log-output"></div>
+
+  <div id="results-section">
+    <h2>Generated documents</h2>
+    <div id="results-list"></div>
+  </div>
+
+  <div id="loading-overlay">
+    <div class="big-spinner"></div>
+    <p id="loading-text">Generating documentation...</p>
+  </div>
+
+  <script>
+    const vscode = acquireVsCodeApi();
+    let folders = [];
+    let generating = false;
+
+    // --- UI helpers ---
+    function setStatus(msg, cls) {
+      const el = document.getElementById('status-bar');
+      el.textContent = msg;
+      el.className = cls || '';
+    }
+
+    function appendLog(msg, cls) {
+      const log = document.getElementById('log-section');
+      log.style.display = 'block';
+      const p = document.createElement('p');
+      p.textContent = msg;
+      if (cls) p.className = cls;
+      log.appendChild(p);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function getLayerBadge(folderName) {
+      const lower = folderName.toLowerCase();
+      if (lower.endsWith('_driver') || lower.endsWith('_drv')) {
+        return { label: 'Driver', cls: 'badge-driver' };
+      } else if (lower.endsWith('_if') || lower.endsWith('_interface')) {
+        return { label: 'Interface', cls: 'badge-interface' };
+      } else if (lower.endsWith('_appl') || lower.endsWith('_app') || lower.endsWith('_application')) {
+        return { label: 'Application', cls: 'badge-application' };
+      }
+      return { label: 'Other', cls: 'badge-unknown' };
+    }
+
+    function renderFolders(folderNames) {
+      folders = folderNames;
+      const list = document.getElementById('folder-list');
+      if (!folderNames.length) {
+        list.innerHTML = '<div class="folder-item" style="color:#8b949e;font-size:13px;justify-content:center;">No folders with C/H files found</div>';
+        return;
+      }
+      list.innerHTML = folderNames.map(name => {
+        const badge = getLayerBadge(name);
+        return `
+          <div class="folder-item">
+            <input type="checkbox" id="cb-${name}" value="${name}" onchange="updateGenerateBtn()" />
+            <label for="cb-${name}">${name}</label>
+            <span class="layer-badge ${badge.cls}">${badge.label}</span>
+          </div>`;
+      }).join('');
+      updateGenerateBtn();
+    }
+
+    function updateGenerateBtn() {
+      const checked = document.querySelectorAll('#folder-list input[type=checkbox]:checked');
+      document.getElementById('btn-generate').disabled = (checked.length === 0 || generating);
+    }
+
+    function getSelectedFolders() {
+      return Array.from(document.querySelectorAll('#folder-list input[type=checkbox]:checked'))
+        .map(cb => cb.value);
+    }
+
+    function showProgress(folderNames) {
+      const section = document.getElementById('progress-section');
+      const list = document.getElementById('progress-list');
+      section.style.display = 'block';
+      list.innerHTML = folderNames.map(name => `
+        <div class="progress-item" id="prog-${name}">
+          <div class="spinner"></div>
+          <span>Generating docs for <strong>${name}</strong></span>
+        </div>`).join('');
+    }
+
+    function markProgressDone(folderName) {
+      const el = document.getElementById('prog-' + folderName);
+      if (el) {
+        el.className = 'progress-item done';
+        el.innerHTML = `<span class="checkmark">✓</span><span>Completed: <strong>${folderName}</strong></span>`;
+      }
+    }
+
+    function markProgressError(folderName, msg) {
+      const el = document.getElementById('prog-' + folderName);
+      if (el) {
+        el.className = 'progress-item error-item';
+        el.innerHTML = `<span class="crossmark">✗</span><span>Failed: <strong>${folderName}</strong> — ${msg}</span>`;
+      }
+    }
+
+    function addResult(folderName, docPath) {
+      const section = document.getElementById('results-section');
+      const list = document.getElementById('results-list');
+      section.style.display = 'block';
+      const item = document.createElement('div');
+      item.className = 'result-item';
+      item.innerHTML = `
+        <span class="result-name">${folderName}_design.html</span>
+        <div class="result-actions">
+          <button class="btn-open-browser" onclick="openDoc('${docPath}')">Open in Browser</button>
+        </div>`;
+      list.appendChild(item);
+    }
+
+    function openDoc(path) {
+      vscode.postMessage({ command: 'openDoc', path });
+    }
+
+    // --- Button handlers ---
+    document.getElementById('btn-select-all').addEventListener('click', () => {
+      document.querySelectorAll('#folder-list input[type=checkbox]').forEach(cb => cb.checked = true);
+      updateGenerateBtn();
+    });
+
+    document.getElementById('btn-deselect-all').addEventListener('click', () => {
+      document.querySelectorAll('#folder-list input[type=checkbox]').forEach(cb => cb.checked = false);
+      updateGenerateBtn();
+    });
+
+    document.getElementById('btn-generate').addEventListener('click', () => {
+      if (generating) return;
+      const selected = getSelectedFolders();
+      if (!selected.length) return;
+      generating = true;
+      document.getElementById('btn-generate').disabled = true;
+      showProgress(selected);
+      appendLog('Starting generation for: ' + selected.join(', '), 'log-info');
+      vscode.postMessage({ command: 'generate', folders: selected });
+    });
+
+    // --- Message handler (from extension) ---
+    window.addEventListener('message', event => {
+      const msg = event.data;
+      switch (msg.type) {
+        case 'foldersLoaded':
+          renderFolders(msg.folders);
+          setStatus('Ready — ' + msg.folders.length + ' module(s) found', 'ready');
+          break;
+        case 'log':
+          appendLog(msg.text, msg.level === 'error' ? 'log-err' : msg.level === 'ok' ? 'log-ok' : 'log-info');
+          break;
+        case 'moduleDone':
+          markProgressDone(msg.folder);
+          addResult(msg.folder, msg.docPath);
+          break;
+        case 'moduleError':
+          markProgressError(msg.folder, msg.error);
+          appendLog('ERROR [' + msg.folder + ']: ' + msg.error, 'log-err');
+          break;
+        case 'allDone':
+          generating = false;
+          updateGenerateBtn();
+          setStatus('Generation complete — ' + msg.count + ' document(s) saved', 'ready');
+          break;
+        case 'error':
+          generating = false;
+          updateGenerateBtn();
+          setStatus('Error: ' + msg.text, 'error');
+          appendLog('Fatal error: ' + msg.text, 'log-err');
+          break;
+      }
+    });
+  </script>
+</body>
+</html>
