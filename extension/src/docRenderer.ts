@@ -1,483 +1,409 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as vscode from 'vscode';
-import { ModuleFolder } from './folderScanner';
+import { LAYER_META, LAYER_ORDER } from './layerMap';
+
+const SECTIONS = [
+    { num: 1, title: 'Module Overview' },
+    { num: 2, title: 'Hardware / Peripheral' },
+    { num: 3, title: 'Configuration' },
+    { num: 4, title: 'Function Inventory' },
+    { num: 5, title: 'Data Flow' },
+    { num: 6, title: 'Cross-Module Dependencies' },
+    { num: 7, title: 'Sequence Diagram' },
+    { num: 8, title: 'State Machine' },
+    { num: 9, title: 'Design Decisions' },
+    { num: 10, title: 'Known Issues & TODOs' }
+];
 
 /**
- * Convert the LLM response text into a full dark-themed HTML document and save it.
- *
- * @param module       Module metadata (name + layer)
- * @param llmText      Raw text from the LLM
- * @param output       VS Code output channel
- * @returns            Absolute path to the saved HTML file
+ * Write a layout-only HTML shell for a module doc.
+ * Session 3 will replace placeholder content with real LLM output.
  */
-export function renderAndSave(
-    module: ModuleFolder,
-    llmText: string,
-    output: vscode.OutputChannel
-): string {
-    const repoRoot = getWorkspaceRoot();
-    const docsDir = path.join(repoRoot, 'docs');
-
-    if (!fs.existsSync(docsDir)) {
-        fs.mkdirSync(docsDir, { recursive: true });
+export function renderDocShell(
+    moduleName: string,
+    layerName: string,
+    outputPath: string
+): void {
+    const dir = path.dirname(outputPath);
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
     }
-
-    const htmlContent = buildHtml(module, llmText);
-    const outPath = path.join(docsDir, `${module.name}_design.html`);
-    fs.writeFileSync(outPath, htmlContent, 'utf8');
-
-    output.appendLine(`[DocRenderer] Saved: ${outPath}`);
-    return outPath;
+    const html = buildDocHtml(moduleName, layerName);
+    fs.writeFileSync(outputPath, html, 'utf8');
 }
 
 // ---------------------------------------------------------------------------
-// Internal helpers
-// ---------------------------------------------------------------------------
 
-function getWorkspaceRoot(): string {
-    const folders = vscode.workspace.workspaceFolders;
-    return folders && folders.length > 0 ? folders[0].uri.fsPath : process.cwd();
+function getLayerColor(layer: string): string {
+    return LAYER_META[layer]?.color ?? '#6e7681';
 }
 
-/**
- * Extract section anchors from the LLM text for the sidebar nav.
- * Looks for lines that start with a number followed by a period (e.g. "1. MODULE OVERVIEW").
- */
-function extractSections(text: string): Array<{ anchor: string; title: string }> {
-    const sections: Array<{ anchor: string; title: string }> = [];
-    const re = /^(\d+)\.\s+([A-Z][A-Z /()]+)/gm;
-    let match: RegExpExecArray | null;
-    while ((match = re.exec(text)) !== null) {
-        const num = match[1];
-        const title = match[2].trim();
-        const anchor = `section-${num}`;
-        sections.push({ anchor, title: `${num}. ${title}` });
-    }
-    return sections;
+function getLayerBg(layer: string): string {
+    const map: Record<string, string> = {
+        'MCAL': '#0f0a1e',
+        'CDD': '#1a0f00',
+        'ESAL': '#001820',
+        'SRVLayer': '#001a0f',
+        'ASW': '#00112a'
+    };
+    return map[layer] ?? '#161b22';
 }
 
-/**
- * Convert the plain LLM text to HTML body content.
- * - Section headers (1. TITLE) become <h2> with anchors
- * - ```mermaid blocks become <div class="mermaid">
- * - ``` code blocks become <pre><code class="language-c">
- * - Other text is wrapped in <p>
- */
-function textToHtml(text: string): string {
-    const lines = text.split('\n');
-    const output: string[] = [];
-    let inCodeBlock = false;
-    let codeBlockLang = '';
-    let inMermaid = false;
-    let codeLines: string[] = [];
-
-    function escapeHtml(s: string): string {
-        return s
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;');
-    }
-
-    for (const line of lines) {
-        // --- Code / mermaid block start ---
-        if (!inCodeBlock && !inMermaid) {
-            const fenceMatch = line.match(/^```(\w*)/);
-            if (fenceMatch) {
-                const lang = fenceMatch[1].toLowerCase();
-                if (lang === 'mermaid') {
-                    inMermaid = true;
-                    codeLines = [];
-                } else {
-                    inCodeBlock = true;
-                    codeBlockLang = lang || 'c';
-                    codeLines = [];
-                }
-                continue;
-            }
-        }
-
-        // --- Inside mermaid block ---
-        if (inMermaid) {
-            if (line.startsWith('```')) {
-                output.push(`<div class="mermaid">\n${escapeHtml(codeLines.join('\n'))}\n</div>`);
-                inMermaid = false;
-                codeLines = [];
-            } else {
-                codeLines.push(line);
-            }
-            continue;
-        }
-
-        // --- Inside code block ---
-        if (inCodeBlock) {
-            if (line.startsWith('```')) {
-                const escaped = escapeHtml(codeLines.join('\n'));
-                output.push(`<pre><code class="language-${codeBlockLang}">${escaped}</code></pre>`);
-                inCodeBlock = false;
-                codeLines = [];
-            } else {
-                codeLines.push(line);
-            }
-            continue;
-        }
-
-        // --- Section header: "N. TITLE" ---
-        const sectionMatch = line.match(/^(\d+)\.\s+([A-Z][A-Z /()]+)/);
-        if (sectionMatch) {
-            const num = sectionMatch[1];
-            const title = sectionMatch[2].trim();
-            output.push(`<h2 id="section-${num}">${escapeHtml(`${num}. ${title}`)}</h2>`);
-            continue;
-        }
-
-        // --- Sub-headers: lines starting with "   -" indented text as list items ---
-        const subItemMatch = line.match(/^\s{3,}-\s+(.*)/);
-        if (subItemMatch) {
-            output.push(`<li>${escapeHtml(subItemMatch[1])}</li>`);
-            continue;
-        }
-
-        // --- Empty line ---
-        if (line.trim() === '') {
-            output.push('<br/>');
-            continue;
-        }
-
-        // --- Plain paragraph ---
-        output.push(`<p>${escapeHtml(line)}</p>`);
-    }
-
-    return output.join('\n');
+function esc(s: string): string {
+    return s
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
 }
 
-function buildHtml(module: ModuleFolder, llmText: string): string {
-    const sections = extractSections(llmText);
-    const generatedAt = new Date().toLocaleString('en-GB', {
+function buildSidebarLinks(): string {
+    return SECTIONS.map(s =>
+        `<a href="#section-${s.num}" class="nav-link">${esc(s.num.toString().padStart(2, '0'))}. ${esc(s.title)}</a>`
+    ).join('\n');
+}
+
+function buildStackWidget(activeLayer: string): string {
+    const layerColor = getLayerColor(activeLayer);
+    const layerBg = getLayerBg(activeLayer);
+    let html = `
+      <div class="stack-widget">
+        <div class="stack-title">Stack Position</div>
+        <div class="stack-item stack-hw">Hardware</div>
+        <div class="stack-arrow">↓</div>`;
+
+    for (let i = 0; i < LAYER_ORDER.length; i++) {
+        const layer = LAYER_ORDER[i];
+        const isActive = layer === activeLayer;
+        const color = getLayerColor(layer);
+        if (isActive) {
+            html += `\n        <div class="stack-item stack-active" style="color:${color};border-left:2px solid ${color};background:${layerBg}">${esc(layer)}</div>`;
+        } else {
+            html += `\n        <div class="stack-item stack-inactive">${esc(layer)}</div>`;
+        }
+        if (i < LAYER_ORDER.length - 1) {
+            html += `\n        <div class="stack-arrow">↓</div>`;
+        }
+    }
+
+    html += `\n      </div>`;
+    return html;
+}
+
+function buildSections(): string {
+    return SECTIONS.map(s => {
+        const numPadded = s.num.toString().padStart(2, '0');
+        return `
+    <section id="section-${s.num}" class="doc-section">
+      <div class="section-heading">
+        <span class="section-num">${numPadded}</span>
+        <h2>${esc(s.title)}</h2>
+      </div>
+      <div class="section-body">
+        <p class="placeholder-text">Content will be generated by GitHub Copilot in Session 3.</p>
+      </div>
+      <hr class="section-rule" />
+    </section>`;
+    }).join('\n');
+}
+
+function buildDocHtml(moduleName: string, layerName: string): string {
+    const layerColor = getLayerColor(layerName);
+    const layerBg = getLayerBg(layerName);
+    const timestamp = new Date().toLocaleString('en-GB', {
         year: 'numeric', month: 'short', day: '2-digit',
         hour: '2-digit', minute: '2-digit'
     });
-
-    const sidebarItems = sections.map(s =>
-        `<a href="#${s.anchor}" class="sidebar-link">${escapeHtmlAttr(s.title)}</a>`
-    ).join('\n');
-
-    const bodyContent = textToHtml(llmText);
 
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${module.name} — BMS Design Document</title>
-
-  <!-- Google Fonts -->
+  <title>${esc(moduleName)} — BMS Design Doc</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-
-  <!-- highlight.js -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js"></script>
-
-  <!-- Mermaid.js -->
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
-
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
   <style>
+    html { scroll-behavior: smooth; }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    :root {
-      --bg: #0d1117;
-      --bg-surface: #161b22;
-      --bg-surface2: #1c2128;
-      --border: #30363d;
-      --text: #e6edf3;
-      --text-muted: #8b949e;
-      --accent: #58a6ff;
-      --green: #3fb950;
-      --yellow: #d29922;
-      --sidebar-width: 260px;
-    }
-
     body {
-      font-family: 'Inter', -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.7;
-      display: flex;
-      min-height: 100vh;
+      font-family: 'JetBrains Mono', 'Consolas', monospace;
+      background: #0d1117;
+      color: #e6edf3;
     }
 
-    /* ---- Sidebar ---- */
-    #sidebar {
-      width: var(--sidebar-width);
-      background: var(--bg-surface);
-      border-right: 1px solid var(--border);
+    /* ── FIXED TOP BAR ── */
+    #topbar {
       position: fixed;
-      top: 0;
-      left: 0;
-      height: 100vh;
-      overflow-y: auto;
-      padding: 24px 0;
-      z-index: 10;
+      top: 0; left: 0; right: 0;
+      height: 56px;
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 100;
     }
 
-    #sidebar .sidebar-header {
-      padding: 0 20px 16px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 12px;
-    }
-
-    #sidebar .sidebar-header h3 {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-muted);
+    .topbar-brand {
+      font-size: 0.78rem;
+      color: #58a6ff;
+      letter-spacing: 0.2em;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
     }
 
-    #sidebar .sidebar-header p {
-      font-size: 13px;
-      color: var(--text);
+    .topbar-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .topbar-module {
+      font-size: 1rem;
       font-weight: 600;
-      margin-top: 4px;
+      color: #e6edf3;
     }
 
-    .sidebar-link {
+    .layer-badge {
+      font-size: 0.72rem;
+      font-weight: 500;
+      padding: 2px 10px;
+      border-radius: 10px;
+      border: 1px solid ${layerColor};
+      color: ${layerColor};
+      background: ${layerBg};
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .topbar-ts {
+      font-size: 0.78rem;
+      color: #8b949e;
+    }
+
+    .btn-open {
+      background: transparent;
+      border: 1px solid #30363d;
+      color: #8b949e;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      border-radius: 6px;
+      padding: 4px 12px;
+      cursor: pointer;
+      transition: color 150ms, border-color 150ms;
+    }
+    .btn-open:hover { color: #e6edf3; border-color: #8b949e; }
+
+    /* ── FIXED LEFT SIDEBAR ── */
+    #sidebar {
+      position: fixed;
+      top: 56px; left: 0; bottom: 0;
+      width: 220px;
+      background: #010409;
+      border-right: 1px solid #21262d;
+      overflow-y: auto;
+      padding: 20px 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .nav-title {
+      color: #484f58;
+      font-size: 0.68rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 0 16px;
+      margin-bottom: 16px;
+    }
+
+    .nav-link {
       display: block;
-      padding: 7px 20px;
-      font-size: 12px;
-      color: var(--text-muted);
+      padding: 7px 16px;
+      color: #6e7681;
+      font-size: 0.82rem;
       text-decoration: none;
       border-left: 2px solid transparent;
-      transition: all 0.1s;
-      font-family: 'Inter', sans-serif;
+      transition: all 150ms;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .sidebar-link:hover {
-      color: var(--text);
-      background: var(--bg-surface2);
-      border-left-color: var(--accent);
+    .nav-link:hover { color: #c9d1d9; }
+    .nav-link.active {
+      color: #e6edf3;
+      border-left-color: #58a6ff;
+      background: rgba(88, 166, 255, 0.07);
     }
 
-    /* ---- Main content ---- */
-    #main {
-      margin-left: var(--sidebar-width);
-      flex: 1;
-      max-width: 900px;
+    /* ── STACK WIDGET ── */
+    .stack-widget {
+      margin-top: auto;
+      padding: 20px 16px;
+      border-top: 1px solid #21262d;
+    }
+
+    .stack-title {
+      color: #484f58;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 10px;
+    }
+
+    .stack-item {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      margin: 1px 0;
+      border-left: 2px solid transparent;
+    }
+
+    .stack-hw { color: #484f58; }
+    .stack-inactive { color: #484f58; }
+    .stack-active { font-weight: 600; }
+
+    .stack-arrow {
+      color: #30363d;
+      font-size: 0.7rem;
+      padding-left: 8px;
+      line-height: 1.4;
+    }
+
+    /* ── MAIN CONTENT ── */
+    #content {
+      margin-left: 220px;
+      padding-top: 56px;
+      min-height: 100vh;
+      background: #0d1117;
+    }
+
+    .content-inner {
+      max-width: 860px;
       padding: 40px 48px;
+      margin: 0 auto;
     }
 
-    /* ---- Document header ---- */
-    #doc-header {
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 24px;
-      margin-bottom: 36px;
-    }
+    /* ── SECTIONS ── */
+    .doc-section { margin-bottom: 8px; }
 
-    #doc-header .module-name {
-      font-size: 28px;
-      font-weight: 600;
-      color: #f0f6fc;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    #doc-header .meta {
-      margin-top: 10px;
+    .section-heading {
       display: flex;
+      align-items: baseline;
       gap: 16px;
-      flex-wrap: wrap;
+      margin-bottom: 20px;
     }
 
-    .meta-badge {
-      font-size: 12px;
-      padding: 3px 10px;
-      border-radius: 12px;
-      font-weight: 500;
-      border: 1px solid;
+    .section-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.8rem;
+      color: #58a6ff;
+      opacity: 0.35;
+      font-weight: 700;
+      line-height: 1;
     }
 
-    .badge-driver { background: #1f3a5f; color: #58a6ff; border-color: #1f4a80; }
-    .badge-interface { background: #3a2a1a; color: #d29922; border-color: #5a3a10; }
-    .badge-application { background: #1a2f1a; color: #3fb950; border-color: #1a4a1a; }
-    .badge-other { background: var(--bg-surface2); color: var(--text-muted); border-color: var(--border); }
-
-    .meta-text {
-      font-size: 12px;
-      color: var(--text-muted);
-      align-self: center;
-    }
-
-    /* ---- Body typography ---- */
-    h2 {
-      font-size: 18px;
+    .section-heading h2 {
+      color: #e6edf3;
+      font-size: 1.25rem;
       font-weight: 600;
-      color: #f0f6fc;
-      margin: 36px 0 16px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--border);
-      scroll-margin-top: 20px;
+      margin: 0;
+      scroll-margin-top: 76px;
     }
 
-    p {
-      margin-bottom: 8px;
-      color: var(--text);
+    .section-body {
+      color: #8b949e;
+      line-height: 1.8;
+      font-size: 0.93rem;
     }
 
-    li {
-      margin-left: 24px;
-      margin-bottom: 4px;
-      color: var(--text);
+    .placeholder-text {
+      color: #30363d;
+      font-style: italic;
+      border-left: 2px solid #21262d;
+      padding-left: 12px;
     }
 
-    br { display: block; margin: 4px 0; content: ''; }
-
-    /* ---- Code blocks ---- */
-    pre {
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 16px;
-      overflow-x: auto;
-      margin: 12px 0;
+    .section-rule {
+      border: none;
+      border-top: 1px solid #21262d;
+      margin: 36px 0;
     }
 
-    pre code {
-      font-family: 'JetBrains Mono', 'Consolas', monospace;
-      font-size: 13px;
-      line-height: 1.6;
-    }
-
-    code:not(pre code) {
-      font-family: 'JetBrains Mono', 'Consolas', monospace;
-      font-size: 12px;
-      background: var(--bg-surface2);
-      border: 1px solid var(--border);
-      border-radius: 3px;
-      padding: 1px 5px;
-      color: #ff7b72;
-    }
-
-    /* ---- Mermaid diagrams ---- */
-    .mermaid {
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 20px;
-      margin: 16px 0;
-      overflow-x: auto;
+    /* ── FOOTER ── */
+    #footer {
       text-align: center;
+      color: #484f58;
+      font-size: 0.78rem;
+      padding: 40px 0 32px;
+      border-top: 1px solid #21262d;
+      margin-top: 48px;
     }
 
-    .mermaid svg {
-      max-width: 100%;
-      height: auto;
-    }
-
-    /* ---- Footer ---- */
-    #doc-footer {
-      margin-top: 60px;
-      padding-top: 20px;
-      border-top: 1px solid var(--border);
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    /* ---- Scrollbar ---- */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: var(--bg); }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #484f58; }
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #010409; }
+    ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
   </style>
 </head>
 <body>
 
-  <!-- Sidebar -->
-  <nav id="sidebar">
-    <div class="sidebar-header">
-      <h3>BMS DocGen</h3>
-      <p>${escapeHtmlAttr(module.name)}</p>
+  <!-- Fixed top bar -->
+  <header id="topbar">
+    <div class="topbar-brand">⚡ BMS DocGen</div>
+    <div class="topbar-center">
+      <div class="topbar-module">${esc(moduleName)}</div>
+      <div class="layer-badge">${esc(layerName)}</div>
     </div>
-    ${sidebarItems}
+    <div class="topbar-right">
+      <span class="topbar-ts">Generated ${esc(timestamp)}</span>
+      <button class="btn-open" onclick="window.open(window.location.href)">Open in Browser</button>
+    </div>
+  </header>
+
+  <!-- Fixed left sidebar -->
+  <nav id="sidebar">
+    <div class="nav-title">Contents</div>
+    ${buildSidebarLinks()}
+    ${buildStackWidget(layerName)}
   </nav>
 
   <!-- Main content -->
-  <main id="main">
-    <div id="doc-header">
-      <div class="module-name">${escapeHtmlAttr(module.name)}</div>
-      <div class="meta">
-        <span class="meta-badge ${layerBadgeClass(module.layer)}">${module.layer}</span>
-        <span class="meta-text">Generated: ${generatedAt}</span>
-        <span class="meta-text">Generated by BMS DocGen (GitHub Copilot)</span>
-      </div>
-    </div>
-
-    <div id="doc-body">
-${bodyContent}
-    </div>
-
-    <div id="doc-footer">
-      Generated by BMS DocGen &mdash; ${generatedAt}
+  <main id="content">
+    <div class="content-inner">
+      ${buildSections()}
+      <footer id="footer">
+        Generated by ⚡ BMS DocGen &middot; ${esc(timestamp)} &middot; Powered by GitHub Copilot
+      </footer>
     </div>
   </main>
 
   <script>
-    // Initialize Mermaid
-    mermaid.initialize({
-      startOnLoad: true,
-      theme: 'dark',
-      themeVariables: {
-        background: '#161b22',
-        primaryColor: '#1f4a80',
-        primaryTextColor: '#e6edf3',
-        lineColor: '#58a6ff',
-        edgeLabelBackground: '#1c2128'
-      }
-    });
-
-    // Initialize highlight.js
-    document.addEventListener('DOMContentLoaded', () => {
-      document.querySelectorAll('pre code').forEach(block => {
-        hljs.highlightElement(block);
-      });
-    });
-
-    // Highlight active sidebar link on scroll
-    const sections = document.querySelectorAll('h2[id]');
-    const links = document.querySelectorAll('.sidebar-link');
+    // Sidebar active link tracking
+    const sections = document.querySelectorAll('.doc-section');
+    const links = document.querySelectorAll('#sidebar .nav-link');
 
     const observer = new IntersectionObserver(entries => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          links.forEach(l => l.style.borderLeftColor = '');
-          const active = document.querySelector('.sidebar-link[href="#' + entry.target.id + '"]');
-          if (active) { active.style.borderLeftColor = '#58a6ff'; active.style.color = '#e6edf3'; }
+          links.forEach(l => l.classList.remove('active'));
+          const id = entry.target.id;
+          const link = document.querySelector('#sidebar a[href="#' + id + '"]');
+          if (link) { link.classList.add('active'); }
         }
       });
-    }, { rootMargin: '-10% 0px -80% 0px' });
+    }, { rootMargin: '-20% 0px -70% 0px' });
 
     sections.forEach(s => observer.observe(s));
   </script>
 </body>
 </html>`;
-}
-
-function layerBadgeClass(layer: string): string {
-    const map: Record<string, string> = {
-        Driver: 'badge-driver',
-        Interface: 'badge-interface',
-        Application: 'badge-application',
-        Other: 'badge-other'
-    };
-    return map[layer] ?? 'badge-other';
-}
-
-function escapeHtmlAttr(s: string): string {
-    return s
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
 }
