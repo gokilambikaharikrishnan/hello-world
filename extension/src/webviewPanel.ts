@@ -64,6 +64,11 @@ export class DocGenPanel {
         return DocGenPanel.instance;
     }
 
+    /** Expose the underlying vscode.WebviewPanel for direct html/event access. */
+    public get rawPanel(): vscode.WebviewPanel {
+        return this.panel;
+    }
+
     public onMessage(handler: (msg: Record<string, unknown>) => void): void {
         this.messageHandler = handler;
     }
