@@ -1,176 +1,142 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { DocGenPanel } from './webviewPanel';
-import { scanWorkspaceFolders, ModuleFolder } from './folderScanner';
-import { readModuleFiles } from './fileReader';
-import { resolveIncludes } from './includeResolver';
-import { buildPrompt } from './promptBuilder';
-import { generateDocumentation } from './llmClient';
-import { renderAndSave } from './docRenderer';
+import { getUsername } from './utils/getUsername';
+import { getChangedFolders } from './utils/getChangedFolders';
+import { scanFolders, ensureDocsDir } from './utils/scanFolders';
+import { buildGreetingHTML } from './webview/greeting';
+import { buildSelectorHTML } from './webview/selector';
+import { renderDocShell } from './docRenderer';
+import { LAYER_MAP } from './layerMap';
 
-let outputChannel: vscode.OutputChannel;
+let output: vscode.OutputChannel;
 
 export function activate(context: vscode.ExtensionContext): void {
-    outputChannel = vscode.window.createOutputChannel('BMS DocGen');
-    outputChannel.appendLine('BMS DocGen activated');
+    output = vscode.window.createOutputChannel('BMS DocGen');
+    output.appendLine('BMS DocGen activated');
 
-    async function openDocGenPanel(): Promise<void> {
-        outputChannel.appendLine('Opening DocGen panel');
-        const panel = DocGenPanel.createOrShow(context.extensionUri);
-
-        panel.onMessage((msg) => {
-            const command = msg['command'] as string;
-            if (command === 'generate') {
-                const folders = msg['folders'] as string[];
-                handleGenerate(panel, folders).catch(err => {
-                    outputChannel.appendLine(`Generate error: ${err}`);
-                    panel.postMessage({ type: 'error', text: String(err) });
-                });
-            } else if (command === 'openDoc') {
-                const docPath = msg['path'] as string;
-                vscode.env.openExternal(vscode.Uri.file(docPath)).then(undefined, err => {
-                    outputChannel.appendLine(`Failed to open doc: ${err}`);
-                });
-            }
-        });
-
-        // Scan and send folders to webview
-        const modules = await scanWorkspaceFolders(outputChannel);
-        panel.postMessage({
-            type: 'foldersLoaded',
-            folders: modules.map(m => m.name)
-        });
-    }
-
-    // Manual command to open the panel
+    // Manual command
     const openPanelCmd = vscode.commands.registerCommand('bms-doc-gen.openPanel', () => {
-        openDocGenPanel().catch(err => outputChannel.appendLine(`Error opening panel: ${err}`));
+        launchGreeting(context).catch(err => output.appendLine(`Error: ${err}`));
     });
 
     // URI handler: vscode://bms-doc-gen/trigger
     const uriHandler = vscode.window.registerUriHandler({
         handleUri(uri: vscode.Uri): void {
-            outputChannel.appendLine(`URI handler triggered: ${uri.toString()}`);
+            output.appendLine(`URI triggered: ${uri.toString()}`);
             if (uri.path === '/trigger') {
-                outputChannel.appendLine('IAR post-build trigger received — opening DocGen panel');
-                openDocGenPanel().catch(err => outputChannel.appendLine(`Error opening panel: ${err}`));
+                output.appendLine('IAR post-build trigger — opening greeting');
+                launchGreeting(context).catch(err => output.appendLine(`Error: ${err}`));
             }
         }
     });
 
-    context.subscriptions.push(openPanelCmd, uriHandler, outputChannel);
+    context.subscriptions.push(openPanelCmd, uriHandler, output);
 }
 
-/**
- * Handle a 'generate' message from the webview.
- * For each selected folder: read files → resolve includes → build prompt → call LLM → render HTML.
- */
-async function handleGenerate(panel: DocGenPanel, folderNames: string[]): Promise<void> {
-    outputChannel.appendLine(`[Generate] Starting for ${folderNames.length} module(s): ${folderNames.join(', ')}`);
+// ---------------------------------------------------------------------------
+// Step 1 — Greeting screen
+// ---------------------------------------------------------------------------
 
-    // Rebuild the module list so we have full metadata
-    const allModules = await scanWorkspaceFolders(outputChannel);
-    const moduleMap = new Map<string, ModuleFolder>(allModules.map(m => [m.name, m]));
+async function launchGreeting(context: vscode.ExtensionContext): Promise<void> {
+    const docGenPanel = DocGenPanel.createOrShow(context.extensionUri);
+    const panel = docGenPanel.rawPanel;
 
-    let completedCount = 0;
+    const username = await getUsername();
+    const timestamp = new Date().toLocaleString('en-GB', {
+        year: 'numeric', month: 'short', day: '2-digit',
+        hour: '2-digit', minute: '2-digit'
+    });
 
-    for (const folderName of folderNames) {
-        const module = moduleMap.get(folderName);
-        if (!module) {
-            panel.postMessage({
-                type: 'moduleError',
-                folder: folderName,
-                error: `Module not found in workspace: ${folderName}`
-            });
-            continue;
-        }
+    output.appendLine(`Greeting: Hey ${username} — ${timestamp}`);
+    panel.webview.html = buildGreetingHTML(username, timestamp);
 
-        panel.postMessage({ type: 'log', text: `[${folderName}] Reading source files...`, level: 'info' });
+    // One-time message listener for this screen
+    const sub = panel.webview.onDidReceiveMessage(async (msg: { command: string; value: string }) => {
+        sub.dispose(); // remove this listener before navigating
 
-        try {
-            // Phase 4: Read module files
-            outputChannel.appendLine(`[Generate] Reading files for: ${folderName}`);
-            const moduleFiles = readModuleFiles(module.fullPath, outputChannel);
+        if (msg.command !== 'mode') { return; }
 
-            if (moduleFiles.length === 0) {
-                throw new Error(`No .c or .h files found in ${folderName}`);
+        switch (msg.value) {
+            case 'full':
+                output.appendLine('Mode: Full Stack');
+                await showSelector(panel, []);
+                break;
+
+            case 'changes': {
+                output.appendLine('Mode: My Changes');
+                const changed = await getChangedFolders();
+                output.appendLine(`Changed folders: ${changed.join(', ') || 'none'}`);
+                if (changed.length === 0) {
+                    vscode.window.showInformationMessage(
+                        'BMS DocGen: No git changes detected — showing full module list'
+                    );
+                }
+                await showSelector(panel, changed);
+                break;
             }
 
-            panel.postMessage({
-                type: 'log',
-                text: `[${folderName}] Read ${moduleFiles.length} file(s) — resolving includes...`,
-                level: 'info'
-            });
+            case 'close':
+                output.appendLine('Mode: Not Now — closing panel');
+                panel.dispose();
+                break;
+        }
+    });
+}
 
-            // Phase 5: Resolve includes
-            const resolvedIncludes = resolveIncludes(moduleFiles, outputChannel);
-            panel.postMessage({
-                type: 'log',
-                text: `[${folderName}] Resolved ${resolvedIncludes.length} cross-module file(s)`,
-                level: 'info'
-            });
+// ---------------------------------------------------------------------------
+// Step 2 — Selector screen
+// ---------------------------------------------------------------------------
 
-            // Phase 6: Build prompt
-            const prompt = buildPrompt(module, moduleFiles, resolvedIncludes, outputChannel);
-            panel.postMessage({
-                type: 'log',
-                text: `[${folderName}] Prompt ready (${prompt.totalChars.toLocaleString()} chars) — calling Copilot...`,
-                level: 'info'
-            });
+async function showSelector(
+    panel: vscode.WebviewPanel,
+    preselected: string[]
+): Promise<void> {
+    const groups = scanFolders();
+    output.appendLine(`Selector: ${groups.length} layer group(s), preselected: [${preselected.join(', ')}]`);
 
-            // Phase 7: Generate via LLM
-            let tokenCount = 0;
-            const llmText = await generateDocumentation(
-                prompt,
-                (token) => {
-                    tokenCount++;
-                    // Throttle webview log updates (every 50 tokens)
-                    if (tokenCount % 50 === 0) {
-                        panel.postMessage({
-                            type: 'log',
-                            text: `[${folderName}] Streaming... (${tokenCount * 4}+ chars received)`,
-                            level: 'info'
-                        });
-                    }
-                },
-                outputChannel
+    panel.webview.html = buildSelectorHTML(groups, preselected);
+
+    // One-time message listener for this screen
+    const sub = panel.webview.onDidReceiveMessage(async (msg: { command: string; folders: string[] }) => {
+        if (msg.command !== 'generate') { return; }
+        sub.dispose();
+
+        output.appendLine(`Generate requested: [${msg.folders.join(', ')}]`);
+        await handleGenerate(panel, msg.folders);
+    });
+}
+
+// ---------------------------------------------------------------------------
+// Step 3 — Generate doc shells (Session 3 will add real LLM content)
+// ---------------------------------------------------------------------------
+
+async function handleGenerate(panel: vscode.WebviewPanel, folders: string[]): Promise<void> {
+    const docsDir = ensureDocsDir();
+    output.appendLine(`=== Generate requested for ${folders.length} module(s) ===`);
+
+    for (const folder of folders) {
+        const layer = LAYER_MAP[folder] ?? 'Unknown';
+        const outFile = path.join(docsDir, `${folder}_design.html`);
+
+        output.appendLine(`Rendering shell: ${folder} (${layer}) → ${outFile}`);
+
+        try {
+            renderDocShell(folder, layer, outFile);
+            output.appendLine(`  ✓ Saved: docs/${folder}_design.html`);
+            vscode.window.showInformationMessage(
+                `BMS DocGen: docs/${folder}_design.html created`
             );
-
-            // Phase 8: Render and save
-            const docPath = renderAndSave(module, llmText, outputChannel);
-            const relPath = path.relative(getWorkspaceRoot(), docPath);
-
-            panel.postMessage({
-                type: 'log',
-                text: `[${folderName}] Saved: ${relPath}`,
-                level: 'ok'
-            });
-            panel.postMessage({
-                type: 'moduleDone',
-                folder: folderName,
-                docPath
-            });
-
-            completedCount++;
-
         } catch (err) {
-            const errMsg = String(err);
-            outputChannel.appendLine(`[Generate] Error for ${folderName}: ${errMsg}`);
-            panel.postMessage({
-                type: 'moduleError',
-                folder: folderName,
-                error: errMsg
-            });
+            output.appendLine(`  ✗ Error: ${err}`);
+            vscode.window.showErrorMessage(
+                `BMS DocGen: Failed to create doc for ${folder}: ${err}`
+            );
         }
     }
 
-    panel.postMessage({ type: 'allDone', count: completedCount });
-    outputChannel.appendLine(`[Generate] All done. ${completedCount}/${folderNames.length} succeeded.`);
-}
-
-function getWorkspaceRoot(): string {
-    const folders = vscode.workspace.workspaceFolders;
-    return folders && folders.length > 0 ? folders[0].uri.fsPath : process.cwd();
+    output.appendLine(`=== Done — ${folders.length} shell(s) written to docs/ ===`);
+    output.appendLine('Session 3 will wire this to Copilot for real content.');
 }
 
 export function deactivate(): void {
