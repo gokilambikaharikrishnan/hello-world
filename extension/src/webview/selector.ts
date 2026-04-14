@@ -1,12 +1,93 @@
 import { FolderGroup } from '../types';
 
-/**
- * Builds the module selector screen HTML.
- * Fully self-contained — set directly as panel.webview.html.
- */
+function esc(s: string): string {
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+// ---------------------------------------------------------------------------
+// Server-side render helpers — generate HTML in TypeScript, not in the webview
+// ---------------------------------------------------------------------------
+
+function buildGroupsHtml(groups: FolderGroup[], preselected: Set<string>): string {
+    let html = '';
+    let bswAdded = false;
+    let aswAdded = false;
+
+    for (const g of groups) {
+        if (g.group === 'BSW' && !bswAdded) {
+            bswAdded = true;
+            html += `
+    <div class="arch-divider arch-divider-bsw">
+      <span class="arch-divider-label">BSW</span>
+      <div class="arch-divider-line"></div>
+      <span class="arch-divider-desc">Basic Software</span>
+    </div>`;
+        }
+        if (g.group === 'ASW' && !aswAdded) {
+            aswAdded = true;
+            html += `
+    <div class="arch-divider arch-divider-asw">
+      <span class="arch-divider-label">ASW</span>
+      <div class="arch-divider-line"></div>
+      <span class="arch-divider-desc">Application Software</span>
+    </div>`;
+        }
+
+        const folderCount = g.folders.length;
+        const foldersHtml = g.folders.map(folder => {
+            const checked = preselected.has(folder);
+            return `
+      <div class="folder-row" id="row-${esc(folder)}" data-folder="${esc(folder)}" data-layer="${esc(g.layer)}">
+        <div class="custom-checkbox${checked ? ' checked' : ''}" id="cb-${esc(folder)}">${checked ? '&#10003;' : ''}</div>
+        <span class="folder-name">${esc(folder)}</span>
+        <span class="layer-badge">${esc(g.layer)}</span>
+      </div>`;
+        }).join('');
+
+        html += `
+    <div class="group-wrapper" id="group-${esc(g.layer)}" style="--layer-color:${esc(g.color)}">
+      <div class="group-header" id="hdr-${esc(g.layer)}">
+        <div class="group-header-left">
+          <span class="group-icon">${g.icon}</span>
+          <span class="group-layer-name">${esc(g.layer)}</span>
+          <span class="group-full-name">${esc(g.fullName)}</span>
+        </div>
+        <div class="group-header-right">
+          <span class="folder-count-badge">${folderCount} folder${folderCount === 1 ? '' : 's'}</span>
+          <div class="selection-dot" id="sel-dot-${esc(g.layer)}" style="background:${esc(g.color)}"></div>
+          <button class="btn-all" data-layer="${esc(g.layer)}">All</button>
+          <span class="chevron" id="chevron-${esc(g.layer)}">&#9660;</span>
+        </div>
+      </div>
+      <div class="folder-list" id="folders-${esc(g.layer)}">${foldersHtml}
+      </div>
+    </div>`;
+    }
+
+    return html;
+}
+
+function buildLayerDotsHtml(groups: FolderGroup[]): string {
+    return groups.map(g =>
+        `<div class="layer-dot" id="dot-${esc(g.layer)}" style="background:${esc(g.color)}" title="${esc(g.layer)}"></div>`
+    ).join('');
+}
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
+
 export function buildSelectorHTML(groups: FolderGroup[], preselected: string[]): string {
     const groupsJson = JSON.stringify(groups);
     const preselectedJson = JSON.stringify(preselected);
+    const preselectedSet = new Set(preselected);
+
+    const groupsHtml   = buildGroupsHtml(groups, preselectedSet);
+    const layerDotsHtml = buildLayerDotsHtml(groups);
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -41,29 +122,12 @@ export function buildSelectorHTML(groups: FolderGroup[], preselected: string[]):
       z-index: 50;
     }
 
-    .topbar-brand {
-      font-size: 0.8rem;
-      color: #58a6ff;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-    }
+    .topbar-brand { font-size: 0.8rem; color: #58a6ff; letter-spacing: 0.2em; text-transform: uppercase; }
+    .topbar-title { font-size: 0.95rem; font-weight: 600; color: #e6edf3; }
 
-    .topbar-title {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: #e6edf3;
-    }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
 
-    .topbar-right {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    #counter {
-      font-size: 0.82rem;
-      color: #8b949e;
-    }
+    #counter { font-size: 0.82rem; color: #8b949e; }
 
     #btn-generate {
       font-family: 'JetBrains Mono', monospace;
@@ -76,20 +140,10 @@ export function buildSelectorHTML(groups: FolderGroup[], preselected: string[]):
       color: #484f58;
       border: 1px solid #30363d;
     }
+    #btn-generate.active { background: #238636; color: #fff; border-color: #238636; cursor: pointer; }
+    #btn-generate.active:hover { background: #2ea043; border-color: #2ea043; }
 
-    #btn-generate.active {
-      background: #238636;
-      color: #ffffff;
-      border-color: #238636;
-      cursor: pointer;
-    }
-
-    #btn-generate.active:hover {
-      background: #2ea043;
-      border-color: #2ea043;
-    }
-
-    /* ── SEARCH BAR ── */
+    /* ── SEARCH ── */
     #searchbar {
       position: sticky;
       top: 52px;
@@ -111,16 +165,16 @@ export function buildSelectorHTML(groups: FolderGroup[], preselected: string[]):
       outline: none;
       transition: border-color 150ms;
     }
-
     #search-input::placeholder { color: #484f58; }
     #search-input:focus { border-color: #58a6ff; }
 
-    /* ── GROUP LIST ── */
-    #group-list {
-      padding-top: 52px;
+    /* ── MAIN CONTENT ── */
+    #main {
+      margin-top: 52px;   /* clear fixed topbar */
       padding-bottom: 56px;
     }
 
+    /* ── GROUP ITEMS ── */
     .group-header {
       background: #0d1117;
       padding: 14px 24px;
@@ -131,71 +185,34 @@ export function buildSelectorHTML(groups: FolderGroup[], preselected: string[]):
       border-bottom: 1px solid #21262d;
       user-select: none;
     }
-
     .group-header:hover .chevron { color: #8b949e; }
 
-    .group-header-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
+    .group-header-left { display: flex; align-items: center; gap: 10px; }
     .group-icon { font-size: 1.1rem; }
+    .group-layer-name { color: #e6edf3; font-weight: 600; font-size: 0.95rem; }
+    .group-full-name { color: #8b949e; font-size: 0.78rem; }
 
-    .group-layer-name {
-      color: #e6edf3;
-      font-weight: 600;
-      font-size: 0.95rem;
-    }
-
-    .group-full-name {
-      color: #8b949e;
-      font-size: 0.78rem;
-    }
-
-    .group-header-right {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+    .group-header-right { display: flex; align-items: center; gap: 12px; }
 
     .folder-count-badge {
-      background: #21262d;
-      color: #8b949e;
-      border-radius: 10px;
-      padding: 2px 8px;
-      font-size: 0.72rem;
+      background: #21262d; color: #8b949e;
+      border-radius: 10px; padding: 2px 8px; font-size: 0.72rem;
     }
 
-    .selection-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      opacity: 0;
-      transition: opacity 200ms;
-    }
+    .selection-dot { width: 8px; height: 8px; border-radius: 50%; opacity: 0; transition: opacity 200ms; }
 
     .btn-all {
-      background: transparent;
-      border: none;
-      color: #58a6ff;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.78rem;
-      cursor: pointer;
-      padding: 2px 6px;
+      background: transparent; border: none; color: #58a6ff;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
+      cursor: pointer; padding: 2px 6px;
     }
     .btn-all:hover { text-decoration: underline; }
 
-    .chevron {
-      color: #484f58;
-      font-size: 0.7rem;
-      transition: transform 200ms;
-    }
+    .chevron { color: #484f58; font-size: 0.7rem; transition: transform 200ms; }
     .chevron.collapsed { transform: rotate(-90deg); }
 
-    /* ── FOLDER LIST ── */
     .folder-list {
-      border-left: 3px solid var(--layer-color);
+      border-left: 3px solid var(--layer-color, #58a6ff);
       margin-left: 32px;
       background: #161b22;
     }
@@ -209,127 +226,54 @@ export function buildSelectorHTML(groups: FolderGroup[], preselected: string[]):
       cursor: pointer;
       transition: background 150ms;
     }
-
     .folder-row:last-child { border-bottom: none; }
     .folder-row:hover { background: #1f2937; }
 
     .custom-checkbox {
-      width: 16px;
-      height: 16px;
-      border-radius: 4px;
-      border: 2px solid #30363d;
-      background: transparent;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      transition: background 150ms, border-color 150ms;
-      font-size: 11px;
-      color: white;
+      width: 16px; height: 16px; border-radius: 4px;
+      border: 2px solid #30363d; background: transparent;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: background 150ms, border-color 150ms;
+      font-size: 11px; color: white;
     }
+    .custom-checkbox.checked { background: var(--layer-color, #58a6ff); border-color: var(--layer-color, #58a6ff); }
 
-    .custom-checkbox.checked {
-      background: var(--layer-color);
-      border-color: var(--layer-color);
-    }
-
-    .folder-name {
-      color: #e6edf3;
-      font-size: 0.88rem;
-      flex: 1;
-    }
+    .folder-name { color: #e6edf3; font-size: 0.88rem; flex: 1; }
 
     .layer-badge {
-      font-size: 0.68rem;
-      padding: 1px 7px;
-      border-radius: 8px;
-      border: 1px solid var(--layer-color);
-      color: var(--layer-color);
-      opacity: 0.7;
+      font-size: 0.68rem; padding: 1px 7px; border-radius: 8px;
+      border: 1px solid var(--layer-color, #58a6ff);
+      color: var(--layer-color, #58a6ff); opacity: 0.7;
     }
 
-    .no-results {
-      display: none;
-      padding: 24px;
-      text-align: center;
-      color: #484f58;
-      font-size: 0.88rem;
-    }
-
-    /* ── BOTTOM BAR ── */
-    #bottombar {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      height: 40px;
-      background: #161b22;
-      border-top: 1px solid #30363d;
-      padding: 0 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    #bottom-summary {
-      font-size: 0.8rem;
-      color: #8b949e;
-    }
-
-    #layer-dots {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .layer-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      opacity: 0;
-      transition: opacity 200ms;
-      cursor: default;
-    }
+    .no-results { display: none; padding: 24px; text-align: center; color: #484f58; font-size: 0.88rem; }
 
     /* ── BSW / ASW DIVIDERS ── */
     .arch-divider {
       padding: 8px 24px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      display: flex; align-items: center; gap: 10px;
       background: #0d1117;
     }
-
     .arch-divider-label {
-      font-size: 0.68rem;
-      font-weight: 600;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      padding: 2px 10px;
-      border-radius: 4px;
-      white-space: nowrap;
+      font-size: 0.68rem; font-weight: 600; letter-spacing: 0.18em;
+      text-transform: uppercase; padding: 2px 10px; border-radius: 4px; white-space: nowrap;
     }
+    .arch-divider-bsw .arch-divider-label { color: #8b949e; border: 1px solid #30363d; background: #161b22; }
+    .arch-divider-asw .arch-divider-label { color: #1f6feb; border: 1px solid #1f6feb; background: rgba(31,111,235,0.08); }
+    .arch-divider-line { flex: 1; height: 1px; background: #21262d; }
+    .arch-divider-desc { font-size: 0.7rem; color: #484f58; }
 
-    .arch-divider-bsw .arch-divider-label {
-      color: #8b949e;
-      border: 1px solid #30363d;
-      background: #161b22;
+    /* ── BOTTOM BAR ── */
+    #bottombar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0; height: 40px;
+      background: #161b22; border-top: 1px solid #30363d;
+      padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
     }
-
-    .arch-divider-asw .arch-divider-label {
-      color: #1f6feb;
-      border: 1px solid #1f6feb;
-      background: rgba(31,111,235,0.08);
-    }
-
-    .arch-divider-line {
-      flex: 1;
-      height: 1px;
-      background: #21262d;
-    }
-
-    .arch-divider-desc {
-      font-size: 0.7rem;
-      color: #484f58;
-    }
+    #bottom-summary { font-size: 0.8rem; color: #8b949e; }
+    #layer-dots { display: flex; align-items: center; gap: 6px; }
+    .layer-dot { width: 8px; height: 8px; border-radius: 50%; opacity: 0; transition: opacity 200ms; cursor: default; }
 
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: #0d1117; }
@@ -338,273 +282,148 @@ export function buildSelectorHTML(groups: FolderGroup[], preselected: string[]):
 </head>
 <body>
 
-  <!-- Top bar -->
   <div id="topbar">
-    <div class="topbar-brand">⚡ BMS DocGen</div>
+    <div class="topbar-brand">&#9889; BMS DocGen</div>
     <div class="topbar-title">Select Modules</div>
     <div class="topbar-right">
       <span id="counter">0 selected</span>
-      <button id="btn-generate">Generate Docs →</button>
+      <button id="btn-generate">Generate Docs &#8594;</button>
     </div>
   </div>
 
-  <!-- Search -->
-  <div id="searchbar">
-    <input id="search-input" type="text" placeholder="Search modules..." autocomplete="off" />
+  <div id="main">
+    <div id="searchbar">
+      <input id="search-input" type="text" placeholder="Search modules..." autocomplete="off" />
+    </div>
+
+    <div id="group-list">${groupsHtml}
+      <div class="no-results" id="no-results">No modules match your search.</div>
+    </div>
   </div>
 
-  <!-- Group list -->
-  <div id="group-list"></div>
-
-  <div class="no-results" id="no-results">No modules match your search.</div>
-
-  <!-- Bottom bar -->
   <div id="bottombar">
     <span id="bottom-summary">0 folders selected across 0 layers</span>
-    <div id="layer-dots"></div>
+    <div id="layer-dots">${layerDotsHtml}</div>
   </div>
 
   <script>
     const vscode = acquireVsCodeApi();
-
     const GROUPS = ${groupsJson};
-    const PRESELECTED = ${preselectedJson};
-
-    const selected = new Set(PRESELECTED);
+    const selected = new Set(${preselectedJson});
     const collapsed = new Set();
 
-    // ── Build DOM ──────────────────────────────────────────────
-
-    function buildUI() {
-      const list = document.getElementById('group-list');
-      list.innerHTML = '';
-
-      const layerDots = document.getElementById('layer-dots');
-      layerDots.innerHTML = '';
-
-      let bswHeaderAdded = false;
-      let aswHeaderAdded = false;
-
-      GROUPS.forEach(group => {
-        // Insert BSW section header before first BSW layer
-        if (group.group === 'BSW' && !bswHeaderAdded) {
-          bswHeaderAdded = true;
-          const d = document.createElement('div');
-          d.className = 'arch-divider arch-divider-bsw';
-          d.innerHTML =
-            '<span class="arch-divider-label">BSW</span>' +
-            '<div class="arch-divider-line"></div>' +
-            '<span class="arch-divider-desc">Basic Software</span>';
-          list.appendChild(d);
-        }
-        // Insert ASW section header before ASW layer
-        if (group.group === 'ASW' && !aswHeaderAdded) {
-          aswHeaderAdded = true;
-          const d = document.createElement('div');
-          d.className = 'arch-divider arch-divider-asw';
-          d.innerHTML =
-            '<span class="arch-divider-label">ASW</span>' +
-            '<div class="arch-divider-line"></div>' +
-            '<span class="arch-divider-desc">Application Software</span>';
-          list.appendChild(d);
-        }
-        // Layer dot in bottom bar
-        const dot = document.createElement('div');
-        dot.className = 'layer-dot';
-        dot.id = 'dot-' + group.layer;
-        dot.style.background = group.color;
-        dot.title = group.layer;
-        layerDots.appendChild(dot);
-
-        // Group wrapper
-        const wrapper = document.createElement('div');
-        wrapper.className = 'group-wrapper';
-        wrapper.id = 'group-' + group.layer;
-        wrapper.style.setProperty('--layer-color', group.color);
-
-        // Group header
-        const header = document.createElement('div');
-        header.className = 'group-header';
-        header.innerHTML =
-          '<div class="group-header-left">' +
-            '<span class="group-icon">' + group.icon + '</span>' +
-            '<span class="group-layer-name">' + esc(group.layer) + '</span>' +
-            '<span class="group-full-name">' + esc(group.fullName) + '</span>' +
-          '</div>' +
-          '<div class="group-header-right">' +
-            '<span class="folder-count-badge">' + group.folders.length + ' folder' + (group.folders.length === 1 ? '' : 's') + '</span>' +
-            '<div class="selection-dot" id="sel-dot-' + group.layer + '" style="background:' + group.color + '"></div>' +
-            '<button class="btn-all" onclick="event.stopPropagation(); selectAll(\'' + group.layer + '\')">All</button>' +
-            '<span class="chevron" id="chevron-' + group.layer + '">▼</span>' +
-          '</div>';
-
-        header.addEventListener('click', () => toggleCollapse(group.layer));
-        wrapper.appendChild(header);
-
-        // Folder list
-        const folderList = document.createElement('div');
-        folderList.className = 'folder-list';
-        folderList.id = 'folders-' + group.layer;
-
-        group.folders.forEach(folder => {
-          const row = document.createElement('div');
-          row.className = 'folder-row';
-          row.id = 'row-' + folder;
-          row.dataset.folder = folder;
-          row.dataset.layer = group.layer;
-
-          const isChecked = selected.has(folder);
-          row.innerHTML =
-            '<div class="custom-checkbox' + (isChecked ? ' checked' : '') + '" id="cb-' + folder + '">' +
-              (isChecked ? '✓' : '') +
-            '</div>' +
-            '<span class="folder-name">' + esc(folder) + '</span>' +
-            '<span class="layer-badge">' + esc(group.layer) + '</span>';
-
-          row.addEventListener('click', () => toggleFolder(folder, group.color, group.layer));
-          folderList.appendChild(row);
-        });
-
-        wrapper.appendChild(folderList);
-        list.appendChild(wrapper);
-      });
-
-      updateCounter();
-    }
-
-    // ── State management ───────────────────────────────────────
-
+    // ── Checkbox toggle ────────────────────────────────────────
     function toggleFolder(folderName, color, layer) {
-      if (selected.has(folderName)) {
-        selected.delete(folderName);
-      } else {
-        selected.add(folderName);
-      }
+      if (selected.has(folderName)) { selected.delete(folderName); }
+      else { selected.add(folderName); }
       const cb = document.getElementById('cb-' + folderName);
       if (cb) {
-        cb.className = 'custom-checkbox' + (selected.has(folderName) ? ' checked' : '');
-        cb.textContent = selected.has(folderName) ? '✓' : '';
+        const on = selected.has(folderName);
+        cb.className = 'custom-checkbox' + (on ? ' checked' : '');
+        cb.textContent = on ? '\\u2713' : '';
       }
       updateCounter();
       updateGroupDot(layer);
     }
 
     function selectAll(layer) {
-      const group = GROUPS.find(g => g.layer === layer);
-      if (!group) { return; }
-      group.folders.forEach(folder => {
-        selected.add(folder);
-        const cb = document.getElementById('cb-' + folder);
-        if (cb) { cb.className = 'custom-checkbox checked'; cb.textContent = '✓'; }
+      const g = GROUPS.find(x => x.layer === layer);
+      if (!g) { return; }
+      g.folders.forEach(f => {
+        selected.add(f);
+        const cb = document.getElementById('cb-' + f);
+        if (cb) { cb.className = 'custom-checkbox checked'; cb.textContent = '\\u2713'; }
       });
       updateCounter();
       updateGroupDot(layer);
     }
 
+    // ── Collapse ───────────────────────────────────────────────
     function toggleCollapse(layer) {
-      const folderList = document.getElementById('folders-' + layer);
-      const chevron = document.getElementById('chevron-' + layer);
-      if (!folderList || !chevron) { return; }
+      const fl = document.getElementById('folders-' + layer);
+      const ch = document.getElementById('chevron-' + layer);
+      if (!fl || !ch) { return; }
       if (collapsed.has(layer)) {
-        collapsed.delete(layer);
-        folderList.style.display = '';
-        chevron.classList.remove('collapsed');
+        collapsed.delete(layer); fl.style.display = ''; ch.classList.remove('collapsed');
       } else {
-        collapsed.add(layer);
-        folderList.style.display = 'none';
-        chevron.classList.add('collapsed');
+        collapsed.add(layer); fl.style.display = 'none'; ch.classList.add('collapsed');
       }
+    }
+
+    // ── Counter ────────────────────────────────────────────────
+    function updateCounter() {
+      const n = selected.size;
+      document.getElementById('counter').textContent = n + ' selected';
+      const btn = document.getElementById('btn-generate');
+      btn.classList.toggle('active', n > 0);
+      const layersN = GROUPS.filter(g => g.folders.some(f => selected.has(f))).length;
+      document.getElementById('bottom-summary').textContent =
+        n + ' folder' + (n === 1 ? '' : 's') + ' selected across ' +
+        layersN + ' layer' + (layersN === 1 ? '' : 's');
+      GROUPS.forEach(g => {
+        const dot = document.getElementById('dot-' + g.layer);
+        if (dot) { dot.style.opacity = g.folders.some(f => selected.has(f)) ? '1' : '0'; }
+      });
     }
 
     function updateGroupDot(layer) {
-      const group = GROUPS.find(g => g.layer === layer);
-      if (!group) { return; }
-      const anySelected = group.folders.some(f => selected.has(f));
+      const g = GROUPS.find(x => x.layer === layer);
+      if (!g) { return; }
       const dot = document.getElementById('sel-dot-' + layer);
-      if (dot) { dot.style.opacity = anySelected ? '1' : '0'; }
+      if (dot) { dot.style.opacity = g.folders.some(f => selected.has(f)) ? '1' : '0'; }
     }
 
-    function updateCounter() {
-      const count = selected.size;
-      document.getElementById('counter').textContent = count + ' selected';
-
-      const btn = document.getElementById('btn-generate');
-      if (count > 0) {
-        btn.classList.add('active');
-      } else {
-        btn.classList.remove('active');
-      }
-
-      // Bottom bar: count layers with at least one selection
-      const layersWithSelection = GROUPS.filter(g =>
-        g.folders.some(f => selected.has(f))
-      );
-      document.getElementById('bottom-summary').textContent =
-        count + ' folder' + (count === 1 ? '' : 's') +
-        ' selected across ' + layersWithSelection.length + ' layer' +
-        (layersWithSelection.length === 1 ? '' : 's');
-
-      // Bottom dots
-      GROUPS.forEach(g => {
-        const dot = document.getElementById('dot-' + g.layer);
-        if (dot) {
-          const has = g.folders.some(f => selected.has(f));
-          dot.style.opacity = has ? '1' : '0';
-        }
-      });
-    }
-
-    // ── Search ─────────────────────────────────────────────────
-
-    document.getElementById('search-input').addEventListener('input', function() {
-      filterFolders(this.value.trim().toLowerCase());
+    // ── Wire up click events ───────────────────────────────────
+    document.querySelectorAll('.folder-row').forEach(row => {
+      const folder = row.dataset.folder;
+      const layer  = row.dataset.layer;
+      const g = GROUPS.find(x => x.layer === layer);
+      const color = g ? g.color : '#58a6ff';
+      row.addEventListener('click', () => toggleFolder(folder, color, layer));
     });
 
-    function filterFolders(query) {
-      let anyVisible = false;
+    document.querySelectorAll('.group-header').forEach(hdr => {
+      const layer = hdr.closest('.group-wrapper').id.replace('group-', '');
+      hdr.addEventListener('click', () => toggleCollapse(layer));
+    });
 
-      GROUPS.forEach(group => {
-        const wrapper = document.getElementById('group-' + group.layer);
-        if (!wrapper) { return; }
-        let groupHasMatch = false;
-
-        group.folders.forEach(folder => {
-          const row = document.getElementById('row-' + folder);
-          if (!row) { return; }
-          const match = !query ||
-            folder.toLowerCase().includes(query) ||
-            group.layer.toLowerCase().includes(query) ||
-            group.fullName.toLowerCase().includes(query);
-          row.style.display = match ? '' : 'none';
-          if (match) { groupHasMatch = true; }
-        });
-
-        wrapper.style.display = groupHasMatch ? '' : 'none';
-        if (groupHasMatch) { anyVisible = true; }
+    document.querySelectorAll('.btn-all').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        selectAll(btn.dataset.layer);
       });
+    });
 
+    // ── Search ─────────────────────────────────────────────────
+    document.getElementById('search-input').addEventListener('input', function() {
+      const q = this.value.trim().toLowerCase();
+      let anyVisible = false;
+      GROUPS.forEach(g => {
+        const wrapper = document.getElementById('group-' + g.layer);
+        if (!wrapper) { return; }
+        let groupMatch = false;
+        g.folders.forEach(f => {
+          const row = document.getElementById('row-' + f);
+          if (!row) { return; }
+          const match = !q || f.toLowerCase().includes(q) ||
+            g.layer.toLowerCase().includes(q) || g.fullName.toLowerCase().includes(q);
+          row.style.display = match ? '' : 'none';
+          if (match) { groupMatch = true; }
+        });
+        wrapper.style.display = groupMatch ? '' : 'none';
+        if (groupMatch) { anyVisible = true; }
+      });
       document.getElementById('no-results').style.display = anyVisible ? 'none' : 'block';
-    }
+    });
 
     // ── Generate ───────────────────────────────────────────────
-
     document.getElementById('btn-generate').addEventListener('click', function() {
       if (selected.size === 0) { return; }
       vscode.postMessage({ command: 'generate', folders: [...selected] });
     });
 
-    // ── Escape helper ──────────────────────────────────────────
-
-    function esc(s) {
-      return String(s)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-    }
-
-    // ── Init ───────────────────────────────────────────────────
-    buildUI();
+    // ── Init counter for any pre-selections ───────────────────
+    if (selected.size > 0) { updateCounter(); }
   </script>
 </body>
 </html>`;
