@@ -30,6 +30,15 @@ export const LAYER_ORDER = [
     'MCAL', 'CDD', 'ESAL', 'SRVLayer', 'ASW'
 ];
 
+/** Relative path from workspace root where each layer's modules live */
+export const LAYER_PATH: Record<string, string> = {
+    'MCAL':     'BSW/MCAL',
+    'CDD':      'BSW/CDD',
+    'ESAL':     'BSW/ESAL',
+    'SRVLayer': 'BSW/SRVLayer',
+    'ASW':      'ASW'
+};
+
 /** Which top-level group each layer belongs to */
 export const LAYER_GROUP: Record<string, 'BSW' | 'ASW'> = {
     'MCAL':     'BSW',

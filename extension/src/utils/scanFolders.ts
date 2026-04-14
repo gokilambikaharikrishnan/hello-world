@@ -1,69 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { LAYER_MAP, LAYER_ORDER, LAYER_META, LAYER_GROUP } from '../layerMap';
+import { LAYER_META, LAYER_ORDER, LAYER_GROUP, LAYER_PATH } from '../layerMap';
 import { FolderGroup } from '../types';
-
-const IGNORE = new Set([
-    '.git', 'node_modules', 'out', 'docs', 'trigger',
-    'extension', 'images', 'media', '.vscode',
-    'bms-doc-gen', '.github'
-]);
-
-export function scanFolders(): FolderGroup[] {
-    const ws = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-    if (!ws) { return []; }
-
-    let entries: fs.Dirent[];
-    try {
-        entries = fs.readdirSync(ws, { withFileTypes: true });
-    } catch {
-        return [];
-    }
-
-    const folders = entries
-        .filter(e => e.isDirectory() && !IGNORE.has(e.name) && !e.name.startsWith('.'))
-        .map(e => e.name);
-
-    // Group by layer
-    const grouped: Record<string, string[]> = {};
-    for (const folder of folders) {
-        const layer = LAYER_MAP[folder] ?? 'Unknown';
-        if (!grouped[layer]) { grouped[layer] = []; }
-        grouped[layer].push(folder);
-    }
-
-    // Build result in defined layer order
-    const result: FolderGroup[] = [];
-    for (const layer of LAYER_ORDER) {
-        if (!grouped[layer]) { continue; }
-        const meta = LAYER_META[layer];
-        result.push({
-            layer,
-            fullName: meta.fullName,
-            description: meta.description,
-            color: meta.color,
-            icon: meta.icon,
-            group: LAYER_GROUP[layer] ?? 'BSW',
-            folders: grouped[layer].sort()
-        });
-    }
-
-    // Append unknown at end if any
-    if (grouped['Unknown']?.length) {
-        result.push({
-            layer: 'Unknown',
-            fullName: 'Unrecognised Folders',
-            description: 'Not mapped to any layer',
-            color: '#6e7681',
-            icon: '📁',
-            group: 'Unknown',
-            folders: grouped['Unknown'].sort()
-        });
-    }
-
-    return result;
-}
 
 /** Returns the workspace root path */
 export function getWorkspaceRoot(): string {
@@ -78,4 +17,63 @@ export function ensureDocsDir(): string {
         fs.mkdirSync(docsPath, { recursive: true });
     }
     return docsPath;
+}
+
+/**
+ * Scan the BSW/ASW nested folder structure and return layer-grouped module lists.
+ * Expected layout:
+ *   BSW/MCAL/<module>/
+ *   BSW/CDD/<module>/
+ *   BSW/ESAL/<module>/
+ *   BSW/SRVLayer/<module>/
+ *   ASW/<module>/
+ */
+export function scanFolders(): FolderGroup[] {
+    const ws = getWorkspaceRoot();
+    const result: FolderGroup[] = [];
+
+    for (const layer of LAYER_ORDER) {
+        const layerRelPath = LAYER_PATH[layer];
+        if (!layerRelPath) { continue; }
+
+        const layerDir = path.join(ws, layerRelPath);
+        if (!fs.existsSync(layerDir)) { continue; }
+
+        let entries: fs.Dirent[];
+        try {
+            entries = fs.readdirSync(layerDir, { withFileTypes: true });
+        } catch {
+            continue;
+        }
+
+        const folders = entries
+            .filter(e => e.isDirectory() && !e.name.startsWith('.'))
+            .map(e => e.name)
+            .sort();
+
+        if (folders.length === 0) { continue; }
+
+        const meta = LAYER_META[layer];
+        result.push({
+            layer,
+            fullName: meta.fullName,
+            description: meta.description,
+            color: meta.color,
+            icon: meta.icon,
+            group: LAYER_GROUP[layer] ?? 'BSW',
+            folders
+        });
+    }
+
+    return result;
+}
+
+/**
+ * Returns the absolute filesystem path for a named module given its layer.
+ * e.g. getModuleFsPath('ADC', 'MCAL') → '<ws>/BSW/MCAL/ADC'
+ */
+export function getModuleFsPath(moduleName: string, layer: string): string {
+    const ws = getWorkspaceRoot();
+    const layerRelPath = LAYER_PATH[layer] ?? layer;
+    return path.join(ws, layerRelPath, moduleName);
 }
