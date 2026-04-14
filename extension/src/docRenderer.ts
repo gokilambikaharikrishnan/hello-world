@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { LAYER_META, LAYER_ORDER } from './layerMap';
+import { LAYER_META, LAYER_ORDER, LAYER_GROUP } from './layerMap';
 
 const SECTIONS = [
     { num: 1, title: 'Module Overview' },
@@ -64,18 +64,27 @@ function buildSidebarLinks(): string {
 }
 
 function buildStackWidget(activeLayer: string): string {
-    const layerColor = getLayerColor(activeLayer);
     const layerBg = getLayerBg(activeLayer);
     let html = `
       <div class="stack-widget">
         <div class="stack-title">Stack Position</div>
         <div class="stack-item stack-hw">Hardware</div>
-        <div class="stack-arrow">↓</div>`;
+        <div class="stack-arrow">↓</div>
+        <div class="stack-group-label" style="color:#484f58;font-size:0.62rem;letter-spacing:0.12em;padding:1px 8px;text-transform:uppercase;">BSW</div>`;
 
+    let prevGroup = 'BSW';
     for (let i = 0; i < LAYER_ORDER.length; i++) {
         const layer = LAYER_ORDER[i];
+        const group = LAYER_GROUP[layer] ?? 'BSW';
         const isActive = layer === activeLayer;
         const color = getLayerColor(layer);
+
+        // Insert ASW divider label when group changes
+        if (group !== prevGroup) {
+            html += `\n        <div class="stack-group-label" style="color:#1f6feb;font-size:0.62rem;letter-spacing:0.12em;padding:1px 8px;text-transform:uppercase;margin-top:2px;">ASW</div>`;
+            prevGroup = group;
+        }
+
         if (isActive) {
             html += `\n        <div class="stack-item stack-active" style="color:${color};border-left:2px solid ${color};background:${layerBg}">${esc(layer)}</div>`;
         } else {

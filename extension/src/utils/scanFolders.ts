@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { LAYER_MAP, LAYER_ORDER, LAYER_META } from '../layerMap';
+import { LAYER_MAP, LAYER_ORDER, LAYER_META, LAYER_GROUP } from '../layerMap';
 import { FolderGroup } from '../types';
 
 const IGNORE = new Set([
@@ -44,6 +44,7 @@ export function scanFolders(): FolderGroup[] {
             description: meta.description,
             color: meta.color,
             icon: meta.icon,
+            group: LAYER_GROUP[layer] ?? 'BSW',
             folders: grouped[layer].sort()
         });
     }
@@ -56,6 +57,7 @@ export function scanFolders(): FolderGroup[] {
             description: 'Not mapped to any layer',
             color: '#6e7681',
             icon: '📁',
+            group: 'Unknown',
             folders: grouped['Unknown'].sort()
         });
     }

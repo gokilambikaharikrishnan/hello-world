@@ -289,6 +289,48 @@ export function buildSelectorHTML(groups: FolderGroup[], preselected: string[]):
       cursor: default;
     }
 
+    /* ── BSW / ASW DIVIDERS ── */
+    .arch-divider {
+      padding: 8px 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #0d1117;
+    }
+
+    .arch-divider-label {
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 2px 10px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    .arch-divider-bsw .arch-divider-label {
+      color: #8b949e;
+      border: 1px solid #30363d;
+      background: #161b22;
+    }
+
+    .arch-divider-asw .arch-divider-label {
+      color: #1f6feb;
+      border: 1px solid #1f6feb;
+      background: rgba(31,111,235,0.08);
+    }
+
+    .arch-divider-line {
+      flex: 1;
+      height: 1px;
+      background: #21262d;
+    }
+
+    .arch-divider-desc {
+      font-size: 0.7rem;
+      color: #484f58;
+    }
+
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: #0d1117; }
     ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
@@ -340,7 +382,32 @@ export function buildSelectorHTML(groups: FolderGroup[], preselected: string[]):
       const layerDots = document.getElementById('layer-dots');
       layerDots.innerHTML = '';
 
+      let bswHeaderAdded = false;
+      let aswHeaderAdded = false;
+
       GROUPS.forEach(group => {
+        // Insert BSW section header before first BSW layer
+        if (group.group === 'BSW' && !bswHeaderAdded) {
+          bswHeaderAdded = true;
+          const d = document.createElement('div');
+          d.className = 'arch-divider arch-divider-bsw';
+          d.innerHTML =
+            '<span class="arch-divider-label">BSW</span>' +
+            '<div class="arch-divider-line"></div>' +
+            '<span class="arch-divider-desc">Basic Software</span>';
+          list.appendChild(d);
+        }
+        // Insert ASW section header before ASW layer
+        if (group.group === 'ASW' && !aswHeaderAdded) {
+          aswHeaderAdded = true;
+          const d = document.createElement('div');
+          d.className = 'arch-divider arch-divider-asw';
+          d.innerHTML =
+            '<span class="arch-divider-label">ASW</span>' +
+            '<div class="arch-divider-line"></div>' +
+            '<span class="arch-divider-desc">Application Software</span>';
+          list.appendChild(d);
+        }
         // Layer dot in bottom bar
         const dot = document.createElement('div');
         dot.className = 'layer-dot';

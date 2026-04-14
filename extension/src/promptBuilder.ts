@@ -12,9 +12,16 @@ const SYSTEM_CONTEXT = `You are a senior embedded firmware engineer documenting 
 Project context:
 - Target MCU: STM32, bare metal drivers written in C
 - Battery pack: 14S LFP prismatic cells, 314Ah capacity, max 75A, max 50V
-- AFE communicates over CAN bus
-- Architecture: Driver layer → IF (interface) layer → Application layer
+- AFE communicates over SPI; pack data reported over CAN bus
 - Standards in scope: IEC 62133, IEC 61960, UL 1973, UN 38.3
+
+Software architecture (bottom to top):
+- BSW — Basic Software (everything below the application layer):
+    - MCAL  (Microcontroller Abstraction Layer): bare metal STM32 peripheral drivers
+    - CDD   (Complex Device Drivers): external IC drivers e.g. AFE, SerialFlash
+    - ESAL  (ECU Software Abstraction Layer): interface/abstraction between BSW and ASW
+    - SRVLayer (Service Layer): cross-cutting services — NVM, Scheduler, Diagnostics, CAN NM
+- ASW — Application Software: BMS logic, SOC estimation, protection, state machines
 
 Your documentation will be read by a new firmware engineer joining the team.
 Be specific, be technical, never hallucinate. Only document what you can see in the code.
@@ -102,8 +109,12 @@ export function buildPrompt(
           ).join('\n\n')
         : '(none resolved)';
 
+    // Determine BSW/ASW group for the module layer
+    const bswLayers = ['MCAL', 'CDD', 'ESAL', 'SRVLayer'];
+    const groupLabel = bswLayers.includes(module.layer) ? 'BSW' : 'ASW';
+
     const dynamicSection = `MODULE BEING DOCUMENTED: ${module.name}
-LAYER: ${module.layer} — one of: Driver / Interface (IF) / Application
+LAYER: ${module.layer} (${groupLabel}) — BSW sub-layers: MCAL / CDD / ESAL / SRVLayer | ASW
 
 FILES IN THIS MODULE:
 ${moduleFilesBlock}
