@@ -1188,11 +1188,12 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
       <div class="hero-chapter">Chapter 01 / 10</div>
       <h1 class="hero-title">The Case for Li-ion</h1>
       <p class="hero-subtitle">
-        From Alessandro Volta's zinc-silver stack in 1800 to lithium iron phosphate cells
-        powering critical infrastructure today — two centuries of electrochemical engineering
-        converge on a single, inescapable conclusion: LFP is the right chemistry for UPS
-        and home energy storage. But chemistry alone is not enough. Physics demands a guardian.
-        That guardian is the BMS.
+        From Alessandro Volta's first battery in 1800 to lithium iron phosphate (LFP) cells
+        powering critical backup systems today — over two centuries of battery research
+        points to one clear answer: LFP is the right chemistry for UPS (uninterruptible
+        power supplies) and home energy storage. But a good chemistry alone is not enough.
+        The physics of lithium cells demands a dedicated guardian circuit.
+        That guardian is the BMS — Battery Management System.
       </p>
       <div class="hero-meta">
         <div class="hero-meta-item">
@@ -1252,11 +1253,11 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
       <div class="section-number">Section 1.1</div>
       <h2 class="section-title">Battery Technology Evolution</h2>
       <p class="section-intro">
-        Every energy storage technology ever deployed reflects the physics available to engineers
-        at the time, the materials they could manufacture, and the use cases they were solving for.
-        The story of batteries is not a smooth curve of progress — it is a series of revolutions,
-        each triggered by a fundamental electrochemical insight, each eventually constrained by an
-        equally fundamental electrochemical limit.
+        Every battery technology ever built reflects what engineers knew at the time —
+        the materials they had available, and the problem they were trying to solve.
+        Battery history is not a smooth upward curve. It is a series of breakthroughs,
+        each unlocked by a new chemical insight, and each eventually hitting a hard wall
+        set by the laws of chemistry and physics.
       </p>
 
       <!-- Key numbers above the fold -->
@@ -1284,9 +1285,10 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
       </div>
 
       <p>
-        To understand why LFP is the right choice for a UPS or home ESS today, we need to understand
-        why everything that came before it was <em>not</em> the right choice. This section is not a
-        history lesson for its own sake — every paragraph here builds toward a requirement.
+        To understand why LFP is the right choice for a UPS or home energy storage system (ESS)
+        today, we first need to understand why every earlier technology was <em>not</em> the right
+        choice. This is not history for its own sake — every technology failure you read here
+        directly motivates a design requirement later in this book.
       </p>
 
       <!-- TIMELINE -->
@@ -1299,21 +1301,24 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
           <div class="timeline-body">
             <p>
               In March 1800, Alessandro Volta stacked alternating discs of zinc and silver (or copper),
-              separated by brine-soaked cardboard, and connected wires to the ends. Electricity flowed —
-              continuously, for the first time in history. The world changed in a single experiment.
+              separated by brine-soaked cardboard, and connected wires to the two ends. For the first time
+              in history, a steady flow of electricity came out of a device — not a one-time spark, but a
+              continuous current. The world changed in a single experiment.
             </p>
             <p>
-              The electrochemistry was brutally simple: zinc oxidizes at the anode, protons reduce at the
-              cathode, and the brine electrolyte carries ions between them. Volta's cell produced roughly
-              <strong>0.76 V</strong> per stage. Sixty stages reached ~45 V — enough to cause significant
-              electric shock, which Volta proved on himself.
+              The chemistry was straightforward: zinc dissolves (oxidizes) at the negative end (anode),
+              and the reaction at the positive end (cathode) drives electrons through the wire. The salty
+              brine in between carries charged atoms (ions) to keep the reaction going. Each stage of
+              Volta's pile produced roughly <strong>0.76 V</strong>. Stack sixty stages and you reach ~45 V
+              — enough to give a painful electric shock, which Volta famously tested on himself.
             </p>
             <p>
-              The limitations were immediate and severe. The cells were <em>primary</em> (not
-              rechargeable). The zinc dissolved as it discharged. The brine dried out. Internal resistance
-              climbed as electrolyte depleted. Within hours, a pile might deliver only a fraction of its
-              initial current. There was no energy density metric to measure — the concept didn't exist —
-              but a rough calculation gives <strong>~7 Wh/kg</strong>, worse than modern lead-acid.
+              The problems were immediate. The cells were <em>primary</em> — meaning single-use,
+              not rechargeable. As the battery drained, the zinc electrode slowly dissolved and the brine
+              dried out. Internal resistance (a measure of how much the battery fights its own current)
+              climbed as the electrolyte was used up. Within hours, the output could drop to a fraction of
+              its starting value. There was no formal "energy density" concept yet, but a rough calculation
+              gives <strong>~7 Wh/kg</strong> — worse than even modern lead-acid batteries.
             </p>
           </div>
           <div class="timeline-stats">
@@ -1335,13 +1340,16 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
           <div class="timeline-body">
             <p>
               Gaston Planté's lead-acid cell was the world's first <em>rechargeable</em> battery, and it
-              remains in production 165 years later. There is a profound irony in this: lead-acid persists
-              not because it is good, but because it is <strong>predictable</strong>, <strong>cheap</strong>,
-              and deeply entrenched in global supply chains and engineering culture.
+              is still being manufactured 165 years later. That is a remarkable fact, but the reason is not
+              flattering: lead-acid survives because it is <strong>predictable</strong>, <strong>cheap</strong>,
+              and deeply embedded in global supply chains and engineering culture — not because it is the
+              best option.
             </p>
             <p>
-              The chemistry involves two electrodes — lead dioxide (PbO₂) at the positive plate,
-              metallic lead (Pb) at the negative — immersed in sulfuric acid electrolyte. On discharge:
+              The battery uses two electrodes (the metal parts that react) sitting in sulfuric acid
+              (the electrolyte — the liquid that carries charged atoms between them). The positive plate
+              is lead dioxide (PbO₂) and the negative plate is metallic lead (Pb). When the battery
+              discharges:
             </p>
             <div class="formula-block">
               <span class="formula-label">Discharge Reaction (overall)</span>
@@ -1349,21 +1357,23 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
               <span class="formula-caption">Both electrodes convert to lead sulfate; sulfuric acid is consumed. On charge, the reaction reverses.</span>
             </div>
             <p>
-              The cell voltage is <strong>~2.0 V</strong> — derived from the reduction potential difference
-              between PbO₂/PbSO₄ (+1.69 V vs SHE) and Pb/PbSO₄ (−0.36 V vs SHE). This 2V per cell means
-              six cells in series produce the 12V nominal used in automotive and UPS applications globally.
+              The voltage produced is <strong>~2.0 V</strong> per cell. This comes from the difference in
+              chemical potential between the two electrode materials. Six lead-acid cells in series
+              give the 12 V nominal voltage used in cars and UPS systems worldwide.
             </p>
             <p>
               <strong>Why lead-acid still powers most UPS systems in 2024:</strong> A 48V lead-acid rack
-              battery can be purchased for $180. Engineers know exactly how it will behave after 20 years
-              of data. Float charging at 2.27 V/cell is well understood. Replacement is a commodity
-              operation. The entire UPS industry — from charger topologies to battery management —
-              was designed around lead-acid. Switching has a total cost of ownership argument, not a
-              point-in-time cost argument.
+              battery costs around $180. Engineers have 20+ years of data on exactly how it behaves.
+              "Float charging" (trickle-charging it at a constant 2.27 V/cell to keep it topped up)
+              is simple and well understood. Replacing a dead battery is a routine, catalog-order job.
+              The entire UPS industry — from charger designs to battery management firmware — was
+              built around lead-acid. Switching to a new chemistry means redesigning the whole system,
+              not just swapping the battery. That is a big cost and effort, even if the new chemistry
+              is technically better.
             </p>
             <p>
-              <strong>Why lead-acid fails for modern ESS:</strong> The problems are fundamental, not
-              engineering limitations that can be designed around.
+              <strong>Why lead-acid fails for modern ESS:</strong> The problems are rooted in chemistry,
+              not things that clever engineering can work around.
             </p>
             <ul class="content-list cross">
               <li><strong>Sulfation:</strong> If discharged below ~50% SoC and left there, PbSO₄ crystals
