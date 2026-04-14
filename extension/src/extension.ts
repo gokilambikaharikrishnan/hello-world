@@ -13,6 +13,7 @@ let output: vscode.OutputChannel;
 
 export function activate(context: vscode.ExtensionContext): void {
     output = vscode.window.createOutputChannel('BMS DocGen');
+    output.show(true); // reveal Output panel and switch to BMS DocGen channel
     output.appendLine('BMS DocGen activated');
 
     // Manual command
