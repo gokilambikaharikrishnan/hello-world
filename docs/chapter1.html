@@ -1253,11 +1253,11 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
       <div class="section-number">Section 1.1</div>
       <h2 class="section-title">Battery Technology Evolution</h2>
       <p class="section-intro">
-        Every battery technology ever built reflects what engineers knew at the time —
-        the materials they had available, and the problem they were trying to solve.
-        Battery history is not a smooth upward curve. It is a series of breakthroughs,
-        each unlocked by a new chemical insight, and each eventually hitting a hard wall
-        set by the laws of chemistry and physics.
+        Every battery ever built was shaped by what engineers knew at the time — the
+        materials available and the specific problem they were trying to solve.
+        Battery history is not one smooth improvement. It is a sequence of breakthroughs,
+        each one enabled by a new chemistry insight, and each one eventually hitting a
+        firm limit set by the laws of physics.
       </p>
 
       <!-- Key numbers above the fold -->
@@ -1285,10 +1285,12 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
       </div>
 
       <p>
-        To understand why LFP is the right choice for a UPS or home energy storage system (ESS)
-        today, we first need to understand why every earlier technology was <em>not</em> the right
-        choice. This is not history for its own sake — every technology failure you read here
-        directly motivates a design requirement later in this book.
+        To understand why LFP is the right choice for a UPS (uninterruptible power supply — a
+        device that keeps equipment running when the grid fails) or a home ESS (energy storage
+        system — a battery that stores solar energy or grid power for later use) today, we first
+        need to understand why every earlier technology was <em>not</em> the right choice. This
+        is not history for its own sake — every failure described here leads directly to a
+        design requirement later in this book.
       </p>
 
       <!-- TIMELINE -->
@@ -1301,24 +1303,25 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
           <div class="timeline-body">
             <p>
               In March 1800, Alessandro Volta stacked alternating discs of zinc and silver (or copper),
-              separated by brine-soaked cardboard, and connected wires to the two ends. For the first time
-              in history, a steady flow of electricity came out of a device — not a one-time spark, but a
-              continuous current. The world changed in a single experiment.
+              separated by brine-soaked cardboard, and connected wires to both ends. For the first time in
+              history, a device produced a steady, continuous flow of electricity — not a one-time spark.
+              The world changed in a single experiment.
             </p>
             <p>
-              The chemistry was straightforward: zinc dissolves (oxidizes) at the negative end (anode),
-              and the reaction at the positive end (cathode) drives electrons through the wire. The salty
-              brine in between carries charged atoms (ions) to keep the reaction going. Each stage of
-              Volta's pile produced roughly <strong>0.76 V</strong>. Stack sixty stages and you reach ~45 V
-              — enough to give a painful electric shock, which Volta famously tested on himself.
+              The chemistry is simple: zinc at the negative end (called the anode) dissolves in a chemical
+              reaction that pushes electrons through the wire. The positive end (called the cathode) absorbs
+              those electrons in a separate reaction. The salty brine in between acts as the highway for
+              charged atoms (called ions) to travel between the two ends, completing the circuit. Each
+              layer of Volta's pile produced roughly <strong>0.76 V</strong>. Stack sixty layers and you
+              reach ~45 V — enough for a painful electric shock, which Volta tested on himself.
             </p>
             <p>
-              The problems were immediate. The cells were <em>primary</em> — meaning single-use,
-              not rechargeable. As the battery drained, the zinc electrode slowly dissolved and the brine
-              dried out. Internal resistance (a measure of how much the battery fights its own current)
-              climbed as the electrolyte was used up. Within hours, the output could drop to a fraction of
-              its starting value. There was no formal "energy density" concept yet, but a rough calculation
-              gives <strong>~7 Wh/kg</strong> — worse than even modern lead-acid batteries.
+              The problems appeared immediately. The cells were <em>primary</em> — meaning single-use.
+              Once the zinc was consumed, the battery was dead. As it drained, the zinc dissolved away and
+              the brine dried out. Internal resistance (how much the battery fights its own current, like
+              friction inside a pipe) climbed as the electrolyte was used up. Within hours, output could
+              fall to a fraction of its starting value. Energy density (how much energy per kilogram of
+              battery) was roughly <strong>~7 Wh/kg</strong> — worse than even modern lead-acid batteries.
             </p>
           </div>
           <div class="timeline-stats">
@@ -1340,16 +1343,15 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
           <div class="timeline-body">
             <p>
               Gaston Planté's lead-acid cell was the world's first <em>rechargeable</em> battery, and it
-              is still being manufactured 165 years later. That is a remarkable fact, but the reason is not
-              flattering: lead-acid survives because it is <strong>predictable</strong>, <strong>cheap</strong>,
-              and deeply embedded in global supply chains and engineering culture — not because it is the
-              best option.
+              is still manufactured 165 years later. That is remarkable — but not for flattering reasons:
+              lead-acid survives because it is <strong>predictable</strong>, <strong>cheap</strong>, and
+              deeply embedded in global supply chains and engineering habits. Not because it is the best option.
             </p>
             <p>
-              The battery uses two electrodes (the metal parts that react) sitting in sulfuric acid
-              (the electrolyte — the liquid that carries charged atoms between them). The positive plate
-              is lead dioxide (PbO₂) and the negative plate is metallic lead (Pb). When the battery
-              discharges:
+              The battery has two electrodes (metal plates that react chemically) sitting in sulfuric acid,
+              which acts as the electrolyte — the liquid that ferries charged atoms between the plates.
+              The positive plate is lead dioxide (PbO₂) and the negative plate is plain lead (Pb). When the
+              battery discharges (delivers power):
             </p>
             <div class="formula-block">
               <span class="formula-label">Discharge Reaction (overall)</span>
@@ -1357,41 +1359,43 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
               <span class="formula-caption">Both electrodes convert to lead sulfate; sulfuric acid is consumed. On charge, the reaction reverses.</span>
             </div>
             <p>
-              The voltage produced is <strong>~2.0 V</strong> per cell. This comes from the difference in
-              chemical potential between the two electrode materials. Six lead-acid cells in series
-              give the 12 V nominal voltage used in cars and UPS systems worldwide.
+              Each cell produces <strong>~2.0 V</strong>. This voltage comes from the chemical difference
+              between the two electrode materials — think of it as chemical pressure pushing electrons
+              through the wire. Six cells in series give the 12 V used in cars and UPS systems worldwide.
             </p>
             <p>
               <strong>Why lead-acid still powers most UPS systems in 2024:</strong> A 48V lead-acid rack
               battery costs around $180. Engineers have 20+ years of data on exactly how it behaves.
-              "Float charging" (trickle-charging it at a constant 2.27 V/cell to keep it topped up)
-              is simple and well understood. Replacing a dead battery is a routine, catalog-order job.
-              The entire UPS industry — from charger designs to battery management firmware — was
-              built around lead-acid. Switching to a new chemistry means redesigning the whole system,
-              not just swapping the battery. That is a big cost and effort, even if the new chemistry
-              is technically better.
+              "Float charging" — trickle-charging it at a steady 2.27 V/cell to keep it topped up — is
+              simple and well understood. Replacing a dead battery is a routine job. The entire UPS
+              industry — charger designs, management firmware, replacement contracts — was built around
+              lead-acid. Switching to a different chemistry means redesigning the whole system, not just
+              swapping the battery. That is a big cost and effort, even when the new chemistry is
+              technically better in every measurable way.
             </p>
             <p>
-              <strong>Why lead-acid fails for modern ESS:</strong> The problems are rooted in chemistry,
-              not things that clever engineering can work around.
+              <strong>Why lead-acid fails for modern ESS:</strong> Its problems come from chemistry itself —
+              not from bad engineering. No amount of clever design can fix them.
             </p>
             <ul class="content-list cross">
-              <li><strong>Sulfation:</strong> If discharged below ~50% SoC and left there, PbSO₄ crystals
-              recrystallize into a hard form that cannot be re-dissolved on charge.
-              A lead-acid battery discharged to 20% and left for two weeks is likely permanently damaged.</li>
-              <li><strong>Depth of discharge (DoD) tyranny:</strong> Lead-acid delivers its rated cycle life
-              only at ≤30% DoD. At 80% DoD — what home ESS requires — cycle life drops from ~500 to ~150 cycles.
-              You are paying for energy storage you cannot use.</li>
-              <li><strong>Temperature sensitivity:</strong> At 0°C, available capacity is ~70% of nominal.
-              At −20°C, ~40%. At +40°C, cycle life halves. Lead-acid in a hot garage in summer is
+              <li><strong>Sulfation:</strong> If the battery is discharged below ~50% SoC (state of charge —
+              how full it is) and left sitting there, the lead sulfate crystals on the plates harden into a
+              form that cannot be dissolved again on recharge. A lead-acid battery drained to 20% and left
+              for two weeks is likely permanently damaged.</li>
+              <li><strong>Depth of discharge (DoD) tyranny:</strong> Lead-acid only achieves its rated
+              cycle life at ≤30% DoD. At 80% DoD — the level a home ESS actually uses every day —
+              cycle life collapses from ~500 to ~150 cycles. You are paying for storage capacity you
+              are not allowed to use.</li>
+              <li><strong>Temperature sensitivity:</strong> At 0°C, you only get ~70% of the rated capacity.
+              At −20°C, ~40%. At +40°C, cycle life halves. A lead-acid battery in a hot garage is slowly
               destroying itself.</li>
-              <li><strong>Gassing and water loss:</strong> Near full charge, water electrolysis produces
-              hydrogen gas — a genuine explosion hazard in confined spaces. Sealed VRLA cells recombine
-              most gas but require pressure valves and still outgas during overcharge.</li>
+              <li><strong>Gassing and water loss:</strong> Near full charge, the battery splits water into
+              hydrogen gas — a genuine explosion hazard in enclosed spaces. Sealed VRLA cells recombine
+              most of that gas, but they still need pressure valves and still leak gas if overcharged.</li>
               <li><strong>Specific energy:</strong> 30–50 Wh/kg. A 10 kWh lead-acid ESS weighs 200–330 kg.
               The equivalent LFP system weighs 60–80 kg.</li>
-              <li><strong>Toxicity:</strong> Lead is a neurotoxin with no safe exposure threshold.
-              Battery manufacturing and disposal create significant environmental liability.</li>
+              <li><strong>Toxicity:</strong> Lead is a neurotoxin with no safe exposure level.
+              Manufacturing and disposing of lead batteries creates serious environmental liability.</li>
             </ul>
           </div>
           <div class="timeline-stats">
@@ -1415,14 +1419,14 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
           <div class="timeline-heading">Nickel-Cadmium — High Performance, Catastrophic Cost</div>
           <div class="timeline-body">
             <p>
-              NiCd was the first battery chemistry to deliver <strong>true deep-cycle capability</strong>.
-              You could discharge it to zero, charge it again, and get full capacity back — repeatedly.
-              This was revolutionary. Lead-acid engineers had spent decades warning users never to go below
-              50% SoC. NiCd simply didn't care.
+              NiCd was the first battery to deliver <strong>true deep-cycle capability</strong>. You could
+              drain it all the way to zero, charge it again, and get full capacity back — and do that
+              hundreds of times. That was revolutionary. Lead-acid engineers had spent decades warning users
+              never to go below 50% charge. NiCd simply didn't care.
             </p>
             <p>
-              The chemistry uses a cadmium anode, a nickel oxyhydroxide cathode, and potassium hydroxide
-              (KOH) electrolyte. Cell voltage is ~1.2V nominal. The reaction:
+              The chemistry uses a cadmium (Cd) negative electrode, a nickel oxyhydroxide positive electrode,
+              and potassium hydroxide (KOH) as the electrolyte. Cell voltage is ~1.2V nominal. The reaction:
             </p>
             <div class="formula-block">
               <span class="formula-label">NiCd Discharge</span>
@@ -1430,24 +1434,24 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
               <span class="formula-caption">Cadmium is oxidized; nickel oxyhydroxide is reduced to nickel hydroxide.</span>
             </div>
             <p>
-              NiCd became the battery of choice for power tools, emergency lighting, aircraft systems, and
-              industrial applications through the 1970s–90s. At its peak, it powered portable electronics
-              before lithium-ion existed.
+              NiCd became the go-to battery for power tools, emergency lighting, aircraft, and industrial
+              equipment through the 1970s–90s. Before lithium-ion existed, it powered most portable electronics.
             </p>
             <p>
-              <strong>The memory effect:</strong> NiCd's most infamous property. If regularly discharged to
-              only 50% and recharged, the battery "learns" to deliver only 50% capacity in subsequent
-              cycles. The mechanism involves cadmium hydroxide crystal growth in partially discharged
-              regions — essentially, the chemistry physically adapts to what it is asked to do. For a
-              UPS application where the battery might float-charge for months and then deliver a brief
-              emergency discharge, memory effect could silently reduce emergency capacity to unacceptable levels.
+              <strong>The memory effect:</strong> NiCd's most notorious problem. If you regularly only
+              discharge it to 50% and then recharge, the battery "learns" to deliver just 50% capacity in
+              future cycles. The mechanism is cadmium hydroxide crystals growing in the partially discharged
+              regions — the chemistry literally adapts to what it is asked to do. For a UPS that sits at
+              full charge for months and then must deliver emergency power, the memory effect could quietly
+              cut available capacity to dangerous levels — invisible until the grid fails.
             </p>
             <p>
-              <strong>Cadmium toxicity ended NiCd's civilian future.</strong> Cadmium is classified as a
-              Group 1 human carcinogen by IARC. It accumulates in the food chain, concentrates in kidneys,
-              and has a biological half-life of 10–30 years in humans. The EU's Battery Directive 2006/66/EC
-              banned cadmium in portable batteries with narrow exceptions. Industrial NiCd survives in some
-              aircraft and rail applications, but its civilian use is effectively over.
+              <strong>Cadmium toxicity ended NiCd's civilian future.</strong> Cadmium is a Group 1 human
+              carcinogen (confirmed cancer-causing agent). It builds up in the food chain, concentrates in
+              human kidneys, and has a biological half-life of 10–30 years — meaning once it enters your
+              body, it stays for decades. The EU's Battery Directive 2006/66/EC banned cadmium in portable
+              batteries. Industrial NiCd survives in some aircraft and rail uses, but for consumers it
+              is effectively over.
             </p>
           </div>
           <div class="timeline-stats">
@@ -1471,22 +1475,22 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
           <div class="timeline-heading">Nickel-Metal Hydride — The Bridge Chemistry</div>
           <div class="timeline-body">
             <p>
-              NiMH replaced cadmium with a metal hydride alloy — typically AB₅ or AB₂ type alloys
-              (lanthanum-nickel, for example) that could reversibly absorb and release hydrogen into their
-              crystal lattice. Same 1.2V nominal voltage. Same KOH electrolyte. Dramatically lower toxicity.
-              No meaningful memory effect.
+              NiMH replaced toxic cadmium with a metal hydride alloy — materials like lanthanum-nickel
+              that can absorb and release hydrogen atoms inside their crystal structure, like a sponge for
+              hydrogen. Same 1.2V cell voltage. Same KOH electrolyte. Much lower toxicity. No meaningful
+              memory effect.
             </p>
             <p>
               NiMH briefly defined portable electronics — every cell phone, laptop, and camcorder from
-              roughly 1990–2003 used NiMH. Then lithium-ion arrived and NiMH was relegated to hybrid
+              roughly 1990–2003 ran on NiMH. Then lithium-ion arrived and NiMH was pushed to hybrid
               vehicles (Toyota Prius, Honda Insight) and AA/AAA rechargeable cells.
             </p>
             <p>
-              <strong>For ESS, NiMH fails on two metrics:</strong> energy density plateaus at
-              60–120 Wh/kg (still only 2× lead-acid), and self-discharge is severe — 20–30% per month
-              at room temperature. A UPS system might sit on standby for months; NiMH cells would
-              partially discharge themselves during that time, requiring a trickle charge that heats the
-              cells and shortens calendar life.
+              <strong>For ESS, NiMH fails on two counts:</strong> Energy density tops out at
+              60–120 Wh/kg (only about 2× lead-acid), and self-discharge is severe — 20–30% per month
+              at room temperature. A UPS sits on standby for months. NiMH would quietly drain itself
+              during that time, requiring constant trickle-charging that heats the cells and shortens
+              their life.
             </p>
           </div>
           <div class="timeline-stats">
@@ -1509,17 +1513,17 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
           <div class="timeline-heading">Lithium-Ion — The Revolution</div>
           <div class="timeline-body">
             <p>
-              Sony's commercialization of the lithium-ion cell in 1991 — based on foundational work by
+              Sony's commercialization of the lithium-ion cell in 1991 — built on foundational research by
               John Goodenough (LiCoO₂ cathode, 1980), Rachid Yazami (graphite anode, 1980), and
-              Akira Yoshino (full cell assembly concept, 1985) — did not just create a better battery.
-              It created a different category.
+              Akira Yoshino (full cell design, 1985) — did not just create a better battery.
+              It created an entirely different category.
             </p>
             <p>
-              The core insight was <strong>intercalation</strong>: instead of consuming electrode
-              materials in the discharge reaction (like lead-acid), lithium ions simply move between
-              the anode and cathode crystal structures. The electrodes are preserved. The cycling
-              mechanism is fundamentally more reversible. This is why Li-ion achieves 500–2000+ cycles
-              while lead-acid manages 150–500.
+              The key insight was <strong>intercalation</strong>: instead of consuming the electrode
+              materials during discharge (like lead-acid does, turning lead into lead sulfate), lithium
+              ions simply slide in and out of the crystal structure of both electrodes — the way a key
+              slides into a lock. The electrodes are not consumed. They are just hosts. This is why
+              Li-ion achieves 500–2000+ charge cycles while lead-acid manages 150–500.
             </p>
             <div class="formula-block">
               <span class="formula-label">Li-ion intercalation (LCO example)</span>
@@ -1528,19 +1532,20 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
               <span class="formula-caption">Li⁺ ions shuttle between graphite anode and oxide cathode. No material is consumed — only hosted.</span>
             </div>
             <p>
-              The energy density improvement was immediate and enormous. First-generation Sony cells
-              delivered <strong>~120 Wh/kg</strong> — 3× better than NiMH, 4× better than lead-acid.
-              Modern NMC cells reach 250–300 Wh/kg. LFP cells reach 120–180 Wh/kg (slightly lower,
-              for important safety reasons we will explore in Section 1.2).
+              The energy density jump was immediate and enormous. First-generation Sony cells delivered
+              <strong>~120 Wh/kg</strong> — 3× better than NiMH, 4× better than lead-acid. Modern NMC
+              (nickel manganese cobalt) cells reach 250–300 Wh/kg. LFP cells reach 120–180 Wh/kg —
+              slightly lower, but for important safety reasons we will explore in Section 1.2.
             </p>
             <p>
               The cell voltage jumped to <strong>3.6–3.7 V</strong> nominal — three times higher than
-              NiCd/NiMH. This means fewer cells in series to achieve a given pack voltage, reducing
-              complexity. A 48V pack needs only 16 LFP cells (3.2V nominal each) versus 40 NiMH cells.
+              NiCd/NiMH. Higher voltage per cell means fewer cells in series to reach the same total
+              pack voltage, making the whole system simpler. A 48V pack needs only 16 LFP cells
+              (3.2V each) versus 40 NiMH cells.
             </p>
             <p>
-              Three researchers who built the foundation of Li-ion — Goodenough, Whittingham, and
-              Yoshino — received the Nobel Prize in Chemistry in 2019. The Nobel Committee called it
+              Three researchers behind the Li-ion breakthrough — Goodenough, Whittingham, and Yoshino —
+              received the Nobel Prize in Chemistry in 2019. The Nobel Committee called it
               "a weightless world of clean energy."
             </p>
           </div>
@@ -1565,21 +1570,22 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
           <div class="timeline-heading">LFP (LiFePO₄) — Safety Through Chemistry</div>
           <div class="timeline-body">
             <p>
-              John Goodenough — who had already given the world LiCoO₂ in 1980 — published a paper in
-              1997 introducing lithium iron phosphate (LiFePO₄) as a cathode material. The world
-              initially underestimated it. The energy density was lower than NMC. The voltage was 3.2V
-              instead of 3.6V. It seemed like a step backward.
+              John Goodenough — who had already invented the LiCoO₂ cathode in 1980 — published a paper in
+              1997 proposing lithium iron phosphate (LiFePO₄, or LFP) as a cathode material. The world
+              underestimated it at first. The energy density was lower than NMC. The voltage was 3.2V
+              instead of 3.6V. It looked like a step backward.
             </p>
             <p>
-              Fifteen years later, as thermal runaway incidents accumulated in NMC/NCA applications —
-              laptops, smartphones, aircraft — the battery community realized Goodenough's second great
-              contribution was not a compromise. It was a different design philosophy: <em>safety
-              through crystal structure stability</em>.
+              Fifteen years later, as batteries in laptops, smartphones, and aircraft caught fire from
+              thermal runaway — a dangerous chain reaction where heat generates more heat until the cell
+              burns — the battery community realized Goodenough's second great contribution was not a
+              compromise. It was a fundamentally different design philosophy: <em>safety built into the
+              crystal structure itself</em>.
             </p>
             <p>
               By 2015, LFP had become the dominant chemistry for stationary energy storage in China.
-              By 2023, it powered the majority of utility-scale grid storage globally and was being
-              adopted by Tesla, BYD, and others for standard-range EVs. The market had caught up to
+              By 2023, it powered most utility-scale grid storage globally and was being adopted by Tesla,
+              BYD, and others for standard-range electric vehicles. The market had finally caught up to
               the physics.
             </p>
           </div>
@@ -1605,20 +1611,20 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
           <div class="callout-title">Why Lead-Acid Still Powers Most UPS Systems in 2024</div>
           <p>
             Despite being outperformed on every technical metric, lead-acid dominates UPS installations
-            for three reasons: (1) <strong>Total cost of ownership inertia</strong> — existing charger
-            topologies, battery management firmware, and replacement contracts are all optimized for
-            lead-acid. Switching requires a full system redesign, not just a battery swap. (2) <strong>Float
-            charging simplicity</strong> — lead-acid can be float-charged indefinitely at 2.27 V/cell
-            without damage, which is trivial to implement. LFP requires more sophisticated charge management
-            (though modern BMS units handle this automatically). (3) <strong>Procurement familiarity</strong>
-            — facilities managers buy lead-acid replacement batteries from the same catalog they have used
-            for 20 years. LFP requires vendor qualification, new specifications, and updated maintenance
-            procedures.
+            for three practical reasons. (1) <strong>System inertia</strong> — existing charger designs,
+            battery management firmware, and replacement contracts are all built around lead-acid.
+            Switching to LFP means redesigning the whole system, not just swapping the battery. (2)
+            <strong>Simple float charging</strong> — lead-acid can be held at 2.27 V/cell indefinitely
+            without damage. LFP needs more careful charge management, though modern BMS units handle
+            this automatically. (3) <strong>Familiar procurement</strong> — facilities managers order
+            lead-acid batteries from the same catalog they have used for 20 years. LFP requires new
+            vendor qualification, new specs, and updated maintenance procedures.
           </p>
           <p>
-            The transition is accelerating. IEC 62040-1 (UPS standard) now explicitly addresses
-            lithium-ion batteries. Major UPS manufacturers offer LFP options. The question is no longer
-            "can LFP work in UPS" — it demonstrably can and does. The question is rate of adoption.
+            The transition is happening. IEC 62040-1 (the main UPS safety standard) now explicitly
+            addresses lithium-ion batteries. Major UPS manufacturers offer LFP options. The question
+            is no longer "can LFP work in UPS?" — it demonstrably can and does. The only question
+            is how fast the industry will switch over.
           </p>
         </div>
       </div>
@@ -1632,32 +1638,37 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
       <div class="section-number">Section 1.2</div>
       <h2 class="section-title">Why LFP Specifically for UPS &amp; Home ESS</h2>
       <p class="section-intro">
-        Not all lithium-ion chemistries are equal. NMC, NCA, LCO, LFP, LTO — each represents a
-        different trade-off in the cathode material that determines energy density, power capability,
-        thermal stability, cycle life, cost, and safety characteristics. For UPS and home ESS,
-        the trade-off analysis converges decisively on LFP. This section explains why, from the
-        atomic scale up.
+        Not all lithium-ion batteries are the same. NMC, NCA, LCO, LFP, LTO — these abbreviations
+        refer to different cathode materials (the positive electrode), and each one makes a different
+        trade-off between energy density, power output, thermal stability, cycle life, cost, and safety.
+        For UPS and home ESS, when you weigh all those trade-offs together, LFP wins decisively.
+        This section explains why — starting at the level of atoms.
       </p>
 
       <!-- Olivine Structure -->
       <div class="subsection" id="olivine">
         <div class="subsection-title">The Olivine Crystal Structure</div>
         <p>
-          The properties of LFP begin in its crystal structure. Lithium iron phosphate adopts an
-          <strong>olivine structure</strong> — the same crystal family as the mineral olivine (Mg,Fe)₂SiO₄
-          that makes up most of the Earth's upper mantle. In LFP, the structure consists of:
+          LFP's special properties come from its crystal structure. Lithium iron phosphate forms an
+          <strong>olivine structure</strong> — the same crystal family as the mineral olivine found in
+          the Earth's upper mantle. Think of it as a rigid three-dimensional cage. Inside that cage,
+          the structure consists of:
         </p>
         <ul class="content-list">
-          <li><strong>Iron(II) octahedra (FeO₆)</strong> forming corner-sharing chains along the b-axis</li>
-          <li><strong>Phosphate tetrahedra (PO₄³⁻)</strong> providing the structural framework</li>
-          <li><strong>Lithium ions</strong> occupying channels (M1 sites) that run parallel to the b-axis</li>
+          <li><strong>Iron(II) octahedra (FeO₆)</strong> — iron atoms surrounded by six oxygen atoms,
+          linked in chains along the b-axis of the crystal</li>
+          <li><strong>Phosphate tetrahedra (PO₄³⁻)</strong> — phosphorus atoms bonded to four oxygen
+          atoms, forming the rigid structural backbone</li>
+          <li><strong>Lithium ions</strong> — sitting in channels (M1 sites) that run parallel to the
+          b-axis, free to slide in and out during charge and discharge</li>
         </ul>
         <p>
-          The PO₄³⁻ polyanion group is the key to everything. The strong covalent P–O bond (bond
-          energy ~544 kJ/mol) is much stronger than the ionic Fe–O bond in competing oxide cathodes
-          like NMC (LiNi₀.₈Mn₀.₁Co₀.₁O₂) or NCA. When you heat LFP, the PO₄ tetrahedra hold their
-          shape. The oxygen atoms are <strong>covalently locked in place</strong>. They cannot be
-          released, even under extreme abuse conditions.
+          The phosphate group (PO₄³⁻) is the key to everything. The bond between phosphorus and oxygen
+          (the P–O bond) has an energy of ~544 kJ/mol — think of that as a measure of how hard you have
+          to pull to break it. That is much stronger than the metal-oxygen bonds in competing cathode
+          materials like NMC or NCA. When you heat LFP, the PO₄ tetrahedra hold their shape. The oxygen
+          atoms are <strong>locked in place by covalent bonds</strong> (shared electrons, the strongest
+          type of chemical bond). They cannot escape, even under extreme abuse.
         </p>
         <div class="crystal-diagram">
           <!-- Olivine structure SVG -->
@@ -1718,8 +1729,8 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
           </svg>
           <p style="font-size:0.82rem; color:var(--text-muted); margin-top:0.75rem;">
             Simplified olivine structure showing Fe octahedra (orange), PO₄ tetrahedra (blue),
-            O atoms (red), and Li⁺ diffusion channels (green). The strong P–O covalent bonds
-            lock oxygen in place — the foundation of LFP thermal safety.
+            O atoms (red), and Li⁺ ion channels (green). The strong P–O covalent bonds keep
+            oxygen locked in place at all times — this is the foundation of LFP's thermal safety advantage.
           </p>
         </div>
       </div><!-- end olivine subsection -->
@@ -1733,36 +1744,37 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
           <div class="callout-body">
             <div class="callout-title">The Thermal Runaway Mechanism in NMC/NCA</div>
             <p>
-              Thermal runaway in oxide-cathode lithium-ion cells (NMC, NCA, LCO) is an
-              <strong>exothermic cascade</strong> driven by oxygen release from the cathode material.
-              Understanding why it happens — and why LFP is immune — requires the thermodynamics.
+              Thermal runaway in oxide-cathode lithium-ion cells (NMC, NCA, LCO) is a
+              <strong>self-accelerating heat cascade</strong> — each chemical reaction generates heat that
+              triggers the next, hotter reaction. The whole process is driven by oxygen escaping from the
+              cathode. Understanding why it happens — and why LFP cannot do this — requires looking at
+              the thermodynamics (the heat budgets of chemical reactions).
             </p>
           </div>
         </div>
 
         <p><strong>Step 1: SEI Decomposition (80–120°C)</strong></p>
         <p>
-          The <strong>Solid Electrolyte Interphase (SEI)</strong> is a passivation layer that forms
-          on the graphite anode surface during the first charge cycle. It is essential — without it,
-          the electrolyte would continuously react with the lithiated graphite. But the SEI is
-          thermally unstable above ~80°C. When cell temperature rises past 80°C, the SEI begins to
-          decompose exothermically, releasing heat that raises the temperature further — the first
-          positive feedback loop. The reaction generates gases (CO₂, hydrocarbons) that increase
-          internal pressure.
+          The <strong>SEI (Solid Electrolyte Interphase)</strong> is a thin protective film that forms on
+          the surface of the graphite anode (negative electrode) during the very first charge cycle. It is
+          essential — without it, the electrolyte would keep reacting with the anode indefinitely. Think
+          of it as a coating that keeps the anode stable. But the SEI is heat-sensitive: above ~80°C it
+          begins to break down, and the breakdown itself generates more heat — a feedback loop. It also
+          produces gases (CO₂ and hydrocarbons) that build up internal pressure inside the sealed cell.
         </p>
 
         <p><strong>Step 2: Electrolyte Oxidation (120–150°C)</strong></p>
         <p>
-          At 120–150°C, the electrolyte (typically LiPF₆ in EC/DMC/EMC carbonate solvents) begins
-          reacting with the now-exposed lithiated graphite anode. These reactions are highly exothermic.
-          The liquid electrolyte can vaporize and contribute combustible gas to the growing internal
-          pressure.
+          At 120–150°C, the electrolyte (the liquid inside — typically LiPF₆ salt dissolved in organic
+          carbonate solvents) starts reacting with the now-exposed lithiated graphite anode. These
+          reactions release a lot of heat and can vaporize the electrolyte, adding flammable gas to the
+          growing internal pressure.
         </p>
 
         <p><strong>Step 3: Cathode Oxygen Release — The Point of No Return (NMC/NCA: 180–200°C)</strong></p>
         <p>
-          In NMC and NCA, the cathode material releases oxygen above approximately 180–200°C.
-          This is the critical, catastrophic step.
+          In NMC and NCA cells, the cathode material releases oxygen gas above roughly 180–200°C.
+          This is the step that makes the situation catastrophic and irreversible.
         </p>
         <div class="formula-block">
           <span class="formula-label">NMC Cathode Decomposition</span>
@@ -1770,12 +1782,13 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
           <span class="formula-caption">Oxygen gas is released from the crystal structure. ΔH ≈ −80 to −120 kJ/mol O₂ — strongly exothermic.</span>
         </div>
         <p>
-          The released oxygen immediately reacts with the flammable electrolyte in an oxidation
-          reaction that is <strong>orders of magnitude more energetic</strong> than the SEI or
-          electrolyte reactions alone. Temperatures spike to 600–900°C within milliseconds.
-          The cell ruptures. Burning electrolyte and electrode materials are ejected. If adjacent
-          cells are heated above their thermal runaway threshold, they trigger —
-          <strong>cell-to-cell propagation</strong>. A pack fire becomes self-sustaining.
+          The released oxygen immediately reacts with the flammable electrolyte — and this is
+          <strong>orders of magnitude more energetic</strong> than anything the SEI or electrolyte
+          reactions alone could generate. Temperatures spike to 600–900°C within milliseconds.
+          The cell ruptures. Burning electrolyte and electrode fragments are ejected. If those hot
+          fragments heat the neighbouring cells above their own threshold, those cells trigger too —
+          <strong>cell-to-cell propagation</strong>. At that point, the fire is self-sustaining
+          and cannot be stopped by cutting power.
         </p>
 
         <div class="callout callout-physics">
@@ -1783,36 +1796,40 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
           <div class="callout-body">
             <div class="callout-title">Why LFP Cannot Release Oxygen — The P–O Bond Argument</div>
             <p>
-              In LFP, oxygen is bound within the phosphate polyanion (PO₄³⁻). The P–O bond has a
-              bond dissociation energy of approximately <strong>544 kJ/mol</strong>. Compare this to
-              the Co–O or Ni–O bond in oxide cathodes: approximately <strong>368 kJ/mol</strong> and
-              <strong>382 kJ/mol</strong> respectively.
+              In LFP, all the oxygen atoms are locked inside phosphate groups (PO₄³⁻). The P–O bond
+              (phosphorus-to-oxygen) has a bond dissociation energy of approximately <strong>544 kJ/mol</strong>
+              — that number is how much energy you would need to supply to rip one mole of those bonds
+              apart. Compare this to the metal-oxygen bonds in NMC cathodes: Co–O is approximately
+              <strong>368 kJ/mol</strong> and Ni–O is approximately <strong>382 kJ/mol</strong>.
+              The phosphate bond is roughly 45% stronger.
             </p>
             <p>
-              The PO₄³⁻ group is a thermodynamic "oxygen trap." To release oxygen from LFP, you would
-              need to break the P–O bond — this requires temperatures exceeding <strong>600°C</strong>,
-              well above any realistic abuse scenario. For comparison, NMC begins releasing oxygen at
-              180–200°C.
+              The PO₄³⁻ group acts as an "oxygen vault." To release oxygen from LFP, you would need to
+              break that bond — which requires temperatures above <strong>600°C</strong>, far beyond any
+              realistic abuse scenario. NMC begins releasing oxygen at just 180–200°C.
             </p>
             <p>
-              Without oxygen release, the exothermic cascade <em>cannot complete</em>. The SEI might
-              decompose (starting around 120°C in LFP). The electrolyte might react with the anode
-              (starting around 150°C). But without the massive heat from cathode oxygen combustion,
+              Without oxygen release, the cascade <em>cannot complete</em>. The SEI may break down
+              (starting around 120°C in LFP). The electrolyte may react with the anode
+              (starting around 150°C). But without the enormous heat from cathode oxygen combustion,
               the temperature rise is self-limiting, not self-amplifying. The cell may vent gas and
-              experience capacity loss, but it will not enter thermal runaway.
+              lose some capacity, but it will not catch fire. Thermal runaway cannot happen.
             </p>
           </div>
         </div>
 
         <p>
-          ARC (Accelerating Rate Calorimetry) data on LFP cells consistently shows:
+          ARC (Accelerating Rate Calorimetry — a lab test that measures the heat a cell generates as it
+          is slowly heated to destruction) data on LFP cells consistently shows:
         </p>
         <ul class="content-list check">
-          <li>LFP cells subjected to nail penetration: temperature rises to ~60–80°C and stabilizes. No fire.</li>
-          <li>LFP cells overcharged to 130% SOC: electrolyte decomposition, gas venting. No thermal runaway.</li>
+          <li>LFP cells pierced with a nail: temperature rises to ~60–80°C and levels off. No fire.</li>
+          <li>LFP cells overcharged to 130% SOC: electrolyte breaks down, gas vents from the cell.
+          No thermal runaway.</li>
           <li>LFP cells heated externally to 300°C at 60% SOC: no thermal runaway observed.
-          NMC cells: thermal runaway at ~200°C under the same conditions.</li>
-          <li>Cell-to-cell propagation in LFP packs: extremely rare. In NMC packs: seconds to full pack involvement.</li>
+          NMC cells under the same test: thermal runaway at ~200°C.</li>
+          <li>Cell-to-cell fire propagation in LFP packs: extremely rare. In NMC packs: one cell
+          can trigger the entire pack within seconds.</li>
         </ul>
 
         <div class="insight-box">
@@ -1831,35 +1848,37 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
         <div class="subsection-title">Cycle Life: 3000–5000 Cycles — Why?</div>
         <p>
           LFP cells routinely deliver <strong>3000–5000 cycles at 80% depth of discharge</strong>
-          before reaching the 80% remaining capacity threshold that defines end-of-life. Compare this
-          to NMC at 1000–2000 cycles, NCA at 500–1500, and lead-acid at 150–500 at 80% DoD.
-          The mechanism is structural.
+          (DoD — how deeply you drain the battery each cycle) before reaching the 80% remaining
+          capacity point that defines end-of-life. Compare this to NMC at 1000–2000 cycles, NCA at
+          500–1500, and lead-acid at 150–500 at the same 80% DoD level. The reason is structural.
         </p>
         <p>
-          Cycle life in Li-ion cells is limited by two primary degradation mechanisms:
+          Cycle life in Li-ion cells is limited by two main wear mechanisms:
         </p>
         <ul class="content-list">
-          <li><strong>Volume change stress:</strong> During charge/discharge, lithium ions are
-          inserted/extracted from the crystal lattice, causing the electrode to expand and contract.
-          In LFP, volume change during full cycling is only <strong>~6.8%</strong>. In NMC (high nickel),
-          volume change can reach 10–15%. This cyclical mechanical stress creates microcracks in the
-          crystal that grow over thousands of cycles, ultimately causing particles to fragment and
-          lose electrical contact.</li>
-          <li><strong>SEI growth:</strong> Every charge cycle slightly grows the SEI layer on the
-          anode, consuming lithium and reducing available capacity. LFP operates at lower voltages
-          than NMC (3.2–3.65V vs 3.0–4.2V), and electrolyte oxidation rate is exponentially sensitive
-          to upper voltage — lower voltage ceiling means slower irreversible SEI growth.</li>
+          <li><strong>Volume change stress:</strong> When lithium ions slide in and out of the crystal
+          structure during charging and discharging, the electrode material swells and shrinks slightly.
+          In LFP, this volume change is only <strong>~6.8%</strong> per full cycle. In high-nickel NMC
+          it can reach 10–15%. That repeated swelling and shrinking — like bending a piece of metal back
+          and forth — creates microcracks that grow over thousands of cycles, eventually fragmenting the
+          electrode particles and breaking their electrical contact.</li>
+          <li><strong>SEI growth:</strong> Every charge cycle slightly thickens the SEI film on the
+          anode, permanently consuming a tiny bit of lithium and reducing the usable capacity. LFP
+          operates at lower maximum voltages than NMC (3.2–3.65V vs 3.0–4.2V). Because electrolyte
+          oxidation (the chemical reaction that grows the SEI) accelerates exponentially with voltage,
+          LFP's lower ceiling means much slower, less damaging SEI growth.</li>
         </ul>
         <p>
-          Additionally, LFP's two-phase intercalation mechanism (FePO₄ ↔ LiFePO₄, with a moving
-          phase boundary rather than a solid-solution gradient) means the lattice strain is
-          concentrated at the phase boundary rather than distributed throughout the particle.
-          This localized strain turns out to be less damaging than the gradient strain in NMC.
+          LFP also uses a two-phase intercalation mechanism (FePO₄ ↔ LiFePO₄ — the crystal switches
+          between two discrete forms rather than stretching continuously). The mechanical strain is
+          concentrated at a sharp boundary between the two phases, rather than spread throughout the
+          whole particle. This concentrated strain is actually less damaging over time than the
+          distributed strain in NMC.
         </p>
         <p>
-          <strong>Real-world consequence:</strong> A home ESS cycling once daily reaches 3000 cycles
-          in ~8.2 years. An LFP system can comfortably deliver this. Lead-acid at 80% DoD would
-          require 20 replacements over the same period. NMC would require 2–3.
+          <strong>In practice:</strong> A home ESS that cycles once per day hits 3000 cycles in ~8.2 years.
+          LFP handles this comfortably. Lead-acid at 80% DoD would need to be replaced about 20 times
+          over the same period. NMC would need 2–3 replacements.
         </p>
 
         <div class="stat-grid">
@@ -1890,34 +1909,36 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
       <div class="subsection">
         <div class="subsection-title">Calendar Life: 10–15 Years — The Mechanism</div>
         <p>
-          Cycle life measures degradation from use. <strong>Calendar life</strong> measures
-          degradation from time — even a battery sitting on a shelf at full charge is aging.
-          For a UPS application where the battery may sit at float charge for years between discharge
-          events, calendar life can be the binding constraint.
+          Cycle life measures degradation from actually using the battery. <strong>Calendar life</strong>
+          measures degradation from time alone — even a battery sitting on a shelf at full charge is
+          slowly aging. For a UPS that might stay fully charged for years between major discharge events,
+          calendar life can be the more important limit.
         </p>
         <p>
-          Calendar aging in Li-ion cells is dominated by three mechanisms:
+          Calendar aging in Li-ion cells is driven by three main mechanisms:
         </p>
         <ul class="content-list">
-          <li><strong>Parasitic SEI growth:</strong> The SEI is not in thermodynamic equilibrium with
-          the electrolyte. It continues to grow slowly as long as lithiated graphite is in contact with
-          electrolyte, consuming cyclable lithium. Rate follows an Arrhenius relationship with temperature —
-          <em>every 10°C increase approximately doubles the degradation rate</em>. Storage at 25°C vs
-          45°C can halve calendar life.</li>
-          <li><strong>Transition metal dissolution:</strong> In NMC/NCA, trace amounts of Ni, Mn, and
-          Co dissolve into the electrolyte over time, migrate to the anode, and deposit as metallic
-          precipitates that catalyze further SEI growth. LFP has minimal iron dissolution at normal
-          operating voltages due to the stability of the PO₄ framework — iron stays in the crystal.</li>
-          <li><strong>Electrolyte decomposition at high voltage:</strong> Holding NMC cells at 4.2V
-          (100% SOC) accelerates electrolyte oxidation at the cathode surface. LFP cells at 3.65V
-          full charge have dramatically slower electrolyte decomposition. This is why LFP systems
-          are often configured to float at ~3.4–3.45V/cell for maximum calendar life.</li>
+          <li><strong>Parasitic SEI growth:</strong> The SEI film is never perfectly stable. It keeps
+          growing slowly as long as lithiated graphite touches electrolyte, consuming usable lithium
+          atom by atom. The growth rate follows an Arrhenius law — <em>every 10°C temperature increase
+          roughly doubles the degradation rate</em>. Storing a battery at 45°C instead of 25°C can
+          halve its calendar life.</li>
+          <li><strong>Transition metal dissolution:</strong> In NMC and NCA cells, tiny amounts of
+          nickel, manganese, and cobalt dissolve out of the cathode into the electrolyte over time,
+          migrate to the anode, and deposit there — accelerating further SEI growth. LFP has minimal
+          iron dissolution at normal voltages because the PO₄ framework holds iron firmly in the
+          crystal.</li>
+          <li><strong>Electrolyte decomposition at high voltage:</strong> Holding an NMC cell at 4.2V
+          (fully charged) accelerates electrolyte breakdown at the cathode surface. LFP cells held at
+          3.65V degrade far more slowly. This is why well-designed LFP systems are set to float-charge
+          at ~3.4–3.45V/cell rather than 3.65V — it keeps the battery near full while dramatically
+          extending calendar life.</li>
         </ul>
         <p>
-          The result: properly managed LFP cells retain >80% capacity after 10–15 years of calendar
-          aging at 25°C. For a home ESS installation with a 15-year payback horizon, this is essential.
-          Lead-acid typically degrades to replacement threshold in 3–5 years regardless of cycle count
-          from sulfation, grid corrosion, and water loss.
+          The result: a well-managed LFP cell keeps more than 80% of its original capacity after 10–15
+          years at 25°C. For a home ESS with a 15-year payback period, this is not a nice-to-have —
+          it is essential. Lead-acid typically needs replacement within 3–5 years regardless of
+          cycle count, due to sulfation, plate corrosion, and water loss.
         </p>
       </div><!-- end calendar life subsection -->
 
@@ -1925,43 +1946,42 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
       <div class="subsection">
         <div class="subsection-title">Cost Stability: The Cobalt-Free Advantage</div>
         <p>
-          LFP does not contain cobalt. This is not a minor detail — it is a structural market
-          advantage that grows more significant as energy storage scales globally.
+          LFP contains no cobalt. This is not a minor detail — it is a structural market advantage
+          that becomes more important as energy storage scales up globally.
         </p>
         <p>
-          <strong>The cobalt problem in NMC/NCA:</strong> Cobalt is primarily mined in the
-          Democratic Republic of Congo (~70% of global supply). The supply chain is concentrated,
-          geopolitically sensitive, and has a well-documented record of supply disruptions and
-          price spikes. In 2018, cobalt prices reached $95,000/tonne — a 300% increase in 18 months.
-          NMC/NCA battery pack costs spiked in parallel. Manufacturers with supply agreements were
-          protected; spot market buyers were not.
+          <strong>The cobalt problem in NMC/NCA:</strong> Cobalt is mostly mined in the Democratic
+          Republic of Congo (~70% of world supply). The supply chain is narrow, geopolitically risky,
+          and has a well-documented history of disruptions and price swings. In 2018, cobalt hit
+          $95,000/tonne — a 300% rise in 18 months. Battery pack costs for NMC and NCA spiked with
+          it. Companies with long-term supply contracts were insulated; everyone buying on the spot
+          market was not.
         </p>
         <p>
-          The DRC's cobalt also carries significant social cost: artisanal and small-scale mining
-          (ASM) accounts for a substantial portion of production, with associated human rights
-          concerns including child labor that have been extensively documented by NGOs and the
-          UN. For end users building "green" home energy systems, cobalt in the supply chain is
-          an ethical liability.
+          DRC cobalt also comes with serious human costs: much of the production comes from artisanal
+          small-scale mining with associated human rights abuses — including child labour — that have
+          been widely documented by NGOs and the UN. For anyone building a "green" home energy system,
+          cobalt in the supply chain is an ethical liability.
         </p>
         <p>
-          <strong>LFP raw materials:</strong> Iron, phosphate, and lithium. Iron is the fourth
-          most abundant element in Earth's crust. Phosphate is globally distributed and already
-          mined at massive scale for fertilizers. Lithium is the variable — but LFP uses the same
-          lithium per kWh as NMC, so it doesn't escape lithium price exposure. However, with
-          only one critical mineral to manage instead of three (Li + Ni + Co), LFP supply chains
-          are inherently more stable.
+          <strong>LFP raw materials:</strong> Iron, phosphate, and lithium. Iron is the fourth most
+          abundant element in the Earth's crust. Phosphate is found worldwide and already mined at
+          enormous scale for fertilisers. Lithium is the one variable — but LFP uses the same amount
+          of lithium per kWh as NMC, so it does not escape lithium price risk. However, with only one
+          critical mineral to worry about instead of three (lithium + nickel + cobalt), LFP supply
+          chains are inherently more stable.
         </p>
         <div class="callout callout-info">
           <div class="callout-icon">📈</div>
           <div class="callout-body">
             <div class="callout-title">LFP Cost Trajectory</div>
             <p>
-              LFP pack costs have fallen from approximately <strong>$1,200/kWh in 2010</strong> to
-              <strong>~$137/kWh in 2023</strong> (BloombergNEF data). The trajectory continues: LFP
-              is expected to reach $80/kWh by 2026, the threshold commonly cited for economic parity
-              with grid electricity storage in most markets. The cost decline is driven by manufacturing
-              scale (China's CATL and BYD alone have 500+ GWh/year capacity), process optimization,
-              and raw material efficiency — not subsidies.
+              LFP pack costs have dropped from approximately <strong>$1,200/kWh in 2010</strong> to
+              <strong>~$137/kWh in 2023</strong> (BloombergNEF data). The trend continues: LFP is
+              expected to reach $80/kWh by 2026, the level widely cited as the break-even point for
+              economical grid-level energy storage. The cost reductions come from manufacturing scale
+              (China's CATL and BYD alone have over 500 GWh/year of production capacity), process
+              improvements, and better material efficiency — not government subsidies.
             </p>
           </div>
         </div>
@@ -1971,9 +1991,9 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
       <div class="subsection" id="full-table">
         <div class="subsection-title">Full Chemistry Comparison Table</div>
         <p>
-          Every application decision comes down to the numbers. The table below provides a comprehensive
-          comparison across all major rechargeable battery chemistries relevant to UPS and home ESS.
-          All values represent typical production cells at time of writing (2023–2024).
+          Every design decision ultimately comes down to numbers. The table below compares all the major
+          rechargeable battery chemistries relevant to UPS and home ESS. All values are for typical
+          production cells as of 2023–2024.
         </p>
         <div class="table-wrapper">
           <table class="comparison-table">
@@ -2151,35 +2171,35 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
       <div class="subsection">
         <div class="subsection-title">Application Fit: UPS Switchover, Float Charging, Deep Discharge</div>
         <p>
-          Numbers tell part of the story. But UPS and home ESS have specific operational requirements
-          that go beyond energy density and cycle life.
+          Numbers tell part of the story. But UPS and home ESS have specific operational demands that
+          go beyond energy density and cycle life.
         </p>
 
-        <p><strong>UPS Switchover Speed:</strong> A UPS must deliver power to critical loads within
-        milliseconds of a grid outage. For online double-conversion UPS (the type used for servers),
-        the battery is always in the power path — switchover time is effectively zero. For line-interactive
-        UPS, the transfer switch must activate before the inverter catches up. IEC 62040-3 defines
-        Class 1 UPS as delivering zero transfer time. LFP cells can deliver full rated current essentially
-        instantaneously — the internal impedance is low (typically 0.5–2 mΩ for a prismatic cell),
-        and there is no induction delay. Lead-acid can also deliver fast response — the technology
-        difference matters less here than BMS design (for Li-ion) and inverter topology.</p>
+        <p><strong>UPS Switchover Speed:</strong> A UPS must keep power flowing to critical equipment
+        within milliseconds of a grid outage. For online double-conversion UPS (the type used for
+        servers, where the battery is always in the power path), switchover time is effectively zero.
+        For line-interactive UPS, a transfer switch activates and the inverter takes over. IEC 62040-3
+        Class 1 UPS delivers zero transfer time. LFP can provide full rated current almost
+        instantaneously — internal impedance is very low (typically 0.5–2 mΩ for a prismatic cell),
+        and there is no mechanical or induction delay. Lead-acid can also respond quickly; the
+        technology difference here matters less than BMS design and inverter topology.</p>
 
         <p><strong>Float Charging Compatibility:</strong> Lead-acid was designed for float charging —
-        holding the battery at ~2.27 V/cell indefinitely. LFP is compatible with float charging but
-        requires a different voltage: ~3.4–3.45 V/cell. This is slightly below the upper voltage
-        cutoff (~3.65 V), which means the battery sits at ~90–95% SoC. This reduces electrolyte
-        oxidation rate and extends calendar life. A properly designed LFP BMS will manage this
-        automatically, entering a "storage mode" float voltage that optimizes calendar life for
-        standby applications.</p>
+        keeping the battery topped up at ~2.27 V/cell indefinitely with a trickle of current. LFP
+        also supports float charging, but at a different voltage: ~3.4–3.45 V/cell. This is slightly
+        below the full-charge cutoff (~3.65 V), meaning the battery sits at ~90–95% SoC. That
+        intentional margin reduces electrolyte oxidation and extends calendar life. A well-designed
+        LFP BMS handles this automatically, switching to a "storage mode" float voltage that
+        prioritises longevity over keeping the battery at absolute maximum charge.</p>
 
-        <p><strong>Deep Discharge Recovery:</strong> Home ESS systems that cycle deeply — drawing
-        down to 10–20% SoC daily — need chemistry that handles this gracefully over years. LFP is
-        essentially indifferent to deep discharge. Unlike lead-acid (which sulfates if left
-        discharged), LFP can be discharged to 0% SoC, left for weeks, and recharged without
-        permanent damage. This is because the intercalation mechanism is fully reversible at any
-        state of charge, including zero. The BMS must still prevent over-discharge (below the
-        minimum cell voltage, typically 2.5V) to avoid copper dissolution at the anode — but within
-        the operating range, LFP handles deep cycling without capacity penalty.</p>
+        <p><strong>Deep Discharge Recovery:</strong> Home ESS systems typically draw down to 10–20%
+        SoC every day, which is "deep discharge." LFP handles this without penalty. Unlike lead-acid
+        (which permanently damages itself if left deeply discharged due to sulfation), LFP can be
+        drained to 0% SoC, left for weeks, and recharged to full capacity with no lasting harm. The
+        intercalation mechanism is reversible at any state of charge, including zero. The BMS still
+        needs to prevent over-discharge below the minimum cell voltage (typically 2.5V) to avoid
+        copper corrosion at the anode — but within the normal operating range, LFP cycles deeply
+        with no capacity penalty over its lifetime.</p>
 
         <div class="callout callout-info">
           <div class="callout-icon">📡</div>
@@ -2187,13 +2207,15 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
             <div class="callout-title">Teaser: The Flat OCV Curve — Chapter 2's Central Challenge</div>
             <p>
               LFP has one property that is simultaneously its greatest operational challenge: a nearly
-              flat open-circuit voltage (OCV) curve between 20% and 80% SoC. The cell voltage changes
-              by only ~50mV across this 60% SoC range. This means you cannot determine state of charge
-              from voltage alone — the most natural measurement for any battery system. Traditional
-              voltage-based SoC estimation, which works acceptably for lead-acid and NMC, completely
-              fails for LFP. This forces BMS designers to use coulomb counting, model-based estimation,
-              or hybrid approaches. It is the central challenge of Chapter 2, and the reason LFP BMS
-              design requires more sophisticated algorithms than other chemistries.
+              flat open-circuit voltage (OCV — the voltage you measure at the battery terminals when
+              no current is flowing) curve between 20% and 80% SoC. The cell voltage changes by only
+              ~50mV across that entire 60% SoC range. This means you cannot figure out how full the
+              battery is just by measuring voltage — the most natural and obvious approach. Traditional
+              voltage-based SoC estimation works reasonably for lead-acid and NMC. For LFP, it is
+              essentially useless in the mid-range. BMS designers must instead use coulomb counting
+              (integrating current over time), model-based estimation, or hybrid approaches. This is
+              the central challenge of Chapter 2, and the main reason LFP BMS design requires more
+              sophisticated algorithms than other chemistries.
             </p>
           </div>
         </div>
@@ -2209,9 +2231,10 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
       <h2 class="section-title">Li-ion Weaknesses → BMS Requirements</h2>
       <p class="section-intro">
         Li-ion batteries are not plug-and-play components. Each of their fundamental weaknesses —
-        rooted in electrochemistry and physics, not engineering limitations — creates an exact,
-        traceable requirement for the Battery Management System. The BMS doesn't exist because
-        engineers wanted complexity. It exists because physics demands it.
+        rooted in electrochemistry and physics, not in poor engineering — maps directly to a specific,
+        non-negotiable requirement for the Battery Management System (BMS — the circuit board that
+        monitors and protects the battery). The BMS doesn't exist because engineers wanted complexity.
+        It exists because the laws of physics demand it.
       </p>
 
       <div class="callout callout-info">
@@ -2219,10 +2242,10 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
         <div class="callout-body">
           <div class="callout-title">How to Read This Section</div>
           <p>
-            For each weakness, we present: (1) the underlying physics, (2) the real-world failure mode,
-            (3) quantitative damage thresholds, and (4) the exact BMS feature it creates. The goal is
-            <strong>full traceability</strong>: every BMS function maps to a fundamental physical
-            necessity. Nothing is arbitrary. Nothing is optional.
+            For each weakness we cover: (1) the underlying physics, (2) the real-world failure mode
+            it causes, (3) the damage thresholds in numbers, and (4) the exact BMS feature that
+            prevents it. The goal is <strong>full traceability</strong>: every BMS function connects
+            directly to a physical necessity. Nothing is arbitrary. Nothing is optional.
           </p>
         </div>
       </div>
@@ -2240,31 +2263,34 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
             </div>
           </div>
           <p>
-            LFP cells have a strict voltage operating window. Exceed the upper limit — even briefly —
-            and you trigger irreversible damage mechanisms. Fall below the lower limit and you risk
-            copper dissolution. Lead-acid tolerates large voltage deviations gracefully; Li-ion does not.
+            LFP cells have a strict voltage window they must stay within. Go above the upper limit —
+            even briefly — and you trigger permanent damage. Fall below the lower limit and you
+            corrode the copper inside the cell. Lead-acid tolerates big voltage swings fairly well.
+            Li-ion does not.
           </p>
         </div>
 
         <p><strong>What happens at over-voltage (above 3.65 V/cell):</strong></p>
         <p>
-          At 3.65 V, the cell is fully charged — all available lithium sites in the FePO₄ cathode
-          are occupied. If charging continues beyond this point, electrons keep flowing but there are
-          no more lithium ions to intercalate into the cathode. Instead:
+          At 3.65 V, the cell is fully charged — every available slot in the cathode crystal that can
+          hold a lithium ion is full. If charging continues past this point, electrons keep flowing
+          through the wire but there is nowhere for the lithium ions to go in the cathode. Instead:
         </p>
         <ul class="content-list cross">
-          <li><strong>Electrolyte oxidation at the cathode:</strong> At voltages above ~3.8–4.0V
-          (for LFP), electrolyte begins decomposing at the cathode surface, forming a growing
-          cathode-electrolyte interphase (CEI). This permanently reduces ionic conductivity and
-          available capacity.</li>
-          <li><strong>Lithium plating on the anode:</strong> If the anode cannot accept incoming
-          lithium fast enough (especially at low temperature or high charge rate), lithium deposits
-          as metallic lithium on the anode surface rather than intercalating. Metallic lithium
-          dendrites can grow through the separator and cause an internal short circuit — a direct
-          thermal runaway precursor in NMC/NCA, and a capacity-killing event in LFP.</li>
-          <li><strong>Gas generation:</strong> CO₂ and hydrocarbons produced by electrolyte
-          decomposition increase internal pressure. If the cell is sealed (prismatic or pouch),
-          the cell swells. If pressure exceeds the vent valve threshold, gas is vented irreversibly.</li>
+          <li><strong>Electrolyte oxidation at the cathode:</strong> Above ~3.8–4.0V, the electrolyte
+          starts breaking down on the cathode surface, forming a growing layer called the CEI
+          (cathode-electrolyte interphase). This permanently reduces how easily ions can move through
+          the cell and shrinks the available capacity.</li>
+          <li><strong>Lithium plating on the anode:</strong> If the anode cannot absorb incoming
+          lithium quickly enough — particularly at low temperatures or high charge rates — lithium
+          deposits as metallic lithium on the anode surface instead of intercalating into it. Metallic
+          lithium can grow needle-like spikes called dendrites that eventually pierce the separator
+          (the thin layer between anode and cathode), causing an internal short circuit. In NMC/NCA
+          this can trigger thermal runaway. In LFP it is a severe capacity-killing event.</li>
+          <li><strong>Gas generation:</strong> Electrolyte decomposition produces CO₂ and hydrocarbons.
+          In a sealed prismatic or pouch cell, this gas has nowhere to go, so the cell swells.
+          If pressure builds past the safety vent threshold, gas is vented irreversibly and some
+          cell material is lost forever.</li>
         </ul>
 
         <p><strong>The 200 mV number:</strong></p>
@@ -2273,33 +2299,34 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
           <div class="callout-body">
             <div class="callout-title">200 mV Overcharge = Measurable Permanent Damage</div>
             <p>
-              In LFP, overcharging a cell to 3.85 V (200 mV above the 3.65 V cutoff) produces measurable
-              capacity loss of <strong>2–8%</strong> in a single event, depending on temperature and
-              duration. At 4.0 V (350 mV overcharge), capacity loss can reach 15–30%. These are not
-              gradual aging effects — they are acute damage events. For a 200 Ah cell, 5% capacity
-              loss represents 10 Ah of permanently lost storage.
+              Charging an LFP cell to 3.85 V — just 200 mV above the 3.65 V cutoff — causes measurable
+              permanent capacity loss of <strong>2–8%</strong> in a single event, depending on temperature
+              and how long the voltage was held there. At 4.0 V (350 mV over), loss can reach 15–30%.
+              These are not slow, gradual aging effects — they are sudden damage events. For a 200 Ah
+              cell, a 5% capacity loss means 10 Ah of storage that is permanently gone.
             </p>
             <p>
-              The overcharge protection threshold must be set at ≤3.65 V/cell with a tolerance of
-              ±10 mV — achievable with 12-bit ADCs and careful signal conditioning, but not trivial.
-              The BMS voltage sensing accuracy requirement (typically ±5 mV) flows directly from this
-              damage threshold.
+              The overcharge protection threshold must be set at ≤3.65 V/cell with an accuracy of
+              ±10 mV — achievable with 12-bit ADCs (analog-to-digital converters — chips that measure
+              voltage) and careful circuit design, but not trivial. The BMS voltage sensing accuracy
+              requirement (typically ±5 mV) comes directly from this damage threshold.
             </p>
           </div>
         </div>
 
         <p><strong>What happens at under-voltage (below 2.5 V/cell):</strong></p>
         <p>
-          The copper current collector on the anode is stable above ~3.0V at the cathode side.
-          Below ~2.5V (cell terminal voltage), the anode potential rises high enough that copper
-          begins dissolving into the electrolyte as Cu²⁺ ions. These ions migrate to the cathode,
-          deposit on the separator, and can nucleate dendritic shorts. The damage is permanent and
-          cumulative — each deep under-discharge event deposits more copper.
+          The copper foil inside the anode (the current collector — the metal sheet the active
+          material is coated onto) is stable at normal voltages. But below ~2.5V at the cell
+          terminals, the electrochemical conditions flip — copper starts dissolving from the anode
+          foil into the electrolyte as Cu²⁺ ions. Those ions drift to the cathode, deposit on the
+          separator, and can eventually form dendritic shorts through the separator. The damage is
+          permanent and cumulative — every deep over-discharge event deposits more copper.
         </p>
         <p>
-          A cell discharged to 0V and then recharged will typically show increased impedance,
-          reduced capacity, and potentially internal short circuit risk. Some cells exposed to
-          prolonged 0V storage develop dendritic copper shorts that trigger spontaneous heating.
+          A cell drained to 0V and then recharged typically shows higher internal resistance, reduced
+          capacity, and a risk of internal short circuits. Some cells stored at 0V for extended periods
+          develop copper dendrite shorts that cause spontaneous heating even with no external current.
         </p>
 
         <div class="card" style="border-color: rgba(72,187,120,0.2);">
