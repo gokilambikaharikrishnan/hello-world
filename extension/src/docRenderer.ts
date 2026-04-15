@@ -126,6 +126,347 @@ function buildSections(): string {
     }).join('\n');
 }
 
+// ---------------------------------------------------------------------------
+// Session 3 additions — real content renderer
+// ---------------------------------------------------------------------------
+
+function escapeHtml(str: string): string {
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function parseSections(llmContent: string): ParsedSection[] {
+    const sections: ParsedSection[] = [];
+    const lines = llmContent.split('\n');
+    let current: ParsedSection | null = null;
+
+    for (const line of lines) {
+        const match = line.match(/^(\d{1,2})\.\s+(.+)$/);
+        if (match && parseInt(match[1]) >= 1 && parseInt(match[1]) <= 10) {
+            if (current) { sections.push(current); }
+            current = {
+                number: match[1].padStart(2, '0'),
+                title: match[2].trim(),
+                content: ''
+            };
+        } else if (current) {
+            current.content += line + '\n';
+        }
+    }
+    if (current) { sections.push(current); }
+
+    if (sections.length === 0) {
+        return [{ number: '01', title: 'Generated Documentation', content: llmContent }];
+    }
+    return sections;
+}
+
+function renderContent(raw: string): string {
+    let html = raw;
+
+    // 1. mermaid blocks first — before generic code blocks
+    html = html.replace(/```mermaid\n([\s\S]*?)```/g, (_, diagram) =>
+        `<div class="mermaid-wrapper"><div class="mermaid">${escapeHtml(diagram.trim())}</div></div>`
+    );
+
+    // 2. other fenced code blocks
+    html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+        const displayLang = lang || 'c';
+        return `<div class="code-block-wrapper">` +
+            `<div class="code-header">` +
+            `<span class="code-lang">${displayLang}</span>` +
+            `<button class="copy-btn" onclick="copyCode(this)">Copy</button>` +
+            `</div>` +
+            `<pre><code class="language-${displayLang}">${escapeHtml(code.trim())}</code></pre>` +
+            `</div>`;
+    });
+
+    // 3. markdown tables — consecutive lines starting with |
+    html = html.replace(/((?:\|.+\|\n?)+)/g, (tableBlock) => {
+        const rows = tableBlock.trim().split('\n').filter(r => !r.match(/^\|[\s\-|]+\|$/));
+        if (rows.length < 2) { return tableBlock; }
+        const th = rows[0].split('|').filter(c => c.trim()).map(c => `<th>${c.trim()}</th>`).join('');
+        const trs = rows.slice(1).map(row => {
+            const cells = row.split('|').filter(c => c.trim()).map(c => `<td>${c.trim()}</td>`).join('');
+            return `<tr>${cells}</tr>`;
+        }).join('');
+        return `<div class="table-wrapper"><table><thead><tr>${th}</tr></thead><tbody>${trs}</tbody></table></div>`;
+    });
+
+    // 4. inline code
+    html = html.replace(/`([^`]+)`/g, (_, code) => `<code class="inline">${escapeHtml(code)}</code>`);
+
+    // 5. bold
+    html = html.replace(/\*\*([^*]+)\*\*/g, (_, text) => `<strong>${text}</strong>`);
+
+    // 6. bullet lists — group consecutive - or * lines
+    html = html.replace(/((?:^[-*]\s.+\n?)+)/gm, (block) => {
+        const items = block.trim().split('\n').map(l => `<li>${l.replace(/^[-*]\s/, '').trim()}</li>`).join('');
+        return `<ul>${items}</ul>`;
+    });
+
+    // 7. paragraphs — double newline
+    html = html.split(/\n\n+/).map(p => p.trim()).filter(p => p.length > 0).map(p => {
+        if (p.startsWith('<')) { return p; }
+        return `<p>${p.replace(/\n/g, ' ')}</p>`;
+    }).join('\n');
+
+    return html;
+}
+
+function buildDynamicSidebarLinks(sections: ParsedSection[]): string {
+    return sections.map(s =>
+        `<a href="#section-${s.number}" class="nav-link">${esc(s.number)}. ${esc(s.title)}</a>`
+    ).join('\n');
+}
+
+function buildRealDocHtml(
+    moduleName: string,
+    layerName: string,
+    sections: ParsedSection[],
+    timestamp: string
+): string {
+    const layerColor = getLayerColor(layerName);
+    const layerBg = getLayerBg(layerName);
+
+    const sidebarLinks = buildDynamicSidebarLinks(sections);
+
+    const sectionsHtml = sections.map(sec => `
+    <section id="section-${sec.number}" class="doc-section">
+      <div class="section-heading">
+        <span class="section-num">${sec.number}</span>
+        <h2>${esc(sec.title)}</h2>
+      </div>
+      <div class="section-body">
+        ${renderContent(sec.content)}
+      </div>
+      <hr class="section-rule" />
+    </section>`).join('\n');
+
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${esc(moduleName)} — BMS Design Doc</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
+  <style>
+    html { scroll-behavior: smooth; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'JetBrains Mono', 'Consolas', monospace;
+      background: #0d1117;
+      color: #e6edf3;
+    }
+
+    /* ── TOP BAR ── */
+    #topbar {
+      position: fixed; top: 0; left: 0; right: 0; height: 56px;
+      background: #161b22; border-bottom: 1px solid #30363d;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; z-index: 100;
+    }
+    .topbar-brand { font-size: 0.78rem; color: #58a6ff; letter-spacing: 0.2em; text-transform: uppercase; }
+    .topbar-center { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .topbar-module { font-size: 1rem; font-weight: 600; color: #e6edf3; }
+    .layer-badge {
+      font-size: 0.72rem; font-weight: 500; padding: 2px 10px; border-radius: 10px;
+      border: 1px solid ${layerColor}; color: ${layerColor}; background: ${layerBg};
+    }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .topbar-ts { font-size: 0.78rem; color: #8b949e; }
+    .btn-open {
+      background: transparent; border: 1px solid #30363d; color: #8b949e;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
+      border-radius: 6px; padding: 4px 12px; cursor: pointer;
+      transition: color 150ms, border-color 150ms;
+    }
+    .btn-open:hover { color: #e6edf3; border-color: #8b949e; }
+
+    /* ── SIDEBAR ── */
+    #sidebar {
+      position: fixed; top: 56px; left: 0; bottom: 0; width: 220px;
+      background: #010409; border-right: 1px solid #21262d;
+      overflow-y: auto; padding: 20px 0;
+      display: flex; flex-direction: column;
+    }
+    .nav-title {
+      color: #484f58; font-size: 0.68rem; letter-spacing: 0.18em;
+      text-transform: uppercase; padding: 0 16px; margin-bottom: 16px;
+    }
+    .nav-link {
+      display: block; padding: 7px 16px; color: #6e7681; font-size: 0.82rem;
+      text-decoration: none; border-left: 2px solid transparent;
+      transition: all 150ms; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .nav-link:hover { color: #c9d1d9; }
+    .nav-link.active { color: #e6edf3; border-left-color: #58a6ff; background: rgba(88,166,255,0.07); }
+
+    /* ── STACK WIDGET ── */
+    .stack-widget { margin-top: auto; padding: 20px 16px; border-top: 1px solid #21262d; }
+    .stack-title { color: #484f58; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 10px; }
+    .stack-item { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; margin: 1px 0; border-left: 2px solid transparent; }
+    .stack-hw { color: #484f58; }
+    .stack-inactive { color: #484f58; }
+    .stack-active { font-weight: 600; }
+    .stack-arrow { color: #30363d; font-size: 0.7rem; padding-left: 8px; line-height: 1.4; }
+
+    /* ── CONTENT ── */
+    #content { margin-left: 220px; padding-top: 56px; min-height: 100vh; background: #0d1117; }
+    .content-inner { max-width: 860px; padding: 40px 48px; margin: 0 auto; }
+
+    /* ── SECTIONS ── */
+    .doc-section { margin-bottom: 8px; }
+    .section-heading { display: flex; align-items: baseline; gap: 16px; margin-bottom: 20px; }
+    .section-num { font-size: 1.8rem; color: #58a6ff; opacity: 0.35; font-weight: 700; line-height: 1; }
+    .section-heading h2 { color: #e6edf3; font-size: 1.25rem; font-weight: 600; margin: 0; scroll-margin-top: 76px; }
+    .section-body { color: #8b949e; line-height: 1.8; font-size: 0.93rem; }
+    .section-rule { border: none; border-top: 1px solid #21262d; margin: 36px 0; }
+
+    /* ── CONTENT ELEMENTS ── */
+    p { margin: 0 0 12px; color: #c9d1d9; line-height: 1.85; }
+    ul { padding-left: 20px; margin: 8px 0; }
+    li { color: #c9d1d9; line-height: 1.8; margin: 4px 0; }
+    strong { color: #e6edf3; }
+
+    code.inline {
+      background: #21262d; border-radius: 4px; padding: 2px 6px;
+      font-size: 0.88em; color: #e6edf3;
+    }
+
+    /* ── CODE BLOCKS ── */
+    .code-block-wrapper {
+      background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+      margin: 16px 0; overflow: hidden;
+    }
+    .code-header {
+      background: #21262d; padding: 8px 16px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .code-lang { color: #8b949e; font-size: 0.78rem; }
+    .copy-btn {
+      background: transparent; border: none; color: #8b949e; cursor: pointer;
+      font-family: inherit; font-size: 0.78rem;
+    }
+    .copy-btn:hover { color: #e6edf3; }
+    pre { margin: 0; padding: 16px; overflow-x: auto; }
+
+    /* ── MERMAID ── */
+    .mermaid-wrapper {
+      background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+      padding: 24px; margin: 16px 0; overflow-x: auto;
+    }
+
+    /* ── TABLES ── */
+    .table-wrapper { overflow-x: auto; margin: 16px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    th { background: #21262d; color: #8b949e; padding: 10px 16px; text-align: left; font-weight: 500; }
+    td { padding: 10px 16px; border-bottom: 1px solid #21262d; color: #e6edf3; }
+
+    /* ── FOOTER ── */
+    #footer {
+      text-align: center; color: #484f58; font-size: 0.78rem;
+      padding: 40px 0 32px; border-top: 1px solid #21262d; margin-top: 48px;
+    }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #010409; }
+    ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+  <header id="topbar">
+    <div class="topbar-brand">&#9889; BMS DocGen</div>
+    <div class="topbar-center">
+      <div class="topbar-module">${esc(moduleName)}</div>
+      <div class="layer-badge">${esc(layerName)}</div>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-ts">Generated ${esc(timestamp)}</span>
+      <button class="btn-open" onclick="window.open(window.location.href)">Open in Browser</button>
+    </div>
+  </header>
+
+  <nav id="sidebar">
+    <div class="nav-title">Contents</div>
+    ${sidebarLinks}
+    ${buildStackWidget(layerName)}
+  </nav>
+
+  <main id="content">
+    <div class="content-inner">
+      ${sectionsHtml}
+      <footer id="footer">
+        Generated by &#9889; BMS DocGen &middot; ${esc(timestamp)} &middot; Powered by GitHub Copilot
+      </footer>
+    </div>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (typeof hljs !== 'undefined') { hljs.highlightAll(); }
+    });
+
+    function copyCode(btn) {
+      const code = btn.closest('.code-block-wrapper').querySelector('code').innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = 'Copied \u2713';
+        btn.style.color = '#3fb950';
+        setTimeout(() => { btn.textContent = 'Copy'; btn.style.color = ''; }, 2000);
+      });
+    }
+
+    // Sidebar active link tracking
+    const sections = document.querySelectorAll('.doc-section');
+    const links    = document.querySelectorAll('#sidebar .nav-link');
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          links.forEach(l => l.classList.remove('active'));
+          const link = document.querySelector('#sidebar a[href="#' + entry.target.id + '"]');
+          if (link) { link.classList.add('active'); }
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+    sections.forEach(s => observer.observe(s));
+  </script>
+</body>
+</html>`;
+}
+
+/**
+ * Write a fully rendered HTML doc from real LLM content.
+ * Parses the LLM output into sections, converts markdown-ish
+ * markup to HTML, and saves to outputPath.
+ */
+export function renderDoc(
+    moduleName: string,
+    layerName: string,
+    llmContent: string,
+    outputPath: string,
+    timestamp: string
+): void {
+    const dir = path.dirname(outputPath);
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+    }
+    const sections = parseSections(llmContent);
+    const html = buildRealDocHtml(moduleName, layerName, sections, timestamp);
+    fs.writeFileSync(outputPath, html, 'utf8');
+}
+
 function buildDocHtml(moduleName: string, layerName: string): string {
     const layerColor = getLayerColor(layerName);
     const layerBg = getLayerBg(layerName);
