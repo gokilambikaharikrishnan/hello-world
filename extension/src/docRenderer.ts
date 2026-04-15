@@ -183,6 +183,32 @@ function parseSections(llmContent: string): ParsedSection[] {
     return sections;
 }
 
+function applyInline(text: string): string {
+    return text
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, '<em>$1</em>')
+        .replace(/`([^`]+)`/g, '<code class="inline">$1</code>');
+}
+
+function renderTable(tableLines: string[]): string {
+    // drop pure separator rows like |---|---|
+    const rows = tableLines.filter(l => !l.match(/^\|[\s\-:|]+\|$/));
+    if (rows.length === 0) { return ''; }
+
+    const parseRow = (row: string) =>
+        row.split('|').slice(1, -1).map(cell => applyInline(escapeHtml(cell.trim())));
+
+    const headerCells = parseRow(rows[0]).map(c => `<th>${c}</th>`).join('');
+    const bodyRows = rows.slice(1).map(row =>
+        `<tr>${parseRow(row).map(c => `<td>${c}</td>`).join('')}</tr>`
+    ).join('');
+
+    return `<div class="table-wrapper"><table>` +
+        `<thead><tr>${headerCells}</tr></thead>` +
+        `<tbody>${bodyRows}</tbody>` +
+        `</table></div>`;
+}
+
 function renderContent(raw: string): string {
     let html = raw;
 
