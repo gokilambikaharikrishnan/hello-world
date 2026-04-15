@@ -210,56 +210,123 @@ function renderTable(tableLines: string[]): string {
 }
 
 function renderContent(raw: string): string {
-    let html = raw;
+    const lines = raw.split('\n');
+    const output: string[] = [];
+    let inCode = false;
+    let inMermaid = false;
+    let codeBuffer = '';
+    let codeLang = '';
+    let mermaidBuffer = '';
+    let listBuffer: string[] = [];
+    let i = 0;
 
-    // 1. mermaid blocks first — before generic code blocks
-    html = html.replace(/```mermaid\n([\s\S]*?)```/g, (_, diagram) =>
-        `<div class="mermaid-wrapper"><div class="mermaid">${escapeHtml(diagram.trim())}</div></div>`
-    );
+    function flushList() {
+        if (listBuffer.length > 0) {
+            output.push(`<ul>${listBuffer.map(item => `<li>${item}</li>`).join('')}</ul>`);
+            listBuffer = [];
+        }
+    }
 
-    // 2. other fenced code blocks
-    html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
-        const displayLang = lang || 'c';
-        return `<div class="code-block-wrapper">` +
-            `<div class="code-header">` +
-            `<span class="code-lang">${displayLang}</span>` +
-            `<button class="copy-btn" onclick="copyCode(this)">Copy</button>` +
-            `</div>` +
-            `<pre><code class="language-${displayLang}">${escapeHtml(code.trim())}</code></pre>` +
-            `</div>`;
-    });
+    while (i < lines.length) {
+        const line = lines[i];
+        const trimmed = line.trim();
 
-    // 3. markdown tables — consecutive lines starting with |
-    html = html.replace(/((?:\|.+\|\n?)+)/g, (tableBlock) => {
-        const rows = tableBlock.trim().split('\n').filter(r => !r.match(/^\|[\s\-|]+\|$/));
-        if (rows.length < 2) { return tableBlock; }
-        const th = rows[0].split('|').filter(c => c.trim()).map(c => `<th>${c.trim()}</th>`).join('');
-        const trs = rows.slice(1).map(row => {
-            const cells = row.split('|').filter(c => c.trim()).map(c => `<td>${c.trim()}</td>`).join('');
-            return `<tr>${cells}</tr>`;
-        }).join('');
-        return `<div class="table-wrapper"><table><thead><tr>${th}</tr></thead><tbody>${trs}</tbody></table></div>`;
-    });
+        // ── mermaid open ──────────────────────────────────────
+        if (trimmed === '```mermaid' && !inCode && !inMermaid) {
+            flushList();
+            inMermaid = true; mermaidBuffer = '';
+            i++; continue;
+        }
+        // ── mermaid close ─────────────────────────────────────
+        if (inMermaid && trimmed === '```') {
+            inMermaid = false;
+            output.push(`<div class="mermaid-wrapper"><div class="mermaid">${mermaidBuffer.trim()}</div></div>`);
+            mermaidBuffer = '';
+            i++; continue;
+        }
+        if (inMermaid) { mermaidBuffer += line + '\n'; i++; continue; }
 
-    // 4. inline code
-    html = html.replace(/`([^`]+)`/g, (_, code) => `<code class="inline">${escapeHtml(code)}</code>`);
+        // ── code block open ───────────────────────────────────
+        if (trimmed.startsWith('```') && !inCode) {
+            flushList();
+            inCode = true;
+            codeLang = trimmed.replace('```', '').trim() || 'c';
+            codeBuffer = '';
+            i++; continue;
+        }
+        // ── code block close ──────────────────────────────────
+        if (inCode && trimmed === '```') {
+            inCode = false;
+            output.push(
+                `<div class="code-block-wrapper">` +
+                `<div class="code-header"><span class="code-lang">${codeLang}</span>` +
+                `<button class="copy-btn" onclick="copyCode(this)">Copy</button></div>` +
+                `<pre><code class="language-${codeLang}">${escapeHtml(codeBuffer.trim())}</code></pre>` +
+                `</div>`
+            );
+            codeBuffer = '';
+            i++; continue;
+        }
+        if (inCode) { codeBuffer += line + '\n'; i++; continue; }
 
-    // 5. bold
-    html = html.replace(/\*\*([^*]+)\*\*/g, (_, text) => `<strong>${text}</strong>`);
+        // ── skip bare dividers ────────────────────────────────
+        if (trimmed === '---' || trimmed === '***') { i++; continue; }
 
-    // 6. bullet lists — group consecutive - or * lines
-    html = html.replace(/((?:^[-*]\s.+\n?)+)/gm, (block) => {
-        const items = block.trim().split('\n').map(l => `<li>${l.replace(/^[-*]\s/, '').trim()}</li>`).join('');
-        return `<ul>${items}</ul>`;
-    });
+        // ── ### subheading ────────────────────────────────────
+        if (trimmed.startsWith('### ')) {
+            flushList();
+            output.push(`<h4 class="subsection-title">${applyInline(trimmed.replace(/^###\s+/, '').replace(/\*+/g, ''))}</h4>`);
+            i++; continue;
+        }
 
-    // 7. paragraphs — double newline
-    html = html.split(/\n\n+/).map(p => p.trim()).filter(p => p.length > 0).map(p => {
-        if (p.startsWith('<')) { return p; }
-        return `<p>${p.replace(/\n/g, ' ')}</p>`;
-    }).join('\n');
+        // ── ## heading ────────────────────────────────────────
+        if (trimmed.startsWith('## ')) {
+            flushList();
+            const text = trimmed.replace(/^##\s+/, '').replace(/\*+/g, '');
+            // only emit if it isn't a numbered section header (those belong to parseSections)
+            if (!text.match(/^\d+\./)) {
+                output.push(`<h3 class="sub-title">${applyInline(text)}</h3>`);
+            }
+            i++; continue;
+        }
 
-    return html;
+        // ── ⚠️ warning line ───────────────────────────────────
+        if (trimmed.startsWith('⚠️')) {
+            flushList();
+            output.push(`<div class="warning-block">${applyInline(trimmed)}</div>`);
+            i++; continue;
+        }
+
+        // ── bullet list item ──────────────────────────────────
+        if (trimmed.match(/^[-*]\s+/)) {
+            listBuffer.push(applyInline(trimmed.replace(/^[-*]\s+/, '')));
+            i++; continue;
+        }
+
+        // ── flush list when line is not a bullet ──────────────
+        if (listBuffer.length > 0) { flushList(); }
+
+        // ── markdown table ────────────────────────────────────
+        if (trimmed.startsWith('|')) {
+            const tableLines: string[] = [];
+            while (i < lines.length && lines[i].trim().startsWith('|')) {
+                tableLines.push(lines[i]);
+                i++;
+            }
+            output.push(renderTable(tableLines));
+            continue;
+        }
+
+        // ── empty line ────────────────────────────────────────
+        if (trimmed === '') { output.push('<div class="spacer"></div>'); i++; continue; }
+
+        // ── regular paragraph ─────────────────────────────────
+        output.push(`<p>${applyInline(escapeHtml(trimmed))}</p>`);
+        i++;
+    }
+
+    flushList();
+    return output.join('\n');
 }
 
 function buildDynamicSidebarLinks(sections: ParsedSection[]): string {
