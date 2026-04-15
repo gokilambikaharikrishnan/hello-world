@@ -480,6 +480,62 @@ export function buildSelectorHTML(groups: FolderGroup[], preselected: string[]):
 
     // ── Init counter for any pre-selections ───────────────────
     if (selected.size > 0) { updateCounter(); }
+
+    // ── Progress panel ─────────────────────────────────────────
+    window.addEventListener('message', event => {
+      const msg = event.data;
+
+      if (msg.command === 'progress') {
+        showProgressPanel();
+        updateProgressRow(msg.folder, msg.status, msg.message, msg.outputPath);
+      }
+
+      if (msg.command === 'allDone') {
+        const doneEl = document.getElementById('all-done-msg');
+        const textEl = document.getElementById('done-text');
+        if (doneEl && textEl) {
+          textEl.textContent = 'Documentation generated for ' + msg.count + ' module' + (msg.count === 1 ? '' : 's');
+          doneEl.style.display = 'flex';
+        }
+      }
+    });
+
+    function showProgressPanel() {
+      const panel = document.getElementById('progress-panel');
+      if (panel) { panel.style.display = 'block'; }
+    }
+
+    function updateProgressRow(folder, status, message, outputPath) {
+      let row = document.getElementById('pr-' + folder);
+      if (!row) {
+        row = document.createElement('div');
+        row.id = 'pr-' + folder;
+        row.className = 'progress-row';
+        const list = document.getElementById('progress-list');
+        if (list) { list.appendChild(row); }
+      }
+
+      const icons = { reading: '\uD83D\uDD0D', analysing: '\u23F3', rendering: '\uD83C\uDFA8', done: '\u2705', error: '\u274C' };
+      const isPulsing = status === 'analysing' || status === 'reading';
+      let linkHtml = '';
+      if (status === 'done' && outputPath) {
+        linkHtml = '<button class="progress-link" onclick="openDoc(\\'' + outputPath.replace(/\\/g, '\\\\') + '\\')">Open doc</button>';
+      }
+
+      row.innerHTML =
+        '<span class="progress-icon ' + (isPulsing ? 'pulsing' : '') + '">' + (icons[status] || '\u23F3') + '</span>' +
+        '<span class="progress-folder">' + folder + '</span>' +
+        '<span class="progress-msg">' + message + '</span>' +
+        linkHtml;
+    }
+
+    function openDoc(filePath) {
+      vscode.postMessage({ command: 'openDoc', path: filePath });
+    }
+
+    document.getElementById('open-docs-btn').addEventListener('click', () => {
+      vscode.postMessage({ command: 'openDocsFolder' });
+    });
   </script>
 </body>
 </html>`;
