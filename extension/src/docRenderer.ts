@@ -475,6 +475,16 @@ function buildRealDocHtml(
       background: #161b22; border: 1px solid #30363d; border-radius: 8px;
       padding: 24px; margin: 16px 0; overflow-x: auto;
     }
+    .mermaid-wrapper svg { max-width: 100%; height: auto; }
+    .mermaid-fallback {
+      background: #161b22; border: 1px solid #d29922; border-radius: 8px; padding: 16px;
+    }
+    .mermaid-fallback-label { color: #d29922; font-size: 0.8rem; margin-bottom: 10px; font-weight: 500; }
+    .mermaid-source {
+      background: #0d1117; border: 1px solid #30363d; border-radius: 4px;
+      padding: 12px; color: #8b949e; font-size: 0.78rem; overflow-x: auto;
+      white-space: pre; margin: 0; font-family: 'JetBrains Mono', monospace;
+    }
 
     /* ── TABLES ── */
     .table-wrapper { overflow-x: auto; margin: 16px 0; }
@@ -540,19 +550,61 @@ function buildRealDocHtml(
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
   <script>
-    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'dark',
+      darkMode: true,
+      securityLevel: 'loose',
+      fontFamily: 'JetBrains Mono, monospace'
+    });
 
-    document.addEventListener('DOMContentLoaded', () => {
-      if (typeof hljs !== 'undefined') { hljs.highlightAll(); }
+    function escHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Render each mermaid diagram individually so one error doesn't kill others
+      const wrappers = document.querySelectorAll('.mermaid-wrapper');
+      for (const wrapper of wrappers) {
+        const el = wrapper.querySelector('.mermaid');
+        if (!el) { continue; }
+        const source = el.textContent || '';
+        if (!source.trim()) { continue; }
+        try {
+          const id = 'mmd-' + Math.random().toString(36).slice(2, 8);
+          const { svg } = await mermaid.render(id, source.trim());
+          el.innerHTML = svg;
+          const svgEl = el.querySelector('svg');
+          if (svgEl) { svgEl.style.maxWidth = '100%'; svgEl.style.height = 'auto'; }
+        } catch (err) {
+          wrapper.innerHTML =
+            '<div class="mermaid-fallback">' +
+            '<div class="mermaid-fallback-label">\u26a0\ufe0f Diagram could not render \u2014 showing source</div>' +
+            '<pre class="mermaid-source">' + escHtml(source.trim()) + '</pre>' +
+            '</div>';
+        }
+      }
+
+      // Syntax-highlight code blocks
+      if (typeof hljs !== 'undefined') {
+        document.querySelectorAll('pre code').forEach(block => { hljs.highlightElement(block); });
+      }
     });
 
     function copyCode(btn) {
-      const code = btn.closest('.code-block-wrapper').querySelector('code').innerText;
-      navigator.clipboard.writeText(code).then(() => {
-        btn.textContent = 'Copied \u2713';
-        btn.style.color = '#3fb950';
-        setTimeout(() => { btn.textContent = 'Copy'; btn.style.color = ''; }, 2000);
-      });
+      const wrapper = btn.closest('.code-block-wrapper');
+      if (!wrapper) { return; }
+      const code = wrapper.querySelector('code');
+      if (!code) { return; }
+      navigator.clipboard.writeText(code.innerText)
+        .then(() => {
+          btn.textContent = 'Copied \u2713'; btn.style.color = '#3fb950';
+          setTimeout(() => { btn.textContent = 'Copy'; btn.style.color = ''; }, 2000);
+        })
+        .catch(() => {
+          btn.textContent = 'Failed';
+          setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+        });
     }
 
     // Sidebar active link tracking
