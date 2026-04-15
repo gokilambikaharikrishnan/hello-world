@@ -347,6 +347,16 @@ export function buildSelectorHTML(groups: FolderGroup[], preselected: string[]):
     </div>
   </div>
 
+  <div id="progress-panel">
+    <div class="progress-header">Generating Documentation</div>
+    <div id="progress-list"></div>
+    <div id="all-done-msg">
+      <span>&#9989;</span>
+      <span id="done-text"></span>
+      <button id="open-docs-btn">Open docs folder</button>
+    </div>
+  </div>
+
   <div id="bottombar">
     <span id="bottom-summary">0 folders selected across 0 layers</span>
     <div id="layer-dots">${layerDotsHtml}</div>
