@@ -277,38 +277,9 @@ export function buildPrompt(
     resolvedIncludes: SourceFile[],
     output: vscode.OutputChannel
 ): PromptPayload {
-    // Build the module files section
-    const moduleFilesBlock = moduleFiles.map(sf =>
-        `=== ${sf.relativePath} ===\n${sf.content}`
-    ).join('\n\n');
-
-    // Build the resolved includes section
-    const resolvedBlock = resolvedIncludes.length > 0
-        ? resolvedIncludes.map(sf =>
-            `=== ${sf.relativePath} ===\n${sf.content}`
-          ).join('\n\n')
-        : '(none resolved)';
-
-    // Determine BSW/ASW group for the module layer
-    const bswLayers = ['MCAL', 'CDD', 'ESAL', 'SRVLayer'];
-    const groupLabel = bswLayers.includes(module.layer) ? 'BSW' : 'ASW';
-
-    const dynamicSection = `MODULE BEING DOCUMENTED: ${module.name}
-LAYER: ${module.layer} (${groupLabel}) — BSW sub-layers: MCAL / CDD / ESAL / SRVLayer | ASW
-
-FILES IN THIS MODULE:
-${moduleFilesBlock}
-
-CROSS-REFERENCED FILES RESOLVED FROM #includes:
-${resolvedBlock}`;
-
-    const userPrompt = `${dynamicSection}
-
----
-
-${OUTPUT_FORMAT}`;
-
-    const totalChars = SYSTEM_CONTEXT.length + userPrompt.length;
+    const partC = buildPartC(module, moduleFiles, resolvedIncludes);
+    const userPrompt = PART_A + PART_B + partC + PART_D;
+    const totalChars = userPrompt.length;
 
     output.appendLine(`[PromptBuilder] Module: ${module.name}`);
     output.appendLine(`[PromptBuilder] Module files: ${moduleFiles.length} (${moduleFiles.reduce((s, f) => s + f.sizeChars, 0).toLocaleString()} chars)`);
@@ -316,7 +287,7 @@ ${OUTPUT_FORMAT}`;
     output.appendLine(`[PromptBuilder] Total prompt length: ${totalChars.toLocaleString()} chars`);
 
     return {
-        systemPrompt: SYSTEM_CONTEXT,
+        systemPrompt: '',   // all content is in userPrompt (PART_A+B+C+D)
         userPrompt,
         totalChars
     };
