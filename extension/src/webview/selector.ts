@@ -41,11 +41,11 @@ function buildGroupsHtml(groups: FolderGroup[], preselected: Set<string>): strin
         const foldersHtml = g.folders.map(folder => {
             const checked = preselected.has(folder);
             return `
-      <div class="folder-row" id="row-${esc(folder)}" onclick="toggleFolder('${folder}','${g.color}','${g.layer}')">
-        <div class="custom-checkbox${checked ? ' checked' : ''}" id="cb-${esc(folder)}">${checked ? '&#10003;' : ''}</div>
+      <label class="folder-row" id="row-${esc(folder)}">
+        <input type="checkbox" name="folder" value="${esc(folder)}"${checked ? ' checked' : ''} onchange="onFolderChange()">
         <span class="folder-name">${esc(folder)}</span>
         <span class="layer-badge">${esc(g.layer)}</span>
-      </div>`;
+      </label>`;
         }).join('');
 
         html += `
@@ -229,14 +229,11 @@ export function buildSelectorHTML(groups: FolderGroup[], preselected: string[]):
     .folder-row:last-child { border-bottom: none; }
     .folder-row:hover { background: #1f2937; }
 
-    .custom-checkbox {
-      width: 16px; height: 16px; border-radius: 4px;
-      border: 2px solid #30363d; background: transparent;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0; transition: background 150ms, border-color 150ms;
-      font-size: 11px; color: white;
+    .folder-row input[type="checkbox"] {
+      width: 16px; height: 16px; flex-shrink: 0;
+      accent-color: var(--layer-color, #58a6ff);
+      cursor: pointer;
     }
-    .custom-checkbox.checked { background: var(--layer-color, #58a6ff); border-color: var(--layer-color, #58a6ff); }
 
     .folder-name { color: #e6edf3; font-size: 0.88rem; flex: 1; }
 
@@ -365,33 +362,22 @@ export function buildSelectorHTML(groups: FolderGroup[], preselected: string[]):
   <script>
     const vscode = acquireVsCodeApi();
     const GROUPS = ${groupsJson};
-    const selected = new Set(${preselectedJson});
     const collapsed = new Set();
 
-    // ── Checkbox toggle ────────────────────────────────────────
-    function toggleFolder(folderName, color, layer) {
-      if (selected.has(folderName)) { selected.delete(folderName); }
-      else { selected.add(folderName); }
-      const cb = document.getElementById('cb-' + folderName);
-      if (cb) {
-        const on = selected.has(folderName);
-        cb.className = 'custom-checkbox' + (on ? ' checked' : '');
-        cb.textContent = on ? '\\u2713' : '';
-      }
-      updateCounter();
-      updateGroupDot(layer);
+    // ── Read currently checked boxes ───────────────────────────
+    function checkedFolders() {
+      return Array.from(document.querySelectorAll('input[name="folder"]:checked')).map(cb => cb.value);
     }
 
+    // ── Called by each checkbox onchange ──────────────────────
+    function onFolderChange() { updateCounter(); }
+
+    // ── Select-all for one layer ──────────────────────────────
     function selectAll(layer) {
-      const g = GROUPS.find(x => x.layer === layer);
-      if (!g) { return; }
-      g.folders.forEach(f => {
-        selected.add(f);
-        const cb = document.getElementById('cb-' + f);
-        if (cb) { cb.className = 'custom-checkbox checked'; cb.textContent = '\\u2713'; }
-      });
+      const fl = document.getElementById('folders-' + layer);
+      if (!fl) { return; }
+      fl.querySelectorAll('input[name="folder"]').forEach(cb => { cb.checked = true; });
       updateCounter();
-      updateGroupDot(layer);
     }
 
     // ── Collapse ───────────────────────────────────────────────
@@ -408,25 +394,11 @@ export function buildSelectorHTML(groups: FolderGroup[], preselected: string[]):
 
     // ── Counter ────────────────────────────────────────────────
     function updateCounter() {
-      const n = selected.size;
+      const n = checkedFolders().length;
       document.getElementById('counter').textContent = n + ' selected';
-      const btn = document.getElementById('btn-generate');
-      btn.classList.toggle('active', n > 0);
-      const layersN = GROUPS.filter(g => g.folders.some(f => selected.has(f))).length;
+      document.getElementById('btn-generate').classList.toggle('active', n > 0);
       document.getElementById('bottom-summary').textContent =
-        n + ' folder' + (n === 1 ? '' : 's') + ' selected across ' +
-        layersN + ' layer' + (layersN === 1 ? '' : 's');
-      GROUPS.forEach(g => {
-        const dot = document.getElementById('dot-' + g.layer);
-        if (dot) { dot.style.opacity = g.folders.some(f => selected.has(f)) ? '1' : '0'; }
-      });
-    }
-
-    function updateGroupDot(layer) {
-      const g = GROUPS.find(x => x.layer === layer);
-      if (!g) { return; }
-      const dot = document.getElementById('sel-dot-' + layer);
-      if (dot) { dot.style.opacity = g.folders.some(f => selected.has(f)) ? '1' : '0'; }
+        n + ' folder' + (n === 1 ? '' : 's') + ' selected';
     }
 
     // ── Search ─────────────────────────────────────────────────
@@ -453,12 +425,13 @@ export function buildSelectorHTML(groups: FolderGroup[], preselected: string[]):
 
     // ── Generate ───────────────────────────────────────────────
     document.getElementById('btn-generate').addEventListener('click', function() {
-      if (selected.size === 0) { return; }
-      vscode.postMessage({ command: 'generate', folders: [...selected] });
+      const folders = checkedFolders();
+      if (folders.length === 0) { return; }
+      vscode.postMessage({ command: 'generate', folders });
     });
 
     // ── Init counter for any pre-selections ───────────────────
-    if (selected.size > 0) { updateCounter(); }
+    updateCounter();
 
     // ── Progress panel ─────────────────────────────────────────
     window.addEventListener('message', event => {
