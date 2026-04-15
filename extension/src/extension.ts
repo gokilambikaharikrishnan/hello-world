@@ -104,46 +104,149 @@ async function showSelector(
 
     panel.webview.html = buildSelectorHTML(groups, preselected);
 
-    // One-time message listener for this screen
-    const sub = panel.webview.onDidReceiveMessage(async (msg: { command: string; folders: string[] }) => {
-        if (msg.command !== 'generate') { return; }
-        sub.dispose();
+    // Message listener for selector screen (persists for openDoc/openDocsFolder too)
+    const sub = panel.webview.onDidReceiveMessage(async (msg: { command: string; folders?: string[]; path?: string }) => {
+        if (msg.command === 'generate') {
+            sub.dispose();
+            output.appendLine(`Generate requested: [${(msg.folders ?? []).join(', ')}]`);
+            await handleGenerate(panel, msg.folders ?? []);
+            return;
+        }
 
-        output.appendLine(`Generate requested: [${msg.folders.join(', ')}]`);
-        await handleGenerate(panel, msg.folders);
+        if (msg.command === 'openDoc' && msg.path) {
+            vscode.env.openExternal(vscode.Uri.file(msg.path));
+            return;
+        }
+
+        if (msg.command === 'openDocsFolder') {
+            const ws = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+            if (ws) { vscode.env.openExternal(vscode.Uri.file(path.join(ws, 'docs'))); }
+            return;
+        }
     });
 }
 
 // ---------------------------------------------------------------------------
-// Step 3 — Generate doc shells (Session 3 will add real LLM content)
+// Step 3 — Full LLM pipeline
 // ---------------------------------------------------------------------------
 
+function sendProgress(
+    panel: vscode.WebviewPanel,
+    folder: string,
+    status: 'reading' | 'analysing' | 'rendering' | 'done' | 'error',
+    message: string,
+    outputPath?: string
+): void {
+    panel.webview.postMessage({ command: 'progress', folder, status, message, outputPath });
+}
+
 async function handleGenerate(panel: vscode.WebviewPanel, folders: string[]): Promise<void> {
-    const docsDir = ensureDocsDir();
-    output.appendLine(`=== Generate requested for ${folders.length} module(s) ===`);
-
-    for (const folder of folders) {
-        const layer = LAYER_MAP[folder] ?? 'Unknown';
-        const outFile = path.join(docsDir, `${folder}_design.html`);
-
-        output.appendLine(`Rendering shell: ${folder} (${layer}) → ${outFile}`);
-
-        try {
-            renderDocShell(folder, layer, outFile);
-            output.appendLine(`  ✓ Saved: docs/${folder}_design.html`);
-            vscode.window.showInformationMessage(
-                `BMS DocGen: docs/${folder}_design.html created`
-            );
-        } catch (err) {
-            output.appendLine(`  ✗ Error: ${err}`);
-            vscode.window.showErrorMessage(
-                `BMS DocGen: Failed to create doc for ${folder}: ${err}`
-            );
-        }
+    const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    if (!workspacePath) {
+        vscode.window.showErrorMessage('BMS DocGen: No workspace folder open');
+        return;
     }
 
-    output.appendLine(`=== Done — ${folders.length} shell(s) written to docs/ ===`);
-    output.appendLine('Session 3 will wire this to Copilot for real content.');
+    const docsPath = path.join(workspacePath, 'docs');
+    if (!fs.existsSync(docsPath)) { fs.mkdirSync(docsPath, { recursive: true }); }
+
+    const timestamp = new Date().toLocaleString('en-GB', {
+        year: 'numeric', month: 'short', day: '2-digit',
+        hour: '2-digit', minute: '2-digit'
+    });
+
+    output.appendLine(`\n=== Generate requested for ${folders.length} module(s) ===`);
+
+    for (const folderName of folders) {
+        const layerName = LAYER_MAP[folderName] ?? 'Unknown';
+        const folderPath = getModuleFsPath(folderName, layerName);
+        const outFile = path.join(docsPath, `${folderName}_design.html`);
+
+        output.appendLine(`\n[${folderName}] layer=${layerName} path=${folderPath}`);
+
+        if (!fs.existsSync(folderPath)) {
+            sendProgress(panel, folderName, 'error', `Folder not found: ${folderPath}`);
+            output.appendLine(`[${folderName}] ERROR: folder not found`);
+            continue;
+        }
+
+        // ── Stage 1: read files ──────────────────────────────────
+        sendProgress(panel, folderName, 'reading', 'Reading source files...');
+        output.appendLine(`[${folderName}] Reading files...`);
+
+        const moduleFiles = readModuleFiles(folderPath, output);
+        if (moduleFiles.length === 0) {
+            sendProgress(panel, folderName, 'error', 'No .c/.h files found in folder');
+            output.appendLine(`[${folderName}] ERROR: no source files`);
+            continue;
+        }
+
+        // ── Stage 2: resolve includes ────────────────────────────
+        sendProgress(panel, folderName, 'reading', `Resolving #include chain (${moduleFiles.length} files)...`);
+        output.appendLine(`[${folderName}] Resolving includes...`);
+
+        const resolvedIncludes = resolveIncludes(moduleFiles, output);
+
+        // ── Stage 3: build prompt ────────────────────────────────
+        sendProgress(panel, folderName, 'analysing', 'Building prompt...');
+        output.appendLine(`[${folderName}] Building prompt...`);
+
+        const moduleFolder: ModuleFolder = {
+            name: folderName,
+            fullPath: folderPath,
+            layer: layerName,
+            fileCount: moduleFiles.length
+        };
+
+        let payload;
+        try {
+            payload = buildPrompt(moduleFolder, moduleFiles, resolvedIncludes, output);
+        } catch (err: any) {
+            sendProgress(panel, folderName, 'error', `Prompt build failed: ${err.message}`);
+            output.appendLine(`[${folderName}] Prompt ERROR: ${err.message}`);
+            continue;
+        }
+
+        // ── Stage 4: call Copilot ────────────────────────────────
+        sendProgress(panel, folderName, 'analysing', 'Calling GitHub Copilot...');
+        output.appendLine(`[${folderName}] Calling Copilot (${payload.totalChars.toLocaleString()} chars)...`);
+
+        let llmContent: string;
+        try {
+            llmContent = await generateDocumentation(
+                payload,
+                (_token: string) => {
+                    // throttle: only post progress every ~500 tokens
+                },
+                output
+            );
+        } catch (err: any) {
+            sendProgress(panel, folderName, 'error', err.message ?? 'Copilot call failed');
+            output.appendLine(`[${folderName}] Copilot ERROR: ${err.message}`);
+            continue;
+        }
+
+        output.appendLine(`[${folderName}] Response: ${llmContent.length.toLocaleString()} chars`);
+
+        // ── Stage 5: render HTML ─────────────────────────────────
+        sendProgress(panel, folderName, 'rendering', 'Rendering documentation...');
+        output.appendLine(`[${folderName}] Rendering to ${outFile}`);
+
+        try {
+            renderDoc(folderName, layerName, llmContent, outFile, timestamp);
+            output.appendLine(`[${folderName}] ✓ Saved: docs/${folderName}_design.html`);
+        } catch (err: any) {
+            sendProgress(panel, folderName, 'error', `Render failed: ${err.message}`);
+            output.appendLine(`[${folderName}] Render ERROR: ${err.message}`);
+            continue;
+        }
+
+        // ── Stage 6: done ────────────────────────────────────────
+        sendProgress(panel, folderName, 'done', 'Documentation complete', outFile);
+    }
+
+    panel.webview.postMessage({ command: 'allDone', count: folders.length });
+    output.appendLine(`\n=== All done: ${folders.length} module(s) ===`);
 }
 
 export function deactivate(): void {
