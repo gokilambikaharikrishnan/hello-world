@@ -3,75 +3,48 @@ import { ModuleFolder } from './folderScanner';
 import * as vscode from 'vscode';
 
 // ---------------------------------------------------------------------------
-// Prompt sections — kept as named constants for clarity and future editing
+// Prompt parts — assembled in buildPrompt()
 // ---------------------------------------------------------------------------
 
-const SYSTEM_CONTEXT = `You are a senior embedded firmware engineer documenting a Battery Management System
-(BMS) codebase for LFP batteries used in UPS and ESS applications.
+const PART_A = `CRITICAL FORMAT RULES — FOLLOW EXACTLY OR THE OUTPUT WILL BREAK:
 
-Project context:
-- Target MCU: STM32, bare metal drivers written in C
-- Battery pack: 14S LFP prismatic cells, 314Ah capacity, max 75A, max 50V
-- AFE communicates over SPI; pack data reported over CAN bus
-- Standards in scope: IEC 62133, IEC 61960, UL 1973, UN 38.3
+- Start your response IMMEDIATELY with "1. MODULE OVERVIEW"
+- Do NOT write any preamble, intro sentence, or title before section 1
+- Do NOT write "Here is the documentation" or similar opener
+- Section headers MUST use EXACTLY this format:
+    1. MODULE OVERVIEW
+    2. HARDWARE / PERIPHERAL INVOLVED
+  (number + dot + space + UPPERCASE TITLE — nothing else on that line)
+- Do NOT put ## or ### or ** before section numbers
+- Do NOT use --- between sections
+- Inside section body: ### for subheadings is OK
+- **bold** for emphasis is OK inside body text
+- Bullet points with - are OK
+- Tables with | col | col | format are OK
+- Code in \`\`\`c fenced blocks is OK
+- Mermaid diagrams in \`\`\`mermaid fenced blocks are OK
+- After every mermaid block write 2 plain English sentences describing it
+`;
 
-Software architecture (bottom to top):
-- BSW — Basic Software (everything below the application layer):
-    - MCAL  (Microcontroller Abstraction Layer): bare metal STM32 peripheral drivers
-    - CDD   (Complex Device Drivers): external IC drivers e.g. AFE, SerialFlash
-    - ESAL  (ECU Software Abstraction Layer): interface/abstraction between BSW and ASW
-    - SRVLayer (Service Layer): cross-cutting services — NVM, Scheduler, Diagnostics, CAN NM
-- ASW — Application Software: BMS logic, SOC estimation, protection, state machines
+const PART_B = `YOU ARE:
+A senior embedded firmware engineer with 15 years of BMS experience.
+You are writing documentation for a junior engineer who just joined the team.
+Your documentation must be:
+- Technically precise: real values, real register names, real behaviour
+- Built from first principles: explain the domain before the code
+- Honest: prefix inferred information with "Inferred from code:"
+- Never vague: no "handles errors appropriately" — say exactly what happens
+- Never hallucinating: only document what is visible in the source files
 
-Your documentation will be read by a new firmware engineer joining the team.
-Be specific, be technical, never hallucinate. Only document what you can see in the code.
-If you infer something that isn't explicitly stated, say "inferred from code."`;
-
-const OUTPUT_FORMAT = `Generate a complete engineering design document with exactly these sections:
-
-1. MODULE OVERVIEW
-   - What this module is, what problem it solves, why it exists in this BMS
-
-2. HARDWARE / PERIPHERAL INVOLVED
-   - What physical hardware or peripheral this module talks to
-   - Relevant register names, peripheral base addresses if visible in code
-
-3. CONFIGURATION
-   - All #defines, constants, baud rates, buffer sizes, interrupt settings
-   - Pull exact values from the code, do not guess
-
-4. FUNCTION INVENTORY
-   - Every function: signature, purpose, parameters, return value, side effects
-   - Group by: init functions / runtime functions / ISRs / helper functions
-
-5. DATA FLOW
-   - What data enters this module, from where, in what format
-   - What data leaves this module, to where, in what format
-   - Any queues, buffers, or shared memory involved
-
-6. CROSS-MODULE DEPENDENCIES
-   - What other modules does this one call?
-   - What other modules call into this one?
-   - Draw this as a Mermaid graph diagram
-
-7. SEQUENCE / FLOW DIAGRAM
-   - The key operational sequence (e.g. CAN message receive flow, init sequence)
-   - Render as a Mermaid sequenceDiagram or flowchart
-
-8. STATE MACHINE (if applicable)
-   - If this module has states or modes, document them
-   - Render as a Mermaid stateDiagram-v2
-
-9. DESIGN DECISIONS
-   - Why is it designed this way? (infer from code if not commented)
-   - Any notable trade-offs visible in the implementation
-
-10. KNOWN ISSUES / TODOs
-    - Extract all TODO, FIXME, HACK, NOTE comments verbatim
-
-All Mermaid diagrams must be in fenced code blocks with \`\`\`mermaid syntax.
-Do not wrap the entire response in markdown. Output clean structured text with
-clear section headers. This will be rendered directly into an HTML document.`;
+READER PROFILE:
+The person reading this just joined the BMS firmware team. They:
+- Know C programming and basic embedded concepts
+- Have NEVER worked on a BMS before
+- Do not know: what a contactor is, what SOC means in practice,
+  why CAN is used, what the AFE does, why NVM matters for battery life
+- Will use this document as their primary reference for modifying the module
+- Must understand the module well enough to change it safely
+`;
 
 // ---------------------------------------------------------------------------
 // Public API
