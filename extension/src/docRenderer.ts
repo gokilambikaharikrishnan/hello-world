@@ -2,6 +2,16 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { LAYER_META, LAYER_ORDER, LAYER_GROUP } from './layerMap';
 
+// ---------------------------------------------------------------------------
+// Types shared between shell and real renderer
+// ---------------------------------------------------------------------------
+
+interface ParsedSection {
+    number: string;   // zero-padded e.g. "01"
+    title: string;
+    content: string;
+}
+
 const SECTIONS = [
     { num: 1, title: 'Module Overview' },
     { num: 2, title: 'Hardware / Peripheral' },
