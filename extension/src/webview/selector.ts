@@ -278,6 +278,52 @@ export function buildSelectorHTML(groups: FolderGroup[], preselected: string[]):
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: #0d1117; }
     ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+
+    /* ── PROGRESS PANEL ── */
+    #progress-panel {
+      display: none;
+      margin: 24px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .progress-header {
+      background: #21262d;
+      padding: 12px 20px;
+      color: #8b949e;
+      font-size: 0.82rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .progress-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 20px; border-bottom: 1px solid #21262d; font-size: 0.88rem;
+    }
+    .progress-row:last-child { border-bottom: none; }
+    .progress-icon { font-size: 1rem; width: 20px; flex-shrink: 0; }
+    .progress-folder { color: #e6edf3; font-weight: 500; min-width: 160px; }
+    .progress-msg { color: #8b949e; flex: 1; }
+    .progress-link {
+      color: #58a6ff; cursor: pointer; font-size: 0.8rem;
+      text-decoration: underline; background: none; border: none;
+      font-family: inherit; white-space: nowrap;
+    }
+    .progress-link:hover { color: #79c0ff; }
+    #all-done-msg {
+      display: none; padding: 16px 20px;
+      align-items: center; gap: 12px;
+      color: #3fb950; font-size: 0.9rem;
+    }
+    #open-docs-btn {
+      margin-left: auto; background: transparent;
+      border: 1px solid #30363d; color: #8b949e;
+      border-radius: 6px; padding: 4px 12px; cursor: pointer;
+      font-family: inherit; font-size: 0.8rem;
+    }
+    #open-docs-btn:hover { color: #e6edf3; border-color: #8b949e; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .pulsing { animation: pulse 1.2s ease infinite; }
   </style>
 </head>
 <body>
