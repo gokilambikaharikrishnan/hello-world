@@ -482,6 +482,21 @@ function buildRealDocHtml(
     th { background: #21262d; color: #8b949e; padding: 10px 16px; text-align: left; font-weight: 500; }
     td { padding: 10px 16px; border-bottom: 1px solid #21262d; color: #e6edf3; }
 
+    h3.sub-title {
+      color: #e6edf3; font-size: 1rem; font-weight: 600;
+      margin: 24px 0 10px; padding-bottom: 6px; border-bottom: 1px solid #21262d;
+    }
+    h4.subsection-title {
+      color: #8b949e; font-size: 0.82rem; font-weight: 600;
+      margin: 18px 0 8px; text-transform: uppercase; letter-spacing: 0.1em;
+    }
+    .warning-block {
+      background: rgba(210,153,34,0.1); border-left: 3px solid #d29922;
+      border-radius: 0 6px 6px 0; padding: 10px 14px; margin: 10px 0;
+      color: #e3b341; font-size: 0.88rem;
+    }
+    .spacer { height: 6px; }
+
     /* ── FOOTER ── */
     #footer {
       text-align: center; color: #484f58; font-size: 0.78rem;
