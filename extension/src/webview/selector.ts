@@ -328,7 +328,7 @@ export function buildSelectorHTML(groups: FolderGroup[], preselected: string[]):
     <div class="topbar-title">Select Modules</div>
     <div class="topbar-right">
       <span id="counter">0 selected</span>
-      <button id="btn-generate">Generate Docs &#8594;</button>
+      <button id="btn-generate" onclick="var f=Array.from(document.querySelectorAll('input[name=folder]:checked')).map(function(c){return c.value});if(f.length&&vscode){vscode.postMessage({command:'generate',folders:f});}">Generate Docs &#8594;</button>
     </div>
   </div>
 
@@ -357,8 +357,9 @@ export function buildSelectorHTML(groups: FolderGroup[], preselected: string[]):
     <div id="layer-dots">${layerDotsHtml}</div>
   </div>
 
+  <script>var vscode = acquireVsCodeApi();</script>
+
   <script>
-    const vscode = acquireVsCodeApi();
     const collapsed = new Set();
 
     // ── Read currently checked boxes ───────────────────────────
