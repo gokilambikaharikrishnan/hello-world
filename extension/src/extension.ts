@@ -1,13 +1,19 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+import * as fs from 'fs';
 import { DocGenPanel } from './webviewPanel';
 import { getUsername } from './utils/getUsername';
 import { getChangedFolders } from './utils/getChangedFolders';
-import { scanFolders, ensureDocsDir } from './utils/scanFolders';
+import { scanFolders, ensureDocsDir, getModuleFsPath } from './utils/scanFolders';
 import { buildGreetingHTML } from './webview/greeting';
 import { buildSelectorHTML } from './webview/selector';
-import { renderDocShell } from './docRenderer';
+import { renderDoc } from './docRenderer';
 import { LAYER_MAP } from './layerMap';
+import { readModuleFiles } from './fileReader';
+import { resolveIncludes } from './includeResolver';
+import { buildPrompt } from './promptBuilder';
+import { generateDocumentation } from './llmClient';
+import { ModuleFolder } from './folderScanner';
 
 let output: vscode.OutputChannel;
 
