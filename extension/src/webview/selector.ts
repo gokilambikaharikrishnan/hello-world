@@ -42,7 +42,7 @@ function buildGroupsHtml(groups: FolderGroup[], preselected: Set<string>): strin
             const checked = preselected.has(folder);
             return `
       <label class="folder-row" id="row-${esc(folder)}">
-        <input type="checkbox" name="folder" value="${esc(folder)}"${checked ? ' checked' : ''} onchange="onFolderChange()">
+        <input type="checkbox" name="folder" value="${esc(folder)}"${checked ? ' checked' : ''} onchange="var n=document.querySelectorAll('input[name=folder]:checked').length;document.getElementById('counter').textContent=n+' selected';document.getElementById('btn-generate').classList.toggle('active',n>0);">
         <span class="folder-name">${esc(folder)}</span>
         <span class="layer-badge">${esc(g.layer)}</span>
       </label>`;
