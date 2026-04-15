@@ -49,7 +49,7 @@ function buildGroupsHtml(groups: FolderGroup[], preselected: Set<string>): strin
         }).join('');
 
         html += `
-    <div class="group-wrapper" id="group-${esc(g.layer)}" style="--layer-color:${esc(g.color)}">
+    <div class="group-wrapper" id="group-${esc(g.layer)}" data-layer="${esc(g.layer)}" data-fullname="${esc(g.fullName)}" style="--layer-color:${esc(g.color)}">
       <div class="group-header" id="hdr-${esc(g.layer)}" onclick="toggleCollapse('${g.layer}')">
         <div class="group-header-left">
           <span class="group-icon">${g.icon}</span>
@@ -82,8 +82,6 @@ function buildLayerDotsHtml(groups: FolderGroup[]): string {
 // ---------------------------------------------------------------------------
 
 export function buildSelectorHTML(groups: FolderGroup[], preselected: string[]): string {
-    const groupsJson = JSON.stringify(groups);
-    const preselectedJson = JSON.stringify(preselected);
     const preselectedSet = new Set(preselected);
 
     const groupsHtml   = buildGroupsHtml(groups, preselectedSet);
@@ -361,7 +359,6 @@ export function buildSelectorHTML(groups: FolderGroup[], preselected: string[]):
 
   <script>
     const vscode = acquireVsCodeApi();
-    const GROUPS = ${groupsJson};
     const collapsed = new Set();
 
     // ── Read currently checked boxes ───────────────────────────
@@ -405,15 +402,13 @@ export function buildSelectorHTML(groups: FolderGroup[], preselected: string[]):
     document.getElementById('search-input').addEventListener('input', function() {
       const q = this.value.trim().toLowerCase();
       let anyVisible = false;
-      GROUPS.forEach(g => {
-        const wrapper = document.getElementById('group-' + g.layer);
-        if (!wrapper) { return; }
+      document.querySelectorAll('.group-wrapper').forEach(wrapper => {
+        const layer = (wrapper.dataset.layer || '').toLowerCase();
+        const fullName = (wrapper.dataset.fullname || '').toLowerCase();
         let groupMatch = false;
-        g.folders.forEach(f => {
-          const row = document.getElementById('row-' + f);
-          if (!row) { return; }
-          const match = !q || f.toLowerCase().includes(q) ||
-            g.layer.toLowerCase().includes(q) || g.fullName.toLowerCase().includes(q);
+        wrapper.querySelectorAll('.folder-row').forEach(row => {
+          const name = (row.querySelector('.folder-name').textContent || '').toLowerCase();
+          const match = !q || name.includes(q) || layer.includes(q) || fullName.includes(q);
           row.style.display = match ? '' : 'none';
           if (match) { groupMatch = true; }
         });
