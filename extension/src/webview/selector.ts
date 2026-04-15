@@ -41,7 +41,7 @@ function buildGroupsHtml(groups: FolderGroup[], preselected: Set<string>): strin
         const foldersHtml = g.folders.map(folder => {
             const checked = preselected.has(folder);
             return `
-      <div class="folder-row" id="row-${esc(folder)}" data-folder="${esc(folder)}" data-layer="${esc(g.layer)}">
+      <div class="folder-row" id="row-${esc(folder)}" onclick="toggleFolder('${folder}','${g.color}','${g.layer}')">
         <div class="custom-checkbox${checked ? ' checked' : ''}" id="cb-${esc(folder)}">${checked ? '&#10003;' : ''}</div>
         <span class="folder-name">${esc(folder)}</span>
         <span class="layer-badge">${esc(g.layer)}</span>
@@ -50,7 +50,7 @@ function buildGroupsHtml(groups: FolderGroup[], preselected: Set<string>): strin
 
         html += `
     <div class="group-wrapper" id="group-${esc(g.layer)}" style="--layer-color:${esc(g.color)}">
-      <div class="group-header" id="hdr-${esc(g.layer)}">
+      <div class="group-header" id="hdr-${esc(g.layer)}" onclick="toggleCollapse('${g.layer}')">
         <div class="group-header-left">
           <span class="group-icon">${g.icon}</span>
           <span class="group-layer-name">${esc(g.layer)}</span>
@@ -59,7 +59,7 @@ function buildGroupsHtml(groups: FolderGroup[], preselected: Set<string>): strin
         <div class="group-header-right">
           <span class="folder-count-badge">${folderCount} folder${folderCount === 1 ? '' : 's'}</span>
           <div class="selection-dot" id="sel-dot-${esc(g.layer)}" style="background:${esc(g.color)}"></div>
-          <button class="btn-all" data-layer="${esc(g.layer)}">All</button>
+          <button class="btn-all" onclick="event.stopPropagation();selectAll('${g.layer}')">All</button>
           <span class="chevron" id="chevron-${esc(g.layer)}">&#9660;</span>
         </div>
       </div>
@@ -428,27 +428,6 @@ export function buildSelectorHTML(groups: FolderGroup[], preselected: string[]):
       const dot = document.getElementById('sel-dot-' + layer);
       if (dot) { dot.style.opacity = g.folders.some(f => selected.has(f)) ? '1' : '0'; }
     }
-
-    // ── Wire up click events ───────────────────────────────────
-    document.querySelectorAll('.folder-row').forEach(row => {
-      const folder = row.dataset.folder;
-      const layer  = row.dataset.layer;
-      const g = GROUPS.find(x => x.layer === layer);
-      const color = g ? g.color : '#58a6ff';
-      row.addEventListener('click', () => toggleFolder(folder, color, layer));
-    });
-
-    document.querySelectorAll('.group-header').forEach(hdr => {
-      const layer = hdr.closest('.group-wrapper').id.replace('group-', '');
-      hdr.addEventListener('click', () => toggleCollapse(layer));
-    });
-
-    document.querySelectorAll('.btn-all').forEach(btn => {
-      btn.addEventListener('click', e => {
-        e.stopPropagation();
-        selectAll(btn.dataset.layer);
-      });
-    });
 
     // ── Search ─────────────────────────────────────────────────
     document.getElementById('search-input').addEventListener('input', function() {
