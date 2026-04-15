@@ -144,15 +144,34 @@ function parseSections(llmContent: string): ParsedSection[] {
     let current: ParsedSection | null = null;
 
     for (const line of lines) {
-        const match = line.match(/^(\d{1,2})\.\s+(.+)$/);
-        if (match && parseInt(match[1]) >= 1 && parseInt(match[1]) <= 10) {
-            if (current) { sections.push(current); }
-            current = {
-                number: match[1].padStart(2, '0'),
-                title: match[2].trim(),
-                content: ''
-            };
-        } else if (current) {
+        // Normalise: strip leading # chars and ** bold markers, then test for
+        // "N. TITLE" — handles all Copilot output variants:
+        //   "1. MODULE OVERVIEW"
+        //   "## 1. MODULE OVERVIEW"
+        //   "**1. MODULE OVERVIEW**"
+        //   "# 1. **MODULE OVERVIEW**"
+        const normalised = line
+            .replace(/^#+\s*/, '')   // strip leading # markers
+            .replace(/\*\*/g, '')    // strip bold markers
+            .trim();
+
+        const match = normalised.match(/^(\d{1,2})\.\s+(.+)$/);
+        if (match) {
+            const num = parseInt(match[1]);
+            if (num >= 1 && num <= 10) {
+                if (current) { sections.push(current); }
+                current = {
+                    number: match[1].padStart(2, '0'),
+                    title: match[2].trim().replace(/\*+/g, '').replace(/#/g, '').trim(),
+                    content: ''
+                };
+                continue;
+            }
+        }
+
+        if (current) {
+            // Skip bare --- dividers between sections — structural noise from LLM
+            if (line.trim() === '---') { continue; }
             current.content += line + '\n';
         }
     }
