@@ -2170,31 +2170,28 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
           go beyond energy density and cycle life.
         </p>
 
-        <p><strong>UPS Switchover Speed:</strong> A UPS must keep power flowing to critical equipment
-        within milliseconds of a grid outage. For online double-conversion UPS (the type used for
-        servers, where the battery is always in the power path), switchover time is effectively zero.
-        For line-interactive UPS, a transfer switch activates and the inverter takes over. IEC 62040-3
-        Class 1 UPS delivers zero transfer time. LFP can provide full rated current almost
-        instantaneously — internal impedance is very low (typically 0.5–2 mΩ for a prismatic cell),
-        and there is no mechanical or induction delay. Lead-acid can also respond quickly; the
-        technology difference here matters less than BMS design and inverter topology.</p>
+        <p><strong>UPS Switchover Speed:</strong> When the grid goes out, a UPS must keep equipment
+        running without any noticeable interruption — we're talking milliseconds. For the highest-end
+        UPS designs (used for servers), the battery is always actively in the circuit, so the
+        switchover is literally instant. For simpler UPS designs, a switch flips and the battery
+        takes over. LFP can deliver its full current almost instantly, because its internal resistance
+        is very low — it doesn't fight against itself. Lead-acid can also respond quickly, so the
+        LFP advantage here is more about how the whole system is designed than the chemistry alone.</p>
 
-        <p><strong>Float Charging Compatibility:</strong> Lead-acid was designed for float charging —
-        keeping the battery topped up at ~2.27 V/cell indefinitely with a trickle of current. LFP
-        also supports float charging, but at a different voltage: ~3.4–3.45 V/cell. This is slightly
-        below the full-charge cutoff (~3.65 V), meaning the battery sits at ~90–95% SoC. That
-        intentional margin reduces electrolyte oxidation and extends calendar life. A well-designed
-        LFP BMS handles this automatically, switching to a "storage mode" float voltage that
-        prioritises longevity over keeping the battery at absolute maximum charge.</p>
+        <p><strong>Float Charging Compatibility:</strong> A UPS battery sits fully charged for most of
+        its life, with a tiny trickle of current to keep it topped up — this is called "float charging."
+        Lead-acid was built for this. LFP also handles it well, but at a slightly lower target voltage
+        (~3.4–3.45 V/cell instead of the maximum 3.65 V). This intentional gap keeps the battery at
+        around 90–95% full rather than 100%, which significantly reduces internal stress and extends
+        how long the battery lasts. A good LFP BMS handles this automatically.</p>
 
-        <p><strong>Deep Discharge Recovery:</strong> Home ESS systems typically draw down to 10–20%
-        SoC every day, which is "deep discharge." LFP handles this without penalty. Unlike lead-acid
-        (which permanently damages itself if left deeply discharged due to sulfation), LFP can be
-        drained to 0% SoC, left for weeks, and recharged to full capacity with no lasting harm. The
-        intercalation mechanism is reversible at any state of charge, including zero. The BMS still
-        needs to prevent over-discharge below the minimum cell voltage (typically 2.5V) to avoid
-        copper corrosion at the anode — but within the normal operating range, LFP cycles deeply
-        with no capacity penalty over its lifetime.</p>
+        <p><strong>Deep Discharge Recovery:</strong> A home ESS typically drains down to 10–20% each
+        day — this is "deep discharge." LFP handles this without any penalty. Lead-acid permanently
+        damages itself if left deeply discharged (the lead sulfate crystals harden). LFP can be drained
+        to 0%, left for weeks, and recharged to full capacity with no lasting harm. The chemistry is
+        fully reversible. The BMS still needs to cut off discharge before the cell drops below 2.5V per
+        cell (to prevent copper corrosion, as we covered earlier) — but within that boundary, LFP
+        handles deep daily cycling with no long-term capacity loss.</p>
 
         <div class="callout callout-info">
           <div class="callout-icon">📡</div>
