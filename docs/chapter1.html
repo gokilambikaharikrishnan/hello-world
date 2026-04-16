@@ -2272,20 +2272,18 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
           through the wire but there is nowhere for the lithium ions to go in the cathode. Instead:
         </p>
         <ul class="content-list cross">
-          <li><strong>Electrolyte oxidation at the cathode:</strong> Above ~3.8–4.0V, the electrolyte
-          starts breaking down on the cathode surface, forming a growing layer called the CEI
-          (cathode-electrolyte interphase). This permanently reduces how easily ions can move through
-          the cell and shrinks the available capacity.</li>
-          <li><strong>Lithium plating on the anode:</strong> If the anode cannot absorb incoming
-          lithium quickly enough — particularly at low temperatures or high charge rates — lithium
-          deposits as metallic lithium on the anode surface instead of intercalating into it. Metallic
-          lithium can grow needle-like spikes called dendrites that eventually pierce the separator
-          (the thin layer between anode and cathode), causing an internal short circuit. In NMC/NCA
-          this can trigger thermal runaway. In LFP it is a severe capacity-killing event.</li>
-          <li><strong>Gas generation:</strong> Electrolyte decomposition produces CO₂ and hydrocarbons.
-          In a sealed prismatic or pouch cell, this gas has nowhere to go, so the cell swells.
-          If pressure builds past the safety vent threshold, gas is vented irreversibly and some
-          cell material is lost forever.</li>
+          <li><strong>Electrolyte breakdown:</strong> Above ~3.8–4.0V, the liquid inside the cell
+          starts breaking down on the positive electrode surface. This leaves behind a growing residue
+          layer that permanently slows down ion movement, shrinking available capacity over time.</li>
+          <li><strong>Lithium plating:</strong> If the negative electrode can't absorb incoming lithium
+          fast enough — especially when cold or charging quickly — lithium deposits as a metallic layer
+          on the surface instead. That metallic lithium can grow into tiny needle-like spikes that
+          eventually poke through the thin separator between the two electrodes, causing an internal
+          short circuit. In LFP this destroys capacity; in NMC/NCA it can trigger thermal runaway.</li>
+          <li><strong>Gas buildup and swelling:</strong> The electrolyte breakdown produces gas (CO₂
+          and organic vapours). In a sealed cell, this gas has nowhere to go, so the cell swells like
+          a balloon. If pressure gets high enough, a safety vent opens — but once vented, some cell
+          material is lost forever and the cell is permanently degraded.</li>
         </ul>
 
         <p><strong>The 200 mV number:</strong></p>
@@ -2311,17 +2309,18 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
 
         <p><strong>What happens at under-voltage (below 2.5 V/cell):</strong></p>
         <p>
-          The copper foil inside the anode (the current collector — the metal sheet the active
-          material is coated onto) is stable at normal voltages. But below ~2.5V at the cell
-          terminals, the electrochemical conditions flip — copper starts dissolving from the anode
-          foil into the electrolyte as Cu²⁺ ions. Those ions drift to the cathode, deposit on the
-          separator, and can eventually form dendritic shorts through the separator. The damage is
-          permanent and cumulative — every deep over-discharge event deposits more copper.
+          Inside the negative electrode, there is a thin copper foil that the active material is
+          coated onto. At normal voltages this copper is stable — it just sits there. But if the cell
+          is drained below 2.5V, the chemistry inside the cell shifts, and copper starts dissolving
+          off that foil. The dissolved copper drifts across and deposits on the separator — the thin
+          film between the two electrodes. Over time this can form metallic copper bridges through
+          the separator, causing an internal short circuit.
         </p>
         <p>
-          A cell drained to 0V and then recharged typically shows higher internal resistance, reduced
-          capacity, and a risk of internal short circuits. Some cells stored at 0V for extended periods
-          develop copper dendrite shorts that cause spontaneous heating even with no external current.
+          The damage builds up with every deep over-discharge event. A cell drained to 0V and then
+          recharged typically has higher internal resistance and reduced capacity. Some cells stored
+          at 0V for a long time develop copper shorts that cause the cell to slowly heat up on its
+          own — even with no current flowing.
         </p>
 
         <div class="card" style="border-color: rgba(72,187,120,0.2);">
