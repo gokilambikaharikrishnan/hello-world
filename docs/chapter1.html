@@ -2610,19 +2610,21 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
       <div class="subsection">
         <div class="subsection-title">Weakness 6: No Self-Regulating Chemistry</div>
         <p>
-          Lead-acid has an inherent self-protection mechanism: as it approaches full charge, the
-          charging reaction transitions from plate charging to water electrolysis (gassing). This
-          acts as a soft current limiter — the charger's current is consumed by electrolysis rather
-          than overcharging the plates. It's wasteful (you lose water), but it means a dumb constant-
-          voltage charger can float-charge lead-acid indefinitely without catastrophic overcharge.
+          Lead-acid has a built-in safety feature: as it approaches full charge, the excess electrical
+          energy goes into splitting water molecules apart (producing hydrogen gas) instead of damaging
+          the plates. It's wasteful — you lose water and have to top it up — but it acts as a natural
+          overflow valve. A basic, dumb charger can keep lead-acid on charge indefinitely without
+          catastrophically overcharging it.
         </p>
         <p>
-          Li-ion has no such mechanism. The intercalation reaction simply stops when all sites are
-          filled, and any additional charge current goes directly into damaging side reactions —
-          electrolyte oxidation, plating, gas generation. There is no self-limiting chemistry.
-          <strong>If the charger fails open (stuck at high voltage) and the BMS fails simultaneously,
-          the cell will overcharge until it physically fails.</strong> This dual-failure scenario is
-          why IEC 62619 requires two independent layers of protection for Li-ion ESS.
+          Li-ion has no such overflow valve. When the battery is full, the charging reaction simply
+          stops — but the charger does not know this. Any extra current that keeps flowing goes into
+          damaging chemical reactions: breaking down the electrolyte, depositing metallic lithium,
+          generating gas. There is nothing to absorb the excess.
+          <strong>If the charger gets stuck at a high voltage and the BMS fails at the same time,
+          the cells will overcharge until they physically fail.</strong> This is why regulations require
+          two completely independent layers of protection for Li-ion systems — so that a single fault
+          cannot cause a disaster.
         </p>
 
         <div class="card" style="border-color: rgba(72,187,120,0.2);">
