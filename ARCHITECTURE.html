@@ -139,6 +139,69 @@
   </div>
   <hr class="divider" />
 
+  <!-- ── 7 FEATURES ── -->
+  <div class="section">
+    <div class="section-label fade-in">What it can do</div>
+    <div class="section-title fade-in">7 Documentation Modes</div>
+
+    <style>
+      .feature-grid { display:flex; flex-direction:column; gap:10px; }
+      .feature-card {
+        border-radius:10px; padding:20px 24px;
+        display:grid; grid-template-columns:1fr 1fr; gap:16px;
+        cursor:default; transition:transform 150ms, box-shadow 150ms;
+        border:1px solid transparent;
+      }
+      .feature-card:hover { transform:translateX(4px); box-shadow:0 0 0 1px rgba(255,255,255,0.06); }
+      .fc-num  { font-size:0.7rem; letter-spacing:0.15em; color:inherit; opacity:0.7; margin-bottom:4px; }
+      .fc-name { font-size:1rem; font-weight:700; }
+      .fc-desc { font-size:0.78rem; opacity:0.75; margin-top:4px; line-height:1.5; }
+      .fc-io   { font-size:0.78rem; opacity:0.8; line-height:1.6; }
+      .fc-io strong { opacity:1; }
+
+      .f1{background:rgba(68,51,153,0.25);border-color:#443399;color:#a99fff;}
+      .f2{background:rgba(27,99,60,0.25);border-color:#1b633c;color:#56d68a;}
+      .f3{background:rgba(139,59,30,0.25);border-color:#8b3b1e;color:#f0a070;}
+      .f4{background:rgba(139,99,0,0.25);border-color:#8b6300;color:#e3b341;}
+      .f5{background:rgba(53,90,20,0.25);border-color:#355a14;color:#85c44a;}
+      .f6{background:rgba(120,30,80,0.25);border-color:#78_1e50;color:#e080b0;}
+      .f6{background:rgba(120,30,80,0.25);border-color:#781e50;color:#e080b0;}
+      .f7{background:rgba(20,70,120,0.25);border-color:#144678;color:#79c0ff;}
+    </style>
+
+    <div class="feature-grid fade-in">
+      <div class="feature-card f1">
+        <div><div class="fc-num">MODE 1</div><div class="fc-name">Code Docs</div><div class="fc-desc">How is this module written? One module, code only, developer view</div></div>
+        <div class="fc-io"><strong>In:</strong> .c + .h files, one module<br><strong>Out:</strong> 10-section design doc — functions, config, flow, diagrams</div>
+      </div>
+      <div class="feature-card f2">
+        <div><div class="fc-num">MODE 2</div><div class="fc-name">Module Docs</div><div class="fc-desc">How does this subsystem work end to end? All layers + hardware, full feature view</div></div>
+        <div class="fc-io"><strong>In:</strong> All CAN/NVM/SOC layers + schematic + spec docs<br><strong>Out:</strong> Full subsystem overview HTML</div>
+      </div>
+      <div class="feature-card f3">
+        <div><div class="fc-num">MODE 3</div><div class="fc-name">Code Review</div><div class="fc-desc">What is wrong, risky, or improvable? Auditor mode — reads and reports only</div></div>
+        <div class="fc-io"><strong>In:</strong> .c + .h files per module<br><strong>Out:</strong> Audit report — memory issues, style problems, optimisation flags</div>
+      </div>
+      <div class="feature-card f4">
+        <div><div class="fc-num">MODE 4</div><div class="fc-name">Event Log Analysis</div><div class="fc-desc">What happened during this run? Upload a log, get it explained vs code</div></div>
+        <div class="fc-io"><strong>In:</strong> Excel / CSV event log + code<br><strong>Out:</strong> Timeline, what went well, what failed, root cause clues</div>
+      </div>
+      <div class="feature-card f5">
+        <div><div class="fc-num">MODE 5</div><div class="fc-name">CAN Log Analysis</div><div class="fc-desc">What was on the bus during this session? Decode raw CAN traffic into signals</div></div>
+        <div class="fc-io"><strong>In:</strong> .trc or .asc log + .dbc file<br><strong>Out:</strong> Decoded signal plots, anomaly flags, timing charts, HTML report</div>
+      </div>
+      <div class="feature-card f6">
+        <div><div class="fc-num">MODE 6</div><div class="fc-name">Full System Doc</div><div class="fc-desc">How does the entire BMS product work? Hardware to software, for managers and auditors</div></div>
+        <div class="fc-io"><strong>In:</strong> All schematics + spec docs + full codebase<br><strong>Out:</strong> Complete BMS system overview — architecture, protection, comms</div>
+      </div>
+      <div class="feature-card f7">
+        <div><div class="fc-num">MODE 7</div><div class="fc-name">Datasheet Simplifier</div><div class="fc-desc">What does this IC actually do in our system? 250-page datasheet → what matters</div></div>
+        <div class="fc-io"><strong>In:</strong> IC datasheet PDF + driver code<br><strong>Out:</strong> Simplified reference — only the registers, modes, sequences we use</div>
+      </div>
+    </div>
+  </div>
+  <hr class="divider" />
+
   <!-- sections added next -->
   <script>
     // Intersection observer for fade-in
