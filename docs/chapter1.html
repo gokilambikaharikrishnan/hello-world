@@ -1651,24 +1651,20 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
         <p>
           LFP's special properties come from its crystal structure. Lithium iron phosphate forms an
           <strong>olivine structure</strong> — the same crystal family as the mineral olivine found in
-          the Earth's upper mantle. Think of it as a rigid three-dimensional cage. Inside that cage,
-          the structure consists of:
+          the Earth's upper mantle. Think of it as a rigid, tightly-packed 3D cage made of three types
+          of atoms locked together:
         </p>
         <ul class="content-list">
-          <li><strong>Iron(II) octahedra (FeO₆)</strong> — iron atoms surrounded by six oxygen atoms,
-          linked in chains along the b-axis of the crystal</li>
-          <li><strong>Phosphate tetrahedra (PO₄³⁻)</strong> — phosphorus atoms bonded to four oxygen
-          atoms, forming the rigid structural backbone</li>
-          <li><strong>Lithium ions</strong> — sitting in channels (M1 sites) that run parallel to the
-          b-axis, free to slide in and out during charge and discharge</li>
+          <li><strong>Iron atoms</strong> — each surrounded by six oxygen atoms forming a tiny cage unit</li>
+          <li><strong>Phosphorus atoms</strong> — each bonded to four oxygen atoms, creating the stiff structural backbone of the whole crystal</li>
+          <li><strong>Lithium ions</strong> — sitting in channels running through the crystal, free to slide in and out during charging and discharging</li>
         </ul>
         <p>
-          The phosphate group (PO₄³⁻) is the key to everything. The bond between phosphorus and oxygen
-          (the P–O bond) has an energy of ~544 kJ/mol — think of that as a measure of how hard you have
-          to pull to break it. That is much stronger than the metal-oxygen bonds in competing cathode
-          materials like NMC or NCA. When you heat LFP, the PO₄ tetrahedra hold their shape. The oxygen
-          atoms are <strong>locked in place by covalent bonds</strong> (shared electrons, the strongest
-          type of chemical bond). They cannot escape, even under extreme abuse.
+          The phosphate group (one phosphorus bonded to four oxygens — written as PO₄) is the key to
+          everything. That phosphorus-to-oxygen bond is extremely strong — think of it as a very tight
+          grip. It is roughly 45% stronger than the metal-oxygen bonds in competing chemistries like NMC.
+          When you heat LFP, the phosphate framework holds its shape. The oxygen atoms are
+          <strong>locked in place</strong> and cannot escape, even under extreme conditions.
         </p>
         <div class="crystal-diagram">
           <!-- Olivine structure SVG -->
@@ -2338,13 +2334,14 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
             </div>
           </div>
           <ul class="content-list check">
-            <li>Measure every cell voltage independently with ≤±5 mV accuracy at ≥100 ms update rate</li>
-            <li>Trigger charge cutoff at configurable high-voltage threshold (default: 3.65 V/cell)</li>
-            <li>Trigger discharge cutoff at configurable low-voltage threshold (default: 2.5 V/cell)</li>
-            <li>Implement hysteresis to prevent rapid cycling of protection FETs at threshold</li>
-            <li>Log overvoltage/undervoltage events with timestamp for degradation tracking</li>
-            <li>Implement per-cell isolation capability (fault cells can be disconnected without
-            taking down the full string — critical for series-connected packs)</li>
+            <li>Measure every individual cell voltage with ≤±5 mV accuracy, updated at least every 100 ms</li>
+            <li>Cut off charging when any cell reaches the configurable high-voltage threshold (default: 3.65 V/cell)</li>
+            <li>Cut off discharging when any cell reaches the configurable low-voltage threshold (default: 2.5 V/cell)</li>
+            <li>Implement hysteresis (a small gap between trip and reset voltage) to prevent the
+            protection switches from rapidly toggling on and off at the threshold</li>
+            <li>Log every overvoltage and undervoltage event with a timestamp so degradation can be tracked over time</li>
+            <li>Allow individual faulty cells to be isolated without shutting down the entire string —
+            critical in series-connected packs where one bad cell would otherwise take down everything</li>
           </ul>
         </div>
       </div><!-- end voltage window subsection -->
@@ -2354,34 +2351,37 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
         <div class="subsection-title">Weakness 2: Thermal Sensitivity and Temperature Dependence</div>
 
         <p>
-          Li-ion cells are not just vulnerable to high temperatures from thermal runaway initiation —
-          they have <strong>complex temperature-dependent behavior</strong> across their entire operating
-          range that must be actively managed.
+          Li-ion cells are not just vulnerable to extreme heat from thermal runaway. They have
+          <strong>complex, temperature-dependent behaviour</strong> across their entire normal
+          operating range — behaviour that must be actively managed by the BMS.
         </p>
 
         <p><strong>High Temperature Effects (above 45°C operating):</strong></p>
         <ul class="content-list cross">
-          <li>SEI growth rate doubles approximately every 10°C (Arrhenius kinetics) — storage at 45°C
-          ages cells 2× faster than at 25°C</li>
-          <li>Electrolyte decomposition rate increases nonlinearly with temperature</li>
-          <li>Internal pressure increases due to accelerated gas generation — risk of swelling,
-          vent activation, or in extreme cases, case rupture</li>
-          <li>Above 60°C: most LFP cells approach the onset temperature for accelerated degradation</li>
-          <li>Above 80°C: SEI begins active decomposition — beginning of the thermal runaway
-          precursor chain (though LFP's phosphate framework prevents completion)</li>
+          <li>SEI growth rate doubles roughly every 10°C (this follows Arrhenius kinetics — a
+          well-established chemistry rule about reaction rates and temperature). A battery stored
+          at 45°C ages 2× faster than one at 25°C</li>
+          <li>Electrolyte decomposition rate increases faster than linearly with temperature</li>
+          <li>Faster gas generation increases internal pressure — risk of swelling, vent activation,
+          or in extreme cases, case rupture</li>
+          <li>Above 60°C: most LFP cells enter a zone of accelerated degradation</li>
+          <li>Above 80°C: the SEI starts actively breaking down — the beginning of the thermal
+          runaway precursor chain (though LFP's phosphate structure prevents the chain completing)</li>
         </ul>
 
         <p><strong>Low Temperature Effects (below 0°C):</strong></p>
         <ul class="content-list cross">
-          <li>Lithium ion diffusion coefficient in the graphite anode decreases dramatically —
-          at −10°C, diffusion is approximately 10× slower than at 25°C</li>
-          <li>Charging at below 0°C causes lithium plating (ions cannot intercalate fast enough)
-          — even at very low charge rates. IEC standards prohibit charging LFP below 0°C</li>
-          <li>Available capacity decreases: LFP at −20°C delivers ~60–70% of room-temperature
-          capacity due to increased ionic resistance in electrolyte and sluggish kinetics</li>
-          <li>Internal resistance increases: at −20°C, cell impedance can be 3–5× higher than
-          at 25°C, limiting peak power output — critical for UPS applications that must deliver
-          high instantaneous power</li>
+          <li>The diffusion coefficient of lithium ions in graphite (how easily they move through the
+          anode) drops sharply with cold — at −10°C, diffusion is roughly 10× slower than at 25°C</li>
+          <li>Charging below 0°C causes lithium plating — ions arrive faster than they can intercalate
+          into the cold anode, so they deposit as metallic lithium instead. This happens even at very
+          low charge rates. IEC standards prohibit charging LFP below 0°C</li>
+          <li>Available capacity shrinks: LFP at −20°C delivers only ~60–70% of its room-temperature
+          capacity, because the higher ionic resistance and slower reaction kinetics limit how much
+          energy can actually be delivered</li>
+          <li>Internal resistance rises: at −20°C, cell impedance can be 3–5× higher than at 25°C.
+          This limits peak power output — a serious issue for UPS applications that must deliver
+          full power instantly when the grid fails</li>
         </ul>
 
         <div class="callout callout-warning">
@@ -2389,17 +2389,18 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
           <div class="callout-body">
             <div class="callout-title">The −20°C UPS Problem</div>
             <p>
-              A UPS battery installed in an unheated telecom cabinet in winter faces temperatures below
-              0°C. If the grid fails at −15°C, the LFP pack must deliver full load power. The high
-              internal resistance means terminal voltage sags more than expected, potentially triggering
-              a false low-voltage cutoff before the energy is actually depleted. Worse, if the grid
-              returns while the battery is cold, the charger may attempt to recharge below 0°C — causing
-              lithium plating that permanently damages the cells.
+              A UPS battery installed in an unheated outdoor telecom cabinet in winter can face
+              temperatures well below 0°C. If the grid fails at −15°C, the LFP pack must still deliver
+              full power to keep the equipment running. But the high cold-weather internal resistance
+              means the terminal voltage sags more than expected, potentially triggering a false
+              low-voltage cutoff before the battery is actually empty — wasting usable energy. Worse,
+              if grid power returns while the battery is still cold, the charger may try to recharge
+              below 0°C — causing lithium plating that permanently damages the cells.
             </p>
             <p>
-              Proper LFP BMS design for outdoor/uncontrolled temperature environments must include:
-              temperature-compensated charge/discharge cutoffs, low-temperature charge inhibit below 0°C,
-              and optional cell heating elements for pre-conditioning before charge.
+              A well-designed LFP BMS for outdoor or uncontrolled-temperature environments must include:
+              temperature-compensated charge and discharge cutoffs, a charge inhibit below 0°C, and
+              optionally a cell heating element to warm the pack before charging starts.
             </p>
           </div>
         </div>
