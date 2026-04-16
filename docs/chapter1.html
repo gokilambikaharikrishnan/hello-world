@@ -2773,18 +2773,19 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
       <div class="section-number">Deep Dive</div>
       <h2 class="section-title">The Flat OCV Curve — LFP's Unique Challenge</h2>
       <p style="color:var(--text-secondary); margin-bottom:1.5rem; line-height:1.75;">
-        The open-circuit voltage (OCV) of a cell at rest is the cleanest indicator of its state of
-        charge — it requires no current measurement, is not affected by IR drop, and is highly
-        repeatable. For NMC, the OCV curve slopes meaningfully across the SoC range, making voltage
-        a useful (if imperfect) SoC indicator. For LFP, the curve is <strong>nearly flat from
-        20% to 80% SoC</strong> — a change of only 50 mV across the central 60% of capacity.
+        When a cell is resting (not charging or discharging), its voltage is the most direct clue
+        to how full it is. For most chemistries, this works pretty well — as the battery drains,
+        the voltage drops steadily, and you can read the level like a gauge. For LFP, this trick
+        mostly fails. The voltage is <strong>nearly flat from 20% to 80% SoC</strong> — changing
+        only about 50 mV (0.05 V) across that entire range. That is a tiny shift that is hard to
+        measure reliably.
       </p>
       <p style="color:var(--text-secondary); margin-bottom:2rem; line-height:1.75;">
-        This arises from LFP's two-phase intercalation mechanism: the cell transitions sharply
-        between two crystallographic phases (FePO₄ and LiFePO₄), and while both phases coexist,
-        the cell potential is pinned near the equilibrium potential of the phase boundary
-        (~3.35 V). Only when nearly all of one phase is consumed does the voltage move
-        significantly.
+        The reason goes back to LFP's crystal structure: as we described above, the crystal
+        switches between two distinct forms — "full" and "empty" — rather than gradually stretching.
+        While both forms exist side by side inside the cell (which is most of the charge/discharge
+        cycle), the voltage is held steady at the transition point. Only right at the very beginning
+        and very end of charging/discharging does the voltage move noticeably.
       </p>
 
       <!-- SVG OCV Curve Chart -->
