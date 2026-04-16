@@ -3194,11 +3194,12 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
           <div class="callout-title">What Chapter 2 Covers</div>
           <p>
             Chapter 1 established <em>why</em> LFP is the right chemistry and <em>why</em> a BMS is
-            physically required. Chapter 2 attacks the hardest practical problem in LFP BMS design:
-            <strong>State of Charge Estimation on a Flat OCV Curve</strong>. We will derive the
-            mathematics of coulomb counting, examine the error accumulation problem, explore
-            Extended Kalman Filter-based estimation, and ultimately build an SoC algorithm that
-            works reliably for LFP across temperature, aging, and partial cycles.
+            physically required. Chapter 2 tackles the hardest practical problem that follows from all
+            of this: <strong>how do you figure out how full an LFP battery is, when the voltage barely
+            changes?</strong> We will go through the main approaches — counting the current flowing in
+            and out over time, catching errors, and using smarter estimation techniques — and build up
+            to a reliable SoC algorithm that works across temperatures, as the battery ages, and even
+            with incomplete charge cycles.
           </p>
         </div>
       </div>
