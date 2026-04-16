@@ -328,6 +328,120 @@
   </div>
   <hr class="divider" />
 
+  <!-- ── BMS LAYER ARCHITECTURE ── -->
+  <div class="section">
+    <div class="section-label fade-in">Software stack</div>
+    <div class="section-title fade-in">BMS Layer Architecture</div>
+
+    <style>
+      .layer-stack { display:flex; flex-direction:column; gap:6px; max-width:640px; margin:0 auto; }
+      .layer-row {
+        border-radius:8px; padding:16px 24px;
+        display:flex; align-items:center; justify-content:space-between;
+        border-left:4px solid; cursor:default;
+        transition:transform 150ms;
+      }
+      .layer-row:hover { transform:translateX(6px); }
+      .lr-left { display:flex; flex-direction:column; gap:4px; }
+      .lr-tag  { font-size:0.7rem; letter-spacing:0.15em; text-transform:uppercase; opacity:0.7; }
+      .lr-name { font-size:0.98rem; font-weight:700; }
+      .lr-desc { font-size:0.78rem; opacity:0.7; margin-top:2px; }
+      .lr-modules { display:flex; gap:6px; flex-wrap:wrap; }
+      .lr-mod {
+        font-size:0.68rem; padding:2px 8px; border-radius:10px;
+        background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1);
+      }
+
+      .lhw  { background:rgba(48,54,61,0.3); border-color:#484f58; color:var(--muted); }
+      .lmcal{ background:rgba(124,58,237,0.12); border-color:#7c3aed; color:#a78bfa; }
+      .lcdd { background:rgba(180,83,9,0.12); border-color:#b45309; color:#fbbf24; }
+      .lesal{ background:rgba(8,145,178,0.12); border-color:#0891b2; color:#22d3ee; }
+      .lsrv { background:rgba(5,150,105,0.12); border-color:#059669; color:#34d399; }
+      .lasw { background:rgba(31,111,235,0.15); border-color:#1f6feb; color:#60a5fa; }
+
+      .stack-connector {
+        display:flex; align-items:center; justify-content:center;
+        color:var(--border); font-size:0.9rem; height:16px;
+      }
+    </style>
+
+    <div class="layer-stack fade-in">
+      <div class="layer-row lhw">
+        <div class="lr-left">
+          <span class="lr-tag">Physical</span>
+          <span class="lr-name">Hardware</span>
+          <span class="lr-desc">STM32 MCU · AFE IC · Contactors · CAN bus · LFP cells</span>
+        </div>
+      </div>
+
+      <div class="stack-connector">↕</div>
+
+      <div class="layer-row lmcal">
+        <div class="lr-left">
+          <span class="lr-tag">BSW — MCAL</span>
+          <span class="lr-name">Microcontroller Abstraction Layer</span>
+          <span class="lr-desc">Bare metal STM32 peripheral drivers</span>
+        </div>
+        <div class="lr-modules">
+          <span class="lr-mod">ADC</span><span class="lr-mod">CAN</span><span class="lr-mod">SPI</span><span class="lr-mod">UART</span><span class="lr-mod">PWM</span>
+        </div>
+      </div>
+
+      <div class="stack-connector">↕</div>
+
+      <div class="layer-row lcdd">
+        <div class="lr-left">
+          <span class="lr-tag">BSW — CDD</span>
+          <span class="lr-name">Complex Device Drivers</span>
+          <span class="lr-desc">External IC drivers — AFE, watchdog, relay, flash</span>
+        </div>
+        <div class="lr-modules">
+          <span class="lr-mod">AFE</span><span class="lr-mod">EWDG</span><span class="lr-mod">RelayDriver</span>
+        </div>
+      </div>
+
+      <div class="stack-connector">↕</div>
+
+      <div class="layer-row lesal">
+        <div class="lr-left">
+          <span class="lr-tag">BSW — ESAL</span>
+          <span class="lr-name">ECU Software Abstraction Layer</span>
+          <span class="lr-desc">Interface contracts between BSW and ASW</span>
+        </div>
+        <div class="lr-modules">
+          <span class="lr-mod">BATT_IF</span><span class="lr-mod">CONTACTOR_IF</span><span class="lr-mod">SAFETY_IF</span>
+        </div>
+      </div>
+
+      <div class="stack-connector">↕</div>
+
+      <div class="layer-row lsrv">
+        <div class="lr-left">
+          <span class="lr-tag">BSW — SRVLayer</span>
+          <span class="lr-name">Service Layer</span>
+          <span class="lr-desc">Cross-cutting services — NVM, Scheduler, Events, CAN NM</span>
+        </div>
+        <div class="lr-modules">
+          <span class="lr-mod">NVM</span><span class="lr-mod">Scheduler</span><span class="lr-mod">Event_Manager</span><span class="lr-mod">CAN_NM</span>
+        </div>
+      </div>
+
+      <div class="stack-connector">↕</div>
+
+      <div class="layer-row lasw">
+        <div class="lr-left">
+          <span class="lr-tag">ASW</span>
+          <span class="lr-name">Application Software</span>
+          <span class="lr-desc">BMS logic — protection, SOC, state machines, fault handling</span>
+        </div>
+        <div class="lr-modules">
+          <span class="lr-mod">ContactorControl</span><span class="lr-mod">PowerComputation</span><span class="lr-mod">PyroControl</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <hr class="divider" />
+
   <!-- sections added next -->
   <script>
     // Intersection observer for fade-in
