@@ -52,7 +52,28 @@
   </style>
 </head>
 <body>
-  <!-- sections added in subsequent chunks -->
+  <!-- ── HERO ── -->
+  <header style="background:var(--surface);border-bottom:1px solid var(--border);padding:80px 24px 60px;text-align:center;">
+    <div style="font-size:0.75rem;letter-spacing:0.25em;color:var(--blue);text-transform:uppercase;margin-bottom:16px;">
+      ⚡ BMS DocGen
+    </div>
+    <h1 style="font-size:2.4rem;font-weight:700;color:var(--text);margin-bottom:16px;line-height:1.2;">
+      Architecture &amp; Design
+    </h1>
+    <p style="font-size:0.95rem;color:var(--muted);max-width:560px;margin:0 auto 32px;">
+      A VS Code extension that auto-generates engineering documentation for BMS firmware
+      using GitHub Copilot — triggered on every successful IAR build.
+    </p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <span style="background:#161b22;border:1px solid var(--border);padding:4px 14px;border-radius:20px;font-size:0.78rem;color:var(--muted);">STM32 · LFP · 14S</span>
+      <span style="background:#161b22;border:1px solid #238636;padding:4px 14px;border-radius:20px;font-size:0.78rem;color:var(--green);">GitHub Copilot</span>
+      <span style="background:#161b22;border:1px solid #1f6feb;padding:4px 14px;border-radius:20px;font-size:0.78rem;color:var(--blue);">VS Code Extension</span>
+      <span style="background:#161b22;border:1px solid #6e40c9;padding:4px 14px;border-radius:20px;font-size:0.78rem;color:var(--purple);">7 Doc Modes</span>
+    </div>
+  </header>
+  <hr class="divider" />
+
+  <!-- sections added next -->
   <script>
     // Intersection observer for fade-in
     const observer = new IntersectionObserver(entries => {
