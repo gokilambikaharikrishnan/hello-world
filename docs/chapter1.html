@@ -2555,34 +2555,30 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
         <div class="subsection-title">Weakness 5: Short Circuit — The Energy Dump Problem</div>
 
         <p>
-          A modern LFP cell stores enormous energy in a small volume. A single prismatic 280Ah LFP
-          cell stores approximately <strong>896 Wh</strong> (280Ah × 3.2V) — equivalent to the
-          kinetic energy of a 1,200 kg car traveling at 133 km/h. A 48V, 100Ah LFP pack stores
-          4,800 Wh — equivalent to 300 fully charged AA batteries.
+          A modern LFP cell stores a lot of energy in a small package. A single large prismatic cell
+          (280Ah) holds roughly <strong>896 Wh</strong> — that is about the same as 300 fully charged
+          AA batteries, crammed into something the size of a thick book.
         </p>
         <p>
-          If this energy is directed into a short circuit path, the discharge rate is limited only
-          by the internal impedance of the cell and the resistance of the fault path. For a typical
-          LFP prismatic cell with internal resistance of 0.5 mΩ, a bolted short circuit at 3.2V
-          produces:
+          If all that energy suddenly gets a short path to flow through — like a screwdriver dropped
+          across the terminals — it all tries to discharge at once. The only thing slowing it down is
+          the tiny resistance inside the cell itself. For a typical LFP cell, that gives:
         </p>
         <div class="formula-block">
           <span class="formula-label">Bolted Short Circuit Current</span>
           I_fault = V_cell / R_internal = 3.2V / 0.0005Ω = <strong>6,400 A</strong>
-          <span class="formula-caption">For a single 280Ah cell. A 16-cell series pack can deliver this current magnitude for fractions of a second, with total energy determined by fault resistance and fuse clearing time.</span>
+          <span class="formula-caption">For a single 280Ah cell. Your home's main fuse might be rated 100A. This is 64 times that, hitting wires in under a millisecond.</span>
         </div>
         <p>
-          6,400 A through wiring that was designed for 100A will reach arc temperature
-          (>3,000°C) in milliseconds. Copper vaporizes. Insulation burns. The short circuit
-          current in a large LFP pack is sufficient to weld tools, rupture conduit, and start
-          fires in adjacent structures — all within the time it takes for a human to blink.
+          6,400 A through wiring designed for 100A will cause copper to vaporize and insulation to
+          catch fire within milliseconds — before any human can react. A 16-cell 48V pack can produce
+          even higher fault currents. The damage happens in the blink of an eye, literally.
         </p>
         <p>
-          <strong>Key difference from lead-acid:</strong> Lead-acid packs typically have internal
-          resistance 10–20× higher than LFP packs of the same voltage and capacity. Short circuit
-          currents are proportionally lower, and the mechanical robustness of lead-acid plates
-          provides some fault current limiting. LFP's low internal resistance (which is a feature
-          for high-power applications) becomes a liability in short-circuit scenarios.
+          <strong>Why LFP is riskier than lead-acid in this scenario:</strong> Lead-acid batteries
+          have much higher internal resistance, which naturally limits how fast the fault current
+          builds up. LFP's low internal resistance (which makes it great for delivering high power)
+          means there is almost nothing to slow down a fault current.
         </p>
 
         <div class="card" style="border-color: rgba(72,187,120,0.2);">
