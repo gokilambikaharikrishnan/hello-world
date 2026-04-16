@@ -1914,21 +1914,20 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
           Calendar aging in Li-ion cells is driven by three main mechanisms:
         </p>
         <ul class="content-list">
-          <li><strong>Parasitic SEI growth:</strong> The SEI film is never perfectly stable. It keeps
-          growing slowly as long as lithiated graphite touches electrolyte, consuming usable lithium
-          atom by atom. The growth rate follows an Arrhenius law — <em>every 10°C temperature increase
-          roughly doubles the degradation rate</em>. Storing a battery at 45°C instead of 25°C can
-          halve its calendar life.</li>
-          <li><strong>Transition metal dissolution:</strong> In NMC and NCA cells, tiny amounts of
-          nickel, manganese, and cobalt dissolve out of the cathode into the electrolyte over time,
-          migrate to the anode, and deposit there — accelerating further SEI growth. LFP has minimal
-          iron dissolution at normal voltages because the PO₄ framework holds iron firmly in the
-          crystal.</li>
-          <li><strong>Electrolyte decomposition at high voltage:</strong> Holding an NMC cell at 4.2V
-          (fully charged) accelerates electrolyte breakdown at the cathode surface. LFP cells held at
-          3.65V degrade far more slowly. This is why well-designed LFP systems are set to float-charge
-          at ~3.4–3.45V/cell rather than 3.65V — it keeps the battery near full while dramatically
-          extending calendar life.</li>
+          <li><strong>Slow film growth:</strong> The thin protective film on the anode (the SEI)
+          is never perfectly stable — it keeps growing very slowly over time, permanently trapping
+          a tiny bit of lithium each time. The warmer the battery, the faster this happens.
+          <em>Every 10°C increase in storage temperature roughly doubles how fast the battery ages.</em>
+          A battery stored in a hot location ages twice as fast as one kept cool.</li>
+          <li><strong>Metal leaching (NMC/NCA only):</strong> In competing chemistries like NMC and NCA,
+          tiny amounts of metal slowly dissolve out of the cathode over time, drift across to the anode,
+          and deposit there — making aging worse. LFP doesn't have this problem — its phosphate structure
+          holds the iron firmly in place.</li>
+          <li><strong>High-voltage stress:</strong> Keeping any Li-ion battery at its maximum charge
+          voltage causes slow chemical breakdown inside. LFP operates at a lower ceiling voltage, which
+          reduces this stress. Well-designed LFP systems also "float" the battery slightly below maximum
+          charge (~3.4–3.45V instead of 3.65V) — it's still nearly full but the lower voltage
+          significantly extends how long it lasts.</li>
         </ul>
         <p>
           The result: a well-managed LFP cell keeps more than 80% of its original capacity after 10–15
