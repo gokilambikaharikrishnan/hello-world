@@ -2357,30 +2357,25 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
 
         <p><strong>High Temperature Effects (above 45°C operating):</strong></p>
         <ul class="content-list cross">
-          <li>SEI growth rate doubles roughly every 10°C (this follows Arrhenius kinetics — a
-          well-established chemistry rule about reaction rates and temperature). A battery stored
-          at 45°C ages 2× faster than one at 25°C</li>
-          <li>Electrolyte decomposition rate increases faster than linearly with temperature</li>
-          <li>Faster gas generation increases internal pressure — risk of swelling, vent activation,
-          or in extreme cases, case rupture</li>
-          <li>Above 60°C: most LFP cells enter a zone of accelerated degradation</li>
-          <li>Above 80°C: the SEI starts actively breaking down — the beginning of the thermal
-          runaway precursor chain (though LFP's phosphate structure prevents the chain completing)</li>
+          <li>The aging film on the anode grows twice as fast for every 10°C increase in temperature — a battery at 45°C ages 2× faster than one at 25°C</li>
+          <li>The electrolyte inside the cell breaks down faster at higher temperatures — losing its ability to carry ions efficiently</li>
+          <li>Chemical reactions inside generate more gas at high temperatures, which can cause the cell to swell and eventually trigger a pressure vent</li>
+          <li>Above 60°C: most LFP cells enter a zone of significantly faster degradation</li>
+          <li>Above 80°C: the protective film on the anode starts breaking down — the beginning of the heat cascade (though LFP's phosphate structure prevents a full thermal runaway)</li>
         </ul>
 
         <p><strong>Low Temperature Effects (below 0°C):</strong></p>
         <ul class="content-list cross">
-          <li>The diffusion coefficient of lithium ions in graphite (how easily they move through the
-          anode) drops sharply with cold — at −10°C, diffusion is roughly 10× slower than at 25°C</li>
-          <li>Charging below 0°C causes lithium plating — ions arrive faster than they can intercalate
-          into the cold anode, so they deposit as metallic lithium instead. This happens even at very
-          low charge rates. IEC standards prohibit charging LFP below 0°C</li>
-          <li>Available capacity shrinks: LFP at −20°C delivers only ~60–70% of its room-temperature
-          capacity, because the higher ionic resistance and slower reaction kinetics limit how much
-          energy can actually be delivered</li>
-          <li>Internal resistance rises: at −20°C, cell impedance can be 3–5× higher than at 25°C.
-          This limits peak power output — a serious issue for UPS applications that must deliver
-          full power instantly when the grid fails</li>
+          <li>Cold makes it much harder for lithium ions to move through the battery — at −10°C,
+          they move roughly 10× slower than at room temperature</li>
+          <li>Charging below 0°C is dangerous: ions arrive at the anode faster than the cold material
+          can absorb them, so they deposit as metallic lithium crystals on the surface instead. This
+          can permanently damage the cell. International standards explicitly prohibit charging LFP below 0°C</li>
+          <li>Available capacity shrinks in the cold: at −20°C, LFP only delivers about 60–70% of its
+          normal capacity — the sluggish ion movement limits how much energy you can extract</li>
+          <li>Internal resistance rises sharply: at −20°C, a cell can resist current 3–5× more than
+          at room temperature, limiting peak power — a serious issue for a UPS that must deliver
+          full power the moment the grid fails</li>
         </ul>
 
         <div class="callout callout-warning">
