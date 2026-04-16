@@ -3220,10 +3220,12 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
 
   <div class="rnd-block">
     <div class="rnd-label">⚡ R&D Thinking</div>
-    <p><strong>What goes wrong without OCV mapping?</strong> If you estimate SoC purely from voltage on an LFP cell,
-    a 200mV range (3.2V→3.4V) covers SoC 10%→90%. That's &lt;2.5mV per percentage point.
-    Your ADC noise floor is likely 1–2mV. You're trying to read a ruler with a blurry eye.
-    That's why coulomb counting + Kalman exists — voltage alone is nearly useless for LFP in the mid-range.</p>
+    <p><strong>What goes wrong without better estimation?</strong> If you try to figure out how full the battery
+    is using only the voltage on an LFP cell, you run into a fundamental wall. The entire 10%→90% SoC range
+    spans just 200mV of voltage change. That means each 1% of SoC moves the voltage by less than 2.5mV —
+    and most voltage-measuring circuits have noise of 1–2mV just from electronic interference. You are
+    essentially trying to read a ruler through foggy glass. This is why you need to count the current flowing
+    in and out over time (coulomb counting), rather than just reading the voltage.</p>
   </div>
 
   <div class="int-panel">
@@ -3261,13 +3263,15 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
 
   <div class="rnd-q">
     <div class="rnd-label">🤔 Pause &amp; Think</div>
-    <p><strong>Q: Why does the OCV curve flatten so dramatically in the 20–80% SoC range for LFP?</strong></p>
-    <p>Hint: It has to do with the olivine crystal structure — the lithium intercalation is a two-phase reaction,
-    not a single-phase solid solution. The flat region is a coexistence zone where both phases exist simultaneously.
-    Unlike NMC (single-phase, graded OCV), LFP switches between two discrete crystal phases.</p>
-    <p><strong>Consequence:</strong> The SoC estimator (Ch5) must rely almost entirely on coulomb counting in the flat region,
-    using OCV only at the endpoints for calibration. This is why the Kalman filter gain K is low in the flat region
-    — voltage measurements carry very little information there.</p>
+    <p><strong>Q: Why does the voltage barely change across the 20–80% SoC range for LFP?</strong></p>
+    <p>Hint: It is because of LFP's crystal structure. As we covered earlier, the crystal switches between
+    two distinct forms — "full" and "empty" — rather than gradually changing. While both forms exist side
+    by side inside the particle (which is most of the charge/discharge cycle), the voltage is held
+    steady at the switching point. Compare this to NMC, where the crystal changes smoothly and
+    continuously — giving a nicely sloped voltage curve you can actually use as a gauge.</p>
+    <p><strong>Consequence:</strong> Any SoC estimation system for LFP must rely mainly on counting
+    current in and out (coulomb counting) across the flat region, only using the voltage reading for
+    corrections at the very beginning and end of a charge cycle where the voltage actually moves.</p>
   </div>
 
   <div class="rnd-block" style="border-color:rgba(255,107,53,0.3);background:rgba(255,107,53,0.04)">
