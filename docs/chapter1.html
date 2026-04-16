@@ -2198,16 +2198,14 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
           <div class="callout-body">
             <div class="callout-title">Teaser: The Flat OCV Curve — Chapter 2's Central Challenge</div>
             <p>
-              LFP has one property that is simultaneously its greatest operational challenge: a nearly
-              flat open-circuit voltage (OCV — the voltage you measure at the battery terminals when
-              no current is flowing) curve between 20% and 80% SoC. The cell voltage changes by only
-              ~50mV across that entire 60% SoC range. This means you cannot figure out how full the
-              battery is just by measuring voltage — the most natural and obvious approach. Traditional
-              voltage-based SoC estimation works reasonably for lead-acid and NMC. For LFP, it is
-              essentially useless in the mid-range. BMS designers must instead use coulomb counting
-              (integrating current over time), model-based estimation, or hybrid approaches. This is
-              the central challenge of Chapter 2, and the main reason LFP BMS design requires more
-              sophisticated algorithms than other chemistries.
+              LFP has one property that creates a big practical problem: its voltage barely changes
+              between 20% and 80% full — only about 50mV across that entire range. You can't just measure
+              the voltage and know how full the battery is, because almost any reading in that range could
+              mean 20% or 80% or anything in between. For most battery types, a voltmeter works as a rough
+              fuel gauge. For LFP, in the middle of the range, it is essentially useless. The BMS has to
+              use a different approach — counting all the current that flows in and out over time to keep
+              track of the charge level, and periodically correcting for errors. This is the central
+              challenge of Chapter 2.
             </p>
           </div>
         </div>
