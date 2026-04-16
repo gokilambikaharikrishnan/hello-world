@@ -73,6 +73,72 @@
   </header>
   <hr class="divider" />
 
+  <!-- ── TRIGGER FLOW ── -->
+  <div class="section">
+    <div class="section-label fade-in">How it starts</div>
+    <div class="section-title fade-in">Trigger Flow</div>
+
+    <style>
+      .flow-chain { display:flex; flex-direction:column; align-items:center; gap:0; }
+      .flow-node {
+        width:100%; max-width:480px;
+        background:var(--surface); border:1px solid var(--border);
+        border-radius:10px; padding:18px 24px; text-align:center;
+        position:relative;
+      }
+      .flow-node .node-title { font-size:0.95rem; font-weight:600; color:var(--text); }
+      .flow-node .node-sub { font-size:0.78rem; color:var(--muted); margin-top:4px; }
+      .flow-arrow {
+        width:2px; height:36px; background:var(--border); margin:0 auto;
+        position:relative; overflow:visible;
+      }
+      .flow-arrow::after {
+        content:''; position:absolute; bottom:-6px; left:50%;
+        transform:translateX(-50%);
+        border-left:6px solid transparent; border-right:6px solid transparent;
+        border-top:8px solid var(--border);
+      }
+      /* animated travelling dot on arrow */
+      .flow-arrow::before {
+        content:''; position:absolute; top:0; left:50%;
+        transform:translateX(-50%);
+        width:6px; height:6px; border-radius:50%; background:var(--blue);
+        animation: travelDown 2s linear infinite;
+      }
+      @keyframes travelDown { 0%{top:0;opacity:1} 80%{top:30px;opacity:1} 100%{top:36px;opacity:0} }
+
+      .flow-node.n-iar  { border-color:#484f58; }
+      .flow-node.n-vsc  { border-color:#484f58; }
+      .flow-node.n-greet{ border-color:#6e40c9; background:rgba(110,64,201,0.08); }
+      .flow-node.n-greet .node-title { color:var(--purple); }
+      .flow-node.n-menu { border-color:#1f6feb; background:rgba(31,111,235,0.08); }
+      .flow-node.n-menu .node-title { color:var(--blue); }
+    </style>
+
+    <div class="flow-chain fade-in">
+      <div class="flow-node n-iar">
+        <div class="node-title">IAR Post-Build Trigger</div>
+        <div class="node-sub">trigger.py fires on every successful build</div>
+      </div>
+      <div class="flow-arrow"></div>
+      <div class="flow-node n-vsc">
+        <div class="node-title">VS Code Wakes Up</div>
+        <div class="node-sub">code --open-url vscode://bms-doc-gen/trigger</div>
+      </div>
+      <div class="flow-arrow"></div>
+      <div class="flow-node n-greet">
+        <div class="node-title">Greeting Screen</div>
+        <div class="node-sub">Hey {name} — reads git config user.name · Full Stack / My Changes / Not Now</div>
+      </div>
+      <div class="flow-arrow"></div>
+      <div class="flow-node n-menu">
+        <div class="node-title">Module Selector</div>
+        <div class="node-sub">Checkbox list of all BMS modules · Generate Docs →</div>
+      </div>
+    </div>
+  </div>
+  <hr class="divider" />
+
   <!-- sections added next -->
   <script>
     // Intersection observer for fade-in
