@@ -2529,17 +2529,20 @@ tr:hover td{background:rgba(0,245,255,0.03) !important;}
             </div>
           </div>
           <ul class="content-list check">
-            <li>Implement coulomb counting (current integration) for primary SoC estimation:
-            SoC(t) = SoC(t₀) − ∫I(t)dt / Q_nominal</li>
-            <li>Compensate for coulombic efficiency (&lt;100% — some charge is lost to side reactions)</li>
-            <li>Implement OCV-SoC lookup table for SoC correction during rest periods (flat curve
-            means correction must be done carefully, with long rest time ≥30 min for accuracy)</li>
-            <li>Track State of Health (SoH) — actual capacity vs. nominal — through full discharge
-            characterization cycles</li>
+            <li><strong>Coulomb counting:</strong> Track current flowing in and out of the battery
+            over time. Add up all the charge that goes in, subtract all that goes out. That running
+            total gives you the SoC. (The math: SoC(t) = SoC(t₀) − ∫I(t)dt / Q_nominal)</li>
+            <li>Compensate for the fact that slightly less charge comes out than went in — some is
+            lost to unavoidable side reactions inside the cell (~0.1–1%)</li>
+            <li>When the battery is resting (not charging or discharging), measure the voltage and
+            compare to a known table to correct any drift in the running count. (Rest must be at
+            least 30 minutes for an accurate reading due to the flat OCV curve)</li>
+            <li>Track State of Health (SoH) — how much usable capacity remains compared to when
+            the battery was new — by periodically doing a full charge/discharge measurement</li>
             <li>Report SoC, SoH, remaining runtime, and per-cell voltages via communication bus
             (CAN, RS485, SMBus, or UART)</li>
-            <li>Implement fuel gauge display output (SOC bar graph, percentage display)</li>
-            <li>Alarm and log conditions: &lt;20% SoC warning, &lt;10% SoC critical, 0% shutoff</li>
+            <li>Show a fuel gauge (percentage display or bar graph) for the user</li>
+            <li>Warn at &lt;20% SoC, escalate at &lt;10%, and cut power at 0% to prevent over-discharge</li>
           </ul>
         </div>
       </div><!-- end no visual indicator subsection -->
