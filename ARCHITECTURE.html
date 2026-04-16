@@ -202,6 +202,132 @@
   </div>
   <hr class="divider" />
 
+  <!-- ── ENGINE PIPELINE ── -->
+  <div class="section">
+    <div class="section-label fade-in">Shared by all 7 modes</div>
+    <div class="section-title fade-in">Generation Engine Pipeline</div>
+
+    <style>
+      .pipeline { display:flex; flex-direction:column; align-items:center; gap:0; }
+      .pipe-node {
+        width:100%; max-width:540px;
+        border-radius:10px; padding:20px 28px; text-align:center;
+        border:1px solid var(--border); position:relative;
+      }
+      .pipe-node .pn-title { font-size:0.98rem; font-weight:700; }
+      .pipe-node .pn-file  { font-size:0.72rem; color:var(--muted); margin-top:3px; letter-spacing:0.05em; }
+      .pipe-node .pn-desc  { font-size:0.8rem; margin-top:6px; opacity:0.8; line-height:1.5; }
+      .pipe-arrow {
+        width:2px; height:40px; position:relative; margin:0 auto;
+      }
+      .pipe-arrow .pa-line {
+        position:absolute; left:50%; top:0; transform:translateX(-50%);
+        width:2px; height:100%;
+      }
+      .pipe-arrow .pa-dot {
+        position:absolute; left:50%; transform:translateX(-50%);
+        width:8px; height:8px; border-radius:50%;
+        animation: pipeDot 1.8s linear infinite;
+      }
+      .pipe-arrow .pa-tip {
+        position:absolute; bottom:-7px; left:50%; transform:translateX(-50%);
+        border-left:6px solid transparent; border-right:6px solid transparent;
+      }
+      @keyframes pipeDot { 0%{top:0;opacity:0} 10%{opacity:1} 90%{opacity:1} 100%{top:36px;opacity:0} }
+
+      /* node colours */
+      .pn-gray { background:rgba(48,54,61,0.4); border-color:var(--border); color:var(--text); }
+      .pn-gray .pn-title { color:var(--text); }
+
+      .pn-purple{ background:rgba(110,64,201,0.15); border-color:#6e40c9; }
+      .pn-purple .pn-title { color:#bc8cff; }
+
+      .pn-blue { background:rgba(31,111,235,0.15); border-color:#1f6feb; }
+      .pn-blue .pn-title { color:#58a6ff; }
+
+      .pn-teal { background:rgba(27,153,139,0.15); border-color:#1b998b; }
+      .pn-teal .pn-title { color:#2dd4bf; }
+
+      .pn-output { background:rgba(48,54,61,0.4); border-color:var(--border); }
+      .pn-output .pn-title { color:var(--muted); font-weight:500; }
+
+      /* arrow colours match destination node */
+      .pa-purple .pa-line { background:#6e40c9; }
+      .pa-purple .pa-dot  { background:#bc8cff; }
+      .pa-purple .pa-tip  { border-top:8px solid #6e40c9; }
+
+      .pa-blue .pa-line { background:#1f6feb; }
+      .pa-blue .pa-dot  { background:#58a6ff; }
+      .pa-blue .pa-tip  { border-top:8px solid #1f6feb; }
+
+      .pa-teal .pa-line { background:#1b998b; }
+      .pa-teal .pa-dot  { background:#2dd4bf; }
+      .pa-teal .pa-tip  { border-top:8px solid #1b998b; }
+
+      .pa-gray .pa-line { background:var(--border); }
+      .pa-gray .pa-dot  { background:var(--muted); }
+      .pa-gray .pa-tip  { border-top:8px solid var(--border); }
+    </style>
+
+    <div class="pipeline fade-in">
+
+      <div class="pipe-node pn-gray">
+        <div class="pn-title">File Reader</div>
+        <div class="pn-file">fileReader.ts · includeResolver.ts</div>
+        <div class="pn-desc">Reads .c .h .pdf .dbc .csv .xls · walks #include chain · 90k char cap</div>
+      </div>
+
+      <div class="pipe-arrow pa-purple">
+        <div class="pa-line"></div>
+        <div class="pa-dot"></div>
+        <div class="pa-tip"></div>
+      </div>
+
+      <div class="pipe-node pn-purple">
+        <div class="pn-title">Prompt Builder</div>
+        <div class="pn-file">promptBuilder.ts</div>
+        <div class="pn-desc">5 layer prompts · domain context · audience definition · 10-section instructions · swaps strategy per mode and per layer</div>
+      </div>
+
+      <div class="pipe-arrow pa-blue">
+        <div class="pa-line"></div>
+        <div class="pa-dot"></div>
+        <div class="pa-tip"></div>
+      </div>
+
+      <div class="pipe-node pn-blue">
+        <div class="pn-title">LLM Caller</div>
+        <div class="pn-file">llmClient.ts</div>
+        <div class="pn-desc">GitHub Copilot via vscode.lm API · gpt-4o preferred · streaming tokens · error handling</div>
+      </div>
+
+      <div class="pipe-arrow pa-teal">
+        <div class="pa-line"></div>
+        <div class="pa-dot"></div>
+        <div class="pa-tip"></div>
+      </div>
+
+      <div class="pipe-node pn-teal">
+        <div class="pn-title">HTML Renderer</div>
+        <div class="pn-file">docRenderer.ts</div>
+        <div class="pn-desc">Parses 10 sections · converts markdown → HTML · Mermaid diagrams · hljs syntax highlight · dark theme</div>
+      </div>
+
+      <div class="pipe-arrow pa-gray">
+        <div class="pa-line"></div>
+        <div class="pa-dot"></div>
+        <div class="pa-tip"></div>
+      </div>
+
+      <div class="pipe-node pn-output">
+        <div class="pn-title">docs/{MODULE}_design.html</div>
+        <div class="pn-desc">Saved to /docs in the repo · opens in browser · 10-section sidebar navigation</div>
+      </div>
+
+    </div>
+  </div>
+  <hr class="divider" />
+
   <!-- sections added next -->
   <script>
     // Intersection observer for fade-in
