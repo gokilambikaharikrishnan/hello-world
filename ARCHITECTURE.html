@@ -765,6 +765,55 @@
   </div>
   <hr class="divider" />
 
+  <!-- ── VALUE SUMMARY ── -->
+  <div class="section">
+    <div class="section-label fade-in">The bottom line</div>
+    <div class="section-title fade-in">What This Gives the Team</div>
+    <style>
+      .value-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:40px; }
+      .val-card {
+        background:var(--surface); border:1px solid var(--border);
+        border-radius:10px; padding:24px 20px; text-align:center;
+      }
+      .val-num { font-size:2rem; font-weight:700; margin-bottom:6px; }
+      .val-label { font-size:0.75rem; color:var(--muted); line-height:1.6; }
+    </style>
+    <div class="value-grid fade-in">
+      <div class="val-card">
+        <div class="val-num" style="color:#a78bfa;">60s</div>
+        <div class="val-label">Full module documentation<br/>instead of 2 hours</div>
+      </div>
+      <div class="val-card">
+        <div class="val-num" style="color:#4ade80;">7</div>
+        <div class="val-label">Question types answered —<br/>code, logs, datasheets, audits</div>
+      </div>
+      <div class="val-card">
+        <div class="val-num" style="color:#fb923c;">0</div>
+        <div class="val-label">Senior engineer hours spent<br/>explaining existing code</div>
+      </div>
+      <div class="val-card">
+        <div class="val-num" style="color:#fbbf24;">Auto</div>
+        <div class="val-label">Triggered on every IAR build —<br/>docs stay in sync with code</div>
+      </div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:28px 32px;max-width:640px;" class="fade-in">
+      <p style="font-size:0.88rem;color:var(--text);line-height:1.9;margin-bottom:14px;">
+        <strong>BMS DocGen is not a documentation tool.</strong>
+        It is an AI that has read your entire firmware, understands battery management
+        from first principles, and is available to every engineer on the team — at any time,
+        for any question.
+      </p>
+      <p style="font-size:0.82rem;color:var(--muted);line-height:1.9;">
+        A new hire on their first day can open any module, generate the doc, and
+        understand it well enough to work safely. A field fault lands on the bench —
+        the log is uploaded, and root cause analysis that used to take a day
+        takes twenty minutes. An auditor requests a system description — it's generated,
+        not written from scratch.
+      </p>
+    </div>
+  </div>
+  <hr class="divider" />
+
   <!-- ── FOOTER ── -->
   <div style="text-align:center; padding:60px 20px 40px; color:var(--muted); font-size:0.78rem; line-height:2;">
     <div style="font-size:1.4rem; margin-bottom:12px;">⚡</div>
