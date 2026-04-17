@@ -201,65 +201,137 @@
   </div>
   <hr class="divider" />
 
-  <!-- ── 7 FEATURES ── -->
+  <!-- ── 7 MODES ── -->
   <div class="section">
-    <div class="section-label fade-in">What it can do</div>
-    <div class="section-title fade-in">7 Documentation Modes</div>
+    <div class="section-label fade-in">7 intelligence modes</div>
+    <div class="section-title fade-in">Ask Any Question About Your Codebase.<br/>Get an Expert Answer.</div>
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:48px;line-height:1.8;max-width:640px;" class="fade-in">
+      Each mode is a different lens on your BMS firmware.
+      Feed it source code, logs, or datasheets — it reads everything,
+      understands the BMS domain, and produces structured documentation
+      a new engineer can act on immediately.
+    </p>
 
     <style>
-      .feature-grid { display:flex; flex-direction:column; gap:10px; }
-      .feature-card {
-        border-radius:10px; padding:20px 24px;
-        display:grid; grid-template-columns:1fr 1fr; gap:16px;
-        cursor:default; transition:transform 150ms, box-shadow 150ms;
-        border:1px solid transparent;
+      .mode-card {
+        border-radius:12px; padding:28px 32px; margin-bottom:20px;
+        border:1px solid var(--border); border-left:4px solid;
+        transition:transform 150ms, box-shadow 150ms;
       }
-      .feature-card:hover { transform:translateX(4px); box-shadow:0 0 0 1px rgba(255,255,255,0.06); }
-      .fc-num  { font-size:0.7rem; letter-spacing:0.15em; color:inherit; opacity:0.7; margin-bottom:4px; }
-      .fc-name { font-size:1rem; font-weight:700; }
-      .fc-desc { font-size:0.78rem; opacity:0.75; margin-top:4px; line-height:1.5; }
-      .fc-io   { font-size:0.78rem; opacity:0.8; line-height:1.6; }
-      .fc-io strong { opacity:1; }
+      .mode-card:hover { transform:translateX(6px); box-shadow: -4px 0 20px rgba(0,0,0,0.3); }
+      .mode-top { display:flex; align-items:baseline; gap:14px; margin-bottom:10px; }
+      .mode-badge { font-size:0.65rem; letter-spacing:0.2em; text-transform:uppercase; opacity:0.7; white-space:nowrap; }
+      .mode-title { font-size:1.15rem; font-weight:700; }
+      .mode-tagline { font-size:0.82rem; color:var(--muted); margin-bottom:18px; font-style:italic; }
+      .mode-body { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+      @media(max-width:600px){ .mode-body { grid-template-columns:1fr; } }
+      .mode-problem { font-size:0.8rem; color:var(--muted); line-height:1.8; }
+      .mode-problem strong { color:var(--text); }
+      .mode-output { font-size:0.8rem; line-height:1.8; }
+      .mode-output .out-label { font-size:0.68rem; letter-spacing:0.15em; text-transform:uppercase; opacity:0.6; margin-bottom:6px; }
+      .mode-output ul { list-style:none; padding:0; }
+      .mode-output li::before { content:"→ "; opacity:0.5; }
+      .mode-io-bar { margin-top:16px; font-size:0.75rem; color:var(--muted); border-top:1px solid var(--border); padding-top:12px; }
+      .mode-io-bar strong { color:var(--text); }
 
-      .f1{background:rgba(68,51,153,0.25);border-color:#443399;color:#a99fff;}
-      .f2{background:rgba(27,99,60,0.25);border-color:#1b633c;color:#56d68a;}
-      .f3{background:rgba(139,59,30,0.25);border-color:#8b3b1e;color:#f0a070;}
-      .f4{background:rgba(139,99,0,0.25);border-color:#8b6300;color:#e3b341;}
-      .f5{background:rgba(53,90,20,0.25);border-color:#355a14;color:#85c44a;}
-      .f6{background:rgba(120,30,80,0.25);border-color:#78_1e50;color:#e080b0;}
-      .f6{background:rgba(120,30,80,0.25);border-color:#781e50;color:#e080b0;}
-      .f7{background:rgba(20,70,120,0.25);border-color:#144678;color:#79c0ff;}
+      .mc1{border-left-color:#7c3aed;} .mc1 .mode-title{color:#a78bfa;}
+      .mc2{border-left-color:#1d9956;} .mc2 .mode-title{color:#4ade80;}
+      .mc3{border-left-color:#c2410c;} .mc3 .mode-title{color:#fb923c;}
+      .mc4{border-left-color:#b45309;} .mc4 .mode-title{color:#fbbf24;}
+      .mc5{border-left-color:#0e7490;} .mc5 .mode-title{color:#22d3ee;}
+      .mc6{border-left-color:#9d174d;} .mc6 .mode-title{color:#f472b6;}
+      .mc7{border-left-color:#1d4ed8;} .mc7 .mode-title{color:#60a5fa;}
     </style>
 
-    <div class="feature-grid fade-in">
-      <div class="feature-card f1">
-        <div><div class="fc-num">MODE 1</div><div class="fc-name">Code Docs</div><div class="fc-desc">How is this module written? One module, code only, developer view</div></div>
-        <div class="fc-io"><strong>In:</strong> .c + .h files, one module<br><strong>Out:</strong> 10-section design doc — functions, config, flow, diagrams</div>
+    <!-- MODE 1 -->
+    <div class="mode-card mc1 fade-in">
+      <div class="mode-top">
+        <span class="mode-badge" style="color:#a78bfa;">Mode 01</span>
+        <span class="mode-title">Code Documentation</span>
       </div>
-      <div class="feature-card f2">
-        <div><div class="fc-num">MODE 2</div><div class="fc-name">Module Docs</div><div class="fc-desc">How does this subsystem work end to end? All layers + hardware, full feature view</div></div>
-        <div class="fc-io"><strong>In:</strong> All CAN/NVM/SOC layers + schematic + spec docs<br><strong>Out:</strong> Full subsystem overview HTML</div>
+      <div class="mode-tagline">"How is this module built — and why was it built that way?"</div>
+      <div class="mode-body">
+        <div class="mode-problem">
+          <strong>The situation:</strong> A developer needs to modify <code>NVM_WriteBlock()</code>
+          but has never touched the NVM module. They open the file. 900 lines of C.
+          Six static variables. A state machine. Three layers of abstraction below.
+          They have no idea where to start — or what they might break.<br/><br/>
+          Without documentation, they guess. Or they interrupt a senior engineer for two hours.
+          Either way, the team loses.
+        </div>
+        <div class="mode-output">
+          <div class="out-label">With DocGen — generated in 60 seconds</div>
+          <ul>
+            <li>10 structured sections — overview, hardware, config, functions</li>
+            <li>Every function explained: purpose, parameters, side effects</li>
+            <li>State machine diagram — every state and transition named</li>
+            <li>Data flow diagram — what comes in, what goes out, where</li>
+            <li>Design decisions — why this approach, what was traded off</li>
+            <li>Fresher warnings — what not to touch and why</li>
+          </ul>
+        </div>
       </div>
-      <div class="feature-card f3">
-        <div><div class="fc-num">MODE 3</div><div class="fc-name">Code Review</div><div class="fc-desc">What is wrong, risky, or improvable? Auditor mode — reads and reports only</div></div>
-        <div class="fc-io"><strong>In:</strong> .c + .h files per module<br><strong>Out:</strong> Audit report — memory issues, style problems, optimisation flags</div>
+      <div class="mode-io-bar"><strong>Input:</strong> One module folder (.c + .h files) &nbsp;&nbsp;|&nbsp;&nbsp; <strong>Output:</strong> 10-section HTML design document with Mermaid diagrams</div>
+    </div>
+
+    <!-- MODE 2 -->
+    <div class="mode-card mc2 fade-in">
+      <div class="mode-top">
+        <span class="mode-badge" style="color:#4ade80;">Mode 02</span>
+        <span class="mode-title">Subsystem Documentation</span>
       </div>
-      <div class="feature-card f4">
-        <div><div class="fc-num">MODE 4</div><div class="fc-name">Event Log Analysis</div><div class="fc-desc">What happened during this run? Upload a log, get it explained vs code</div></div>
-        <div class="fc-io"><strong>In:</strong> Excel / CSV event log + code<br><strong>Out:</strong> Timeline, what went well, what failed, root cause clues</div>
+      <div class="mode-tagline">"How does this entire feature work — from hardware to application?"</div>
+      <div class="mode-body">
+        <div class="mode-problem">
+          <strong>The situation:</strong> You want to understand how State of Charge flows through the system.
+          That means reading: MCAL ADC, CDD AFE, ESAL BATT_IF, SRVLayer NVM, ASW PowerComputation —
+          five separate modules, five separate files, spread across the stack.
+          No single document ties them together.<br/><br/>
+          An engineer spends a day tracing the signal path manually, trying to hold
+          all five layers in their head at once.
+        </div>
+        <div class="mode-output">
+          <div class="out-label">With DocGen — cross-layer intelligence</div>
+          <ul>
+            <li>Reads all 5 layers simultaneously, understands relationships</li>
+            <li>End-to-end signal flow: raw ADC counts → calibrated SOC %</li>
+            <li>Cross-module dependency graph — who calls what and why</li>
+            <li>Sequence diagram: ADC measurement to NVM write, every step</li>
+            <li>Consolidated config table — all parameters across all layers</li>
+          </ul>
+        </div>
       </div>
-      <div class="feature-card f5">
-        <div><div class="fc-num">MODE 5</div><div class="fc-name">CAN Log Analysis</div><div class="fc-desc">What was on the bus during this session? Decode raw CAN traffic into signals</div></div>
-        <div class="fc-io"><strong>In:</strong> .trc or .asc log + .dbc file<br><strong>Out:</strong> Decoded signal plots, anomaly flags, timing charts, HTML report</div>
+      <div class="mode-io-bar"><strong>Input:</strong> Multiple modules across layers + optional spec docs &nbsp;&nbsp;|&nbsp;&nbsp; <strong>Output:</strong> Unified subsystem overview HTML</div>
+    </div>
+
+    <!-- MODE 3 -->
+    <div class="mode-card mc3 fade-in">
+      <div class="mode-top">
+        <span class="mode-badge" style="color:#fb923c;">Mode 03</span>
+        <span class="mode-title">AI Code Review</span>
       </div>
-      <div class="feature-card f6">
-        <div><div class="fc-num">MODE 6</div><div class="fc-name">Full System Doc</div><div class="fc-desc">How does the entire BMS product work? Hardware to software, for managers and auditors</div></div>
-        <div class="fc-io"><strong>In:</strong> All schematics + spec docs + full codebase<br><strong>Out:</strong> Complete BMS system overview — architecture, protection, comms</div>
+      <div class="mode-tagline">"What is wrong, risky, or improvable in this module?"</div>
+      <div class="mode-body">
+        <div class="mode-problem">
+          <strong>The situation:</strong> A code review takes half a day. The reviewer
+          checks style, logic, memory safety — but reviewers are human.
+          They miss subtle issues: a buffer that's one byte too small, a state machine
+          with an unhandled transition, a magic number with no explanation, a
+          loop that stalls if a peripheral hangs.<br/><br/>
+          These bugs reach production. In a battery system, production bugs can be dangerous.
+        </div>
+        <div class="mode-output">
+          <div class="out-label">With DocGen — tireless auditor mode</div>
+          <ul>
+            <li>Memory safety: buffer bounds, pointer arithmetic, stack usage</li>
+            <li>State machine completeness: every transition, every edge case</li>
+            <li>Magic numbers flagged — every unexplained constant explained</li>
+            <li>ISR safety: variables shared between ISR and main, atomicity</li>
+            <li>Severity rating: Critical / Warning / Suggestion per finding</li>
+          </ul>
+        </div>
       </div>
-      <div class="feature-card f7">
-        <div><div class="fc-num">MODE 7</div><div class="fc-name">Datasheet Simplifier</div><div class="fc-desc">What does this IC actually do in our system? 250-page datasheet → what matters</div></div>
-        <div class="fc-io"><strong>In:</strong> IC datasheet PDF + driver code<br><strong>Out:</strong> Simplified reference — only the registers, modes, sequences we use</div>
-      </div>
+      <div class="mode-io-bar"><strong>Input:</strong> Module .c + .h files &nbsp;&nbsp;|&nbsp;&nbsp; <strong>Output:</strong> Audit report — severity-rated findings, no hallucination</div>
     </div>
   </div>
   <hr class="divider" />
