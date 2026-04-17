@@ -336,6 +336,132 @@
   </div>
   <hr class="divider" />
 
+  <!-- modes 4-7 -->
+  <div class="section" style="padding-top:0;">
+
+    <!-- MODE 4 -->
+    <div class="mode-card mc4 fade-in">
+      <div class="mode-top">
+        <span class="mode-badge" style="color:#fbbf24;">Mode 04</span>
+        <span class="mode-title">Event Log Analysis</span>
+      </div>
+      <div class="mode-tagline">"What actually happened during this test run — and why did it fault?"</div>
+      <div class="mode-body">
+        <div class="mode-problem">
+          <strong>The situation:</strong> A battery pack faults on the test bench.
+          You have a 50,000-line CSV event log: timestamps, module IDs, event codes.
+          Someone has to manually cross-reference each event code against the source code
+          to understand what triggered what.<br/><br/>
+          It takes a full day. The test cannot resume until the root cause is confirmed.
+          The engineer doing it is the one you least want tied up for a day.
+        </div>
+        <div class="mode-output">
+          <div class="out-label">With DocGen — log meets code</div>
+          <ul>
+            <li>Reads the log AND the source code together</li>
+            <li>Translates every event code into plain English</li>
+            <li>Reconstructs the exact sequence of events that led to the fault</li>
+            <li>Highlights anomalies: out-of-order events, missing heartbeats, timing gaps</li>
+            <li>Root cause section: most likely explanation with evidence from log</li>
+          </ul>
+        </div>
+      </div>
+      <div class="mode-io-bar"><strong>Input:</strong> Excel/CSV event log + module source code &nbsp;&nbsp;|&nbsp;&nbsp; <strong>Output:</strong> Timeline analysis, root cause report, anomaly flags</div>
+    </div>
+
+    <!-- MODE 5 -->
+    <div class="mode-card mc5 fade-in">
+      <div class="mode-top">
+        <span class="mode-badge" style="color:#22d3ee;">Mode 05</span>
+        <span class="mode-title">CAN Bus Log Analysis</span>
+      </div>
+      <div class="mode-tagline">"What was on the bus during this session — decoded into human signals?"</div>
+      <div class="mode-body">
+        <div class="mode-problem">
+          <strong>The situation:</strong> A 4-hour test session was recorded.
+          The .trc file has 2 million CAN frames: raw hex IDs and data bytes.
+          To make sense of it, an engineer opens VECTOR CANalyzer, loads the .dbc,
+          filters signals, and manually looks for the window where something went wrong.<br/><br/>
+          It's slow. It requires expensive tooling. And it still requires someone
+          who knows what "normal" looks like.
+        </div>
+        <div class="mode-output">
+          <div class="out-label">With DocGen — your bus, explained</div>
+          <ul>
+            <li>Reads .trc / .asc log + .dbc database together</li>
+            <li>Decodes every signal by name, value, unit, and timestamp</li>
+            <li>Detects anomalies: missing messages, out-of-range values, timing gaps</li>
+            <li>Summary report: what happened on the bus, when, what stood out</li>
+            <li>No VECTOR licence required — runs in VS Code</li>
+          </ul>
+        </div>
+      </div>
+      <div class="mode-io-bar"><strong>Input:</strong> .trc or .asc CAN log + .dbc file &nbsp;&nbsp;|&nbsp;&nbsp; <strong>Output:</strong> Decoded signal report, anomaly flags, HTML timeline</div>
+    </div>
+
+    <!-- MODE 6 -->
+    <div class="mode-card mc6 fade-in">
+      <div class="mode-top">
+        <span class="mode-badge" style="color:#f472b6;">Mode 06</span>
+        <span class="mode-title">Full System Documentation</span>
+      </div>
+      <div class="mode-tagline">"How does the entire BMS product work — for an auditor or integration partner?"</div>
+      <div class="mode-body">
+        <div class="mode-problem">
+          <strong>The situation:</strong> An external auditor (ISO 26262, customer, IATF)
+          needs a system description. A new integration partner needs to understand
+          your CAN interface, your protection thresholds, your startup sequence.
+          Your best engineer needs to write 50 pages of documentation. From scratch.
+          For two weeks. While feature development stops.<br/><br/>
+          This happens every time there's an audit. Every time there's a new customer.
+        </div>
+        <div class="mode-output">
+          <div class="out-label">With DocGen — audit-ready at a click</div>
+          <ul>
+            <li>Reads the full codebase, schematics, and spec documents together</li>
+            <li>Produces a complete system overview: architecture, protection logic, comms</li>
+            <li>Hardware-to-software signal chain for every major feature</li>
+            <li>Protection thresholds table — every limit, every action</li>
+            <li>CAN interface section — every message, signal, and timing</li>
+          </ul>
+        </div>
+      </div>
+      <div class="mode-io-bar"><strong>Input:</strong> Full codebase + schematics + spec docs &nbsp;&nbsp;|&nbsp;&nbsp; <strong>Output:</strong> Complete BMS system description document</div>
+    </div>
+
+    <!-- MODE 7 -->
+    <div class="mode-card mc7 fade-in">
+      <div class="mode-top">
+        <span class="mode-badge" style="color:#60a5fa;">Mode 07</span>
+        <span class="mode-title">Datasheet Intelligence</span>
+      </div>
+      <div class="mode-tagline">"This IC has a 280-page datasheet. What do WE actually use — and how?"</div>
+      <div class="mode-body">
+        <div class="mode-problem">
+          <strong>The situation:</strong> Your AFE IC datasheet is 280 pages.
+          The engineer implementing the driver reads every page, figures out
+          which of the 200 registers are relevant to your design, and writes
+          a driver from scratch. Six months later a different engineer needs
+          to understand how cell balancing is triggered. They start from page 1 again.<br/><br/>
+          Every new engineer repeats the same archaeology.
+        </div>
+        <div class="mode-output">
+          <div class="out-label">With DocGen — 280 pages → what matters</div>
+          <ul>
+            <li>Reads the datasheet PDF and your driver code together</li>
+            <li>Identifies which registers, modes, and sequences your code actually uses</li>
+            <li>Explains each register in the context of your specific BMS design</li>
+            <li>Init sequence document: exact order, exact values, exact reason for each</li>
+            <li>Quick-reference card — the only part of the datasheet you need</li>
+          </ul>
+        </div>
+      </div>
+      <div class="mode-io-bar"><strong>Input:</strong> IC datasheet PDF + driver .c/.h files &nbsp;&nbsp;|&nbsp;&nbsp; <strong>Output:</strong> Simplified reference — only what your system uses</div>
+    </div>
+
+  </div>
+  <hr class="divider" />
+
   <!-- ── ENGINE PIPELINE ── -->
   <div class="section">
     <div class="section-label fade-in">Shared by all 7 modes</div>
