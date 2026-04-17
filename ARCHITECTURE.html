@@ -442,7 +442,78 @@
   </div>
   <hr class="divider" />
 
-  <!-- sections added next -->
+  <!-- ── REPO STRUCTURE ── -->
+  <div class="section">
+    <div class="section-label fade-in">Codebase layout</div>
+    <div class="section-title fade-in">Repository Structure</div>
+
+    <style>
+      .file-tree {
+        background:var(--surface); border:1px solid var(--border);
+        border-radius:10px; padding:24px 28px; font-size:0.82rem;
+        line-height:1.9; max-width:680px;
+      }
+      .ft-dir  { color:var(--blue); font-weight:600; }
+      .ft-file { color:var(--text); }
+      .ft-key  { color:#f0a070; font-weight:600; }
+      .ft-note { color:var(--muted); font-style:italic; }
+      .ft-indent { padding-left:20px; border-left:1px solid var(--border); margin-left:8px; }
+    </style>
+
+    <div class="file-tree fade-in">
+      <div>bms-firmware/</div>
+      <div class="ft-indent">
+        <div><span class="ft-dir">ASW/</span> <span class="ft-note">← Application modules</span></div>
+        <div class="ft-indent">
+          <div class="ft-dir">ContactorControl/ &nbsp;PowerComputation/</div>
+        </div>
+        <div><span class="ft-dir">BSW/</span> <span class="ft-note">← Basic Software modules</span></div>
+        <div class="ft-indent">
+          <div><span class="ft-dir">MCAL/</span> ADC/ &nbsp;CAN/ &nbsp;SPI/ &nbsp;UART/</div>
+          <div><span class="ft-dir">CDD/</span> &nbsp;AFE/ &nbsp;EWDG/</div>
+          <div><span class="ft-dir">ESAL/</span> BATT_IF/ &nbsp;CONTACTOR_IF/</div>
+          <div><span class="ft-dir">SRVLayer/</span> NVM/ &nbsp;Scheduler/ &nbsp;Event_Manager/</div>
+        </div>
+        <div><span class="ft-dir">docs/</span> <span class="ft-note">← Generated HTML docs (created on first run)</span></div>
+        <div class="ft-indent">
+          <div class="ft-file">{MODULE}_design.html</div>
+        </div>
+        <div><span class="ft-dir">trigger/</span></div>
+        <div class="ft-indent">
+          <div><span class="ft-key">trigger.py</span> <span class="ft-note">← IAR post-build hook</span></div>
+        </div>
+        <div><span class="ft-dir">extension/</span></div>
+        <div class="ft-indent">
+          <div class="ft-file">package.json &nbsp;<span class="ft-note">← VS Code extension manifest</span></div>
+          <div><span class="ft-dir">src/</span></div>
+          <div class="ft-indent">
+            <div><span class="ft-key">extension.ts</span>    <span class="ft-note">← activation, URI handler, orchestration</span></div>
+            <div><span class="ft-key">promptBuilder.ts</span><span class="ft-note">← 4-part prompt assembly</span></div>
+            <div><span class="ft-key">llmClient.ts</span>    <span class="ft-note">← Copilot API + streaming</span></div>
+            <div><span class="ft-key">docRenderer.ts</span>  <span class="ft-note">← LLM text → dark HTML</span></div>
+            <div class="ft-file">fileReader.ts &nbsp; includeResolver.ts</div>
+            <div class="ft-file">folderScanner.ts &nbsp; webviewPanel.ts</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <hr class="divider" />
+
+  <!-- ── FOOTER ── -->
+  <div style="text-align:center; padding:60px 20px 40px; color:var(--muted); font-size:0.78rem; line-height:2;">
+    <div style="font-size:1.4rem; margin-bottom:12px;">⚡</div>
+    <div style="font-size:1rem; color:var(--text); font-weight:600; margin-bottom:6px;">BMS DocGen</div>
+    <div>VS Code Extension · GitHub Copilot · 5-Layer BMS Firmware</div>
+    <div style="margin-top:16px; display:flex; justify-content:center; gap:24px; flex-wrap:wrap;">
+      <span style="background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:4px 14px;">MCAL</span>
+      <span style="background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:4px 14px;">CDD</span>
+      <span style="background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:4px 14px;">ESAL</span>
+      <span style="background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:4px 14px;">SRVLayer</span>
+      <span style="background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:4px 14px;">ASW</span>
+    </div>
+  </div>
+
   <script>
     // Intersection observer for fade-in
     const observer = new IntersectionObserver(entries => {
