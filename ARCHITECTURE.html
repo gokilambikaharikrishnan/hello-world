@@ -79,6 +79,62 @@
   </header>
   <hr class="divider" />
 
+  <!-- ── THE PROBLEM ── -->
+  <div class="section">
+    <div class="section-label fade-in">Why this exists</div>
+    <div class="section-title fade-in">The Problem We're Solving</div>
+    <style>
+      .problem-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr)); gap:16px; }
+      .prob-card {
+        background:var(--surface); border:1px solid var(--border);
+        border-radius:10px; padding:24px; border-left:3px solid;
+      }
+      .prob-icon { font-size:1.6rem; margin-bottom:12px; }
+      .prob-title { font-size:0.9rem; font-weight:700; color:var(--text); margin-bottom:8px; }
+      .prob-body { font-size:0.78rem; color:var(--muted); line-height:1.75; }
+      .prob-body strong { color:var(--text); }
+    </style>
+    <div class="problem-grid fade-in">
+      <div class="prob-card" style="border-color:#7c3aed;">
+        <div class="prob-icon">&#x1F9D1;&#x200D;&#x1F4BB;</div>
+        <div class="prob-title">New engineer joins the team</div>
+        <div class="prob-body">
+          They ask: <strong>"How does the NVM module work?"</strong><br/><br/>
+          A senior engineer spends 2 hours walking through 1,400 lines of C —
+          register maps, state machines, power-cycle behaviour —
+          knowledge that lives only in one person's head.<br/><br/>
+          <strong>Multiply that by 30 modules.</strong>
+        </div>
+      </div>
+      <div class="prob-card" style="border-color:#b45309;">
+        <div class="prob-icon">&#x1F6A8;</div>
+        <div class="prob-title">Battery pack faults in the field</div>
+        <div class="prob-body">
+          You have a <strong>50,000-line event log</strong> and a car that won't start.
+          Someone manually correlates timestamps to code paths.
+          It takes a day to find the fault. Another day to confirm it.<br/><br/>
+          <strong>A customer is waiting. The root cause is buried in the data.</strong>
+        </div>
+      </div>
+      <div class="prob-card" style="border-color:#0891b2;">
+        <div class="prob-icon">&#x1F4C4;</div>
+        <div class="prob-title">Audit or customer integration</div>
+        <div class="prob-body">
+          An external auditor asks for a <strong>system description document.</strong>
+          An integration partner needs to understand your CAN interface.
+          Someone has to write 50 pages of documentation from scratch.<br/><br/>
+          <strong>That someone is your best engineer. For two weeks.</strong>
+        </div>
+      </div>
+    </div>
+    <p style="margin-top:28px;font-size:0.85rem;color:var(--muted);line-height:1.8;" class="fade-in">
+      BMS DocGen solves all three. It is an AI that has read your entire codebase,
+      understands BMS domain context, and can answer any question about it —
+      in structured, expert-level documentation — on demand.
+    </p>
+  </div>
+  <hr class="divider" />
+
   <!-- ── TRIGGER FLOW ── -->
   <div class="section">
     <div class="section-label fade-in">How it starts</div>
