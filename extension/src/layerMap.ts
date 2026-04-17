@@ -2,14 +2,24 @@ export const LAYER_MAP: Record<string, string> = {
     // MCAL - Microcontroller Abstraction Layer (BSW)
     'ADC': 'MCAL', 'CAN': 'MCAL', 'GPIO': 'MCAL',
     'SPI': 'MCAL', 'PWM': 'MCAL', 'TIMER': 'MCAL', 'UART': 'MCAL',
+    // MCAL additions — session 5
+    'CLOCK': 'MCAL', 'DMA': 'MCAL', 'FLASH': 'MCAL',
+    'I2C': 'MCAL', 'IRQM': 'MCAL', 'IWDG': 'MCAL',
+    'MCU': 'MCAL', 'RTC': 'MCAL', 'Safety': 'MCAL',
+    'STM32H743ZI': 'MCAL', 'Timer': 'MCAL',
     // CDD - Complex Device Drivers (BSW)
     'AFE': 'CDD', 'EWDG': 'CDD',
     'RelayDriver': 'CDD', 'SerialFlash': 'CDD',
+    // CDD additions — session 5 (both names kept pending folder check)
+    'Serial_Flash': 'CDD',
     // ESAL - ECU Software Abstraction Layer (BSW)
     'BATT_IF': 'ESAL', 'CONTACTOR_IF': 'ESAL',
     'HEATER_IF': 'ESAL', 'RTC_IF': 'ESAL',
     'SAFETY_IF': 'ESAL', 'UART_IF': 'ESAL',
     'HEARTBEAT_IF': 'ESAL', 'DCDCHWSIGNAL_IF': 'ESAL',
+    // ESAL additions — session 5
+    'BKPSR_IF': 'ESAL', 'CANIF': 'ESAL',
+    'ECU_IF': 'ESAL', 'MEM_IF': 'ESAL',
     // SRVLayer - Service Layer (BSW)
     'Battery_Diagnostics': 'SRVLayer',
     'BMS_PWR_MNGT_SRVC': 'SRVLayer',
@@ -23,7 +33,12 @@ export const LAYER_MAP: Record<string, string> = {
     'DynamicPwrLimitsComp': 'ASW', 'Heartbeat': 'ASW',
     'HeaterControl': 'ASW', 'PowerComputation': 'ASW',
     'PyroControl': 'ASW', 'Safety_Appl': 'ASW',
-    'Segger': 'ASW', 'StackMon': 'ASW', 'Tester': 'ASW'
+    'Segger': 'ASW', 'StackMon': 'ASW', 'Tester': 'ASW',
+    // ASW additions — session 5
+    'App_Stubs': 'ASW', 'BatProtection': 'ASW',
+    'BatteryEstimation': 'ASW', 'BattFaultModule': 'ASW',
+    'BattStateMachine': 'ASW', 'CANAppl': 'ASW',
+    'DynamicPwrlLimitsComp': 'ASW'
 };
 
 export const LAYER_ORDER = [
