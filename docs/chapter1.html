@@ -3702,5 +3702,180 @@ document.addEventListener('DOMContentLoaded', () => {
 @media(max-width:768px){.ch-journey{font-size:.5rem;gap:.1rem;}.cj-stop{padding:.2rem .4rem;}.cj-arrow{display:none;}}
 </style>
 <div class="ch-journey"><span class="cj-stop cj-current" title="Fundamentals">CH1</span><span class="cj-arrow">›</span><a href="chapter2.html" class="cj-stop cj-link" title="Cell Physics">CH2</a><span class="cj-arrow">›</span><a href="chapter3.html" class="cj-stop cj-link" title="Thermal">CH3</a><span class="cj-arrow">›</span><a href="chapter4.html" class="cj-stop cj-link" title="Protection">CH4</a><span class="cj-arrow">›</span><a href="chapter5.html" class="cj-stop cj-link" title="Standards">CH5</a><span class="cj-arrow">›</span><a href="chapter6.html" class="cj-stop cj-link" title="Architecture">CH6</a><span class="cj-arrow">›</span><a href="chapter7.html" class="cj-stop cj-link" title="UPS & ESS">CH7</a><span class="cj-arrow">›</span><a href="chapter8.html" class="cj-stop cj-link" title="Hardware">CH8</a><span class="cj-arrow">›</span><a href="chapter9.html" class="cj-stop cj-link" title="Firmware">CH9</a><span class="cj-arrow">›</span><a href="chapter10.html" class="cj-stop cj-link" title="Future">CH10</a><span class="cj-arrow">›</span><a href="SYSTEM_OVERVIEW.html" class="cj-stop cj-link" title="System View">SYS</a></div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     BOOKMARK / RESUME READING
+     ════════════════════════════════════════════════════════════════ -->
+<style>
+#bm-toast {
+  position: fixed;
+  bottom: 3.2rem; /* sit above the chapter journey bar */
+  right: 1.25rem;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(10, 10, 22, 0.96);
+  border: 1px solid rgba(255, 200, 87, 0.45);
+  border-radius: 10px;
+  padding: 0.65rem 1rem;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,200,87,0.1);
+  backdrop-filter: blur(16px);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.8rem;
+  color: #cbd5e0;
+  max-width: 300px;
+  cursor: pointer;
+  transition: opacity 0.3s, transform 0.3s;
+  animation: bm-slide-in 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+#bm-toast:hover { border-color: rgba(255,200,87,0.8); background: rgba(15,14,30,0.98); }
+#bm-toast .bm-icon { font-size: 1.1rem; flex-shrink: 0; }
+#bm-toast .bm-text { flex: 1; line-height: 1.4; }
+#bm-toast .bm-label { font-size: 0.68rem; color: #FFC857; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 0.15rem; }
+#bm-toast .bm-section { color: #e2e8f0; font-weight: 500; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+#bm-toast .bm-dismiss { color: #4a5568; font-size: 1rem; line-height: 1; padding: 0 0.1rem; flex-shrink: 0; transition: color 0.2s; }
+#bm-toast .bm-dismiss:hover { color: #fc8181; }
+#bm-pin {
+  position: fixed;
+  bottom: 3.2rem;
+  right: 1.25rem;
+  z-index: 9998;
+  background: rgba(10,10,22,0.88);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.72rem;
+  color: #4a5568;
+  cursor: pointer;
+  font-family: 'Inter', system-ui, sans-serif;
+  backdrop-filter: blur(12px);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+#bm-pin:hover { color: #FFC857; border-color: rgba(255,200,87,0.4); background: rgba(15,14,30,0.95); }
+#bm-pin.bm-saved { color: #48bb78; border-color: rgba(72,187,120,0.4); }
+@keyframes bm-slide-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+@media (max-width: 600px) {
+  #bm-toast, #bm-pin { right: 0.75rem; max-width: calc(100vw - 1.5rem); }
+}
+</style>
+
+<script>
+(function () {
+  const STORAGE_KEY = 'bms_ch1_bookmark';
+  let saveTimer = null;
+  let pinBtn = null;
+  let toast = null;
+
+  /* ── helpers ── */
+  function getNearestHeading() {
+    const headings = document.querySelectorAll('h2.section-title, .subsection-title, .timeline-heading');
+    let best = null, bestDist = Infinity;
+    const mid = window.scrollY + window.innerHeight * 0.35;
+    headings.forEach(h => {
+      const top = h.getBoundingClientRect().top + window.scrollY;
+      const dist = Math.abs(top - mid);
+      if (dist < bestDist) { bestDist = dist; best = h; }
+    });
+    return best ? best.textContent.trim().replace(/\s+/g, ' ').slice(0, 60) : 'Chapter 1';
+  }
+
+  function savePosition() {
+    const data = { y: window.scrollY, section: getNearestHeading(), ts: Date.now() };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    if (pinBtn) {
+      pinBtn.classList.add('bm-saved');
+      pinBtn.innerHTML = '📌 Position saved';
+      setTimeout(() => {
+        if (pinBtn) { pinBtn.classList.remove('bm-saved'); pinBtn.innerHTML = '📌 Save position'; }
+      }, 1800);
+    }
+  }
+
+  /* ── auto-save on scroll (debounced, every 3s max) ── */
+  let lastAutoSave = 0;
+  window.addEventListener('scroll', () => {
+    const now = Date.now();
+    if (now - lastAutoSave > 3000) {
+      lastAutoSave = now;
+      const data = { y: window.scrollY, section: getNearestHeading(), ts: now };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+  }, { passive: true });
+
+  /* ── show "Save position" pin button ── */
+  function createPinButton() {
+    pinBtn = document.createElement('button');
+    pinBtn.id = 'bm-pin';
+    pinBtn.innerHTML = '📌 Save position';
+    pinBtn.title = 'Click to manually bookmark your current spot';
+    pinBtn.addEventListener('click', savePosition);
+    document.body.appendChild(pinBtn);
+  }
+
+  /* ── show "Resume reading" toast on load ── */
+  function showResumeToast(data) {
+    toast = document.createElement('div');
+    toast.id = 'bm-toast';
+    toast.title = 'Click to resume reading';
+    toast.innerHTML = `
+      <span class="bm-icon">📖</span>
+      <span class="bm-text">
+        <div class="bm-label">Resume reading</div>
+        <div class="bm-section">${data.section}</div>
+      </span>
+      <span class="bm-dismiss" title="Dismiss" id="bm-dismiss-btn">✕</span>
+    `;
+    document.body.appendChild(toast);
+
+    /* click on the toast body → jump to saved position */
+    toast.addEventListener('click', function (e) {
+      if (e.target.id === 'bm-dismiss-btn') return;
+      window.scrollTo({ top: data.y, behavior: 'smooth' });
+      dismissToast();
+    });
+
+    /* dismiss button */
+    document.getElementById('bm-dismiss-btn').addEventListener('click', function (e) {
+      e.stopPropagation();
+      dismissToast();
+    });
+
+    /* auto-dismiss after 12 s */
+    setTimeout(dismissToast, 12000);
+  }
+
+  function dismissToast() {
+    if (!toast) return;
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(8px) scale(0.96)';
+    setTimeout(() => { if (toast) { toast.remove(); toast = null; } }, 300);
+    /* show pin button after toast gone */
+    if (!pinBtn) createPinButton();
+  }
+
+  /* ── init ── */
+  window.addEventListener('DOMContentLoaded', function () {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      try {
+        const data = JSON.parse(raw);
+        /* only show toast if they've scrolled past the first screen */
+        if (data.y > window.innerHeight * 0.8) {
+          showResumeToast(data);
+          return; /* pin button appears after dismiss */
+        }
+      } catch (e) { /* ignore corrupt data */ }
+    }
+    createPinButton();
+  });
+})();
+</script>
 </body>
 </html>
