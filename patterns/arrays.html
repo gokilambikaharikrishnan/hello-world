@@ -995,6 +995,826 @@ return 2 ✓</div>
   <div class="trigger">When you see: shortest/longest subarray + a condition that can be fixed by shrinking &#8594; think: variable sliding window with while-shrink on the left</div>
 </div>
 
+<!-- ================================================================ P11 -->
+<div class="card" id="p11">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 11</span>
+    <span class="pattern-name">Sliding Window: Longest Substring Without Repeat (Freq Map)</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    You are making a playlist where no song can repeat until you've played every other song.
+    Start adding songs. The moment you're about to add a duplicate, go back and remove songs from the start until the duplicate is gone.
+    Track the longest streak you had before any removal.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Keep a frequency table of what's in the current window. When a duplicate appears (freq[c] &gt; 1), shrink from the left until there's no duplicate. O(n) total because each element enters and exits the window exactly once.
+  </div>
+
+  <div class="section-label">&#9314; Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Create an integer array <code>freq[256]</code> initialized to 0 (one slot per ASCII char / int value).</li>
+    <li>Move right pointer: increment freq[arr[right]].</li>
+    <li>While freq[arr[right]] &gt; 1 (duplicate in window): decrement freq[arr[left]], advance left.</li>
+    <li>Update max length: <code>right - left + 1</code>.</li>
+  </ol></div>
+
+  <div class="section-label">Diagram</div>
+  <div class="diagram">arr = ['a','b','c','a','b','c','b','c']   (shown as chars for clarity)
+
+right=0(a): freq[a]=1  no dup  len=1
+right=1(b): freq[b]=1  no dup  len=2
+right=2(c): freq[c]=1  no dup  len=3
+right=3(a): freq[a]=2  dup! shrink: -arr[0](a) left=1 freq[a]=1  len=3
+right=4(b): freq[b]=2  dup! shrink: -arr[1](b) left=2 freq[b]=1  len=3
+right=5(c): freq[c]=2  dup! shrink: -arr[2](c) left=3 freq[c]=1  len=3
+right=6(b): freq[b]=2  dup! shrink: -arr[3](a) left=4 freq[a]=0; still dup
+            shrink: -arr[4](b) left=5 freq[b]=1  len=2
+right=7(c): freq[c]=2  dup! shrink: -arr[5](c) left=6 freq[c]=1  len=2
+max = 3 ✓</div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* Longest subarray of integers with all distinct values.
+   Works for any integer values; uses a hash map simulated with an int array for chars. */
+int longest_no_repeat(char *s, int n) {
+    int freq[256] = {0};   /* frequency of each character in the current window */
+    int left      = 0;
+    int max_len   = 0;
+
+    for (int right = 0; right &lt; n; right++) {
+        freq[(unsigned char)s[right]]++;    /* add right character to window */
+
+        /* shrink from left until the duplicate is removed */
+        while (freq[(unsigned char)s[right]] &gt; 1) {
+            freq[(unsigned char)s[left]]--; /* remove left character from window */
+            left++;                         /* advance left boundary */
+        }
+
+        int len = right - left + 1;        /* current window length */
+        if (len &gt; max_len) max_len = len;
+    }
+    return max_len;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">s = "abcabc"
+
+right=0('a'): freq[a]=1, no dup, len=1, max=1
+right=1('b'): freq[b]=1, no dup, len=2, max=2
+right=2('c'): freq[c]=1, no dup, len=3, max=3
+right=3('a'): freq[a]=2, dup! → freq[a]--, left=1, freq[a]=1, no dup, len=3, max=3
+right=4('b'): freq[b]=2, dup! → freq[b]--, left=2, freq[b]=1, no dup, len=3, max=3
+right=5('c'): freq[c]=2, dup! → freq[c]--, left=3, freq[c]=1, no dup, len=3, max=3
+
+Answer: 3 ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Casting char to int for the frequency array index</div>
+    <p>In C, plain <code>char</code> may be signed. If the input contains characters with values &gt; 127 (e.g., extended ASCII), casting to <code>int</code> gives a negative index and you will corrupt memory or crash. Always cast to <code>(unsigned char)</code> before using a character as an array index.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>3 &middot; Longest Substring Without Repeating Characters</span>
+    <span>159 &middot; Longest Substring with At Most Two Distinct Characters</span>
+    <span>340 &middot; Longest Substring with At Most K Distinct Characters</span>
+  </div>
+  <div class="trigger">When you see: longest subarray/substring with all-distinct elements &#8594; think: variable sliding window + frequency map, shrink on duplicate</div>
+</div>
+
+<!-- ================================================================ P12 -->
+<div class="card" id="p12">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 12</span>
+    <span class="pattern-name">Sliding Window: Minimum Window Substring</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    You are looking for the shortest section of a newspaper that contains every word from a required list.
+    You expand your reading window right until you've found all required words.
+    Then you shrink from the left as much as possible while still having all words covered.
+    Record the shortest valid window and repeat.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Track two frequency maps: what is required (<code>need[]</code>) and what the current window has (<code>have[]</code>). Track a count of how many distinct required characters are fully satisfied. When count == required_types, you have a valid window — try to shrink it.
+  </div>
+
+  <div class="section-label">&#9314; Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Build <code>need[c]</code> = frequency of each char in target string t.</li>
+    <li>Initialize <code>have[c] = 0</code>, <code>formed = 0</code> (how many chars in t are fully covered), <code>required = distinct chars in t</code>.</li>
+    <li>Expand right: add s[right] to have[]. If have[c] == need[c], increment formed.</li>
+    <li>While formed == required (window is valid): record window if it's the shortest so far. Shrink left: if removing s[left] makes have[c] &lt; need[c], decrement formed. Then left++.</li>
+  </ol></div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">#include &lt;string.h&gt;
+#include &lt;limits.h&gt;
+
+/* Find start index and length of minimum window in s containing all chars of t.
+   Returns length; sets *start to the starting index. Returns INT_MAX if not found. */
+int min_window(const char *s, const char *t, int *start) {
+    int need[256] = {0};   /* required frequency of each char from t */
+    int have[256] = {0};   /* current frequency of each char in the window */
+    int required  = 0;     /* number of distinct chars in t that need to be satisfied */
+
+    for (int i = 0; t[i]; i++) {
+        if (need[(unsigned char)t[i]] == 0) required++;  /* new distinct char */
+        need[(unsigned char)t[i]]++;
+    }
+
+    int left = 0, formed = 0;
+    int min_len = INT_MAX;
+    *start = 0;
+
+    for (int right = 0; s[right]; right++) {
+        unsigned char c = (unsigned char)s[right];
+        have[c]++;                              /* add right char to window */
+        if (need[c] &gt; 0 &amp;&amp; have[c] == need[c]) /* this char is now fully covered */
+            formed++;
+
+        while (formed == required) {            /* window contains all of t */
+            int len = right - left + 1;
+            if (len &lt; min_len) { min_len = len; *start = left; } /* best so far */
+
+            unsigned char lc = (unsigned char)s[left];
+            have[lc]--;                         /* remove left char from window */
+            if (need[lc] &gt; 0 &amp;&amp; have[lc] &lt; need[lc])  /* lost coverage of this char */
+                formed--;
+            left++;
+        }
+    }
+    return min_len;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">s = "ADOBECODEBANC",  t = "ABC"
+need: A=1, B=1, C=1   required=3
+
+right=0(A): have[A]=1, formed=1
+right=1(D): have[D]=1, formed=1
+right=2(O): have[O]=1, formed=1
+right=3(B): have[B]=1, formed=2
+right=4(E): have[E]=1, formed=2
+right=5(C): have[C]=1, formed=3 ← valid window "ADOBEC" len=6
+  shrink: left=0(A): have[A]=0 < need[A]=1 → formed=2, left=1
+right=6..9: expand, formed<3
+right=10(B): formed still < 3
+right=11(A): have[A]=1, formed=3 ← valid "CODEBA" → wait, "BANC" from left=9
+...min window = "BANC" len=4 ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Checking have[c] == need[c] with need[c] == 0</div>
+    <p>Characters not in t have need[c] = 0. If you don't guard with <code>need[c] &gt; 0</code>, then when have[c] increments from 0 to 0... wait, any increment from 0 would be 1. Actually the real gotcha is: when shrinking, only decrement <code>formed</code> if <code>need[c] &gt; 0</code>. Otherwise you'd decrement formed for characters that were never required.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>76 &middot; Minimum Window Substring</span>
+    <span>438 &middot; Find All Anagrams in a String</span>
+    <span>567 &middot; Permutation in String</span>
+  </div>
+  <div class="trigger">When you see: shortest substring containing all characters of a target &#8594; think: two freq maps + formed/required counter + shrink when fully covered</div>
+</div>
+
+<!-- ================================================================ P13 -->
+<div class="card" id="p13">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 13</span>
+    <span class="pattern-name">Sliding Window: Count Subarrays with Condition</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    You need to count every contiguous subarray that satisfies some condition (e.g., at most K distinct integers).
+    Instead of trying all O(n&sup2;) pairs, notice that every valid window ending at right contains exactly <code>(right - left + 1)</code> valid subarrays — all those starting anywhere from left to right.
+    Summing that count as you slide gives the total.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    For a window [left, right] that is the largest valid window ending at right, every subarray ending at right and starting at any index in [left, right] is also valid. Count = right - left + 1. Accumulate this at each right step.
+  </div>
+
+  <div class="section-label">&#9314; Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Maintain a sliding window with left=0 and a condition tracker (e.g., distinct count, sum).</li>
+    <li>At each right: add arr[right] to the window state.</li>
+    <li>Shrink left while the window violates the condition.</li>
+    <li>Add <code>right - left + 1</code> to the total count (all subarrays ending at right, starting from left..right).</li>
+  </ol></div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* Count subarrays with at most k distinct integers. */
+int count_subarrays_at_most_k(int *arr, int n, int k) {
+    int freq[20001] = {0};   /* frequency of values in current window */
+    int distinct    = 0;     /* number of distinct values in current window */
+    int left        = 0;
+    int count       = 0;
+
+    for (int right = 0; right &lt; n; right++) {
+        if (freq[arr[right]] == 0) distinct++;  /* new distinct value entered */
+        freq[arr[right]]++;
+
+        /* shrink until at most k distinct values in window */
+        while (distinct &gt; k) {
+            freq[arr[left]]--;
+            if (freq[arr[left]] == 0) distinct--;  /* that value is gone from window */
+            left++;
+        }
+
+        /* every subarray ending at right, starting at left..right, is valid */
+        count += right - left + 1;
+    }
+    return count;
+}
+
+/* Count subarrays with EXACTLY k distinct integers (common trick). */
+int count_exactly_k(int *arr, int n, int k) {
+    /* exactly(k) = atMost(k) - atMost(k-1) */
+    return count_subarrays_at_most_k(arr, n, k)
+         - count_subarrays_at_most_k(arr, n, k - 1);
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">arr = [1, 2, 1, 2, 3],  k=2 (at most 2 distinct)
+
+right=0: add 1, distinct=1, left=0, count+=1  (total=1)
+right=1: add 2, distinct=2, left=0, count+=2  (total=3)  [1,2],[2],[1,2,1]...wait
+right=2: add 1, distinct=2, left=0, count+=3  (total=6)
+right=3: add 2, distinct=2, left=0, count+=4  (total=10)
+right=4: add 3, distinct=3 >2 → shrink:
+  remove arr[0]=1, freq[1]=1(not 0), left=1, distinct=3 still
+  remove arr[1]=2, freq[2]=1(not 0), left=2, distinct=3 still
+  remove arr[2]=1, freq[1]=0, distinct=2, left=3
+  count+=2  (total=12)
+
+Answer: 12</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Counting "exactly K" directly is much harder — use the subtraction trick</div>
+    <p>Counting subarrays with <em>exactly</em> K distinct values directly requires careful bookkeeping. The clean way: <code>exactly(K) = atMost(K) - atMost(K-1)</code>. This works because atMost(K) counts all subarrays with &le;K distinct values, so subtracting atMost(K-1) (which are &le;K-1 distinct) leaves exactly K.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>992 &middot; Subarrays with K Different Integers</span>
+    <span>713 &middot; Subarray Product Less Than K</span>
+    <span>930 &middot; Binary Subarrays With Sum</span>
+  </div>
+  <div class="trigger">When you see: count subarrays satisfying a shrinkable condition &#8594; think: variable window + count += (right - left + 1) at each step</div>
+</div>
+
+<!-- ================================================================ P14 -->
+<div class="card" id="p14">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 14</span>
+    <span class="pattern-name">Binary Search: Classic Target Find</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    You're looking up a name in a phone book. You don't start from page 1.
+    You open to the middle. Too early alphabetically? Go to the right half. Too late? Go to the left half.
+    Every single guess eliminates half of the remaining pages. With 1 million pages you need at most 20 guesses.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    A sorted array lets you eliminate half the search space with every comparison. O(log n) because you keep halving: n &rarr; n/2 &rarr; n/4 &rarr; ... &rarr; 1.
+  </div>
+
+  <div class="section-label">&#9314; Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Set <code>lo = 0</code>, <code>hi = n - 1</code>.</li>
+    <li>While lo &le; hi: compute <code>mid = lo + (hi - lo) / 2</code> (avoids integer overflow).</li>
+    <li>If arr[mid] == target: found, return mid.</li>
+    <li>If arr[mid] &lt; target: target is in right half — set lo = mid + 1.</li>
+    <li>If arr[mid] &gt; target: target is in left half — set hi = mid - 1.</li>
+    <li>If loop ends without returning: target not in array, return -1.</li>
+  </ol></div>
+
+  <div class="section-label">Diagram</div>
+  <div class="diagram">arr = [1, 3, 5, 7, 9, 11, 13],  target = 7
+
+lo=0, hi=6 → mid=3 arr[3]=7 == target → return 3 ✓
+
+arr = [1, 3, 5, 7, 9, 11, 13],  target = 6
+lo=0, hi=6 → mid=3 arr[3]=7 > 6  → hi=2
+lo=0, hi=2 → mid=1 arr[1]=3 < 6  → lo=2
+lo=2, hi=2 → mid=2 arr[2]=5 < 6  → lo=3
+lo=3 > hi=2 → loop ends → return -1</div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* Return index of target in sorted array, or -1 if not found. */
+int binary_search(int *arr, int n, int target) {
+    int lo = 0;
+    int hi = n - 1;
+
+    while (lo &lt;= hi) {
+        int mid = lo + (hi - lo) / 2;   /* avoid overflow: do NOT use (lo+hi)/2 */
+
+        if (arr[mid] == target)
+            return mid;                  /* found it */
+        else if (arr[mid] &lt; target)
+            lo = mid + 1;               /* target must be in the right half */
+        else
+            hi = mid - 1;               /* target must be in the left half */
+    }
+    return -1;   /* lo > hi means target is not in the array */
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">arr = [2, 5, 8, 12, 16, 23, 38],  target = 23
+
+lo=0, hi=6: mid=3, arr[3]=12 < 23 → lo=4
+lo=4, hi=6: mid=5, arr[5]=23 == 23 → return 5 ✓
+
+(Only 2 comparisons for 7 elements)</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Integer overflow with (lo + hi) / 2</div>
+    <p>If lo and hi are both large (near INT_MAX), <code>lo + hi</code> overflows and gives a negative or garbage value. Always compute mid as <code>lo + (hi - lo) / 2</code>. This is mathematically equivalent but never overflows since <code>hi - lo</code> is always non-negative and within int range.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>704 &middot; Binary Search</span>
+    <span>35 &middot; Search Insert Position</span>
+    <span>374 &middot; Guess Number Higher or Lower</span>
+  </div>
+  <div class="trigger">When you see: sorted array + find target &#8594; think: binary search, lo/hi converge, mid = lo + (hi-lo)/2</div>
+</div>
+
+<!-- ================================================================ P15 -->
+<div class="card" id="p15">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 15</span>
+    <span class="pattern-name">Binary Search: Find Leftmost (First) Occurrence</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    The phone book has multiple listings for "Smith." You want the very first one.
+    When you open to the middle and see "Smith," you don't stop — you note it and keep looking left.
+    You only stop when you've confirmed there's nothing earlier.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    When arr[mid] == target, record mid as a candidate but set hi = mid - 1 to keep searching left. The loop continues until lo &gt; hi, at which point your last recorded candidate is the leftmost occurrence.
+  </div>
+
+  <div class="section-label">&#9314; Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Set lo = 0, hi = n-1, result = -1.</li>
+    <li>While lo &le; hi: compute mid.</li>
+    <li>If arr[mid] == target: record result = mid, then hi = mid - 1 (search left for an earlier one).</li>
+    <li>If arr[mid] &lt; target: lo = mid + 1.</li>
+    <li>If arr[mid] &gt; target: hi = mid - 1.</li>
+    <li>Return result.</li>
+  </ol></div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* Return the index of the first occurrence of target, or -1. */
+int find_first(int *arr, int n, int target) {
+    int lo = 0, hi = n - 1, result = -1;
+
+    while (lo &lt;= hi) {
+        int mid = lo + (hi - lo) / 2;
+
+        if (arr[mid] == target) {
+            result = mid;   /* found a match, but maybe there's an earlier one */
+            hi = mid - 1;   /* search the left half for a smaller index */
+        } else if (arr[mid] &lt; target) {
+            lo = mid + 1;   /* target is to the right */
+        } else {
+            hi = mid - 1;   /* target is to the left */
+        }
+    }
+    return result;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">arr = [1, 2, 2, 2, 3, 4],  target = 2
+
+lo=0, hi=5: mid=2, arr[2]=2 == target → result=2, hi=1
+lo=0, hi=1: mid=0, arr[0]=1 < 2 → lo=1
+lo=1, hi=1: mid=1, arr[1]=2 == target → result=1, hi=0
+lo=1 > hi=0 → stop
+
+return 1  ✓ (first occurrence of 2 is at index 1)</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Returning mid immediately when arr[mid] == target</div>
+    <p>That gives you <em>some</em> occurrence, not the <em>first</em>. Always save mid to result and continue searching left by setting <code>hi = mid - 1</code>. The same idea applies to find-last: save mid and set <code>lo = mid + 1</code>.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>34 &middot; Find First and Last Position of Element in Sorted Array</span>
+    <span>278 &middot; First Bad Version</span>
+    <span>744 &middot; Find Smallest Letter Greater Than Target</span>
+  </div>
+  <div class="trigger">When you see: first/last occurrence of a value in sorted array &#8594; think: binary search but save result and keep searching in that direction</div>
+</div>
+
+<!-- ================================================================ P16 -->
+<div class="card" id="p16">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 16</span>
+    <span class="pattern-name">Binary Search: Find Rightmost (Last) Occurrence</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Same phone book. Now you want the last "Smith" listing.
+    When you find "Smith" in the middle, note it but keep looking right — there might be a later one.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Mirror of find-first: when arr[mid] == target, save mid as result and set lo = mid + 1 to continue searching right. The last recorded value is the rightmost occurrence.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* Return index of last occurrence of target, or -1. */
+int find_last(int *arr, int n, int target) {
+    int lo = 0, hi = n - 1, result = -1;
+
+    while (lo &lt;= hi) {
+        int mid = lo + (hi - lo) / 2;
+
+        if (arr[mid] == target) {
+            result = mid;   /* found a match, but maybe there's a later one */
+            lo = mid + 1;   /* search the right half for a larger index */
+        } else if (arr[mid] &lt; target) {
+            lo = mid + 1;
+        } else {
+            hi = mid - 1;
+        }
+    }
+    return result;
+}
+
+/* Count occurrences of target using find_first and find_last. */
+int count_occurrences(int *arr, int n, int target) {
+    int first = find_first(arr, n, target);
+    if (first == -1) return 0;           /* not in array at all */
+    int last  = find_last(arr, n, target);
+    return last - first + 1;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">arr = [1, 2, 2, 2, 3, 4],  target = 2
+
+lo=0, hi=5: mid=2, arr[2]=2 → result=2, lo=3
+lo=3, hi=5: mid=4, arr[4]=3 > 2 → hi=3
+lo=3, hi=3: mid=3, arr[3]=2 → result=3, lo=4
+lo=4 > hi=3 → stop
+
+return 3  ✓ (last occurrence of 2 is at index 3)
+
+count_occurrences: last(3) - first(1) + 1 = 3  ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Confusing find-first and find-last in the same function</div>
+    <p>The only difference between the two variants is the direction you continue searching after a match. In find-first: <code>hi = mid - 1</code>. In find-last: <code>lo = mid + 1</code>. Keep them in separate functions or use a boolean flag — mixing them up in one function is a frequent source of bugs.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>34 &middot; Find First and Last Position of Element in Sorted Array</span>
+    <span>1539 &middot; Kth Missing Positive Number</span>
+    <span>2089 &middot; Find Target Indices After Sorting Array</span>
+  </div>
+  <div class="trigger">When you see: last/rightmost index of a value &#8594; think: binary search, on match save and set lo = mid + 1</div>
+</div>
+
+<!-- ================================================================ P17 -->
+<div class="card" id="p17">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 17</span>
+    <span class="pattern-name">Binary Search: Search in Rotated Sorted Array</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Imagine a sorted array that's been cut and the two pieces swapped — like taking a deck of cards and doing a cut.
+    [1,2,3,4,5,6,7] becomes [4,5,6,7,1,2,3].
+    It's not fully sorted anymore, but each half is. At every midpoint, one side must still be a clean sorted segment. Use that to decide which side to search.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    At any mid point, exactly one of [lo..mid] or [mid..hi] is sorted (not rotated). Check which side is sorted, determine if target falls within that sorted range, and discard the other half.
+  </div>
+
+  <div class="section-label">&#9314; Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Compute mid.</li>
+    <li>If arr[lo] &le; arr[mid]: left half [lo..mid] is the sorted half.</li>
+    <li>  If target is in [arr[lo], arr[mid]): search left (hi = mid - 1). Else search right (lo = mid + 1).</li>
+    <li>Else: right half [mid..hi] is the sorted half.</li>
+    <li>  If target is in (arr[mid], arr[hi]]: search right (lo = mid + 1). Else search left (hi = mid - 1).</li>
+  </ol></div>
+
+  <div class="section-label">Diagram</div>
+  <div class="diagram">arr = [4, 5, 6, 7, 0, 1, 2],  target = 1
+
+lo=0, hi=6: mid=3, arr[3]=7
+  arr[lo]=4 <= arr[mid]=7 → left half [4,5,6,7] is sorted
+  target=1 not in [4,7) → search right: lo=4
+lo=4, hi=6: mid=5, arr[5]=1
+  arr[lo]=0 <= arr[mid]=1 → left half [0,1] is sorted
+  target=1 in [0,1] → search left: hi=5  (wait, mid is already 5)
+  arr[mid]=1 == target → return 5 ✓</div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">int search_rotated(int *arr, int n, int target) {
+    int lo = 0, hi = n - 1;
+
+    while (lo &lt;= hi) {
+        int mid = lo + (hi - lo) / 2;
+        if (arr[mid] == target) return mid;
+
+        if (arr[lo] &lt;= arr[mid]) {
+            /* left half [lo..mid] is the sorted half */
+            if (arr[lo] &lt;= target &amp;&amp; target &lt; arr[mid]) {
+                hi = mid - 1;   /* target is within the sorted left half */
+            } else {
+                lo = mid + 1;   /* target must be in the unsorted right half */
+            }
+        } else {
+            /* right half [mid..hi] is the sorted half */
+            if (arr[mid] &lt; target &amp;&amp; target &lt;= arr[hi]) {
+                lo = mid + 1;   /* target is within the sorted right half */
+            } else {
+                hi = mid - 1;   /* target must be in the unsorted left half */
+            }
+        }
+    }
+    return -1;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">arr = [4,5,6,7,0,1,2], target=0
+
+lo=0,hi=6: mid=3, arr[3]=7≠0
+  arr[0]=4 <= arr[3]=7 → left sorted
+  target=0 NOT in [4,7) → lo=4
+lo=4,hi=6: mid=5, arr[5]=1≠0
+  arr[4]=0 <= arr[5]=1 → left sorted
+  target=0 in [0,1) → hi=4
+lo=4,hi=4: mid=4, arr[4]=0==0 → return 4 ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Using strict less-than instead of less-than-or-equal for the sorted-side check</div>
+    <p>When checking if the left half is sorted, use <code>arr[lo] &lt;= arr[mid]</code> (not strict &lt;). If arr[lo] == arr[mid], the left side could be just one element (a valid sorted subarray). Getting this wrong causes incorrect half-selection and missed targets.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>33 &middot; Search in Rotated Sorted Array</span>
+    <span>81 &middot; Search in Rotated Sorted Array II</span>
+    <span>153 &middot; Find Minimum in Rotated Sorted Array</span>
+  </div>
+  <div class="trigger">When you see: rotated sorted array + find target &#8594; think: binary search, identify the sorted half, check if target is in it</div>
+</div>
+
+<!-- ================================================================ P18 -->
+<div class="card" id="p18">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 18</span>
+    <span class="pattern-name">Binary Search: Find Peak Element</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    You're hiking a mountain range and want to find any peak — a point higher than both neighbors.
+    You stand at the midpoint and look left and right.
+    If the slope goes up to the right, a peak is somewhere to the right (you can't go down forever without peaking first).
+    If the slope goes up to the left, a peak is to the left.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    If arr[mid] &lt; arr[mid+1], the right side is "uphill" — there's a peak to the right (or at mid+1). If arr[mid] &gt; arr[mid+1], the right side is "downhill" — the peak is at mid or to the left.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* Find index of any peak element (element greater than its neighbors).
+   Edges are treated as -infinity. */
+int find_peak(int *arr, int n) {
+    int lo = 0, hi = n - 1;
+
+    while (lo &lt; hi) {          /* loop until lo and hi converge */
+        int mid = lo + (hi - lo) / 2;
+
+        if (arr[mid] &lt; arr[mid + 1]) {
+            lo = mid + 1;   /* going uphill to the right: peak is to the right */
+        } else {
+            hi = mid;       /* going downhill (or flat) right: peak is at mid or left */
+        }
+    }
+    return lo;   /* lo == hi: this is the peak index */
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">arr = [1, 2, 3, 1]
+
+lo=0, hi=3: mid=1, arr[1]=2 < arr[2]=3 → uphill right → lo=2
+lo=2, hi=3: mid=2, arr[2]=3 > arr[3]=1 → downhill right → hi=2
+lo=2 == hi=2 → return 2   arr[2]=3 is a peak ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Using while(lo &lt;= hi) and returning mid, same as classic binary search</div>
+    <p>Peak finding uses <code>while (lo &lt; hi)</code> (strict) and returns lo at the end. This is because when we set <code>hi = mid</code> (not mid-1), we need the loop to eventually terminate without overshooting. With <code>lo &lt;= hi</code> and <code>hi = mid</code>, the loop could run forever if lo == hi == mid.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>162 &middot; Find Peak Element</span>
+    <span>852 &middot; Peak Index in a Mountain Array</span>
+    <span>1095 &middot; Find in Mountain Array</span>
+  </div>
+  <div class="trigger">When you see: find any local maximum (peak) in an array &#8594; think: binary search on slope direction, lo&lt;hi loop, hi=mid (not mid-1)</div>
+</div>
+
+<!-- ================================================================ P19 -->
+<div class="card" id="p19">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 19</span>
+    <span class="pattern-name">Binary Search: Answer Space (Minimize/Maximize a Value)</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Instead of searching an array for a position, you binary search the space of possible answers.
+    "What is the minimum speed at which I can finish?" Try a speed in the middle of all valid speeds. If it works, try lower. If it doesn't work, try higher.
+    You are binary searching the answer, not the array.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    When the feasibility of an answer is monotonic — "if speed X works, all speeds &gt; X also work" — you can binary search the answer space [lo, hi]. Find the boundary where feasibility changes.
+  </div>
+
+  <div class="section-label">&#9314; Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Identify the answer range: lo = minimum possible answer, hi = maximum possible answer.</li>
+    <li>Write a <code>feasible(mid)</code> function that checks if answer = mid satisfies the problem constraints.</li>
+    <li>Binary search: if feasible(mid), record mid as a candidate and search lower (hi = mid - 1). Else search higher (lo = mid + 1).</li>
+    <li>Return the last valid candidate.</li>
+  </ol></div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">#include &lt;math.h&gt;
+
+/* Example: "Koko Eating Bananas" — find minimum eating speed k such that
+   all piles can be eaten within h hours. */
+
+/* Check: can we eat all piles at speed k within h hours? */
+int feasible(int *piles, int n, int k, int h) {
+    int hours = 0;
+    for (int i = 0; i &lt; n; i++) {
+        hours += (piles[i] + k - 1) / k;  /* ceil(piles[i] / k) without floats */
+    }
+    return hours &lt;= h;                     /* feasible if we finish in time */
+}
+
+int min_eating_speed(int *piles, int n, int h) {
+    int lo = 1;            /* minimum possible speed: eat 1 banana/hour */
+    int hi = 0;
+    for (int i = 0; i &lt; n; i++)
+        if (piles[i] &gt; hi) hi = piles[i]; /* maximum speed: eat largest pile in 1 hour */
+
+    int result = hi;       /* worst case: maximum speed always works */
+
+    while (lo &lt;= hi) {
+        int mid = lo + (hi - lo) / 2;
+        if (feasible(piles, n, mid, h)) {
+            result = mid;   /* mid works — record it, try to go slower */
+            hi = mid - 1;
+        } else {
+            lo = mid + 1;   /* mid too slow — need to go faster */
+        }
+    }
+    return result;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">piles=[3,6,7,11], h=8
+
+lo=1, hi=11: mid=6
+  feasible(6): ceil(3/6)+ceil(6/6)+ceil(7/6)+ceil(11/6) = 1+1+2+2=6 <=8 → YES
+  result=6, hi=5
+
+lo=1, hi=5: mid=3
+  feasible(3): ceil(3/3)+ceil(6/3)+ceil(7/3)+ceil(11/3) = 1+2+3+4=10 >8 → NO
+  lo=4
+
+lo=4, hi=5: mid=4
+  feasible(4): 1+2+2+3=8 <=8 → YES, result=4, hi=3
+
+lo=4 > hi=3 → return 4 ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Not thinking about which direction to keep searching after a feasible answer</div>
+    <p>Ask yourself: "am I minimizing or maximizing?" If minimizing (find the smallest valid answer), when feasible record it and search left (hi = mid - 1). If maximizing (find the largest valid answer), when feasible record it and search right (lo = mid + 1). Getting this direction wrong finds the wrong boundary.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>875 &middot; Koko Eating Bananas</span>
+    <span>1011 &middot; Capacity To Ship Packages Within D Days</span>
+    <span>410 &middot; Split Array Largest Sum</span>
+  </div>
+  <div class="trigger">When you see: minimize/maximize a value + feasibility is monotonic &#8594; think: binary search the answer space, not the array</div>
+</div>
+
+<!-- ================================================================ P20 -->
+<div class="card" id="p20">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 20</span>
+    <span class="pattern-name">Kadane&rsquo;s Algorithm: Maximum Subarray Sum</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    You're walking a path where each tile adds or subtracts points.
+    At each tile you ask: "Is it better to carry my running score here, or to restart from zero at this tile?"
+    If your running score went negative, it's dead weight — drop it and start fresh. Always extend if your running total is still positive.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    At each index, either extend the previous subarray (current + arr[i]) or start a new one at arr[i]. Whichever is larger is the best subarray ending at i. Track the global maximum across all positions.
+  </div>
+
+  <div class="section-label">&#9314; Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Initialize <code>current = arr[0]</code>, <code>max_sum = arr[0]</code>.</li>
+    <li>For each i from 1 to n&minus;1: <code>current = max(arr[i], current + arr[i])</code>.</li>
+    <li>This means: if current + arr[i] &lt; arr[i], the running sum is negative — restart at arr[i].</li>
+    <li>Update max_sum: <code>max_sum = max(max_sum, current)</code>.</li>
+  </ol></div>
+
+  <div class="section-label">Diagram</div>
+  <div class="diagram">arr = [-2, 1, -3, 4, -1, 2, 1, -5, 4]
+
+i: 0   1   2   3   4   5   6   7   8
+   -2   1  -3   4  -1   2   1  -5   4
+cur:-2   1  -2   4   3   5   6   1   5
+max:-2   1   1   4   4   5   6   6   6
+
+max_sum = 6  (subarray [4,-1,2,1]) ✓</div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* Return the maximum sum of any contiguous subarray.
+   Works with negative numbers too. */
+int max_subarray(int *arr, int n) {
+    int current = arr[0];   /* best sum of subarray ENDING at current index */
+    int max_sum = arr[0];   /* global best seen so far */
+
+    for (int i = 1; i &lt; n; i++) {
+        /* choice: extend current subarray, or start fresh at arr[i] */
+        if (current + arr[i] &gt; arr[i]) {
+            current = current + arr[i];  /* extending is better: running sum was positive */
+        } else {
+            current = arr[i];            /* restart: running sum was negative, drag it off */
+        }
+
+        if (current &gt; max_sum)
+            max_sum = current;   /* update global best */
+    }
+    return max_sum;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">arr = [-2, 1, -3, 4, -1, 2, 1, -5, 4]
+
+i=1: current=max(1, -2+1=-1)=1,    max=1
+i=2: current=max(-3, 1-3=-2)=-2,   max=1
+i=3: current=max(4, -2+4=2)=4,     max=4
+i=4: current=max(-1, 4-1=3)=3,     max=4
+i=5: current=max(2, 3+2=5)=5,      max=5
+i=6: current=max(1, 5+1=6)=6,      max=6
+i=7: current=max(-5, 6-5=1)=1,     max=6
+i=8: current=max(4, 1+4=5)=5,      max=6
+
+return 6 ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Initializing current and max_sum to 0 instead of arr[0]</div>
+    <p>If the array is all negative (e.g., [-3, -1, -2]), the correct answer is -1 (the least negative). If you initialize to 0, you'll return 0, which is wrong — 0 corresponds to an empty subarray, but the problem typically requires at least one element. Initialize to arr[0].</p>
+  </div>
+
+  <div class="leetcode">
+    <span>53 &middot; Maximum Subarray</span>
+    <span>918 &middot; Maximum Sum Circular Subarray</span>
+    <span>152 &middot; Maximum Product Subarray</span>
+  </div>
+  <div class="trigger">When you see: maximum/minimum sum contiguous subarray &#8594; think: Kadane's — extend or restart, track running max</div>
+</div>
+
 <!-- PATTERNS_END -->
 <script>hljs.highlightAll();</script>
 </body>
