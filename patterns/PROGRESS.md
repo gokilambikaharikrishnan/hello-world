@@ -6,7 +6,7 @@
 |------|----------|--------|--------------|
 | index.html | nav | ✅ Done | 2026-04-24 |
 | arrays.html | 54 | 🔄 In Progress | — |
-| pointers.html | 30 | ⏳ Pending | — |
+| pointers.html | 30 | ✅ Done | 2026-04-24 |
 | strings.html | 40 | ⏳ Pending | — |
 | linkedlist.html | 35 | ⏳ Pending | — |
 | stacks.html | 32 | ⏳ Pending | — |
@@ -22,6 +22,9 @@
 | ✅ 04 | arrays.html | 21-30 | feat(arrays): patterns 21-30 — Kadane variants, in-place, sorting, greedy jump game |
 | ✅ 05 | arrays.html | 31-40 | feat(arrays): patterns 31-40 — greedy, matrix traversal, hashmap patterns |
 | ✅ 06 | arrays.html | 41-54 | feat(arrays): patterns 41-54 — group anagrams, hard classics, monotonic stack, bit manip |
+| ✅ 07 | pointers.html | 01-10 | feat(pointers): patterns 01-10 — what a pointer is, arithmetic, functions |
+| ✅ 08 | pointers.html | 11-20 | feat(pointers): patterns 11-20 — two-pointer, structs, dynamic memory |
+| ✅ 09 | pointers.html | 21-30 | feat(pointers): patterns 21-30 — embedded C, aliasing, pitfalls |
 
 ## arrays.html Progress
 - [x] Patterns 01–10 (Prefix Sum + Two Pointer basics)
@@ -31,9 +34,9 @@
 - [ ] Patterns 41–54 (Hashmap cont. + Hard Classics + Bit Manip)
 
 ## pointers.html Progress
-- [ ] Patterns 01–10 (Basics, Arithmetic, Functions)
-- [ ] Patterns 11–20 (Two Pointer, Structs, Dynamic Memory)
-- [ ] Patterns 21–30 (Embedded C, Aliasing, Pitfalls)
+- [x] Patterns 01–10 (Basics, Arithmetic, Functions)
+- [x] Patterns 11–20 (Two Pointer, Structs, Dynamic Memory)
+- [x] Patterns 21–30 (Embedded C, Aliasing, Pitfalls)
 
 ## strings.html Progress
 - [ ] Patterns 01–10 (Basics, Copy, Search, Frequency)

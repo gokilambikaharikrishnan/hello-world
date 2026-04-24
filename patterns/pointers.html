@@ -1531,6 +1531,705 @@ heap_return(7):
   <div class="trigger">When you see: function that must return data to the caller &#8594; either use heap (malloc, caller frees) or output pointer parameter (caller provides the buffer)</div>
 </div>
 
+<!-- ================================================================ P21 -->
+<div class="card" id="p21">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 21</span>
+    <span class="pattern-name">Embedded C: Memory-Mapped Register Access</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    In embedded systems, hardware peripherals (GPIO, timers, UART) are controlled by reading and writing to specific memory addresses — not RAM, but hardware registers mapped into the address space.
+    You access them by casting a raw integer address to a pointer and dereferencing it. The pointer type tells the CPU how many bytes to read/write.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Cast the register address to a typed pointer: <code>(uint32_t*)0x40020000</code>. Mark it volatile so the compiler never optimizes away reads/writes. Use bitwise operations to set/clear individual bits without disturbing others.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">#include &lt;stdint.h&gt;
+
+/* Example: STM32-style GPIO register access */
+
+/* Hardware register addresses (from the chip's reference manual) */
+#define GPIOA_BASE   0x40020000UL
+#define GPIOA_MODER  ((volatile uint32_t*)(GPIOA_BASE + 0x00))  /* mode register */
+#define GPIOA_ODR    ((volatile uint32_t*)(GPIOA_BASE + 0x14))  /* output data register */
+
+/* Set GPIO pin 5 as output (bits 11:10 = 01) */
+void gpio_set_output(void) {
+    *GPIOA_MODER &amp;= ~(0x3U &lt;&lt; 10);   /* clear bits 11:10 first */
+    *GPIOA_MODER |=  (0x1U &lt;&lt; 10);   /* set bit 10 = output mode */
+}
+
+/* Toggle GPIO pin 5 */
+void gpio_toggle(void) {
+    *GPIOA_ODR ^= (1U &lt;&lt; 5);   /* XOR bit 5: 0→1, 1→0 */
+}
+
+/* Read a specific bit from a register */
+int gpio_read_pin5(void) {
+    volatile uint32_t *IDR = (volatile uint32_t*)(GPIOA_BASE + 0x10);
+    return (*IDR &gt;&gt; 5) &amp; 1U;   /* shift bit 5 to position 0, mask off others */
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">GPIOA_MODER at address 0x40020000:
+  Initial value: 0xA8000000 (some default)
+
+gpio_set_output():
+  &= ~(0x3 << 10): clears bits 11:10
+  |= (0x1 << 10):  sets bit 10
+  Result: bits 11:10 = 01 (output mode)  ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Missing volatile — compiler optimizes away register reads</div>
+    <p>Without <code>volatile</code>, the compiler may cache a register read in a CPU register and never re-read from memory — even if the hardware changed the value. Hardware registers can change at any time (interrupts, DMA, peripheral activity). Always declare hardware register pointers as <code>volatile</code>.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>Embedded C fundamentals — STM32, AVR, ARM Cortex-M</span>
+    <span>Underpins: all bare-metal peripheral drivers</span>
+  </div>
+  <div class="trigger">When you see: hardware register at fixed address &#8594; cast address to volatile uint32_t*, use |= to set bits, &amp;= ~mask to clear bits</div>
+</div>
+
+<!-- ================================================================ P22 -->
+<div class="card" id="p22">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 22</span>
+    <span class="pattern-name">Embedded C: volatile Pointer for Hardware Registers</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    The <code>volatile</code> keyword tells the compiler: "do not assume this memory location stays the same between accesses — read from hardware every time, write to hardware every time."
+    Without it, the compiler might see that you "write to a variable and never read it" and just delete the write. That's catastrophic for hardware registers.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    volatile suppresses three optimizations: caching reads in registers, eliminating "redundant" writes, reordering memory accesses. Use it for: hardware registers, variables shared with ISRs (interrupt service routines), and variables modified by signal handlers.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">#include &lt;stdint.h&gt;
+
+/* ISR sets this flag; main loop reads it */
+volatile int flag = 0;   /* volatile: compiler won't cache this in a register */
+
+void isr_handler(void) {
+    flag = 1;             /* interrupt sets the flag */
+}
+
+void main_loop(void) {
+    while (!flag) {       /* without volatile, compiler might hoist this check out of loop */
+        /* wait... */
+    }
+    /* flag is now 1 */
+}
+
+/* Spin-wait on a hardware status bit */
+#define UART_SR  ((volatile uint32_t*)0x40011000)
+#define TXE_BIT  (1U &lt;&lt; 7)   /* transmit data register empty */
+
+void uart_wait_tx_ready(void) {
+    while (!(*UART_SR &amp; TXE_BIT)) {
+        /* volatile ensures this reads from hardware each iteration */
+        /* without volatile: compiler reads once, caches, loops forever (or never) */
+    }
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">Without volatile on flag:
+  Compiler sees: while(!flag) { }
+  Optimizes to:  if(!flag) { loop forever; }
+  (caches flag=0 in register, never re-reads from RAM)
+  ISR sets flag=1 in RAM, but main still sees cached 0 → hang  ✗
+
+With volatile:
+  Every iteration reads flag from RAM
+  ISR sets flag=1, main sees it on next iteration  ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: volatile does NOT mean atomic</div>
+    <p>volatile guarantees the compiler reads/writes from memory every time, but it does NOT make operations atomic. On a 32-bit MCU, reading a 64-bit variable with volatile can still be interrupted between the two 32-bit reads. For truly shared data between ISR and main, use volatile AND disable interrupts (critical section) around multi-step operations.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>Underpins: all ISR-to-main communication in embedded C</span>
+    <span>Underpins: spin-wait loops on hardware status bits</span>
+  </div>
+  <div class="trigger">When you see: variable shared with ISR or hardware &#8594; declare as volatile; remember volatile ≠ atomic for multi-byte values</div>
+</div>
+
+<!-- ================================================================ P23 -->
+<div class="card" id="p23">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 23</span>
+    <span class="pattern-name">Embedded C: Bit Fields and Pointer Casting</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Bit fields let you name individual bits or groups of bits within a struct. The compiler packs them together.
+    Pointer casting lets you reinterpret raw bytes (e.g., a uint32_t register value) as a struct with named fields. Combining both gives you readable, named access to hardware registers without error-prone manual bit shifting.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Define a packed struct with bit fields matching the register layout. Cast the register address to a pointer to that struct. Compiler handles the bit manipulation internally — you just write <code>reg-&gt;enable = 1</code> instead of <code>*REG |= (1 &lt;&lt; 3)</code>.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">#include &lt;stdint.h&gt;
+
+/* Struct matching a hardware control register bit layout */
+typedef struct {
+    uint32_t enable    :  1;   /* bit 0: enable the peripheral */
+    uint32_t mode      :  2;   /* bits 2:1: operating mode (0-3) */
+    uint32_t reserved  :  5;   /* bits 7:3: reserved, do not touch */
+    uint32_t prescaler :  8;   /* bits 15:8: clock prescaler value */
+    uint32_t reserved2 : 16;   /* bits 31:16: reserved */
+} __attribute__((packed)) CtrlReg;
+
+/* Overlay the struct on the hardware address */
+#define CTRL_REG  ((volatile CtrlReg*)0x40000000)
+
+void configure_peripheral(void) {
+    CTRL_REG-&gt;enable    = 1;   /* set enable bit    — no manual bit shift needed */
+    CTRL_REG-&gt;mode      = 2;   /* set mode to 2     — compiler generates the shift */
+    CTRL_REG-&gt;prescaler = 8;   /* set prescaler = 8 */
+}
+
+/* Type-punning via union (more portable than pointer cast) */
+union FloatInt {
+    float    f;
+    uint32_t u;
+};
+
+uint32_t float_bits(float f) {
+    union FloatInt fi;
+    fi.f = f;
+    return fi.u;   /* read the bit pattern of the float as a uint32_t */
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">CTRL_REG->enable = 1:
+  bit 0 of *0x40000000 set to 1
+  (compiler generates: *reg |= 1U)
+
+CTRL_REG->mode = 2:
+  bits 2:1 set to 10 (binary)
+  (compiler generates: *reg = (*reg & ~0x6) | (2 << 1))  ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Bit field ordering is implementation-defined</div>
+    <p>The C standard does not specify whether bit fields are allocated from LSB to MSB or MSB to LSB. On most ARM Cortex-M and x86 systems, bit fields fill from LSB first, but this is not guaranteed. Always verify with your specific compiler and target. When portability matters, use explicit bit masks instead of bit fields.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>Underpins: CMSIS register definitions in ARM embedded C</span>
+    <span>Underpins: hardware abstraction layers (HAL)</span>
+  </div>
+  <div class="trigger">When you see: named bit access to hardware registers &#8594; use struct bit fields + volatile pointer cast; verify bit ordering in your toolchain docs</div>
+</div>
+
+<!-- ================================================================ P24 -->
+<div class="card" id="p24">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 24</span>
+    <span class="pattern-name">Embedded C: DMA Buffer Alignment</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    DMA (Direct Memory Access) lets hardware write directly to RAM without CPU involvement. DMA engines often require buffers to be aligned to specific byte boundaries (e.g., 32-byte aligned for cache line efficiency, or 4-byte aligned for the hardware to work at all).
+    Misaligned DMA buffers cause silent data corruption or hard faults that are extremely difficult to debug.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Use <code>__attribute__((aligned(N)))</code> (GCC/Clang) to force a variable to a specific alignment boundary. Or use <code>alignas(N)</code> from C11. DMA buffers should also be placed in specific memory sections on embedded targets.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">#include &lt;stdint.h&gt;
+
+/* DMA receive buffer: 32-byte aligned, placed in DMA-accessible SRAM */
+__attribute__((aligned(32)))
+uint8_t dma_rx_buf[256];    /* aligned(32): address is multiple of 32 */
+
+/* Alternatively, using C11 alignas */
+#include &lt;stdalign.h&gt;
+alignas(32) uint8_t dma_rx_buf2[256];
+
+/* Check alignment at runtime */
+int is_aligned(void *ptr, size_t alignment) {
+    return ((uintptr_t)ptr % alignment) == 0;   /* address mod alignment must be 0 */
+}
+
+/* Manual aligned malloc (when dynamic allocation is needed) */
+void *aligned_malloc(size_t size, size_t align) {
+    void *raw = malloc(size + align + sizeof(void*));
+    if (!raw) return NULL;
+    /* align the pointer upward */
+    uintptr_t addr = (uintptr_t)raw + sizeof(void*) + align - 1;
+    addr &amp;= ~(align - 1);              /* round down to alignment boundary */
+    ((void**)addr)[-1] = raw;          /* store original pointer for free */
+    return (void*)addr;
+}
+
+void aligned_free(void *ptr) {
+    free(((void**)ptr)[-1]);   /* retrieve and free original pointer */
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">__attribute__((aligned(32))) uint8_t buf[256]:
+  &buf must be divisible by 32
+  if system places buf at 0x2001FFF0 (not aligned):
+    compiler adjusts to 0x20020000 (next 32-byte boundary)
+  is_aligned(&buf, 32): 0x20020000 % 32 == 0 ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: malloc does not guarantee DMA alignment</div>
+    <p>Standard malloc typically guarantees only 8 or 16-byte alignment (enough for all standard C types). DMA engines may require 32, 64, or even 256-byte alignment. Never pass a plain malloc'd buffer to DMA — use aligned static buffers or aligned_alloc/posix_memalign.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>Underpins: UART/SPI/I2C DMA drivers in embedded C</span>
+    <span>Underpins: cache-coherent memory in ARM Cortex-A systems</span>
+  </div>
+  <div class="trigger">When you see: DMA or cache-coherent buffer &#8594; use aligned(N) attribute; verify &amp;buf % N == 0 at runtime during debug</div>
+</div>
+
+<!-- ================================================================ P25 -->
+<div class="card" id="p25">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 25</span>
+    <span class="pattern-name">Pointer Aliasing: The Strict Aliasing Rule</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Two pointers "alias" if they point to the same memory. The C strict aliasing rule says: the compiler may assume that a float* and an int* never point to the same location. This lets it make aggressive optimizations. Violating this rule causes silent, hard-to-debug incorrect behavior — the compiler optimizes based on a false assumption.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Never cast an int* to float* and dereference it (or vice versa) unless using a union or memcpy. The only safe way to reinterpret bytes is: (1) union type punning, (2) memcpy, or (3) char*/unsigned char* (which are exempt from strict aliasing).
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">#include &lt;string.h&gt;
+#include &lt;stdint.h&gt;
+
+/* WRONG: strict aliasing violation — undefined behavior */
+float int_to_float_bad(uint32_t u) {
+    return *(float*)&amp;u;   /* reinterprets int bits as float — UB with strict aliasing */
+}
+
+/* CORRECT: use memcpy to reinterpret bytes safely */
+float int_to_float_good(uint32_t u) {
+    float f;
+    memcpy(&amp;f, &amp;u, sizeof(f));   /* copies the bit pattern; no aliasing violation */
+    return f;
+}
+
+/* CORRECT: union type punning (C standard allows this, C++ does not) */
+float int_to_float_union(uint32_t u) {
+    union { uint32_t i; float f; } pun;
+    pun.i = u;
+    return pun.f;   /* reading a different union member than was written — legal in C */
+}
+
+/* char* is always allowed to alias anything — used in memcpy/memset internals */
+void print_bytes(void *ptr, size_t n) {
+    unsigned char *p = (unsigned char*)ptr;   /* safe: char* exempt from strict aliasing */
+    for (size_t i = 0; i &lt; n; i++)
+        printf("%02x ", p[i]);
+}</code></pre>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Using -O2 exposes aliasing violations that -O0 hides</div>
+    <p>With no optimization, the compiler reads/writes memory on every access — the aliasing violation is "accidentally correct." With -O2 or higher, the compiler assumes strict aliasing and caches values aggressively. Code that worked at -O0 silently breaks at -O2. Always compile with <code>-Wall -Wstrict-aliasing=2</code> to catch these at compile time.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>Underpins: fast hash functions, serialization code</span>
+    <span>Underpins: IEEE 754 floating point bit tricks</span>
+  </div>
+  <div class="trigger">When you see: reinterpret bytes between types &#8594; use memcpy or union, never pointer cast; char* is always exempt from strict aliasing</div>
+</div>
+
+<!-- ================================================================ P26 -->
+<div class="card" id="p26">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 26</span>
+    <span class="pattern-name">Pointer Comparison: Valid vs Undefined Behavior</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Comparing two pointers with &lt; or &gt; is only valid when both point into the same array (or one past the end of it). Comparing pointers into different objects — even if one address happens to be numerically larger — is undefined behavior in C. The result is unpredictable.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    p == q and p != q are always valid for any two pointers. p &lt; q, p &gt; q are only valid within the same array. Equality checks work across different objects; relational comparisons do not.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">int arr1[5] = {1,2,3,4,5};
+int arr2[5] = {6,7,8,9,10};
+int *p = &amp;arr1[2];
+int *q = &amp;arr1[4];
+int *r = &amp;arr2[0];
+
+/* VALID: comparing within the same array */
+if (p &lt; q) { /* yes: p is at index 2, q at index 4, same array */ }
+
+/* UNDEFINED BEHAVIOR: comparing across different arrays */
+/* if (p < r) { ... } */  /* even if arr2 happens to be at a higher address */
+
+/* VALID: equality comparison is always defined */
+if (p == r) { /* well-defined: checks if p and r point to the same address */ }
+
+/* VALID: compare to one-past-end sentinel */
+for (int *it = arr1; it &lt; arr1 + 5; it++) {   /* arr1+5 is one-past-end: valid */
+    printf("%d ", *it);
+}
+/* arr1+5 is valid TO COMPARE TO; dereferencing it is undefined */</code></pre>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Dereferencing a one-past-end pointer</div>
+    <p>The one-past-end pointer <code>arr + n</code> is valid to compute and compare against, but NEVER to dereference. <code>for (int *p = arr; p &lt; arr+n; p++)</code> is correct — the loop stops before dereferencing arr+n. Writing <code>p &lt;= arr+n; p++</code> and then using *p when p==arr+n is undefined behavior.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>Underpins: correct for-loops with pointer iterators</span>
+    <span>Underpins: safe pointer-based range checks</span>
+  </div>
+  <div class="trigger">When you see: pointer comparison with &lt;/&gt; &#8594; only valid within the same array; == and != are always valid; one-past-end is comparable but not dereferenceable</div>
+</div>
+
+
+<div class="card" id="p27">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 27</span>
+    <span class="pattern-name">Array Decay — When Arrays Become Pointers</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">You name a puppy "Buddy." When you hand Buddy to a friend, you don't hand over the puppy <em>and the house it lives in</em>—you just hand over the leash. In C, when you pass an array to a function, you don't pass the whole array—you pass a pointer to its first element. The array "decays" into a pointer and loses its size information.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">In most expressions, <code>arr</code> silently becomes <code>&amp;arr[0]</code>. The three exceptions are: <code>sizeof(arr)</code>, <code>&amp;arr</code>, and initialization of a string literal. Everywhere else—function calls, assignments, arithmetic—the array decays and you lose size.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Declare <code>int arr[5]</code> — 5 ints live contiguously in memory.</li>
+    <li>Pass <code>arr</code> to <code>void f(int *p)</code> — compiler silently converts to <code>&amp;arr[0]</code>.</li>
+    <li>Inside <code>f</code>, <code>sizeof(p)</code> gives 8 (pointer size), NOT 20 (array size).</li>
+    <li>Always pass length separately: <code>void f(int *p, int n)</code>.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">int arr[5] = {10,20,30,40,50};
+  arr → [10][20][30][40][50]   (5 ints = 20 bytes)
+
+  In a function call:
+  f(arr)  →  f(&arr[0])        (pointer = 8 bytes, size lost!)
+
+  sizeof(arr)  = 20            ← inside declaring scope
+  sizeof(p)    =  8            ← inside function (p is just a pointer)</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+
+/* arr decays to int* here — n must be passed separately */
+void print_array(int *arr, int n) {
+    /* sizeof(arr) here = 8 (pointer size), NOT 5*4=20 */
+    for (int i = 0; i &lt; n; i++)
+        printf("%d ", arr[i]);   /* arr[i] == *(arr+i) */
+    printf("\n");
+}
+
+int main(void) {
+    int nums[5] = {10, 20, 30, 40, 50};
+
+    /* sizeof(nums) = 20 (full array) */
+    int len = sizeof(nums) / sizeof(nums[0]);   /* = 5 */
+
+    print_array(nums, len);   /* nums decays to &nums[0] here */
+
+    /* &nums is pointer to the whole array — type int (*)[5] */
+    /* &nums[0] is pointer to first element — type int * */
+    /* Both have same numeric value, different types */
+    printf("&nums=%p  &nums[0]=%p\n", (void*)&nums, (void*)&nums[0]);
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">main:
+  nums = {10,20,30,40,50} at address 0x7fff1000
+  sizeof(nums) = 20
+  len = 20/4 = 5
+  call print_array(0x7fff1000, 5)
+    arr = 0x7fff1000 (pointer, 8 bytes)
+    sizeof(arr) = 8  ← NOT 20!
+    i=0: arr[0]=10, i=1: arr[1]=20, ...
+  output: 10 20 30 40 50</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: sizeof inside a function</div>
+    <p>The most common C bug beginners write: <code>int len = sizeof(arr)/sizeof(arr[0])</code> inside a function that received the array as a parameter. This gives <code>8/4 = 2</code> on 64-bit, not the actual length. Always compute the length in the scope where the array is declared, or pass it explicitly.</p>
+  </div>
+  <div class="leetcode"><span>N/A (pure C mechanics)</span><span>Any function taking array arg</span></div>
+  <div class="trigger">When you pass an array to a function → think: "size is lost, pass length separately."</div>
+</div>
+
+<div class="card" id="p28">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 28</span>
+    <span class="pattern-name">sizeof Pitfall — Pointer vs Array</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">You ask "how long is this road?" Someone hands you a signpost (a pointer to the road's start) and you measure the signpost itself — you get 8 cm (the height of the sign), not the road's length. <code>sizeof</code> on a pointer always gives the pointer size (4 or 8 bytes), never the data it points to.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight"><code>sizeof</code> is a compile-time operator — it looks at the <em>type</em>, not the runtime value. A pointer's type is always "pointer to T," so <code>sizeof</code> gives 8 on 64-bit regardless of how many elements T* points at.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li><code>int arr[10]</code> — type is <code>int[10]</code>, <code>sizeof = 40</code>.</li>
+    <li><code>int *p = arr</code> — type is <code>int *</code>, <code>sizeof = 8</code>.</li>
+    <li>Array-to-function decay makes the type <code>int *</code> inside the function.</li>
+    <li>For heap memory (<code>malloc</code>), you <em>must</em> track size yourself — no way to recover it from the pointer.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">int arr[10];              sizeof(arr)   = 40  (10 ints × 4 bytes)
+int *p = arr;             sizeof(p)     =  8  (pointer on 64-bit)
+char buf[256];            sizeof(buf)   = 256
+char *s = buf;            sizeof(s)     =  8
+
+double *d = malloc(100 * sizeof(double));
+                          sizeof(d)     =  8   ← 800 bytes allocated, can't recover!</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+/* WRONG: sizeof(arr) here is sizeof(int*) = 8, not 40 */
+void wrong(int *arr) {
+    int n = sizeof(arr) / sizeof(arr[0]);   /* 8/4 = 2, WRONG */
+    printf("wrong n=%d\n", n);
+}
+
+/* RIGHT: pass count explicitly */
+void right(int *arr, int n) {
+    printf("right n=%d\n", n);   /* n=10, correct */
+}
+
+int main(void) {
+    int arr[10] = {0};
+
+    /* sizeof in declaring scope knows the full type */
+    printf("sizeof(arr)=%zu\n", sizeof(arr));   /* 40 */
+
+    int n = sizeof(arr) / sizeof(arr[0]);        /* 10 — compute HERE */
+    wrong(arr);       /* broken */
+    right(arr, n);    /* correct */
+
+    /* heap: you MUST store the count */
+    int count = 50;
+    int *heap = malloc(count * sizeof(int));     /* track 'count' yourself */
+    free(heap);
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">main:
+  arr is int[10] → sizeof(arr) = 40
+  n = 40/4 = 10 ✓
+  call wrong(arr):
+    arr is now int* → sizeof(arr) = 8
+    n = 8/4 = 2  ← WRONG!
+  call right(arr, 10):
+    uses passed n=10 ← correct</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: malloc doesn't store size</div>
+    <p>You cannot call <code>sizeof</code> on a heap pointer to find out how many bytes were allocated. The allocator knows internally, but exposes no API for it (in standard C). Always track heap allocation sizes in a separate variable.</p>
+  </div>
+  <div class="leetcode"><span>N/A (pure C mechanics)</span></div>
+  <div class="trigger">When you see sizeof(pointer) → think: "always 8, not the array size — compute sizeof in declaring scope."</div>
+</div>
+
+
+<div class="card" id="p29">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 29</span>
+    <span class="pattern-name">void* Callbacks — Passing State to Function Pointers</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">A courier company has one standard truck. Different customers need the truck to carry different things—groceries, furniture, chemicals. The truck's job (drive A→B) doesn't change, but a <em>cargo manifest</em> rides along with each shipment telling the driver what's inside. In C, a <code>void *context</code> parameter is that manifest — it lets a generic callback carry caller-specific state without the callback needing to know the type.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight"><code>void *</code> is C's escape hatch for generics. A callback signature <code>void (*cb)(void *ctx)</code> plus a <code>void *ctx</code> argument lets any typed data travel through a type-erased interface. The callback casts <code>ctx</code> back to the concrete type it knows about.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Define callback type: <code>typedef void (*Callback)(void *ctx);</code></li>
+    <li>Library function accepts <code>Callback cb</code> and <code>void *ctx</code>.</li>
+    <li>When event fires, library calls <code>cb(ctx)</code> — passes the opaque pointer back.</li>
+    <li>Callback casts <code>(MyState *)ctx</code> to recover the typed data.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">Caller side:
+  MyState s = {.count=0};
+  register_callback(my_cb, &s);   /* pass fn ptr + void* context */
+
+Library side (doesn't know MyState):
+  cb(ctx)   /* calls my_cb(&s) — passes void* back */
+
+Callback side:
+  void my_cb(void *ctx) {
+      MyState *s = (MyState *)ctx;   /* cast back, now typed */
+      s->count++;
+  }</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+/* Generic callback type — void* carries caller state */
+typedef void (*Callback)(void *ctx);
+
+/* Library function: knows nothing about the state type */
+void run_three_times(Callback cb, void *ctx) {
+    for (int i = 0; i &lt; 3; i++)
+        cb(ctx);   /* passes opaque pointer back to callback */
+}
+
+/* ---- Caller code ---- */
+typedef struct { int count; int step; } Counter;
+
+/* Callback casts void* back to the type it knows */
+void increment_cb(void *ctx) {
+    Counter *c = (Counter *)ctx;   /* cast: we know the real type */
+    c->count += c->step;
+    printf("count = %d\n", c->count);
+}
+
+typedef struct { const char *msg; } Printer;
+
+void print_cb(void *ctx) {
+    Printer *p = (Printer *)ctx;
+    printf("%s\n", p->msg);
+}
+
+int main(void) {
+    Counter c = {.count = 0, .step = 5};
+    run_three_times(increment_cb, &c);   /* count: 5, 10, 15 */
+
+    Printer p = {.msg = "hello"};
+    run_three_times(print_cb, &p);       /* hello x3 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">run_three_times(increment_cb, &c):
+  i=0: increment_cb(&c) → c.count = 0+5 = 5
+  i=1: increment_cb(&c) → c.count = 5+5 = 10
+  i=2: increment_cb(&c) → c.count = 10+5 = 15
+
+run_three_times(print_cb, &p):
+  i=0,1,2: print_cb(&p) → prints "hello" each time</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Lifetime of the context object</div>
+    <p>The <code>void *ctx</code> is just a pointer — the caller must ensure the pointed-to object lives as long as the callback might fire. Passing a pointer to a local variable that goes out of scope before the callback fires is a classic use-after-free bug. When in doubt, heap-allocate the context and document who frees it.</p>
+  </div>
+  <div class="leetcode"><span>N/A (C design pattern)</span><span>Used in: qsort, pthreads, libuv</span></div>
+  <div class="trigger">When you need a generic callback with state → think: <code>void (*cb)(void *ctx)</code> + cast inside callback.</div>
+</div>
+
+<div class="card" id="p30">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 30</span>
+    <span class="pattern-name">Wild Pointer — Uninitialized Pointer Danger</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">You write a house address on a sticky note without looking up the address — you just write random digits. Then you drive to that "address." You might end up in an empty lot, someone else's house, or off a cliff. An uninitialized pointer is that random address: dereferencing it is undefined behavior and can silently corrupt memory, crash hours later, or appear to work in debug builds but fail in release.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">A local pointer variable holds whatever garbage was in that stack slot — it could be zero, it could look valid. Always initialize pointers: to <code>NULL</code>, to a valid address, or to the result of <code>malloc</code>. Check for <code>NULL</code> before dereferencing. Set to <code>NULL</code> after <code>free</code> to prevent double-free and use-after-free.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Uninitialized pointer: value is garbage — any dereference is UB.</li>
+    <li>Dangling pointer: <code>free(p)</code> but still use <code>*p</code> — UB (use-after-free).</li>
+    <li>Double-free: <code>free(p); free(p);</code> — corrupts allocator, crashes.</li>
+    <li>Fix: always init to NULL; check NULL before use; set NULL after free.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">/* WILD POINTER */
+int *p;          /* p = 0x????  ← garbage! */
+*p = 42;         /* writes to unknown memory — CRASH or silent corruption */
+
+/* DANGLING POINTER */
+int *q = malloc(4);
+free(q);         /* memory returned to allocator */
+*q = 99;         /* use-after-free — UB, allocator may have reused it */
+
+/* DOUBLE FREE */
+free(q);
+free(q);         /* second free corrupts allocator heap metadata */
+
+/* SAFE PATTERN */
+int *r = NULL;              /* always init */
+r = malloc(sizeof(int));
+if (r == NULL) { /* handle */ }
+*r = 42;
+free(r);
+r = NULL;        /* prevents dangling dereference and double-free */</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+/* Safe allocation wrapper: exits on failure */
+static void *xmalloc(size_t n) {
+    void *p = malloc(n);
+    if (!p) { fprintf(stderr, "OOM\n"); exit(1); }
+    return p;
+}
+
+/* Safe free wrapper: sets caller's pointer to NULL */
+/* Using macro so we can assign back through the pointer-to-pointer */
+#define SAFE_FREE(p) do { free(p); (p) = NULL; } while (0)
+
+int main(void) {
+    /* BAD: uninitialized */
+    /* int *wild;  *wild = 1;  — undefined behavior, do not do this */
+
+    /* GOOD: always initialize */
+    int *p = NULL;
+
+    p = xmalloc(sizeof(int));   /* allocate */
+    *p = 42;
+    printf("*p = %d\n", *p);   /* 42 */
+
+    SAFE_FREE(p);               /* free AND set p=NULL */
+    /* p is now NULL — safe to check */
+    if (p == NULL) printf("p is safely NULL after free\n");
+
+    /* Double-free is now harmless: free(NULL) is a no-op in C */
+    free(p);   /* p==NULL → no-op, safe */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">p = NULL          (initialized safely)
+p = xmalloc(4)   (p = 0x602010, *p = ???)
+*p = 42           (memory at 0x602010 = 42)
+printf → "*p = 42"
+SAFE_FREE(p):
+  free(0x602010)  → memory returned to allocator
+  p = NULL
+printf → "p is safely NULL after free"
+free(NULL)        → no-op (C standard guarantees this)</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: free(NULL) is safe, free(dangling) is not</div>
+    <p>The C standard guarantees <code>free(NULL)</code> is a no-op. So setting a pointer to <code>NULL</code> after freeing it makes subsequent accidental frees harmless. But if you forget to set it to <code>NULL</code>, the pointer still holds the old address — and that memory may now belong to a different allocation, so writing through it silently corrupts unrelated data.</p>
+  </div>
+  <div class="leetcode"><span>N/A (safety pattern)</span><span>Valgrind / AddressSanitizer detects these</span></div>
+  <div class="trigger">When you allocate → think: "init to NULL, check NULL, set NULL after free."</div>
+</div>
+
 <!-- PATTERNS_END -->
 <script>hljs.highlightAll();</script>
 </body>
