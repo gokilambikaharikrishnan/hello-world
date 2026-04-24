@@ -3220,6 +3220,974 @@ return 4 ✓</div>
   <div class="trigger">When you see: longest run of consecutive integers in O(n) &#8594; think: hash set + only start counting when (num-1) is not in the set</div>
 </div>
 
+<!-- ================================================================ P41 -->
+<div class="card" id="p41">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 41</span>
+    <span class="pattern-name">Hashmap: Group Anagrams</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Group words that are anagrams of each other (same letters, different order).
+    The key insight: two words are anagrams if and only if their sorted characters are identical.
+    Sort each word to get its "canonical form" (the key), then group all words with the same key together.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    The sorted form of a word is its unique identifier among all anagrams. "eat", "tea", "ate" all sort to "aet". Use the sorted form as a hash map key.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">#include &lt;string.h&gt;
+#include &lt;stdlib.h&gt;
+
+int cmp_char(const void *a, const void *b) { return *(char*)a - *(char*)b; }
+
+/* Get sorted version of s into buf (buf must be at least strlen(s)+1). */
+void sorted_key(const char *s, char *buf) {
+    strcpy(buf, s);                                  /* copy the word */
+    qsort(buf, strlen(buf), sizeof(char), cmp_char); /* sort its characters */
+}
+
+/* Group anagrams. For each word, compute its sorted key.
+   In a real solution you'd use a proper hash map; here we show the core logic. */
+void group_anagrams(char **words, int n) {
+    char key[100];
+    /* Simplified: for each word, find all words with the same sorted key */
+    for (int i = 0; i &lt; n; i++) {
+        sorted_key(words[i], key);
+
+        for (int j = i + 1; j &lt; n; j++) {
+            char key2[100];
+            sorted_key(words[j], key2);
+            if (strcmp(key, key2) == 0) {
+                /* words[i] and words[j] are anagrams */
+            }
+        }
+    }
+    /* In production, use a hash map: key=sorted_string → list of original words. */
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">words = ["eat","tea","tan","ate","nat","bat"]
+
+sorted keys:
+  "eat" → "aet"
+  "tea" → "aet"   ← same as "eat"
+  "tan" → "ant"
+  "ate" → "aet"   ← same as "eat"
+  "nat" → "ant"   ← same as "tan"
+  "bat" → "abt"
+
+Groups: ["eat","tea","ate"], ["tan","nat"], ["bat"] ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Modifying the original word when sorting</div>
+    <p>Sorting the word in-place to create the key modifies the original. Always copy the word to a temporary buffer first, then sort the copy. Keep the original intact for output.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>49 &middot; Group Anagrams</span>
+    <span>242 &middot; Valid Anagram</span>
+    <span>438 &middot; Find All Anagrams in a String</span>
+  </div>
+  <div class="trigger">When you see: group words that are rearrangements of each other &#8594; think: sorted form as hash key — anagrams share the same sorted string</div>
+</div>
+
+<!-- ================================================================ P42 -->
+<div class="card" id="p42">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 42</span>
+    <span class="pattern-name">Hashmap: Top K Frequent Elements</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Find the K most common elements. Count frequencies with a hashmap, then find the K largest counts.
+    The clever trick is bucket sort: create an array of buckets where index i holds elements that appear exactly i times. Then scan from the highest-frequency bucket down until you collect K elements.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Frequencies are bounded: no element can appear more than n times. So bucket-sort by frequency gives O(n) — better than a heap-based O(n log k) approach.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* Top K frequent elements using bucket sort. Values assumed 0..9999. */
+void top_k_frequent(int *arr, int n, int k, int *result) {
+    int freq[10000] = {0};
+    for (int i = 0; i &lt; n; i++) freq[arr[i]]++;   /* count frequency of each value */
+
+    /* Bucket sort: bucket[i] holds values with frequency exactly i.
+       Using a simple 2D approach here. */
+    int buckets[n + 1][n];    /* buckets[freq][index] = value */
+    int bucket_size[n + 1];
+    for (int i = 0; i &lt;= n; i++) bucket_size[i] = 0;
+
+    for (int val = 0; val &lt; 10000; val++) {
+        if (freq[val] &gt; 0) {
+            int f = freq[val];
+            buckets[f][bucket_size[f]++] = val;  /* put val in bucket f */
+        }
+    }
+
+    int count = 0;
+    for (int f = n; f &gt;= 1 &amp;&amp; count &lt; k; f--) {   /* scan from highest freq down */
+        for (int i = 0; i &lt; bucket_size[f] &amp;&amp; count &lt; k; i++) {
+            result[count++] = buckets[f][i];
+        }
+    }
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">arr = [1,1,1,2,2,3],  k=2
+
+freq: {1:3, 2:2, 3:1}
+buckets: bucket[3]=[1], bucket[2]=[2], bucket[1]=[3]
+
+scan from f=6 down:
+  f=3: result[0]=1, count=1
+  f=2: result[1]=2, count=2
+  count==k → stop
+
+result = [1, 2] ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Sorting by frequency (O(n log n)) when bucket sort gives O(n)</div>
+    <p>The bucket sort approach works because frequencies range from 1 to n — a known, bounded range. This enables O(n) bucket sort. If you sort elements by frequency using a generic sort, you pay O(n log n) unnecessarily. Recognize bounded ranges as opportunities for linear sorting.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>347 &middot; Top K Frequent Elements</span>
+    <span>692 &middot; Top K Frequent Words</span>
+    <span>451 &middot; Sort Characters By Frequency</span>
+  </div>
+  <div class="trigger">When you see: top K elements by frequency &#8594; think: count with hashmap, then bucket sort by frequency (O(n)) or min-heap of size K (O(n log k))</div>
+</div>
+
+<!-- ================================================================ P43 -->
+<div class="card" id="p43">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 43</span>
+    <span class="pattern-name">Hard Classic: Trapping Rain Water</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Water trapped at position i equals: min(tallest wall to the left, tallest wall to the right) minus height[i].
+    If that min is less than height[i], no water is trapped (it spills over the shorter wall).
+    Pre-compute "left max" and "right max" arrays, then walk through for the answer.
+    Or use two pointers for O(1) space.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    water[i] = max(0, min(left_max[i], right_max[i]) &minus; height[i]). The limiting factor is always the shorter side. Two-pointer approach: the side with the smaller max is the binding constraint — process it.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* Trapping rain water with two pointers. O(n) time, O(1) space. */
+int trap(int *h, int n) {
+    int left = 0, right = n - 1;
+    int left_max = 0, right_max = 0;
+    int water = 0;
+
+    while (left &lt; right) {
+        if (h[left] &lt; h[right]) {
+            /* left wall is shorter: it's the bottleneck for water at 'left' */
+            if (h[left] &gt;= left_max) {
+                left_max = h[left];   /* new taller left wall, no water here */
+            } else {
+                water += left_max - h[left];  /* water fills up to left_max */
+            }
+            left++;
+        } else {
+            /* right wall is shorter (or equal): it's the bottleneck for 'right' */
+            if (h[right] &gt;= right_max) {
+                right_max = h[right];
+            } else {
+                water += right_max - h[right];
+            }
+            right--;
+        }
+    }
+    return water;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">h = [0,1,0,2,1,0,1,3,2,1,2,1]
+
+left=0,right=11: h[0]=0<h[11]=1 → left side: h[0]=0<left_max=0? no, left_max=0, left=1
+left=1,right=11: h[1]=1>=h[11]=1 → right side: h[11]=1>=right_max=0, right_max=1, right=10
+left=1,right=10: h[1]=1<h[10]=2 → left: h[1]=1>=left_max=0, left_max=1, left=2
+left=2,right=10: h[2]=0<h[10]=2 → left: h[2]=0<left_max=1, water+=1, left=3
+... (continues)
+Total water = 6 ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Processing the wrong pointer (the taller side)</div>
+    <p>Process the side with the SMALLER max height. That side's water level is determined — it's capped by its own max. The taller side might get taller still, so we can't finalize it yet. Always process the side with the smaller max.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>42 &middot; Trapping Rain Water</span>
+    <span>407 &middot; Trapping Rain Water II</span>
+    <span>11 &middot; Container With Most Water</span>
+  </div>
+  <div class="trigger">When you see: water trapped between walls &#8594; think: min(left_max, right_max) - height[i]; use two pointers to compute in O(1) space</div>
+</div>
+
+<!-- ================================================================ P44 -->
+<div class="card" id="p44">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 44</span>
+    <span class="pattern-name">Hard Classic: Largest Rectangle in Histogram</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Given bar heights in a histogram, find the largest rectangle that fits within the bars.
+    The rectangle extends as wide as bars that are at least as tall as the shortest bar in its span.
+    Use a monotonic increasing stack: when a shorter bar is found, pop taller bars and compute the rectangle they could form.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Maintain a stack of indices with increasing heights. When bar i is shorter than the stack top, the top bar cannot extend right anymore — compute its area using width = i &minus; stack_below &minus; 1.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* Largest rectangle area in histogram. O(n) with monotonic stack. */
+int largest_rectangle(int *heights, int n) {
+    int stack[n + 1];   /* stores indices; stack[0..top-1] */
+    int top = 0;
+    int max_area = 0;
+
+    for (int i = 0; i &lt;= n; i++) {
+        int h = (i == n) ? 0 : heights[i];   /* sentinel 0 at end flushes the stack */
+
+        while (top &gt; 0 &amp;&amp; heights[stack[top-1]] &gt; h) {
+            int height = heights[stack[--top]];   /* height of popped bar */
+            int width  = (top == 0) ? i : i - stack[top-1] - 1;  /* width it can span */
+            int area   = height * width;
+            if (area &gt; max_area) max_area = area;
+        }
+        stack[top++] = i;   /* push current index */
+    }
+    return max_area;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">heights = [2, 1, 5, 6, 2, 3]
+
+i=0: push 0              stack=[0(h=2)]
+i=1: h=1 < h[0]=2 → pop 0: h=2,width=1(stack empty)=1, area=2; push 1   stack=[1(h=1)]
+i=2: push 2              stack=[1,2(h=5)]
+i=3: push 3              stack=[1,2,3(h=6)]
+i=4: h=2 < h[3]=6 → pop 3: h=6,width=4-2-1=1, area=6
+     h=2 < h[2]=5 → pop 2: h=5,width=4-1-1=2, area=10 ← max
+     push 4              stack=[1,4(h=2)]
+i=5: push 5              stack=[1,4,5(h=3)]
+i=6: sentinel h=0 → flush all:
+     pop 5: h=3,width=6-4-1=1, area=3
+     pop 4: h=2,width=6-1-1=4, area=8
+     pop 1: h=1,width=6(empty), area=6
+
+max_area = 10 ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Forgetting the sentinel 0 at the end</div>
+    <p>Without a sentinel bar of height 0 appended at the end, bars remaining in the stack after the main loop never get processed. The sentinel forces all remaining bars to be popped and their areas computed. Always append a virtual 0-height bar.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>84 &middot; Largest Rectangle in Histogram</span>
+    <span>85 &middot; Maximal Rectangle</span>
+    <span>42 &middot; Trapping Rain Water</span>
+  </div>
+  <div class="trigger">When you see: largest rectangle in histogram &#8594; think: monotonic increasing stack, pop on shorter bar, compute area = height × (i - stack_below - 1)</div>
+</div>
+
+<!-- ================================================================ P45 -->
+<div class="card" id="p45">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 45</span>
+    <span class="pattern-name">Hard Classic: Median of Two Sorted Arrays</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Find the median of two sorted arrays combined, in O(log(min(m,n))) time — no merging allowed.
+    Binary search on the partition point of the smaller array. A "partition" splits both arrays so that everything on the left is &le; everything on the right.
+    Adjust the partition until it's balanced.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Binary search on the smaller array to find the right partition. Once the partition satisfies: maxLeft1 &le; minRight2 AND maxLeft2 &le; minRight1, you've found the median. O(log(min(m,n))).
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">#include &lt;limits.h&gt;
+
+double find_median(int *a, int m, int *b, int n) {
+    if (m &gt; n) return find_median(b, n, a, m);   /* ensure a is the smaller array */
+
+    int lo = 0, hi = m;
+    int half = (m + n + 1) / 2;   /* number of elements in the left partition */
+
+    while (lo &lt;= hi) {
+        int pa = lo + (hi - lo) / 2;   /* partition a: pa elements from a on the left */
+        int pb = half - pa;             /* partition b: the rest come from b */
+
+        int maxLeftA  = (pa == 0) ? INT_MIN : a[pa-1];
+        int minRightA = (pa == m) ? INT_MAX : a[pa];
+        int maxLeftB  = (pb == 0) ? INT_MIN : b[pb-1];
+        int minRightB = (pb == n) ? INT_MAX : b[pb];
+
+        if (maxLeftA &lt;= minRightB &amp;&amp; maxLeftB &lt;= minRightA) {
+            /* correct partition found */
+            if ((m + n) % 2 == 1)
+                return (double)(maxLeftA &gt; maxLeftB ? maxLeftA : maxLeftB);
+            int left  = maxLeftA  &gt; maxLeftB  ? maxLeftA  : maxLeftB;
+            int right = minRightA &lt; minRightB ? minRightA : minRightB;
+            return (double)(left + right) / 2.0;
+        } else if (maxLeftA &gt; minRightB) {
+            hi = pa - 1;   /* too many from a: move partition left */
+        } else {
+            lo = pa + 1;   /* too few from a: move partition right */
+        }
+    }
+    return 0.0;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">a=[1,3], b=[2], m=2, n=1   half=2
+
+lo=0,hi=2: pa=1, pb=1
+  maxLeftA=1, minRightA=3, maxLeftB=2, minRightB=INT_MAX
+  1<=INT_MAX ✓ and 2<=3 ✓ → correct partition
+  (m+n)=3 odd → return max(maxLeftA=1, maxLeftB=2) = 2 ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Not ensuring the first array is the smaller one</div>
+    <p>The algorithm binary searches the smaller array. If you binary search the larger array, <code>pb = half - pa</code> can become negative when pa is large, causing out-of-bounds access. Always swap so that m &le; n before starting.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>4 &middot; Median of Two Sorted Arrays</span>
+    <span>295 &middot; Find Median from Data Stream</span>
+    <span>480 &middot; Sliding Window Median</span>
+  </div>
+  <div class="trigger">When you see: median of two sorted arrays in O(log n) &#8594; think: binary search the partition on the smaller array until left-max &le; right-min on both sides</div>
+</div>
+
+<!-- ================================================================ P46 -->
+<div class="card" id="p46">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 46</span>
+    <span class="pattern-name">Hard Classic: Next Permutation</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Find the next lexicographically larger permutation of an array in-place.
+    Example: [1,2,3] → [1,3,2]. If already the largest ([3,2,1]), wrap to smallest ([1,2,3]).
+    Walk from right to left: find the first position where the sequence "dips" (a[i] &lt; a[i+1]). Swap it with the smallest element to its right that is larger, then reverse the suffix to the right.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Three steps: (1) find rightmost "dip" at index i where a[i] &lt; a[i+1], (2) find the smallest element in a[i+1..n-1] that is greater than a[i] and swap them, (3) reverse a[i+1..n-1] to make it the smallest suffix.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">void next_permutation(int *a, int n) {
+    /* Step 1: find rightmost dip (a[i] < a[i+1]) */
+    int i = n - 2;
+    while (i &gt;= 0 &amp;&amp; a[i] &gt;= a[i+1]) i--;
+
+    if (i &gt;= 0) {
+        /* Step 2: find smallest element right of i that is greater than a[i] */
+        int j = n - 1;
+        while (a[j] &lt;= a[i]) j--;   /* rightmost element > a[i] */
+        int tmp = a[i]; a[i] = a[j]; a[j] = tmp;   /* swap */
+    }
+
+    /* Step 3: reverse suffix a[i+1..n-1] to get smallest arrangement */
+    int lo = i + 1, hi = n - 1;
+    while (lo &lt; hi) {
+        int tmp = a[lo]; a[lo] = a[hi]; a[hi] = tmp;
+        lo++; hi--;
+    }
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">a = [1, 3, 2]
+
+Step 1: i=1: a[1]=3 >= a[2]=2; i=0: a[0]=1 < a[1]=3 → dip at i=0
+Step 2: j=2: a[2]=2 > a[0]=1 → swap a[0],a[2] → [2, 3, 1]
+Step 3: reverse [1..2] = [3,1] → [1,3] → a = [2, 1, 3] ✓
+
+(next permutation after [1,3,2] is [2,1,3])</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Not handling the all-descending case (already largest permutation)</div>
+    <p>If the array is entirely descending (e.g., [3,2,1]), step 1 fails to find a dip — i ends up at -1. Skip step 2 entirely in this case. Step 3 still runs with lo = 0, reversing the entire array to produce the smallest permutation [1,2,3].</p>
+  </div>
+
+  <div class="leetcode">
+    <span>31 &middot; Next Permutation</span>
+    <span>46 &middot; Permutations</span>
+    <span>60 &middot; Permutation Sequence</span>
+  </div>
+  <div class="trigger">When you see: next lexicographic permutation in-place &#8594; think: find rightmost dip, swap with next-greater to the right, reverse the suffix</div>
+</div>
+
+<!-- ================================================================ P47 -->
+<div class="card" id="p47">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 47</span>
+    <span class="pattern-name">Hard Classic: First Missing Positive</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Find the smallest positive integer not in the array, in O(n) time and O(1) space.
+    The answer must be in [1, n+1] — if all of 1..n are present, the answer is n+1.
+    Use the array itself as a hash table: place value v at index v-1 using cyclic sort, then scan for the first gap.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    The first missing positive is always in [1, n+1]. Use cyclic sort to place each value in its "home" index (value v → index v-1). Ignore values outside [1,n]. Then scan: first index where arr[i] != i+1 is the answer.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">int first_missing_positive(int *arr, int n) {
+    /* Cyclic sort: place value v at index v-1, ignore values outside [1,n]. */
+    for (int i = 0; i &lt; n; ) {
+        int val = arr[i];
+        if (val &gt;= 1 &amp;&amp; val &lt;= n &amp;&amp; arr[val-1] != val) {
+            /* val is in range AND not already at its correct index */
+            int tmp = arr[val-1]; arr[val-1] = arr[i]; arr[i] = tmp;  /* swap into place */
+        } else {
+            i++;   /* value is out of range or already placed correctly */
+        }
+    }
+
+    /* Scan for the first position where the value doesn't match */
+    for (int i = 0; i &lt; n; i++)
+        if (arr[i] != i + 1) return i + 1;   /* i+1 is missing */
+
+    return n + 1;   /* all 1..n are present */
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">arr = [3, 4, -1, 1]
+
+Cyclic sort:
+  i=0: val=3, arr[2]=-1≠3 → swap arr[0]↔arr[2] → [-1,4,3,1]
+  i=0: val=-1, out of range → i=1
+  i=1: val=4, arr[3]=1≠4 → swap arr[1]↔arr[3] → [-1,1,3,4]
+  i=1: val=1, arr[0]=-1≠1 → swap arr[1]↔arr[0] → [1,-1,3,4]
+  i=1: val=-1, out of range → i=2
+  i=2: val=3, arr[2]=3==3 → i=3
+  i=3: val=4, arr[3]=4==4 → i=4
+
+Scan: arr[0]=1==1✓, arr[1]=-1≠2 → return 2 ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Advancing i after every swap in the cyclic sort</div>
+    <p>After a swap, the new value at position i needs to be checked — do NOT advance i yet. Only advance i when the current value is out of range [1,n] or is already in its correct slot. Advancing after every swap leaves some values un-placed.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>41 &middot; First Missing Positive</span>
+    <span>268 &middot; Missing Number</span>
+    <span>448 &middot; Find All Numbers Disappeared in an Array</span>
+  </div>
+  <div class="trigger">When you see: first missing positive in O(n) O(1) &#8594; think: cyclic sort to place v at index v-1, then scan for mismatch</div>
+</div>
+
+<!-- ================================================================ P48 -->
+<div class="card" id="p48">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 48</span>
+    <span class="pattern-name">Hard Classic: Count of Smaller Numbers After Self</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    For each element, count how many elements to its right are smaller. Brute force is O(n&sup2;).
+    The key approach: merge sort from right to left. During the merge step, when we pick from the right sub-array over the left sub-array, all remaining left elements are larger — increment their counts.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Modified merge sort: sort pairs (value, original_index) in descending order. During merge, when an element from the right half is placed, all left-half elements not yet placed are larger — add the count of already-placed right elements to each such left element's answer.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">int counts[10000];   /* global count array */
+
+typedef struct { int val, idx; } Pair;
+Pair tmp_buf[10000]; /* merge sort buffer */
+
+void merge_count(Pair *arr, int lo, int hi) {
+    if (hi - lo &lt;= 1) return;
+    int mid = lo + (hi - lo) / 2;
+    merge_count(arr, lo, mid);
+    merge_count(arr, mid, hi);
+
+    int i = lo, j = mid, k = lo, right_count = 0;
+    while (i &lt; mid &amp;&amp; j &lt; hi) {
+        if (arr[i].val &gt; arr[j].val) {
+            right_count++;        /* arr[j] (from right) is smaller than arr[i] (from left) */
+            tmp_buf[k++] = arr[j++];
+        } else {
+            counts[arr[i].idx] += right_count;  /* arr[i] has 'right_count' smaller on its right */
+            tmp_buf[k++] = arr[i++];
+        }
+    }
+    while (i &lt; mid) { counts[arr[i].idx] += right_count; tmp_buf[k++] = arr[i++]; }
+    while (j &lt; hi)  { tmp_buf[k++] = arr[j++]; }
+    for (int x = lo; x &lt; hi; x++) arr[x] = tmp_buf[x];
+}
+
+void count_smaller(int *nums, int n, int *result) {
+    Pair arr[10000];
+    for (int i = 0; i &lt; n; i++) { arr[i].val = nums[i]; arr[i].idx = i; counts[i] = 0; }
+    merge_count(arr, 0, n);
+    for (int i = 0; i &lt; n; i++) result[i] = counts[i];
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">nums = [5, 2, 6, 1]
+
+After merge sort (tracking counts):
+  Merge [5,2]: 2<5 → right_count=1 for 5; counts[0]=1
+  Merge [6,1]: 1<6 → right_count=1 for 6; counts[2]=1
+  Merge [2,5] with [1,6]:
+    1<2 → place 1, right_count=1
+    2>1,place 2: counts[1]+=1=1
+    5>1,place 5: counts[0]+=1=2 → wait, recalculate...
+
+Final result: [2, 1, 1, 0] ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Sorting values directly instead of (value, original_index) pairs</div>
+    <p>Merge sort rearranges elements. If you only sort values, you lose track of which original index each count belongs to. Always carry the original index with the value as a pair, so when you update counts[arr[i].idx], you're updating the correct original position.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>315 &middot; Count of Smaller Numbers After Self</span>
+    <span>493 &middot; Reverse Pairs</span>
+    <span>327 &middot; Count of Range Sum</span>
+  </div>
+  <div class="trigger">When you see: count smaller/larger elements to the right in O(n log n) &#8594; think: modified merge sort tracking cross-half comparisons</div>
+</div>
+
+<!-- ================================================================ P49 -->
+<div class="card" id="p49">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 49</span>
+    <span class="pattern-name">Monotonic Stack: Next Greater Element</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    For each element, find the first element to its right that is larger.
+    A naive approach checks every element to the right: O(n&sup2;).
+    The stack approach: maintain a stack of elements waiting to find their "next greater." When a new element arrives and it's larger than the stack top, the stack top has found its answer.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Maintain a monotonically decreasing stack of indices. When arr[i] &gt; arr[stack.top()], pop the top and record arr[i] as its next greater element. Push i onto the stack. Elements never popped have no next greater (answer = -1).
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* For each element, find the first element to its right that is strictly greater.
+   result[i] = -1 if no such element exists. */
+void next_greater(int *arr, int n, int *result) {
+    int stack[n];   /* stores indices, not values */
+    int top = 0;
+
+    for (int i = 0; i &lt; n; i++) result[i] = -1;  /* default: no next greater */
+
+    for (int i = 0; i &lt; n; i++) {
+        /* while the stack has elements AND arr[i] is greater than the top element */
+        while (top &gt; 0 &amp;&amp; arr[stack[top-1]] &lt; arr[i]) {
+            result[stack[--top]] = arr[i];  /* arr[i] is the next greater for the popped index */
+        }
+        stack[top++] = i;   /* push current index: still looking for its next greater */
+    }
+    /* indices remaining in stack have no next greater — they stay -1 */
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">arr = [4, 1, 2, 3]
+
+i=0: stack empty → push 0         stack=[0(4)]
+i=1: 1 < 4 → no pop, push 1       stack=[0(4),1(1)]
+i=2: 2 > 1 → pop 1: result[1]=2; 2 < 4 → push 2   stack=[0(4),2(2)]
+i=3: 3 > 2 → pop 2: result[2]=3; 3 < 4 → push 3   stack=[0(4),3(3)]
+
+remaining: indices 0,3 → result[0]=-1, result[3]=-1
+result = [-1, 2, 3, -1] ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Storing values instead of indices in the stack</div>
+    <p>If you store values in the stack, you can compute arr[i] &gt; stack_top correctly, but you lose the ability to write to <code>result[j]</code> for the popped element's original index. Always store indices in the stack and use arr[index] when comparing.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>496 &middot; Next Greater Element I</span>
+    <span>503 &middot; Next Greater Element II (Circular)</span>
+    <span>739 &middot; Daily Temperatures</span>
+  </div>
+  <div class="trigger">When you see: next greater/smaller element for each position &#8594; think: monotonic stack of indices, pop when current breaks the monotonicity</div>
+</div>
+
+<!-- ================================================================ P50 -->
+<div class="card" id="p50">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 50</span>
+    <span class="pattern-name">Monotonic Stack: Daily Temperatures</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    For each day, how many days must you wait until a warmer temperature?
+    Same pattern as Next Greater Element, but instead of recording the value, record the distance (i &minus; popped_index).
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Exact same monotonic decreasing stack. When you pop an index j because arr[i] &gt; arr[j], the answer for j is i &minus; j (the number of days waited). The only change from Next Greater Element is storing the gap instead of the value.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* How many days until a warmer temperature? result[i]=0 if no warmer day exists. */
+void daily_temperatures(int *temps, int n, int *result) {
+    int stack[n];
+    int top = 0;
+
+    for (int i = 0; i &lt; n; i++) result[i] = 0;   /* default: never gets warmer */
+
+    for (int i = 0; i &lt; n; i++) {
+        while (top &gt; 0 &amp;&amp; temps[stack[top-1]] &lt; temps[i]) {
+            int j = stack[--top];
+            result[j] = i - j;   /* waited (i-j) days for a warmer temperature */
+        }
+        stack[top++] = i;
+    }
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">temps = [73, 74, 75, 71, 69, 72, 76, 73]
+
+i=0: push 0
+i=1: 74>73 → pop 0: result[0]=1-0=1; push 1
+i=2: 75>74 → pop 1: result[1]=2-1=1; push 2
+i=3: 71<75 → push 3
+i=4: 69<71 → push 4
+i=5: 72>69 → pop 4: result[4]=5-4=1; 72>71 → pop 3: result[3]=5-3=2; push 5
+i=6: 76>72 → pop 5: result[5]=6-5=1; 76>75 → pop 2: result[2]=6-2=4; push 6
+i=7: 73<76 → push 7
+
+Remaining stack [6,7]: result[6]=0, result[7]=0
+result = [1,1,4,2,1,1,0,0] ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Recording the temperature value instead of the day count</div>
+    <p>The problem asks for the number of days to wait, not the temperature value. When you pop index j, store <code>result[j] = i - j</code> (the gap between indices), not <code>temps[i]</code> (the warmer temperature itself).</p>
+  </div>
+
+  <div class="leetcode">
+    <span>739 &middot; Daily Temperatures</span>
+    <span>496 &middot; Next Greater Element I</span>
+    <span>901 &middot; Online Stock Span</span>
+  </div>
+  <div class="trigger">When you see: days/steps until next warmer/larger value &#8594; think: monotonic stack, result[j] = i - j when popping</div>
+</div>
+
+<!-- ================================================================ P51 -->
+<div class="card" id="p51">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 51</span>
+    <span class="pattern-name">Bit Manipulation: Single Number (XOR Trick)</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Every number in an array appears twice except one. Find the unique number without extra space.
+    XOR (exclusive or) has a magic property: X ^ X = 0 (any number XORed with itself is 0), and X ^ 0 = X.
+    XOR all numbers together. Pairs cancel out to 0, and the lone number remains.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    XOR is commutative and associative. All duplicate pairs cancel: (a^a) = 0. The single element paired with all the zeros equals itself. One pass, no extra space.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* Find the element that appears exactly once (all others appear twice). */
+int single_number(int *arr, int n) {
+    int result = 0;
+    for (int i = 0; i &lt; n; i++)
+        result ^= arr[i];   /* XOR accumulates: pairs cancel, single survives */
+    return result;
+}
+
+/* Extended: find two numbers that appear once (all others appear twice).
+   XOR all → get a^b. Find any set bit → split array into two groups. */
+void single_number_III(int *arr, int n, int *x, int *y) {
+    int xor_all = 0;
+    for (int i = 0; i &lt; n; i++) xor_all ^= arr[i];  /* xor_all = x ^ y */
+
+    /* find the rightmost set bit (a bit where x and y differ) */
+    int diff_bit = xor_all &amp; (-xor_all);
+
+    *x = 0; *y = 0;
+    for (int i = 0; i &lt; n; i++) {
+        if (arr[i] &amp; diff_bit)
+            *x ^= arr[i];   /* group 1: elements with this bit set */
+        else
+            *y ^= arr[i];   /* group 2: elements with this bit clear */
+    }
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">arr = [4, 1, 2, 1, 2]
+
+XOR: 0^4=4, 4^1=5, 5^2=7, 7^1=6, 6^2=4
+result = 4 ✓ (4 appears once; 1 and 2 cancel themselves)</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Thinking XOR only works for exactly two of each duplicate</div>
+    <p>XOR cancels any number of pairs: if a number appears 2, 4, 6... (even) times it cancels. If it appears an odd number of times it survives. The basic single-number problem requires all duplicates to appear exactly twice. If duplicates appear 3 times, XOR doesn't work — you'd need a different approach (counting bits modulo 3).</p>
+  </div>
+
+  <div class="leetcode">
+    <span>136 &middot; Single Number</span>
+    <span>137 &middot; Single Number II</span>
+    <span>260 &middot; Single Number III</span>
+  </div>
+  <div class="trigger">When you see: find the one element that doesn't have a duplicate &#8594; think: XOR all elements — pairs cancel to 0, unique survives</div>
+</div>
+
+<!-- ================================================================ P52 -->
+<div class="card" id="p52">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 52</span>
+    <span class="pattern-name">Bit Manipulation: Missing Number</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Given n distinct numbers from 0 to n, find the one that's missing.
+    Two approaches: (1) expected sum minus actual sum = missing number. (2) XOR all indices 0..n and all elements — the missing index will not have a matching element to cancel it.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Sum approach: expected = n*(n+1)/2, actual = sum of array. Difference is the missing number. XOR approach: XOR(0..n) ^ XOR(all elements) = missing number (same cancellation trick as Single Number).
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* Find missing number in array containing n distinct values from [0, n]. */
+int missing_number(int *arr, int n) {
+    /* Math approach: sum of 0..n minus sum of array */
+    int expected = n * (n + 1) / 2;   /* Gauss formula: sum of 0+1+2+...+n */
+    int actual   = 0;
+    for (int i = 0; i &lt; n; i++) actual += arr[i];
+    return expected - actual;
+
+    /* XOR approach (avoids potential overflow for large n):
+    int result = n;   // start by XORing with n itself
+    for (int i = 0; i < n; i++)
+        result ^= i ^ arr[i];   // XOR index i and element i
+    return result;
+    */
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">arr = [3, 0, 1],  n=3
+
+expected = 3*4/2 = 6
+actual   = 3+0+1 = 4
+return 6-4 = 2 ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Integer overflow for large n with the sum approach</div>
+    <p>n*(n+1)/2 overflows a 32-bit int when n is around 65536. Use <code>long long</code> for large inputs, or use the XOR approach which never overflows (XOR works bit by bit, no addition).</p>
+  </div>
+
+  <div class="leetcode">
+    <span>268 &middot; Missing Number</span>
+    <span>41 &middot; First Missing Positive</span>
+    <span>645 &middot; Set Mismatch</span>
+  </div>
+  <div class="trigger">When you see: find one missing from 0..n &#8594; think: expected sum minus actual sum, or XOR of indices vs values</div>
+</div>
+
+<!-- ================================================================ P53 -->
+<div class="card" id="p53">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 53</span>
+    <span class="pattern-name">Divide &amp; Conquer: Count Inversions (Merge Sort)</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    An inversion is a pair (i,j) where i &lt; j but arr[i] &gt; arr[j] — out of order.
+    Count them all in O(n log n) using merge sort.
+    During the merge step, whenever we pick from the right half, all remaining left-half elements are larger than it — they ALL form inversions with this right element.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    During merge of two sorted halves [L] and [R]: when we pick R[j] because L[i] &gt; R[j], all of L[i..end] are also &gt; R[j] (L is sorted). So we add (mid - i) inversions at once — an O(1) count per element.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">long long merge_count_inv(int *arr, int *tmp, int lo, int hi) {
+    if (hi - lo &lt;= 1) return 0;   /* single element: no inversions */
+    int mid = lo + (hi - lo) / 2;
+
+    long long count = merge_count_inv(arr, tmp, lo,  mid)
+                    + merge_count_inv(arr, tmp, mid, hi);
+
+    int i = lo, j = mid, k = lo;
+    while (i &lt; mid &amp;&amp; j &lt; hi) {
+        if (arr[i] &lt;= arr[j]) {
+            tmp[k++] = arr[i++];   /* left element is smaller: no inversion */
+        } else {
+            /* arr[j] < arr[i], and all of arr[i..mid-1] > arr[j] (left is sorted) */
+            count  += (mid - i);   /* all remaining left elements form inversions with arr[j] */
+            tmp[k++] = arr[j++];
+        }
+    }
+    while (i &lt; mid) tmp[k++] = arr[i++];
+    while (j &lt; hi)  tmp[k++] = arr[j++];
+    for (int x = lo; x &lt; hi; x++) arr[x] = tmp[x];
+
+    return count;
+}
+
+long long count_inversions(int *arr, int n) {
+    int tmp[n];
+    return merge_count_inv(arr, tmp, 0, n);
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">arr = [2, 4, 1, 3, 5]
+
+Inversions: (2,1),(4,1),(4,3) → count = 3
+
+Merge [2,4] and [1,3]:
+  arr[0]=2 > tmp[0]=1 → count+=2 (both 2,4 > 1), place 1
+  arr[0]=2 < arr[1]=3 → no inv, place 2
+  arr[1]=4 > arr[1]=3 → count+=1, place 3, place 4
+Total from this merge = 3 ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Adding 1 instead of (mid - i) when picking from the right</div>
+    <p>When you pick R[j] because L[i] &gt; R[j], ALL remaining elements in L (positions i through mid-1) are greater than R[j] — because L is sorted. The inversion count to add is <code>mid - i</code>, not just 1. Adding 1 undercounts severely for large left sub-arrays.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>315 &middot; Count of Smaller Numbers After Self</span>
+    <span>493 &middot; Reverse Pairs</span>
+    <span>912 &middot; Sort an Array</span>
+  </div>
+  <div class="trigger">When you see: count inversions (out-of-order pairs) in O(n log n) &#8594; think: merge sort + add (mid-i) to count when picking from right half</div>
+</div>
+
+<!-- ================================================================ P54 -->
+<div class="card" id="p54">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 54</span>
+    <span class="pattern-name">Difference Array: Range Update in O(1)</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    You need to add a value to every element in a range [l, r] — repeatedly, many times.
+    Doing it naively updates O(r&minus;l+1) elements each time.
+    The difference array trick: only mark the start and end of each range update. Then reconstruct the actual values with a prefix sum at query time.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Store <code>diff[l] += val</code> and <code>diff[r+1] -= val</code>. Each range update is O(1). After all updates, the actual array is the prefix sum of diff[]. Then queries are O(n) but amortized over many updates.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* Difference array for multiple range updates.
+   After all updates, call build() to get the final array values. */
+int diff[10001] = {0};
+
+/* Range update: add val to every element in arr[l..r] */
+void range_update(int l, int r, int val) {
+    diff[l]     += val;    /* range starts here: begin adding val */
+    diff[r + 1] -= val;    /* range ends here: stop adding val */
+}
+
+/* Reconstruct final array by prefix-summing the difference array. */
+void build(int *result, int n) {
+    int running = 0;
+    for (int i = 0; i &lt; n; i++) {
+        running   += diff[i];   /* running sum accumulates all active range additions */
+        result[i]  = running;
+    }
+}
+
+/* Example: corporate flight bookings — seats booked per flight segment */
+int max_seats(int bookings[][3], int nb, int n) {
+    for (int i = 0; i &lt;= n + 1; i++) diff[i] = 0;
+    for (int i = 0; i &lt; nb; i++)
+        range_update(bookings[i][0], bookings[i][1], bookings[i][2]);
+    int result[n], max_val = 0;
+    build(result, n);
+    for (int i = 0; i &lt; n; i++) if (result[i] &gt; max_val) max_val = result[i];
+    return max_val;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">Updates on arr[0..4]:
+  range_update(1, 3, +2)  → diff[1]+=2, diff[4]-=2
+  range_update(0, 2, +1)  → diff[0]+=1, diff[3]-=1
+  range_update(2, 4, +3)  → diff[2]+=3, diff[5]-=3
+
+diff = [1, 2, 3, -1, -2, -3]
+
+Build (prefix sum of diff):
+  i=0: running=1  result[0]=1
+  i=1: running=3  result[1]=3
+  i=2: running=6  result[2]=6
+  i=3: running=5  result[3]=5
+  i=4: running=3  result[4]=3
+
+result = [1, 3, 6, 5, 3] ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Writing diff[r] instead of diff[r+1] for the range end marker</div>
+    <p>The subtraction must go at index r+1, not r. You want val to be added for all positions l through r (inclusive). If you subtract at r, position r itself won't get val. The diff array requires diff[r+1] -= val so the prefix sum includes r but not r+1.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>1109 &middot; Corporate Flight Bookings</span>
+    <span>1094 &middot; Car Pooling</span>
+    <span>370 &middot; Range Addition</span>
+  </div>
+  <div class="trigger">When you see: multiple range-add updates then query final values &#8594; think: difference array — mark start/end, reconstruct with prefix sum</div>
+</div>
+
 <!-- PATTERNS_END -->
 <script>hljs.highlightAll();</script>
 </body>
