@@ -18,6 +18,10 @@
 |--------|------|----------|-------------|
 | ✅ 01 | setup | — | feat: init patterns directory with index and progress tracker |
 | ✅ 02 | arrays.html | 01-10 | feat(arrays): patterns 01-10 — prefix sum, two pointer, sliding window basics |
+| ✅ 03 | arrays.html | 11-20 | feat(arrays): patterns 11-20 — sliding window freq map, binary search variants, Kadane's |
+| ✅ 04 | arrays.html | 21-30 | feat(arrays): patterns 21-30 — Kadane variants, in-place, sorting, greedy jump game |
+| ✅ 05 | arrays.html | 31-40 | feat(arrays): patterns 31-40 — greedy, matrix traversal, hashmap patterns |
+| ✅ 06 | arrays.html | 41-54 | feat(arrays): patterns 41-54 — group anagrams, hard classics, monotonic stack, bit manip |
 
 ## arrays.html Progress
 - [x] Patterns 01–10 (Prefix Sum + Two Pointer basics)

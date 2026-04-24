@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C Pattern Library — Pointers</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', system-ui, sans-serif; line-height: 1.7; padding: 2rem; max-width: 960px; margin: 0 auto; }
+h1 { color: #58a6ff; font-size: 2rem; margin-bottom: 0.5rem; }
+.subtitle { color: #8b949e; margin-bottom: 2rem; }
+nav a { color: #58a6ff; text-decoration: none; margin-right: 1.5rem; }
+nav a:hover { text-decoration: underline; }
+.card { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; }
+.pattern-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+.pattern-num { background: #388bfd; color: white; border-radius: 4px; padding: 0.2rem 0.6rem; font-size: 0.8rem; font-weight: bold; }
+.pattern-name { color: #e6edf3; font-size: 1.2rem; font-weight: bold; }
+.section-label { color: #8b949e; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 1rem; margin-bottom: 0.4rem; font-weight: bold; }
+.story { color: #c9d1d9; background: #0d1117; border-left: 3px solid #58a6ff; padding: 0.8rem 1rem; border-radius: 0 4px 4px 0; }
+.insight { color: #e6edf3; background: #0d1117; border-left: 3px solid #3fb950; padding: 0.8rem 1rem; border-radius: 0 4px 4px 0; }
+.steps { background: #0d1117; border-radius: 4px; padding: 1rem; }
+.steps ol { padding-left: 1.5rem; }
+.steps li { margin-bottom: 0.4rem; }
+.diagram { background: #0d1117; border: 1px solid #21262d; border-radius: 4px; padding: 1rem; font-family: monospace; font-size: 0.85rem; color: #79c0ff; white-space: pre; overflow-x: auto; }
+.dry-run { background: #0d1117; border: 1px dashed #30363d; border-radius: 4px; padding: 1rem; font-family: monospace; font-size: 0.85rem; color: #a5d6ff; white-space: pre; overflow-x: auto; }
+.gotcha { background: #2d1717; border: 1px solid #f85149; border-radius: 4px; padding: 1rem; margin-top: 1rem; }
+.gotcha-title { color: #f85149; font-weight: bold; margin-bottom: 0.4rem; }
+.gotcha p { color: #ffa198; font-size: 0.9rem; }
+.leetcode { margin-top: 0.8rem; }
+.leetcode span { background: #1f6feb22; border: 1px solid #1f6feb44; color: #79c0ff; border-radius: 12px; padding: 0.2rem 0.7rem; font-size: 0.8rem; margin-right: 0.5rem; display: inline-block; margin-bottom: 0.3rem; }
+.trigger { margin-top: 1rem; background: #0d1117; border: 1px solid #3fb950; border-radius: 4px; padding: 0.7rem 1rem; color: #3fb950; font-weight: bold; font-size: 0.9rem; }
+pre { border-radius: 6px !important; margin: 0.5rem 0 !important; }
+code.hljs { font-size: 0.82rem !important; }
+.toc { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; columns: 2; column-gap: 2rem; }
+.toc a { color: #58a6ff; text-decoration: none; display: block; padding: 0.15rem 0; font-size: 0.88rem; }
+.toc a:hover { color: #79c0ff; }
+.toc-section { color: #8b949e; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: bold; margin-top: 0.8rem; margin-bottom: 0.2rem; }
+</style>
+</head>
+<body>
+<nav><a href="index.html">&#8592; Back to Index</a></nav>
+<h1>C Pattern Library &#8212; Pointers</h1>
+<p class="subtitle">30 patterns &mdash; mechanics &middot; arithmetic &middot; two-pointer algorithms &middot; dynamic memory &middot; embedded C &middot; pitfalls</p>
+
+<div class="toc">
+<div class="toc-section">Pointer Mechanics</div>
+<a href="#p01">01 &middot; What a Pointer Actually Is</a>
+<a href="#p02">02 &middot; Pointer Arithmetic: Moving Through Arrays</a>
+<a href="#p03">03 &middot; Pointer to Pointer: Double Indirection</a>
+<a href="#p04">04 &middot; Pass by Reference via Pointer</a>
+<a href="#p05">05 &middot; Pointer to Array vs Array of Pointers</a>
+<a href="#p06">06 &middot; Function Pointers: Callbacks</a>
+<a href="#p07">07 &middot; Void Pointer: Generic Data</a>
+<a href="#p08">08 &middot; const Pointer Variants</a>
+<a href="#p09">09 &middot; NULL Check: Defensive Use</a>
+<a href="#p10">10 &middot; Dangling Pointer: Detection &amp; Prevention</a>
+<div class="toc-section">Two-Pointer Algorithms</div>
+<a href="#p11">11 &middot; Left-Right Convergence</a>
+<a href="#p12">12 &middot; Fast-Slow Pointer (Floyd&rsquo;s)</a>
+<a href="#p13">13 &middot; Partition In Place</a>
+<a href="#p14">14 &middot; Read-Write Pointer (Compaction)</a>
+<a href="#p15">15 &middot; Merge Two Sorted Arrays In-Place</a>
+<div class="toc-section">Structs &amp; Memory</div>
+<a href="#p16">16 &middot; Pointer in Structs: Linked Data</a>
+<a href="#p17">17 &middot; Arrow vs Dot Operator</a>
+<a href="#p18">18 &middot; Dynamic Memory: malloc/calloc/realloc/free</a>
+<a href="#p19">19 &middot; Memory Leak: When free() Is Missed</a>
+<a href="#p20">20 &middot; Stack vs Heap: Pointer Lifetime</a>
+<div class="toc-section">Embedded C</div>
+<a href="#p21">21 &middot; Memory-Mapped Register Access</a>
+<a href="#p22">22 &middot; volatile Pointer for Hardware</a>
+<a href="#p23">23 &middot; Bit Fields and Pointer Casting</a>
+<a href="#p24">24 &middot; DMA Buffer Alignment</a>
+<div class="toc-section">Pitfalls &amp; Rules</div>
+<a href="#p25">25 &middot; Pointer Aliasing: Strict Aliasing Rule</a>
+<a href="#p26">26 &middot; Pointer Comparison: Valid vs UB</a>
+<a href="#p27">27 &middot; Array Decay: Array Becomes Pointer</a>
+<a href="#p28">28 &middot; sizeof: Pointer vs Array</a>
+<a href="#p29">29 &middot; Callbacks with void* Context</a>
+<a href="#p30">30 &middot; Wild Pointer: Uninitialized Danger</a>
+</div>
+
+<!-- ================================================================ P01 -->
+<div class="card" id="p01">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 01</span>
+    <span class="pattern-name">What a Pointer Actually Is</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    A pointer is just a variable that stores a memory address — a number that says "the data you care about lives at this location in RAM."
+    Think of it like a sticky note that says "look in drawer 42" instead of holding the contents of drawer 42 directly.
+    The address is the sticky note. Dereferencing (*) means opening the drawer.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    <code>int x = 5</code> stores the value 5. <code>int *p = &amp;x</code> stores the address of x. <code>*p</code> reads or writes through that address back to x. The type tells C how many bytes to read/write at that address.
+  </div>
+
+  <div class="section-label">&#9314; Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Declare a variable: <code>int x = 42</code> — the compiler allocates 4 bytes somewhere in memory.</li>
+    <li>Declare a pointer: <code>int *p</code> — p will hold an address; the * means "this is a pointer to int."</li>
+    <li>Get the address of x: <code>p = &amp;x</code> — the &amp; operator returns the memory address of x.</li>
+    <li>Dereference: <code>*p</code> means "go to the address stored in p and read/write the int there."</li>
+    <li>Changing *p changes x — they refer to the same memory location.</li>
+  </ol></div>
+
+  <div class="section-label">Diagram</div>
+  <div class="diagram">Memory layout (simplified):
+
+Address:  0x1000   0x1004   0x1008
+          [  42  ] [0x1000] [  ?  ]
+             x        p    (unused)
+
+int x = 42;      → x lives at 0x1000, holds value 42
+int *p = &x;     → p lives at 0x1004, holds address 0x1000
+*p               → follow address 0x1000 → read 42
+*p = 99          → follow address 0x1000 → write 99 there → x is now 99</div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+
+int main(void) {
+    int x = 42;         /* x is an int variable, value 42, stored somewhere in RAM */
+    int *p = &amp;x;        /* p stores the ADDRESS of x; &amp; = "address-of" operator */
+
+    printf("%d\n",  x);  /* prints 42  — direct access */
+    printf("%p\n",  p);  /* prints something like 0x7ffee... — the address */
+    printf("%d\n", *p);  /* prints 42  — dereference: follow address, read the int */
+
+    *p = 99;             /* dereference on left side = WRITE through the pointer */
+    printf("%d\n",  x);  /* prints 99  — x changed because *p and x are the same location */
+
+    return 0;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">int x = 42;       → memory[0x1000] = 42
+int *p = &x;      → p = 0x1000
+
+*p reads:         follow 0x1000 → 42
+*p = 99 writes:   follow 0x1000 → set to 99
+x now:            memory[0x1000] = 99  ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Confusing p and *p</div>
+    <p><code>p</code> is the address (e.g., 0x1000). <code>*p</code> is the value at that address (e.g., 42). Printing <code>p</code> with %d gives a meaningless garbage number. Printing <code>*p</code> with %p gives a meaningless large hex value. Always match the variable to its format specifier: %p for pointer, %d for dereferenced int.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>C fundamentals — no direct LeetCode equivalent</span>
+    <span>Underpins: linked lists, trees, graphs</span>
+  </div>
+  <div class="trigger">When you see: int *p &#8594; p is an address; *p is the value at that address; &amp;x gives the address of x</div>
+</div>
+
+<!-- ================================================================ P02 -->
+<div class="card" id="p02">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 02</span>
+    <span class="pattern-name">Pointer Arithmetic: Moving Through an Array</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    When you add 1 to a pointer, it doesn't add 1 to the raw address — it advances by the size of the pointed-to type.
+    An <code>int*</code> advances by 4 bytes. A <code>char*</code> advances by 1 byte. A <code>double*</code> advances by 8 bytes.
+    This is why you can iterate through an array with a pointer: each increment lands exactly on the next element.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    <code>p + n</code> = address of the nth element after p. The compiler multiplies n by sizeof(*p) automatically. <code>p[n]</code> is exactly equivalent to <code>*(p + n)</code> — array indexing IS pointer arithmetic.
+  </div>
+
+  <div class="section-label">Diagram</div>
+  <div class="diagram">int arr[] = {10, 20, 30, 40};
+int *p = arr;   /* p points to arr[0] */
+
+Address:  0x100  0x104  0x108  0x10C
+Value:    [ 10]  [ 20]  [ 30]  [ 40]
+           p     p+1    p+2    p+3
+
+p+1 = 0x100 + 1*sizeof(int) = 0x100 + 4 = 0x104
+*(p+2) = value at 0x108 = 30
+p[3]   = *(p+3) = value at 0x10C = 40   ([] is syntactic sugar)</div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+
+int main(void) {
+    int arr[] = {10, 20, 30, 40, 50};
+    int *p = arr;   /* arr decays to pointer to its first element; same as &arr[0] */
+
+    /* Three equivalent ways to access arr[2]: */
+    printf("%d\n", arr[2]);   /* classic index notation */
+    printf("%d\n", *(p + 2)); /* pointer arithmetic + dereference */
+    printf("%d\n", p[2]);     /* pointer used with index notation (exactly the same) */
+
+    /* Walk the array with a pointer */
+    for (int *q = arr; q &lt; arr + 5; q++) {   /* q++ advances by sizeof(int) = 4 bytes */
+        printf("%d ", *q);                    /* dereference to get the value */
+    }
+    printf("\n");
+
+    /* Pointer subtraction: distance between two pointers (in elements, not bytes) */
+    int *first = &amp;arr[1];
+    int *last  = &amp;arr[4];
+    printf("%td\n", last - first);   /* prints 3 (elements apart, not bytes) */
+    return 0;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">arr at 0x100: [10,20,30,40,50]
+p = 0x100
+
+p+0 = 0x100 → *p = 10
+p+1 = 0x104 → *(p+1) = 20
+p+2 = 0x108 → *(p+2) = 30
+
+q loop: q=0x100(*q=10), q=0x104(*q=20), ..., q=0x110(*q=50), q=0x114 >= arr+5=0x114 → stop</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Comparing or subtracting pointers from different arrays</div>
+    <p>Pointer subtraction gives the distance in elements — but ONLY when both pointers point into the same array (or one past its end). Subtracting pointers from different arrays is undefined behavior. The result is meaningless and the compiler may do anything.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>Underpins: all string traversal patterns</span>
+    <span>Underpins: in-place array manipulation</span>
+  </div>
+  <div class="trigger">When you see: p++ or p+n on an int* &#8594; remember it moves by sizeof(int) bytes, not by 1 byte; p[n] == *(p+n) always</div>
+</div>
+
+<!-- ================================================================ P03 -->
+<div class="card" id="p03">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 03</span>
+    <span class="pattern-name">Pointer to Pointer: Double Indirection</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    A pointer to a pointer is just a variable that holds the address of another pointer.
+    Think of it as a sticky note that says "look at sticky note in drawer 5, which tells you which drawer has the actual data."
+    You follow two levels of indirection. Common uses: modifying a pointer from inside a function, arrays of strings (char**), linked list head modification.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    <code>int **pp</code>: pp holds an address of a pointer. *pp gives you the pointer. **pp gives you the int. Each * removes one level of indirection.
+  </div>
+
+  <div class="section-label">Diagram</div>
+  <div class="diagram">int x = 42;
+int *p  = &x;    /* p  → x */
+int **pp = &p;   /* pp → p → x */
+
+Memory:
+0x1000: [ 42 ]  ← x
+0x1004: [0x1000] ← p  (holds address of x)
+0x1008: [0x1004] ← pp (holds address of p)
+
+**pp  = follow 0x1008→0x1004→0x1000 = 42
+*pp   = follow 0x1008→0x1004 = p itself</div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+/* Without **: the caller's pointer is NOT changed (gets a copy) */
+void alloc_wrong(int *p, int val) {
+    p = malloc(sizeof(int));   /* only modifies the LOCAL copy of p */
+    *p = val;                  /* this leaks: caller's p still NULL */
+}
+
+/* With **: we can modify the caller's actual pointer */
+void alloc_correct(int **pp, int val) {
+    *pp = malloc(sizeof(int)); /* *pp is the caller's pointer — modify it directly */
+    **pp = val;                /* **pp is the int the caller's pointer now points to */
+}
+
+int main(void) {
+    int *p = NULL;
+    alloc_correct(&amp;p, 99);    /* pass address of p so function can change p itself */
+    printf("%d\n", *p);       /* prints 99 */
+    free(p);
+    return 0;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">main: p = NULL (address 0x2000 in stack)
+
+alloc_correct(&p, 99):
+  pp = 0x2000 (address of p)
+  *pp = malloc(...) → p now points to newly allocated int (say 0x3000)
+  **pp = 99 → memory[0x3000] = 99
+
+back in main: p = 0x3000, *p = 99  ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Passing a pointer when you need a pointer-to-pointer</div>
+    <p>If a function needs to modify the caller's pointer (e.g., allocate memory, advance a head pointer in a linked list), passing <code>int *p</code> gives the function a copy of the pointer. Any assignment to p inside the function is lost. Pass <code>int **pp</code> and write to <code>*pp</code> to actually modify the caller's pointer.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>Underpins: linked list head modification</span>
+    <span>Underpins: dynamic string arrays (char**)</span>
+  </div>
+  <div class="trigger">When you see: function must change the caller's pointer itself &#8594; think: pass int** and assign to *pp inside the function</div>
+</div>
+
+<!-- ================================================================ P04 -->
+<div class="card" id="p04">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 04</span>
+    <span class="pattern-name">Pass by Reference via Pointer</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    C is always pass-by-value — functions receive copies of arguments. If you want a function to modify the caller's variable, you pass the address of that variable (a pointer to it). The function follows the address and writes through it. This is "pass by reference" simulated via pointers.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Passing &amp;x instead of x gives the function a way to write back to x. Inside the function, every *param write goes directly to the caller's variable. The function receives a copy of the address, not a copy of the value.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+
+/* WRONG: modifies only a local copy of a and b */
+void swap_wrong(int a, int b) {
+    int tmp = a; a = b; b = tmp;   /* caller sees no change */
+}
+
+/* CORRECT: modifies caller's variables through pointers */
+void swap(int *a, int *b) {
+    int tmp = *a;   /* save the value that a points to */
+    *a = *b;        /* write b's value into a's location */
+    *b = tmp;       /* write saved value into b's location */
+}
+
+/* Multiple return values via pointers */
+void min_max(int *arr, int n, int *out_min, int *out_max) {
+    *out_min = arr[0];
+    *out_max = arr[0];
+    for (int i = 1; i &lt; n; i++) {
+        if (arr[i] &lt; *out_min) *out_min = arr[i];
+        if (arr[i] &gt; *out_max) *out_max = arr[i];
+    }
+}
+
+int main(void) {
+    int x = 3, y = 7;
+    swap(&amp;x, &amp;y);               /* pass addresses */
+    printf("%d %d\n", x, y);    /* prints 7 3 */
+
+    int arr[] = {5, 1, 9, 3};
+    int lo, hi;
+    min_max(arr, 4, &amp;lo, &amp;hi);
+    printf("%d %d\n", lo, hi);  /* prints 1 9 */
+    return 0;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">swap(&x, &y):  a=&x=0x100, b=&y=0x104
+  tmp = *a = 3
+  *a = *b → memory[0x100] = 7 → x=7
+  *b = tmp → memory[0x104] = 3 → y=3  ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: swap(x, y) vs swap(&amp;x, &amp;y)</div>
+    <p>Calling <code>swap(x, y)</code> passes copies. The function swaps its local copies and returns — x and y in the caller are unchanged. You must call <code>swap(&amp;x, &amp;y)</code>. This is one of the most common beginner mistakes in C.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>Underpins: qsort comparator pattern</span>
+    <span>Underpins: returning multiple values from a C function</span>
+  </div>
+  <div class="trigger">When you see: function must modify the caller's variable &#8594; think: pass &amp;variable, receive int *param, write via *param</div>
+</div>
+
+<!-- ================================================================ P05 -->
+<div class="card" id="p05">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 05</span>
+    <span class="pattern-name">Pointer to Array vs Array of Pointers</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    These two declarations look similar but mean completely different things:
+    <code>int (*p)[5]</code> — one pointer, pointing to an entire array of 5 ints.
+    <code>int *p[5]</code> — an array of 5 pointers, each pointing to an int.
+    The parentheses around *p change everything.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Operator precedence: [] binds tighter than *. So <code>int *p[5]</code> reads as "array of 5 int-pointers." To get "pointer to array of 5 ints" you need parentheses: <code>int (*p)[5]</code>.
+  </div>
+
+  <div class="section-label">Diagram</div>
+  <div class="diagram">/* Array of pointers — 5 separate ints anywhere in memory */
+int *arr_of_ptrs[5];
+arr_of_ptrs: [ ptr0 | ptr1 | ptr2 | ptr3 | ptr4 ]
+                ↓      ↓      ↓      ↓      ↓
+             int    int    int    int    int  (anywhere)
+
+/* Pointer to array — one pointer to a contiguous block of 5 ints */
+int data[5] = {1,2,3,4,5};
+int (*ptr_to_arr)[5] = &data;
+ptr_to_arr: [ address ] → [ 1 | 2 | 3 | 4 | 5 ]  (contiguous)</div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+
+int main(void) {
+    /* Array of 5 int pointers — used for arrays of strings, jagged arrays */
+    int a = 1, b = 2, c = 3;
+    int *arr_ptrs[3] = {&amp;a, &amp;b, &amp;c};   /* each element is a pointer to a separate int */
+    printf("%d\n", *arr_ptrs[1]);        /* prints 2 */
+
+    /* Pointer to an array of 5 ints — used with 2D arrays */
+    int row[5] = {10, 20, 30, 40, 50};
+    int (*p)[5] = &amp;row;    /* p points to the entire 5-element array */
+    printf("%d\n", (*p)[2]);  /* dereference p to get array, then index — prints 30 */
+
+    /* 2D array traversal with pointer-to-array */
+    int matrix[3][4] = {{1,2,3,4},{5,6,7,8},{9,10,11,12}};
+    int (*row_ptr)[4] = matrix;   /* row_ptr points to first row (array of 4 ints) */
+    row_ptr++;                     /* advance to second row (moves by 4*sizeof(int)=16 bytes) */
+    printf("%d\n", row_ptr[0][1]); /* second row, second element = 6 */
+    return 0;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">int (*p)[5] = &row;
+sizeof(*p) = sizeof(int[5]) = 20 bytes
+
+p+1 would advance 20 bytes (past the entire array)
+(*p)[2] = row[2] = 30  ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Missing parentheses — int *p[5] vs int (*p)[5]</div>
+    <p><code>int *p[5]</code> declares an array of 5 pointers (the [] binds before *). <code>int (*p)[5]</code> declares one pointer to an array of 5 ints. When passing a 2D array to a function, you need <code>int (*row)[COLS]</code> — the parentheses are mandatory, not optional.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>Underpins: 2D array function parameters</span>
+    <span>Underpins: argv (char *argv[]) parsing</span>
+  </div>
+  <div class="trigger">When you see: int *p[N] &#8594; array of N pointers; int (*p)[N] &#8594; one pointer to an N-element array</div>
+</div>
+
+<!-- ================================================================ P06 -->
+<div class="card" id="p06">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 06</span>
+    <span class="pattern-name">Function Pointers: Callbacks and Dispatch Tables</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    A function pointer stores the address of a function. You can pass it to other functions, store it in arrays, and call it later.
+    This is how qsort accepts any comparator, how event systems work, and how you build a "dispatch table" (switch without switch) in embedded C.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    A function pointer declaration mirrors the function signature: <code>int (*fp)(int, int)</code> is a pointer to a function taking two ints and returning int. Call it as <code>fp(a, b)</code> — no * needed for the call.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+
+int add(int a, int b) { return a + b; }
+int sub(int a, int b) { return a - b; }
+int mul(int a, int b) { return a * b; }
+
+/* A function that takes another function as a parameter (callback) */
+int apply(int x, int y, int (*op)(int, int)) {
+    return op(x, y);   /* call the function through the pointer */
+}
+
+/* Dispatch table: array of function pointers */
+int (*ops[3])(int, int) = {add, sub, mul};  /* function names decay to pointers */
+
+int main(void) {
+    /* Pass function as argument */
+    printf("%d\n", apply(10, 3, add));   /* 13 */
+    printf("%d\n", apply(10, 3, sub));   /* 7  */
+
+    /* Dispatch table: choose operation by index */
+    for (int i = 0; i &lt; 3; i++)
+        printf("%d\n", ops[i](10, 3));   /* 13, 7, 30 */
+
+    /* Typedef makes function pointer types readable */
+    typedef int (*BinaryOp)(int, int);
+    BinaryOp fp = mul;
+    printf("%d\n", fp(4, 5));            /* 20 */
+    return 0;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">apply(10, 3, sub):
+  op = address of sub function
+  op(10, 3) → calls sub(10,3) → returns 7  ✓
+
+ops[2](10, 3):
+  ops[2] = address of mul
+  call mul(10,3) → 30  ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Confusing the function pointer declaration with a function declaration</div>
+    <p><code>int *fp(int, int)</code> declares a function fp that returns int*. <code>int (*fp)(int, int)</code> declares a pointer fp that points to a function returning int. The parentheses around *fp are critical. Use typedef to avoid this confusion: <code>typedef int (*Op)(int,int);</code> then just <code>Op fp = add;</code>.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>Underpins: qsort() custom comparator</span>
+    <span>Underpins: embedded C interrupt handler tables</span>
+    <span>Underpins: plugin/strategy design patterns in C</span>
+  </div>
+  <div class="trigger">When you see: passing behavior as a parameter &#8594; think: function pointer — declare with (*fp)(params), call as fp(args)</div>
+</div>
+
+<!-- ================================================================ P07 -->
+<div class="card" id="p07">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 07</span>
+    <span class="pattern-name">Void Pointer: Generic Data Handling</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    A <code>void*</code> is a pointer with no type information — it just says "some address." It can point to anything.
+    This is how C achieves generics: qsort, memcpy, malloc all use void* so they work on any data type.
+    You must cast void* to the correct typed pointer before dereferencing, because C needs to know how many bytes to read.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    void* accepts any pointer without casting. To use the data, cast to the correct type first: <code>(int*)vp</code>. You cannot dereference void* directly — C doesn't know the size or interpretation of the data.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+/* Generic print function using void* + a type tag */
+void print_value(void *data, char type) {
+    if (type == 'i') printf("%d\n",  *(int*)data);    /* cast to int*, then dereference */
+    if (type == 'd') printf("%f\n",  *(double*)data);
+    if (type == 'c') printf("%c\n",  *(char*)data);
+}
+
+/* Generic swap of any type using void* and element size */
+void generic_swap(void *a, void *b, size_t size) {
+    char tmp[256];                  /* temporary buffer on the stack */
+    memcpy(tmp, a,   size);        /* copy a → tmp */
+    memcpy(a,   b,   size);        /* copy b → a */
+    memcpy(b,   tmp, size);        /* copy tmp → b */
+}
+
+int main(void) {
+    int    x = 42;
+    double y = 3.14;
+    char   c = 'Z';
+
+    print_value(&amp;x, 'i');   /* prints 42    */
+    print_value(&amp;y, 'd');   /* prints 3.14  */
+    print_value(&amp;c, 'c');   /* prints Z     */
+
+    int a = 10, b = 20;
+    generic_swap(&amp;a, &amp;b, sizeof(int));
+    printf("%d %d\n", a, b);   /* prints 20 10 */
+    return 0;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">print_value(&x, 'i'):
+  data = address of x (e.g., 0x1000)
+  (int*)data = treat 0x1000 as int*
+  *(int*)data = read 4 bytes at 0x1000 = 42  ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Dereferencing void* without casting first</div>
+    <p><code>*vp</code> where vp is void* is a compile error (or undefined behavior in older compilers). The compiler doesn't know the size of the object. Always cast first: <code>*(int*)vp</code>. Also, void* arithmetic is non-standard in C — don't write <code>vp + 1</code>; cast to char* first.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>Underpins: qsort and bsearch in stdlib</span>
+    <span>Underpins: generic data structures in C</span>
+  </div>
+  <div class="trigger">When you see: void* &#8594; cast to the correct typed pointer before dereferencing; void* accepts any pointer without explicit cast</div>
+</div>
+
+<!-- ================================================================ P08 -->
+<div class="card" id="p08">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 08</span>
+    <span class="pattern-name">const Pointer Variants: Four Combinations</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    The word <code>const</code> near a pointer declaration is like a lock. Depending on which side of the * you put it, you lock either the address (where the pointer points) or the value (what it points to) — or both.
+    Knowing all four combinations lets you express your intent precisely and catch bugs at compile time.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Read right-to-left through the declaration: "p is a [const] pointer to [const] int." const before * = data is read-only. const after * = pointer itself is read-only (can't re-aim). Both = fully locked.
+  </div>
+
+  <div class="section-label">Diagram</div>
+  <div class="diagram">int x = 1, y = 2;
+
+int *p              → can change *p AND p     (no locks)
+const int *p        → can change p, NOT *p    (data locked)
+int * const p = &x  → can change *p, NOT p    (pointer locked)
+const int * const p = &x  → NOTHING changeable (both locked)</div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">int x = 10, y = 20;
+
+/* 1. Mutable pointer, mutable data — no restrictions */
+int *p1 = &amp;x;
+*p1 = 99;     /* OK: change data */
+p1  = &amp;y;    /* OK: re-aim pointer */
+
+/* 2. Mutable pointer, immutable data (most common for function params) */
+const int *p2 = &amp;x;
+/* *p2 = 99; */  /* ERROR: data is read-only */
+p2 = &amp;y;         /* OK: can re-aim */
+
+/* 3. Immutable pointer, mutable data */
+int * const p3 = &amp;x;
+*p3 = 99;         /* OK: can change data */
+/* p3 = &y; */   /* ERROR: cannot re-aim pointer */
+
+/* 4. Immutable pointer, immutable data (safest for constants) */
+const int * const p4 = &amp;x;
+/* *p4 = 99; */  /* ERROR */
+/* p4 = &y;  */  /* ERROR */
+
+/* Function taking read-only array: promise not to modify elements */
+int sum(const int *arr, int n) {
+    int s = 0;
+    for (int i = 0; i &lt; n; i++) s += arr[i];  /* arr[i] is const: no modification */
+    return s;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">Rule: read right-to-left, stopping at *
+
+const int *p:   p is (pointer) to (const int)     → data locked
+int * const p:  p is (const pointer) to (int)      → pointer locked
+const int * const p: p is (const pointer) to (const int) → both locked</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Passing const int* to a function expecting int*</div>
+    <p>If a function takes <code>int *</code> but you pass a <code>const int *</code>, the compiler warns because the function might modify data you promised not to change. You cannot silently strip const. If you see this warning, either make the function accept <code>const int*</code>, or reconsider your design.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>Underpins: safe function signatures for read-only arrays</span>
+    <span>Underpins: string literal handling (always const char*)</span>
+  </div>
+  <div class="trigger">When you see: const before * &#8594; data is read-only; const after * &#8594; pointer address is fixed; both &#8594; fully immutable</div>
+</div>
+
+<!-- ================================================================ P09 -->
+<div class="card" id="p09">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 09</span>
+    <span class="pattern-name">NULL Check: Defensive Pointer Use</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    NULL is the zero address — a special value that means "this pointer points to nothing."
+    Dereferencing NULL is undefined behavior and almost always causes an immediate crash (segmentation fault).
+    Always check that a pointer is non-NULL before dereferencing it when there is any possibility it could be null.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    NULL == 0 as an integer. Pointers evaluate to false in an if-statement when NULL, true when non-NULL. <code>if (p)</code> is idiomatic C for "if p is not NULL." Check at every boundary: function entry, after malloc, after file open.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+/* Always check pointer parameters */
+int safe_deref(int *p) {
+    if (p == NULL) return -1;   /* guard: refuse to dereference NULL */
+    return *p;                  /* safe: p is guaranteed non-NULL here */
+}
+
+/* Always check malloc return value */
+int *allocate(int n) {
+    int *arr = malloc(n * sizeof(int));
+    if (arr == NULL) {          /* malloc returns NULL on failure */
+        fprintf(stderr, "allocation failed\n");
+        return NULL;            /* propagate the failure to the caller */
+    }
+    return arr;
+}
+
+/* Linked list traversal: stop at NULL */
+typedef struct Node { int val; struct Node *next; } Node;
+
+void print_list(Node *head) {
+    while (head != NULL) {      /* NULL marks the end of the list */
+        printf("%d ", head-&gt;val);
+        head = head-&gt;next;      /* advance; will be NULL at end */
+    }
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">safe_deref(NULL):  p==NULL → return -1  (no crash) ✓
+safe_deref(&x):    p!=NULL → return *p = x's value  ✓
+
+malloc failure:
+  arr = NULL
+  if (NULL) → true → print error, return NULL  ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Checking p == NULL vs checking *p == NULL</div>
+    <p><code>p == NULL</code> checks whether the pointer itself is null (the address is zero). <code>*p == NULL</code> dereferences p first and checks the value it points to. If p is NULL, writing <code>*p == NULL</code> immediately crashes — you're dereferencing NULL to check if it's NULL. Always check the pointer before dereferencing.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>Underpins: all linked list problems (check node != NULL)</span>
+    <span>Underpins: tree traversal base cases</span>
+  </div>
+  <div class="trigger">When you see: a pointer that might be null &#8594; check if (p) or if (p != NULL) before any *p or p-&gt;field access</div>
+</div>
+
+<!-- ================================================================ P10 -->
+<div class="card" id="p10">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 10</span>
+    <span class="pattern-name">Dangling Pointer: Detection and Prevention</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    A dangling pointer points to memory that has already been freed or is no longer valid (e.g., a local variable that went out of scope).
+    Using it is undefined behavior — it might read garbage, it might crash, it might silently corrupt data.
+    The fix: always set a pointer to NULL immediately after freeing it, and never return pointers to local (stack) variables.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    After <code>free(p)</code>, p still holds the old address — but that memory is no longer yours. Set <code>p = NULL</code> immediately. A NULL dereference crashes loudly and immediately; a dangling pointer dereference corrupts silently and fails mysteriously later.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">#include &lt;stdlib.h&gt;
+
+/* WRONG: returns address of local variable — undefined behavior */
+int *bad_return(void) {
+    int x = 42;
+    return &amp;x;   /* x lives on the stack; it's destroyed when function returns */
+}
+
+/* CORRECT: return heap-allocated memory */
+int *good_return(int val) {
+    int *p = malloc(sizeof(int));
+    if (p) *p = val;
+    return p;   /* caller owns this heap memory and must free it */
+}
+
+/* WRONG: using pointer after free */
+void use_after_free(void) {
+    int *p = malloc(sizeof(int));
+    *p = 99;
+    free(p);
+    /* *p = 42; */ /* UNDEFINED BEHAVIOR: memory already returned to OS/allocator */
+}
+
+/* CORRECT: nullify immediately after free */
+void safe_free(int **pp) {
+    free(*pp);    /* release the memory */
+    *pp = NULL;   /* nullify so any accidental later use is caught as NULL deref */
+}
+
+int main(void) {
+    int *p = good_return(7);
+    /* use p ... */
+    safe_free(&amp;p);   /* p is now NULL */
+    /* if (p) ... */ /* safe: p is NULL, the if-body won't execute */
+    return 0;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">bad_return():
+  x at stack address 0x7ff0 = 42
+  return 0x7ff0
+  (function returns, stack frame destroyed)
+  caller uses 0x7ff0 → reads garbage or crashes  ✗
+
+safe_free(&p):
+  free(*p) → memory released
+  *p = NULL → p = NULL
+  later: if (p) → false → no dereference  ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Double free — calling free() on the same pointer twice</div>
+    <p>After <code>free(p)</code>, calling <code>free(p)</code> again is undefined behavior and often corrupts the heap allocator's internal structures, causing mysterious crashes later. Setting <code>p = NULL</code> after free prevents double-free: <code>free(NULL)</code> is defined to do nothing safely.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>Underpins: all dynamic allocation in C</span>
+    <span>Underpins: implementing free() in custom allocators</span>
+  </div>
+  <div class="trigger">When you see: free(p) &#8594; always follow with p = NULL; never return &local_var; always check malloc != NULL</div>
+</div>
+
+<!-- PATTERNS_END -->
+<script>hljs.highlightAll();</script>
+</body>
+</html>
