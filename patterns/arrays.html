@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C Pattern Library — Arrays</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', system-ui, sans-serif; line-height: 1.7; padding: 2rem; max-width: 960px; margin: 0 auto; }
+h1 { color: #58a6ff; font-size: 2rem; margin-bottom: 0.5rem; }
+.subtitle { color: #8b949e; margin-bottom: 2rem; }
+nav a { color: #58a6ff; text-decoration: none; margin-right: 1.5rem; }
+nav a:hover { text-decoration: underline; }
+.card { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; }
+.pattern-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+.pattern-num { background: #1f6feb; color: white; border-radius: 4px; padding: 0.2rem 0.6rem; font-size: 0.8rem; font-weight: bold; }
+.pattern-name { color: #e6edf3; font-size: 1.2rem; font-weight: bold; }
+.section-label { color: #8b949e; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 1rem; margin-bottom: 0.4rem; font-weight: bold; }
+.story { color: #c9d1d9; background: #0d1117; border-left: 3px solid #58a6ff; padding: 0.8rem 1rem; border-radius: 0 4px 4px 0; }
+.insight { color: #e6edf3; background: #0d1117; border-left: 3px solid #3fb950; padding: 0.8rem 1rem; border-radius: 0 4px 4px 0; }
+.steps { background: #0d1117; border-radius: 4px; padding: 1rem; }
+.steps ol { padding-left: 1.5rem; }
+.steps li { margin-bottom: 0.4rem; }
+.diagram { background: #0d1117; border: 1px solid #21262d; border-radius: 4px; padding: 1rem; font-family: monospace; font-size: 0.85rem; color: #79c0ff; white-space: pre; overflow-x: auto; }
+.dry-run { background: #0d1117; border: 1px dashed #30363d; border-radius: 4px; padding: 1rem; font-family: monospace; font-size: 0.85rem; color: #a5d6ff; white-space: pre; overflow-x: auto; }
+.gotcha { background: #2d1717; border: 1px solid #f85149; border-radius: 4px; padding: 1rem; margin-top: 1rem; }
+.gotcha-title { color: #f85149; font-weight: bold; margin-bottom: 0.4rem; }
+.gotcha p { color: #ffa198; font-size: 0.9rem; }
+.leetcode { margin-top: 0.8rem; }
+.leetcode span { background: #1f6feb22; border: 1px solid #1f6feb44; color: #79c0ff; border-radius: 12px; padding: 0.2rem 0.7rem; font-size: 0.8rem; margin-right: 0.5rem; display: inline-block; margin-bottom: 0.3rem; }
+.trigger { margin-top: 1rem; background: #0d1117; border: 1px solid #3fb950; border-radius: 4px; padding: 0.7rem 1rem; color: #3fb950; font-weight: bold; font-size: 0.9rem; }
+pre { border-radius: 6px !important; margin: 0.5rem 0 !important; }
+code.hljs { font-size: 0.82rem !important; }
+.toc { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; columns: 2; column-gap: 2rem; }
+.toc a { color: #58a6ff; text-decoration: none; display: block; padding: 0.15rem 0; font-size: 0.88rem; }
+.toc a:hover { color: #79c0ff; }
+.toc-section { color: #8b949e; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: bold; margin-top: 0.8rem; margin-bottom: 0.2rem; break-after: avoid; }
+</style>
+</head>
+<body>
+<nav><a href="index.html">&#8592; Back to Index</a></nav>
+<h1>C Pattern Library &#8212; Arrays</h1>
+<p class="subtitle">54 patterns &mdash; prefix sum &middot; two pointer &middot; sliding window &middot; binary search &middot; Kadane&rsquo;s &middot; sorting &middot; greedy &middot; matrix &middot; hashmap &middot; hard classics</p>
+
+<div class="toc">
+<div class="toc-section">Prefix Sum</div>
+<a href="#p01">01 &middot; Prefix Sum: Range Query</a>
+<a href="#p02">02 &middot; Prefix Sum: Running Total / Pivot</a>
+<a href="#p03">03 &middot; Prefix Sum: 2D Matrix Range Sum</a>
+<div class="toc-section">Two Pointer</div>
+<a href="#p04">04 &middot; Two Pointer: Sorted Array Pair Sum</a>
+<a href="#p05">05 &middot; Two Pointer: Remove Duplicates In-Place</a>
+<a href="#p06">06 &middot; Two Pointer: Move Zeros to End</a>
+<a href="#p07">07 &middot; Two Pointer: Three Sum</a>
+<a href="#p08">08 &middot; Two Pointer: Container With Most Water</a>
+<div class="toc-section">Sliding Window</div>
+<a href="#p09">09 &middot; Sliding Window: Fixed Size Max Sum</a>
+<a href="#p10">10 &middot; Sliding Window: Variable Size (Shrink When Invalid)</a>
+<a href="#p11">11 &middot; Sliding Window: Longest No-Repeat via Freq Map</a>
+<a href="#p12">12 &middot; Sliding Window: Minimum Window Substring</a>
+<a href="#p13">13 &middot; Sliding Window: Count Subarrays with Condition</a>
+<div class="toc-section">Binary Search</div>
+<a href="#p14">14 &middot; Binary Search: Classic Target Find</a>
+<a href="#p15">15 &middot; Binary Search: Leftmost Occurrence</a>
+<a href="#p16">16 &middot; Binary Search: Rightmost Occurrence</a>
+<a href="#p17">17 &middot; Binary Search: Rotated Sorted Array</a>
+<a href="#p18">18 &middot; Binary Search: Peak Element</a>
+<a href="#p19">19 &middot; Binary Search: Answer Space</a>
+<div class="toc-section">Kadane&rsquo;s</div>
+<a href="#p20">20 &middot; Kadane&rsquo;s: Maximum Subarray Sum</a>
+<a href="#p21">21 &middot; Kadane&rsquo;s Variant: Maximum Product Subarray</a>
+<a href="#p22">22 &middot; Kadane&rsquo;s Variant: Circular Maximum Subarray</a>
+<div class="toc-section">In-Place</div>
+<a href="#p23">23 &middot; In-Place: Cyclic Sort</a>
+<a href="#p24">24 &middot; In-Place: Dutch National Flag</a>
+<a href="#p25">25 &middot; In-Place: Rotate Array Right by K</a>
+<a href="#p26">26 &middot; In-Place: Reverse Segments</a>
+<div class="toc-section">Sorting</div>
+<a href="#p27">27 &middot; Sorting: Custom Comparator</a>
+<a href="#p28">28 &middot; Sorting: Merge Intervals</a>
+<a href="#p29">29 &middot; Sorting: Meeting Rooms / Overlap Check</a>
+<div class="toc-section">Greedy</div>
+<a href="#p30">30 &middot; Greedy: Jump Game (Can Reach End?)</a>
+<a href="#p31">31 &middot; Greedy: Jump Game II (Min Jumps)</a>
+<a href="#p32">32 &middot; Greedy: Gas Station Circular Tour</a>
+<a href="#p33">33 &middot; Greedy: Assign Cookies</a>
+<div class="toc-section">Matrix</div>
+<a href="#p34">34 &middot; Matrix: Spiral Order Traversal</a>
+<a href="#p35">35 &middot; Matrix: Set Row/Col Zero</a>
+<a href="#p36">36 &middot; Matrix: Rotate 90 Degrees In-Place</a>
+<a href="#p37">37 &middot; Matrix: Word Search (DFS on Grid)</a>
+<div class="toc-section">Hashmap</div>
+<a href="#p38">38 &middot; Hashmap: Two Sum (Single Pass)</a>
+<a href="#p39">39 &middot; Hashmap: Subarray Sum Equals K</a>
+<a href="#p40">40 &middot; Hashmap: Longest Consecutive Sequence</a>
+<a href="#p41">41 &middot; Hashmap: Group Anagrams</a>
+<a href="#p42">42 &middot; Hashmap: Top K Frequent Elements</a>
+<div class="toc-section">Hard Classics</div>
+<a href="#p43">43 &middot; Hard: Trapping Rain Water</a>
+<a href="#p44">44 &middot; Hard: Largest Rectangle in Histogram</a>
+<a href="#p45">45 &middot; Hard: Median of Two Sorted Arrays</a>
+<a href="#p46">46 &middot; Hard: Next Permutation</a>
+<a href="#p47">47 &middot; Hard: First Missing Positive</a>
+<a href="#p48">48 &middot; Hard: Count of Smaller Numbers After Self</a>
+<div class="toc-section">Monotonic / Bit / Advanced</div>
+<a href="#p49">49 &middot; Monotonic Stack: Next Greater Element</a>
+<a href="#p50">50 &middot; Monotonic Stack: Daily Temperatures</a>
+<a href="#p51">51 &middot; Bit Manipulation: Single Number (XOR)</a>
+<a href="#p52">52 &middot; Bit Manipulation: Missing Number</a>
+<a href="#p53">53 &middot; Divide &amp; Conquer: Inversion Count</a>
+<a href="#p54">54 &middot; Difference Array: Range Update O(1)</a>
+</div>
+
+<!-- ================================================================ P01 -->
+<div class="card" id="p01">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 01</span>
+    <span class="pattern-name">Prefix Sum: Range Query</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Imagine you run a cash register and your boss keeps asking: "what were total sales between hour 3 and hour 7?"
+    You could add them up from scratch each time — but that is slow.
+    Instead, you write down a running total after each hour. Then any range question is just one subtraction: total-up-to-hour-7 minus total-up-to-hour-2.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    sum(l, r) = prefix[r] &minus; prefix[l&minus;1]. Build the prefix array once in O(n), answer every range query in O(1). You are trading a little extra space for instant answers.
+  </div>
+
+  <div class="section-label">&#9314; Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Create a <code>prefix[]</code> array the same length as the input array.</li>
+    <li>Set <code>prefix[0] = arr[0]</code> — the first running total is just the first element.</li>
+    <li>For every index <code>i</code> from 1 to n&minus;1: <code>prefix[i] = prefix[i&minus;1] + arr[i]</code>.</li>
+    <li>To answer "what is the sum of arr[l..r]?": return <code>prefix[r] - prefix[l-1]</code>.</li>
+    <li>Special case: if l == 0, there is no left side to subtract, so return <code>prefix[r]</code> directly.</li>
+  </ol></div>
+
+  <div class="section-label">Diagram</div>
+  <div class="diagram">arr:    [  2,   3,   1,   5,   4 ]
+index:    0    1    2    3    4
+
+prefix: [  2,   5,   6,  11,  15 ]
+          +3   +1   +5   +4
+
+Query sum(1, 3) = prefix[3] - prefix[0] = 11 - 2 = 9
+  check: arr[1]+arr[2]+arr[3] = 3+1+5 = 9  ✓</div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+
+/* Build prefix sum array.
+   After calling this, prefix[i] holds the sum of arr[0..i]. */
+void build_prefix(int *arr, int *prefix, int n) {
+    prefix[0] = arr[0];               /* first running total is just arr[0] itself */
+    for (int i = 1; i &lt; n; i++)      /* visit every remaining element left to right */
+        prefix[i] = prefix[i-1] + arr[i]; /* add this element to the previous running total */
+}
+
+/* Return the sum of arr[l..r] inclusive, in O(1). */
+int range_sum(int *prefix, int l, int r) {
+    if (l == 0)                        /* nothing to the left of index 0 to subtract */
+        return prefix[r];              /* prefix[r] already equals sum of arr[0..r] */
+    return prefix[r] - prefix[l-1];   /* total up to r, minus total up to (l-1) */
+}
+
+int main(void) {
+    int arr[]  = {2, 3, 1, 5, 4};
+    int n      = 5;
+    int prefix[5];
+
+    build_prefix(arr, prefix, n);
+
+    printf("%d\n", range_sum(prefix, 1, 3)); /* 9  (3+1+5) */
+    printf("%d\n", range_sum(prefix, 0, 4)); /* 15 (whole array) */
+    return 0;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">arr = [2, 3, 1, 5, 4],  n = 5
+
+BUILD prefix array:
+  i=0: prefix[0] = arr[0]                = 2
+  i=1: prefix[1] = prefix[0] + arr[1]   = 2 + 3  =  5
+  i=2: prefix[2] = prefix[1] + arr[2]   = 5 + 1  =  6
+  i=3: prefix[3] = prefix[2] + arr[3]   = 6 + 5  = 11
+  i=4: prefix[4] = prefix[3] + arr[4]   = 11 + 4 = 15
+
+QUERY range_sum(prefix, 1, 3):
+  l=1, not 0, so: prefix[3] - prefix[0] = 11 - 2 = 9  ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Accessing prefix[-1] when l = 0</div>
+    <p>If you blindly write <code>prefix[r] - prefix[l-1]</code> and l is 0, you access <code>prefix[-1]</code> — that is reading random memory or crashing. Always check for l == 0 first. Alternatively, build a 1-indexed prefix array of size n+1 where <code>prefix[0] = 0</code>; then the formula <code>prefix[r+1] - prefix[l]</code> works for all l without any special case.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>303 &middot; Range Sum Query - Immutable</span>
+    <span>560 &middot; Subarray Sum Equals K</span>
+    <span>238 &middot; Product of Array Except Self</span>
+  </div>
+  <div class="trigger">When you see: repeated range sum queries on a static array &#8594; think: build a prefix sum array first, then answer each query in O(1)</div>
+</div>
+<!-- ================================================================ P02 -->
+<div class="card" id="p02">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 02</span>
+    <span class="pattern-name">Prefix Sum: Running Total / Pivot Index</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    You are balancing a see-saw. You want to find the one seat where, if you sit there, the total weight on your left equals the total weight on your right.
+    You do not need to try every seat and recount both sides from scratch each time.
+    Just keep a running left-total as you walk from left to right, and compute the right-total instantly from: right = total &minus; left &minus; current.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    At any index i: right_sum = total &minus; left_sum &minus; arr[i]. You never need a second pass or a separate right array. One pass with a running left total is enough.
+  </div>
+
+  <div class="section-label">&#9314; Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Compute the grand total of the entire array in one pass.</li>
+    <li>Initialize <code>left_sum = 0</code>.</li>
+    <li>Walk index i from 0 to n&minus;1.</li>
+    <li>At each i: <code>right_sum = total - left_sum - arr[i]</code>.</li>
+    <li>If <code>left_sum == right_sum</code>, index i is the pivot. Return it.</li>
+    <li>Otherwise: <code>left_sum += arr[i]</code> — add current to left before moving on.</li>
+  </ol></div>
+
+  <div class="section-label">Diagram</div>
+  <div class="diagram">arr = [1, 7, 3, 6, 5, 6]   total = 28
+
+i=0: left=0  arr[0]=1  right=28-0-1=27  0≠27
+i=1: left=1  arr[1]=7  right=28-1-7=20  1≠20
+i=2: left=8  arr[2]=3  right=28-8-3=17  8≠17
+i=3: left=11 arr[3]=6  right=28-11-6=11  11==11  ← pivot at index 3 ✓</div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+
+int pivot_index(int *arr, int n) {
+    int total = 0;
+    for (int i = 0; i &lt; n; i++)     /* first pass: sum up the entire array */
+        total += arr[i];
+
+    int left_sum = 0;                /* running sum of everything to the LEFT of i */
+    for (int i = 0; i &lt; n; i++) {
+        /* right_sum = everything NOT on the left and NOT the current element */
+        int right_sum = total - left_sum - arr[i];
+
+        if (left_sum == right_sum)   /* left and right are balanced at this index */
+            return i;                /* this is the pivot */
+
+        left_sum += arr[i];          /* current element joins the left side for next iteration */
+    }
+    return -1;                       /* no pivot found */
+}
+
+int main(void) {
+    int arr[] = {1, 7, 3, 6, 5, 6};
+    printf("%d\n", pivot_index(arr, 6)); /* prints 3 */
+    return 0;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">arr = [1, 7, 3, 6, 5, 6],  total = 28
+
+i=0: left=0,  right=28-0-1 =27  → 0≠27, left becomes 1
+i=1: left=1,  right=28-1-7 =20  → 1≠20, left becomes 8
+i=2: left=8,  right=28-8-3 =17  → 8≠17, left becomes 11
+i=3: left=11, right=28-11-6=11  → 11==11 ✓  return 3</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Adding arr[i] to left_sum at the wrong time</div>
+    <p>Do NOT add <code>arr[i]</code> to <code>left_sum</code> before computing <code>right_sum</code>. The current element at index i belongs to neither side — it is the pivot candidate itself. Compute right_sum first, check equality, then advance left_sum.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>724 &middot; Find Pivot Index</span>
+    <span>1991 &middot; Find the Middle Index in Array</span>
+    <span>525 &middot; Contiguous Array</span>
+  </div>
+  <div class="trigger">When you see: find index where left sum equals right sum &#8594; think: running left total + derive right from total</div>
+</div>
+
+<!-- ================================================================ P03 -->
+<div class="card" id="p03">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 03</span>
+    <span class="pattern-name">Prefix Sum: 2D Matrix Range Sum</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    You have a city map on graph paper. Your boss keeps asking: "what is the total population in this rectangle?"
+    Drawing a box on the map and counting every cell inside is slow (O(rows&times;cols) per query).
+    Instead, build a "census table" where every cell stores the total population from the top-left corner up to that cell. Then any rectangle query is four table lookups and three additions.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Use inclusion-exclusion: rect(r1,c1,r2,c2) = P[r2][c2] &minus; P[r1&minus;1][c2] &minus; P[r2][c1&minus;1] + P[r1&minus;1][c1&minus;1]. Build once in O(n&times;m), query each rectangle in O(1).
+  </div>
+
+  <div class="section-label">&#9314; Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Build a 1-indexed prefix table P of size (rows+1) &times; (cols+1), with row-0 and col-0 all zeroed.</li>
+    <li>For each cell (r,c): <code>P[r][c] = grid[r-1][c-1] + P[r-1][c] + P[r][c-1] - P[r-1][c-1]</code>.</li>
+    <li>To query rectangle with top-left (r1,c1) and bottom-right (r2,c2) (0-indexed): shift to 1-indexed, then apply inclusion-exclusion.</li>
+  </ol></div>
+
+  <div class="section-label">Diagram</div>
+  <div class="diagram">grid:          prefix P (1-indexed):
+ 1  2  3        0  0  0  0
+ 4  5  6   →   0  1  3  6
+ 7  8  9        0  5 12 21
+                0 12 27 45
+
+Query rect (1,1)→(2,2) in 0-indexed = (2,2)→(3,3) in 1-indexed:
+  P[3][3] - P[1][3] - P[3][1] + P[1][1] = 45 - 6 - 12 + 1 = 28
+  check: 5+6+8+9 = 28 ✓</div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#define MAXN 101
+
+int P[MAXN+1][MAXN+1]; /* 1-indexed prefix table, row-0 and col-0 stay 0 */
+
+/* Build 2D prefix sum. grid is 0-indexed [rows][cols]. */
+void build_2d(int grid[MAXN][MAXN], int rows, int cols) {
+    for (int r = 1; r &lt;= rows; r++) {
+        for (int c = 1; c &lt;= cols; c++) {
+            P[r][c] = grid[r-1][c-1]   /* current cell value */
+                    + P[r-1][c]         /* sum of column above */
+                    + P[r][c-1]         /* sum of row to the left */
+                    - P[r-1][c-1];      /* top-left corner was counted twice, remove once */
+        }
+    }
+}
+
+/* Sum of rectangle top-left (r1,c1) to bottom-right (r2,c2), 0-indexed. */
+int query_2d(int r1, int c1, int r2, int c2) {
+    r1++; c1++; r2++; c2++;            /* shift to 1-indexed to use prefix table */
+    return P[r2][c2]
+         - P[r1-1][c2]                 /* remove the strip above the rectangle */
+         - P[r2][c1-1]                 /* remove the strip to the left */
+         + P[r1-1][c1-1];             /* add back corner that was subtracted twice */
+}
+
+int main(void) {
+    int grid[MAXN][MAXN] = {{1,2,3},{4,5,6},{7,8,9}};
+    build_2d(grid, 3, 3);
+    printf("%d\n", query_2d(1, 1, 2, 2)); /* 28 */
+    return 0;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">grid = [[1,2,3],[4,5,6],[7,8,9]]
+
+Build P (1-indexed):
+  P[1][1]=1,  P[1][2]=3,  P[1][3]=6
+  P[2][1]=5,  P[2][2]=12, P[2][3]=21
+  P[3][1]=12, P[3][2]=27, P[3][3]=45
+
+Query (1,1)→(2,2) 0-indexed → (2,2)→(3,3) 1-indexed:
+  45 - P[1][3] - P[3][1] + P[1][1]
+= 45 - 6 - 12 + 1 = 28  ✓ (5+6+8+9=28)</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Using 0-indexed prefix table directly</div>
+    <p>With a 0-indexed prefix table, querying a rectangle that touches the top row or left column requires messy boundary checks. Use a 1-indexed table (size n+1 &times; m+1 with zeroed border) to eliminate all edge cases. The formula then works uniformly for every rectangle.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>304 &middot; Range Sum Query 2D - Immutable</span>
+    <span>1314 &middot; Matrix Block Sum</span>
+    <span>363 &middot; Max Sum of Rectangle No Larger Than K</span>
+  </div>
+  <div class="trigger">When you see: repeated rectangle sum queries on a static grid &#8594; think: 2D prefix sum with 1-indexed table + inclusion-exclusion</div>
+</div>
+
+<!-- ================================================================ P04 -->
+<div class="card" id="p04">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 04</span>
+    <span class="pattern-name">Two Pointer: Sorted Array Pair Sum</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Two people stand at opposite ends of a hallway and walk toward each other.
+    If the sum of their positions is too large, the person on the right takes a step left (shrinks the sum).
+    If the sum is too small, the person on the left takes a step right (grows the sum).
+    They keep adjusting until they find the target or meet in the middle.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Because the array is sorted, moving the right pointer left always decreases the sum, and moving the left pointer right always increases it. You never need to try every pair.
+  </div>
+
+  <div class="section-label">&#9314; Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Set <code>left = 0</code> (smallest element) and <code>right = n-1</code> (largest element).</li>
+    <li>Compute <code>sum = arr[left] + arr[right]</code>.</li>
+    <li>If <code>sum == target</code>: found the pair, return it.</li>
+    <li>If <code>sum &gt; target</code>: the right value is too large — do <code>right--</code>.</li>
+    <li>If <code>sum &lt; target</code>: the left value is too small — do <code>left++</code>.</li>
+    <li>Repeat until <code>left &gt;= right</code>.</li>
+  </ol></div>
+
+  <div class="section-label">Diagram</div>
+  <div class="diagram">arr = [1, 3, 6, 8, 11],  target = 9
+
+Step 1: left=0(1)  right=4(11) sum=12 > 9 → right--
+Step 2: left=0(1)  right=3(8)  sum=9  == 9 → FOUND ✓</div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+
+/* Find pair in sorted array summing to target.
+   Returns 1 if found (indices in *l, *r), 0 otherwise. */
+int two_sum_sorted(int *arr, int n, int target, int *l, int *r) {
+    int left  = 0;       /* start at the smallest value */
+    int right = n - 1;   /* start at the largest value */
+
+    while (left &lt; right) {                        /* stop when pointers meet */
+        int sum = arr[left] + arr[right];
+
+        if (sum == target) {                       /* exact match found */
+            *l = left; *r = right;
+            return 1;
+        } else if (sum &gt; target) {
+            right--;   /* sum too big: the right value is too large, shrink it */
+        } else {
+            left++;    /* sum too small: the left value is too small, grow it */
+        }
+    }
+    return 0;           /* no valid pair exists */
+}
+
+int main(void) {
+    int arr[] = {1, 3, 6, 8, 11};
+    int l, r;
+    if (two_sum_sorted(arr, 5, 9, &amp;l, &amp;r))
+        printf("indices %d and %d\n", l, r); /* indices 0 and 3 */
+    return 0;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">arr = [1, 3, 6, 8, 11],  target = 9
+
+left=0(val=1), right=4(val=11) → sum=12 > 9 → right--
+left=0(val=1), right=3(val=8)  → sum=9 ==9  → FOUND: indices 0, 3 ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: This only works on a SORTED array</div>
+    <p>The two-pointer convergence relies on knowing that moving right inward reduces the sum and moving left inward increases it. On an unsorted array this logic is broken. Sort first (O(n log n)), or use a hash map for O(n) unsorted two-sum (see Pattern 38).</p>
+  </div>
+
+  <div class="leetcode">
+    <span>167 &middot; Two Sum II - Input Array is Sorted</span>
+    <span>15 &middot; 3Sum</span>
+    <span>977 &middot; Squares of a Sorted Array</span>
+  </div>
+  <div class="trigger">When you see: sorted array + find pair with given sum &#8594; think: left and right pointer converging from both ends</div>
+</div>
+
+<!-- ================================================================ P05 -->
+<div class="card" id="p05">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 05</span>
+    <span class="pattern-name">Two Pointer: Remove Duplicates In-Place</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    A bouncer at a club checks IDs. Only new, unique people get in.
+    He keeps one hand on the door (the write pointer, only advances when someone unique arrives) and one hand scanning the line (the read pointer, always moving forward).
+    Duplicates are seen but not written to the door.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Two pointers on the same array: slow pointer (write) marks where the next unique element goes, fast pointer (read) scans forward looking for new values. When read finds something new, write it at slow and advance slow.
+  </div>
+
+  <div class="section-label">&#9314; Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Start <code>write = 0</code> (first unique slot is position 0, which already holds arr[0]).</li>
+    <li>Start <code>read = 1</code> (begin scanning from the second element).</li>
+    <li>If <code>arr[read] != arr[write]</code>: a new unique value found — increment write, copy arr[read] to arr[write].</li>
+    <li>If <code>arr[read] == arr[write]</code>: duplicate — just advance read, do nothing to write.</li>
+    <li>Repeat until read reaches end. Return <code>write + 1</code> (the new length).</li>
+  </ol></div>
+
+  <div class="section-label">Diagram</div>
+  <div class="diagram">arr = [1, 1, 2, 3, 3, 4]
+
+write=0(1), read=1(1): same → skip
+write=0(1), read=2(2): diff → write++, arr[1]=2  → [1,2,2,3,3,4]
+write=1(2), read=3(3): diff → write++, arr[2]=3  → [1,2,3,3,3,4]
+write=2(3), read=4(3): same → skip
+write=2(3), read=5(4): diff → write++, arr[3]=4  → [1,2,3,4,3,4]
+return write+1 = 4</div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* Remove duplicates from sorted array in-place.
+   Returns the new length. Elements beyond new length may be garbage. */
+int remove_duplicates(int *arr, int n) {
+    if (n == 0) return 0;
+
+    int write = 0;   /* index of the last confirmed unique element */
+
+    for (int read = 1; read &lt; n; read++) {      /* read scans every element */
+        if (arr[read] != arr[write]) {           /* found a value different from last unique */
+            write++;                             /* advance to next write slot */
+            arr[write] = arr[read];              /* place new unique value there */
+        }
+        /* if arr[read] == arr[write]: duplicate, read advances but write stays */
+    }
+    return write + 1;   /* write is 0-indexed, so length = write + 1 */
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">arr = [1, 1, 2, 3, 3],  n=5
+
+write=0
+read=1: arr[1]=1 == arr[0]=1 → duplicate, skip
+read=2: arr[2]=2 != arr[0]=1 → write=1, arr[1]=2    arr=[1,2,2,3,3]
+read=3: arr[3]=3 != arr[1]=2 → write=2, arr[2]=3    arr=[1,2,3,3,3]
+read=4: arr[4]=3 == arr[2]=3 → duplicate, skip
+
+return write+1 = 3   (arr[0..2] = [1,2,3])  ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Starting read at 0 instead of 1</div>
+    <p>If read starts at 0, the first element compares against itself, incrementing write incorrectly. Start read at 1 — element at index 0 is always unique (nothing before it), so write starts at 0 pointing to it, and read begins looking for something different.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>26 &middot; Remove Duplicates from Sorted Array</span>
+    <span>27 &middot; Remove Element</span>
+    <span>80 &middot; Remove Duplicates from Sorted Array II</span>
+  </div>
+  <div class="trigger">When you see: remove or compact elements in-place from a sorted array &#8594; think: slow write pointer + fast read pointer</div>
+</div>
+
+<!-- ================================================================ P06 -->
+<div class="card" id="p06">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 06</span>
+    <span class="pattern-name">Two Pointer: Move Zeros to End</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Imagine sorting a line of people where some are "ghosts" (zeros) — they take up space but don't count.
+    You want all real people at the front in their original order, and ghosts pushed to the back.
+    A write pointer marks where the next real person goes. A read pointer scans forward and whenever it finds a real person, it hands them to the write pointer.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Read pointer scans all elements. Write pointer only advances when a non-zero is found. After the scan, everything from write onward gets filled with zeros.
+  </div>
+
+  <div class="section-label">&#9314; Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Set <code>write = 0</code>.</li>
+    <li>For each <code>read</code> from 0 to n&minus;1: if <code>arr[read] != 0</code>, set <code>arr[write] = arr[read]</code> and increment write.</li>
+    <li>After the loop, fill positions write to n&minus;1 with zeros.</li>
+  </ol></div>
+
+  <div class="section-label">Diagram</div>
+  <div class="diagram">arr = [0, 1, 0, 3, 12]
+
+read=0(0):  zero, skip write
+read=1(1):  non-zero → arr[0]=1, write=1   [1, 1, 0, 3, 12]
+read=2(0):  zero, skip write
+read=3(3):  non-zero → arr[1]=3, write=2   [1, 3, 0, 3, 12]
+read=4(12): non-zero → arr[2]=12, write=3  [1, 3, 12, 3, 12]
+fill [3..4] with 0  →                      [1, 3, 12, 0, 0] ✓</div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* Move all zeros to end of array, preserving order of non-zero elements.
+   Done in-place, O(n) time, O(1) space. */
+void move_zeros(int *arr, int n) {
+    int write = 0;                          /* next position for a non-zero element */
+
+    for (int read = 0; read &lt; n; read++) {
+        if (arr[read] != 0) {              /* found a real (non-zero) element */
+            arr[write] = arr[read];        /* place it at the next write slot */
+            write++;                       /* advance write; next non-zero goes here */
+        }
+        /* zeros: read advances but write stays, effectively skipping them */
+    }
+
+    while (write &lt; n)          /* fill remaining slots (where zeros belong) */
+        arr[write++] = 0;
+}
+</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">arr = [0, 1, 0, 3, 12],  n=5,  write=0
+
+read=0: arr[0]=0  → skip
+read=1: arr[1]=1  → arr[0]=1, write=1
+read=2: arr[2]=0  → skip
+read=3: arr[3]=3  → arr[1]=3, write=2
+read=4: arr[4]=12 → arr[2]=12, write=3
+
+fill positions 3,4 with 0 → arr = [1, 3, 12, 0, 0] ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Swapping instead of overwriting breaks nothing, but missing the fill step does</div>
+    <p>Some versions swap arr[write] and arr[read] instead of just overwriting. Both work, but if you overwrite (not swap), you MUST fill trailing positions with zeros at the end. If you swap, the zeros get shuffled into place automatically so no fill step is needed. Choose one approach and stick to it.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>283 &middot; Move Zeroes</span>
+    <span>27 &middot; Remove Element</span>
+    <span>905 &middot; Sort Array By Parity</span>
+  </div>
+  <div class="trigger">When you see: push a category of elements to one end while keeping others in order &#8594; think: write pointer only advances on the "keep" condition</div>
+</div>
+
+<!-- ================================================================ P07 -->
+<div class="card" id="p07">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 07</span>
+    <span class="pattern-name">Two Pointer: Three Sum</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    You need three numbers that sum to zero. Trying every trio is O(n&sup3;) — too slow.
+    Instead: sort the array, then pin one number with a regular loop, and find the other two using the two-pointer pair-sum trick (Pattern 04) on the rest of the array.
+    Pinning one number turns a three-number problem into a two-number problem you already know how to solve.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Fix index i, set target for the remaining pair as <code>0 - arr[i]</code>, then use left/right two-pointer on the sorted subarray <code>[i+1 .. n-1]</code>. Sort first so you can skip duplicates cleanly.
+  </div>
+
+  <div class="section-label">&#9314; Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Sort the array.</li>
+    <li>For each i from 0 to n&minus;3: if <code>arr[i] &gt; 0</code>, break (sorted, so no triple can sum to 0). Skip i if it duplicates arr[i&minus;1].</li>
+    <li>Set <code>left = i+1</code>, <code>right = n-1</code>.</li>
+    <li>Compute <code>sum = arr[i] + arr[left] + arr[right]</code>.</li>
+    <li>If sum == 0: record the triple, then skip duplicate lefts and rights, then advance both pointers.</li>
+    <li>If sum &gt; 0: right-- (need smaller). If sum &lt; 0: left++ (need larger).</li>
+  </ol></div>
+
+  <div class="section-label">Diagram</div>
+  <div class="diagram">arr = [-4,-1,-1,0,1,2]  (sorted)
+
+i=0, arr[i]=-4:  left=1(-1), right=5(2): sum=-3 < 0 → left++
+                 left=2(-1), right=5(2): sum=-3 < 0 → left++
+                 left=3(0),  right=5(2): sum=-2 < 0 → left++
+                 left=4(1),  right=5(2): sum=-1 < 0 → left++ → left>=right, done
+i=1, arr[i]=-1:  left=2(-1), right=5(2): sum=0  ✓ → record [-1,-1,2], skip dups
+                 left=3(0),  right=4(1): sum=0  ✓ → record [-1,0,1]</div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+int cmp_int(const void *a, const void *b) {
+    return *(int*)a - *(int*)b;   /* ascending comparator for qsort */
+}
+
+/* Find all unique triplets that sum to zero.
+   result is a caller-allocated [n][3] array. Returns count of triplets. */
+int three_sum(int *arr, int n, int result[][3]) {
+    qsort(arr, n, sizeof(int), cmp_int);   /* sort so two-pointer logic works */
+    int count = 0;
+
+    for (int i = 0; i &lt; n - 2; i++) {
+        if (arr[i] &gt; 0) break;             /* sorted: no triple can sum to 0 now */
+        if (i &gt; 0 &amp;&amp; arr[i] == arr[i-1]) continue; /* skip duplicate fixed values */
+
+        int left = i + 1, right = n - 1;
+
+        while (left &lt; right) {
+            int sum = arr[i] + arr[left] + arr[right];
+
+            if (sum == 0) {
+                result[count][0] = arr[i];
+                result[count][1] = arr[left];
+                result[count][2] = arr[right];
+                count++;
+                /* skip duplicate values on both sides to avoid duplicate triplets */
+                while (left &lt; right &amp;&amp; arr[left]  == arr[left+1])  left++;
+                while (left &lt; right &amp;&amp; arr[right] == arr[right-1]) right--;
+                left++; right--;             /* move both pointers past the used values */
+            } else if (sum &gt; 0) {
+                right--;   /* sum too big: right value too large */
+            } else {
+                left++;    /* sum too small: left value too small */
+            }
+        }
+    }
+    return count;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">arr (after sort) = [-1, 0, 1, 2, -1, -4] → [-4,-1,-1,0,1,2]
+
+i=1, arr[1]=-1, left=2(-1), right=5(2): sum=0 → record [-1,-1,2], count=1
+  skip dups: left stays (no dup), right stays → left++, right--
+  left=3(0), right=4(1): sum=0 → record [-1,0,1], count=2
+  left++, right-- → left=4, right=3 → left>=right, break
+
+i=2, arr[2]=-1: i>0 && arr[2]==arr[1] → skip (duplicate fixed value)
+
+Final: [[-1,-1,2], [-1,0,1]]  ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Duplicate triplets from not skipping duplicates</div>
+    <p>If you record a match and immediately do <code>left++; right--</code> without first advancing past identical values, you will record the same triplet multiple times. After finding a match, advance both pointers past any consecutive equal values, then do the final left++/right--.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>15 &middot; 3Sum</span>
+    <span>16 &middot; 3Sum Closest</span>
+    <span>18 &middot; 4Sum</span>
+  </div>
+  <div class="trigger">When you see: find unique triplets summing to a target &#8594; think: sort + fix one element + two-pointer for the remaining pair</div>
+</div>
+
+<!-- ================================================================ P08 -->
+<div class="card" id="p08">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 08</span>
+    <span class="pattern-name">Two Pointer: Container With Most Water</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    You have a row of walls of different heights. You want to pick two walls that, together, hold the most water.
+    The amount of water is: distance between walls &times; height of the shorter wall (because water spills over the shorter one).
+    The trick is deciding which wall to move inward. Hint: always move the shorter one — moving the taller one can only hurt you.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    The shorter wall is the bottleneck. Moving the taller wall inward shrinks width AND can only keep or lower the min-height — guaranteed worse. Moving the shorter wall is the only chance to find a taller replacement that compensates for reduced width.
+  </div>
+
+  <div class="section-label">&#9314; Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Set <code>left = 0</code>, <code>right = n-1</code>, <code>max_area = 0</code>.</li>
+    <li>Compute area: <code>(right - left) * min(heights[left], heights[right])</code>.</li>
+    <li>Update max_area if this area is larger.</li>
+    <li>Move the pointer pointing to the shorter wall: if heights[left] &lt; heights[right], left++; else right--.</li>
+    <li>Repeat until left &gt;= right.</li>
+  </ol></div>
+
+  <div class="section-label">Diagram</div>
+  <div class="diagram">heights = [1, 8, 6, 2, 5, 4, 8, 3, 7]
+indices:   0  1  2  3  4  5  6  7  8
+
+Step 1: l=0(h=1) r=8(h=7)  area=8*1=8   shorter=left → left++
+Step 2: l=1(h=8) r=8(h=7)  area=7*7=49  shorter=right → right--
+Step 3: l=1(h=8) r=7(h=3)  area=6*3=18  shorter=right → right--
+Step 4: l=1(h=8) r=6(h=8)  area=5*8=40  equal→right-- ...
+...max_area = 49 ✓</div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* Return maximum water area between any two heights. */
+int max_water(int *h, int n) {
+    int left     = 0;       /* left wall starts at the beginning */
+    int right    = n - 1;   /* right wall starts at the end */
+    int max_area = 0;
+
+    while (left &lt; right) {
+        int width  = right - left;                    /* horizontal distance */
+        int height = h[left] &lt; h[right] ? h[left] : h[right]; /* shorter wall limits water */
+        int area   = width * height;
+
+        if (area &gt; max_area) max_area = area;         /* keep the best seen so far */
+
+        if (h[left] &lt; h[right])
+            left++;    /* left is the bottleneck; only moving left can help */
+        else
+            right--;   /* right is bottleneck (or equal); move it */
+    }
+    return max_area;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">h = [1, 8, 6, 2, 5, 4, 8, 3, 7]
+
+l=0(1),  r=8(7): width=8,  min=1,  area=8   max=8   left<right → l++
+l=1(8),  r=8(7): width=7,  min=7,  area=49  max=49  left>right → r--
+l=1(8),  r=7(3): width=6,  min=3,  area=18  max=49  left>right → r--
+l=1(8),  r=6(8): width=5,  min=8,  area=40  max=49  equal      → r--
+... (remaining areas all < 49)
+Answer: 49 ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Moving the taller wall hoping to find more water</div>
+    <p>Moving the taller wall inward always reduces width. The height can only stay the same or decrease (since you already have the shorter wall as the cap). You are guaranteed to lose area or stay equal. The only rational move is to give the shorter wall a chance to improve. Always move the shorter wall.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>11 &middot; Container With Most Water</span>
+    <span>42 &middot; Trapping Rain Water</span>
+    <span>84 &middot; Largest Rectangle in Histogram</span>
+  </div>
+  <div class="trigger">When you see: two walls / bars + maximize area between them &#8594; think: two pointers from both ends, always move the shorter wall inward</div>
+</div>
+
+<!-- ================================================================ P09 -->
+<div class="card" id="p09">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 09</span>
+    <span class="pattern-name">Sliding Window: Fixed Size Maximum Sum</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    A camera frame of fixed width slides across a film strip one frame at a time.
+    At each position you see exactly k elements.
+    Instead of adding up all k elements at every position (O(n&times;k)), you maintain a running window sum: subtract the element leaving the left edge, add the element entering the right edge. O(n) total.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    When a fixed-size window slides one step right, only one element leaves (the leftmost) and one enters (the new right). The rest of the window is unchanged. So window_sum updates in O(1) per step.
+  </div>
+
+  <div class="section-label">&#9314; Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Compute the sum of the first window: arr[0..k-1].</li>
+    <li>Set max_sum = window_sum.</li>
+    <li>For each i from k to n&minus;1: add arr[i] (new right element), subtract arr[i&minus;k] (old left element).</li>
+    <li>Update max_sum if window_sum is larger.</li>
+  </ol></div>
+
+  <div class="section-label">Diagram</div>
+  <div class="diagram">arr = [2, 3, 4, 1, 5],  k = 3
+
+Window [0..2]:       2+3+4 = 9   ← initial
+Slide to [1..3]: +1 -2 = 9-2+1 = 8
+Slide to [2..4]: +5 -3 = 8-3+5 = 10 ← max ✓</div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* Maximum sum of any contiguous subarray of exactly k elements. */
+int max_sum_window(int *arr, int n, int k) {
+    int window_sum = 0;
+
+    /* build the first window [0 .. k-1] */
+    for (int i = 0; i &lt; k; i++)
+        window_sum += arr[i];
+
+    int max_sum = window_sum;   /* first window is our initial best */
+
+    /* slide the window one step at a time */
+    for (int i = k; i &lt; n; i++) {
+        window_sum += arr[i];       /* new element enters from the right */
+        window_sum -= arr[i - k];   /* old element exits from the left */
+        /* window now covers [i-k+1 .. i] */
+        if (window_sum &gt; max_sum)
+            max_sum = window_sum;
+    }
+    return max_sum;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">arr = [2, 3, 4, 1, 5],  k=3
+
+Init window [0..2]: sum = 2+3+4 = 9,  max=9
+
+i=3: +arr[3]=1, -arr[0]=2 → sum=9+1-2=8   max=9
+i=4: +arr[4]=5, -arr[1]=3 → sum=8+5-3=10  max=10
+
+Answer: 10  ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Using i&minus;k instead of i&minus;k+1 for the window left edge</div>
+    <p>When the right edge is at index i (after the slide loop step), the left edge is at <code>i - k + 1</code>. The element leaving the window is <code>arr[i - k]</code> (the element just before the new left edge). Getting this wrong shifts the window and produces wrong sums. Draw the window bounds explicitly when in doubt.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>643 &middot; Maximum Average Subarray I</span>
+    <span>438 &middot; Find All Anagrams in a String</span>
+    <span>567 &middot; Permutation in String</span>
+  </div>
+  <div class="trigger">When you see: fixed-size subarray + max/min/average &#8594; think: build first window, then slide by subtracting old left and adding new right</div>
+</div>
+
+<!-- ================================================================ P10 -->
+<div class="card" id="p10">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 10</span>
+    <span class="pattern-name">Sliding Window: Variable Size (Shrink When Invalid)</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Imagine a rubber band stretched around a group of items.
+    You keep stretching it to include the next item on the right.
+    When the group violates some rule (too many items, sum too large, etc.), you snap the left edge forward until the rule is satisfied again.
+    The window grows and shrinks dynamically — it's never fixed in size.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Right pointer always moves forward (O(n) total). Left pointer only moves forward to fix violations. Since both pointers only move right, the total work is O(n) — each element enters and leaves the window at most once.
+  </div>
+
+  <div class="section-label">&#9314; Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Initialize <code>left = 0</code>, <code>window_sum = 0</code>, <code>min_len = INT_MAX</code>.</li>
+    <li>Move right pointer forward, adding arr[right] to window_sum.</li>
+    <li>While the window satisfies the condition (sum &ge; target): record the window length, then shrink from left: subtract arr[left], left++.</li>
+    <li>Repeat until right reaches the end.</li>
+    <li>Return min_len (or 0 if never satisfied).</li>
+  </ol></div>
+
+  <div class="section-label">Diagram</div>
+  <div class="diagram">arr = [2, 3, 1, 2, 4, 3],  target = 7
+
+right=0: sum=2       < 7
+right=1: sum=5       < 7
+right=2: sum=6       < 7
+right=3: sum=8  >= 7 → len=4, shrink: -arr[0]=2, left=1, sum=6
+right=4: sum=10 >= 7 → len=4, shrink: -arr[1]=3, left=2, sum=7
+         sum=7  >= 7 → len=3, shrink: -arr[2]=1, left=3, sum=6
+right=5: sum=9  >= 7 → len=3, shrink: -arr[3]=2, left=4, sum=7
+         sum=7  >= 7 → len=2 ← new min! shrink: -arr[4]=4, left=5, sum=3
+Answer: 2 ✓</div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">#include &lt;limits.h&gt;
+
+/* Find length of smallest contiguous subarray with sum >= target.
+   Returns 0 if no such subarray exists. */
+int min_subarray_len(int *arr, int n, int target) {
+    int left       = 0;
+    int window_sum = 0;
+    int min_len    = INT_MAX;   /* start with "infinity"; any valid window beats this */
+
+    for (int right = 0; right &lt; n; right++) {
+        window_sum += arr[right];   /* expand: bring right element into window */
+
+        /* shrink from left for as long as the window condition holds */
+        while (window_sum &gt;= target) {
+            int len = right - left + 1;          /* current window size */
+            if (len &lt; min_len) min_len = len;    /* update best if smaller */
+            window_sum -= arr[left];             /* remove left element from window */
+            left++;                              /* shrink window from the left */
+        }
+    }
+    return min_len == INT_MAX ? 0 : min_len;   /* 0 means no valid subarray found */
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">arr = [2, 3, 1, 2, 4, 3],  target = 7
+
+right=0: sum=2  not>=7
+right=1: sum=5  not>=7
+right=2: sum=6  not>=7
+right=3: sum=8  >=7 → len=4(min=4), -arr[0]=2 left=1 sum=6 → not>=7
+right=4: sum=10 >=7 → len=4(min=4), -arr[1]=3 left=2 sum=7
+         sum=7  >=7 → len=3(min=3), -arr[2]=1 left=3 sum=6 → not>=7
+right=5: sum=9  >=7 → len=3(min=3), -arr[3]=2 left=4 sum=7
+         sum=7  >=7 → len=2(min=2), -arr[4]=4 left=5 sum=3 → not>=7
+
+return 2 ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Using an if instead of while for the shrink step</div>
+    <p>If you write <code>if (window_sum &gt;= target)</code> instead of <code>while (window_sum &gt;= target)</code>, you only shrink the window once per right-pointer step. You will miss cases where shrinking multiple times yields a shorter valid window. Always use <code>while</code> in the shrink step.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>209 &middot; Minimum Size Subarray Sum</span>
+    <span>3 &middot; Longest Substring Without Repeating Characters</span>
+    <span>76 &middot; Minimum Window Substring</span>
+  </div>
+  <div class="trigger">When you see: shortest/longest subarray + a condition that can be fixed by shrinking &#8594; think: variable sliding window with while-shrink on the left</div>
+</div>
+
+<!-- PATTERNS_END -->
+<script>hljs.highlightAll();</script>
+</body>
+</html>
