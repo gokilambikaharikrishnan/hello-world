@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C Pattern Library — Strings</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', system-ui, sans-serif; line-height: 1.7; padding: 2rem; max-width: 960px; margin: 0 auto; }
+h1 { color: #58a6ff; font-size: 2rem; margin-bottom: 0.5rem; }
+.subtitle { color: #8b949e; margin-bottom: 2rem; }
+nav a { color: #58a6ff; text-decoration: none; margin-right: 1.5rem; }
+nav a:hover { text-decoration: underline; }
+.card { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; }
+.pattern-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+.pattern-num { background: #388bfd; color: white; border-radius: 4px; padding: 0.2rem 0.6rem; font-size: 0.8rem; font-weight: bold; }
+.pattern-name { color: #e6edf3; font-size: 1.2rem; font-weight: bold; }
+.section-label { color: #8b949e; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 1rem; margin-bottom: 0.4rem; font-weight: bold; }
+.story { color: #c9d1d9; background: #0d1117; border-left: 3px solid #58a6ff; padding: 0.8rem 1rem; border-radius: 0 4px 4px 0; }
+.insight { color: #e6edf3; background: #0d1117; border-left: 3px solid #3fb950; padding: 0.8rem 1rem; border-radius: 0 4px 4px 0; }
+.steps { background: #0d1117; border-radius: 4px; padding: 1rem; }
+.steps ol { padding-left: 1.5rem; }
+.steps li { margin-bottom: 0.4rem; }
+.diagram { background: #0d1117; border: 1px solid #21262d; border-radius: 4px; padding: 1rem; font-family: monospace; font-size: 0.85rem; color: #79c0ff; white-space: pre; overflow-x: auto; }
+.dry-run { background: #0d1117; border: 1px dashed #30363d; border-radius: 4px; padding: 1rem; font-family: monospace; font-size: 0.85rem; color: #a5d6ff; white-space: pre; overflow-x: auto; }
+.gotcha { background: #2d1717; border: 1px solid #f85149; border-radius: 4px; padding: 1rem; margin-top: 1rem; }
+.gotcha-title { color: #f85149; font-weight: bold; margin-bottom: 0.4rem; }
+.gotcha p { color: #ffa198; font-size: 0.9rem; }
+.leetcode { margin-top: 0.8rem; }
+.leetcode span { background: #1f6feb22; border: 1px solid #1f6feb44; color: #79c0ff; border-radius: 12px; padding: 0.2rem 0.7rem; font-size: 0.8rem; margin-right: 0.5rem; display: inline-block; margin-bottom: 0.3rem; }
+.trigger { margin-top: 1rem; background: #0d1117; border: 1px solid #3fb950; border-radius: 4px; padding: 0.7rem 1rem; color: #3fb950; font-weight: bold; font-size: 0.9rem; }
+pre { border-radius: 6px !important; margin: 0.5rem 0 !important; }
+code.hljs { font-size: 0.82rem !important; }
+.toc { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; columns: 2; column-gap: 2rem; }
+.toc a { color: #58a6ff; text-decoration: none; display: block; padding: 0.15rem 0; font-size: 0.88rem; }
+.toc a:hover { color: #79c0ff; }
+.toc-section { color: #8b949e; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: bold; margin-top: 0.8rem; margin-bottom: 0.2rem; }
+</style>
+</head>
+<body>
+<nav><a href="index.html">&#8592; Back to Index</a></nav>
+<h1>C Pattern Library &#8212; Strings</h1>
+<p class="subtitle">40 patterns &mdash; null termination &middot; manual operations &middot; frequency counting &middot; sliding window &middot; palindromes &middot; parsing &middot; pattern matching &middot; DP</p>
+
+<div class="toc">
+<div class="toc-section">C String Mechanics</div>
+<a href="#p01">01 &middot; Null Terminator and strlen</a>
+<a href="#p02">02 &middot; Manual strcpy and Buffer Safety</a>
+<a href="#p03">03 &middot; Manual strcmp</a>
+<a href="#p04">04 &middot; String Reversal In-Place</a>
+<a href="#p05">05 &middot; String Search (strstr logic)</a>
+<a href="#p06">06 &middot; Character Frequency Count</a>
+<a href="#p07">07 &middot; Remove Duplicates from String</a>
+<a href="#p08">08 &middot; String Tokenizer (strtok logic)</a>
+<a href="#p09">09 &middot; atoi — String to Integer</a>
+<a href="#p10">10 &middot; itoa — Integer to String</a>
+<div class="toc-section">Sliding Window &amp; Frequency</div>
+<a href="#p11">11 &middot; Longest Substring Without Repeating Characters</a>
+<a href="#p12">12 &middot; Minimum Window Substring</a>
+<a href="#p13">13 &middot; Longest Substring with At Most K Distinct</a>
+<a href="#p14">14 &middot; Anagram Check (Frequency Array)</a>
+<a href="#p15">15 &middot; All Anagrams in String</a>
+<a href="#p16">16 &middot; Permutation in String</a>
+<a href="#p17">17 &middot; Longest Repeating Character Replacement</a>
+<a href="#p18">18 &middot; Count of Substrings with Exactly K Distinct</a>
+<a href="#p19">19 &middot; Minimum Consecutive Cards to Pick Up</a>
+<a href="#p20">20 &middot; Max Vowels in Substring of Length K</a>
+<div class="toc-section">Palindromes &amp; Two Pointer</div>
+<a href="#p21">21 &middot; Valid Palindrome (Two Pointer)</a>
+<a href="#p22">22 &middot; Expand Around Center</a>
+<a href="#p23">23 &middot; Longest Palindromic Substring</a>
+<a href="#p24">24 &middot; Palindrome Partitioning Check</a>
+<a href="#p25">25 &middot; Two-Pointer String Reverse Words</a>
+<a href="#p26">26 &middot; Valid Parentheses with String</a>
+<a href="#p27">27 &middot; Remove K Digits (Monotonic)</a>
+<a href="#p28">28 &middot; String Compression (Run-Length Encoding)</a>
+<a href="#p29">29 &middot; Zigzag Conversion</a>
+<a href="#p30">30 &middot; String Parsing — Roman to Integer</a>
+<div class="toc-section">Pattern Matching &amp; DP</div>
+<a href="#p31">31 &middot; KMP — Failure Function</a>
+<a href="#p32">32 &middot; KMP — Search</a>
+<a href="#p33">33 &middot; Rabin-Karp Rolling Hash</a>
+<a href="#p34">34 &middot; Edit Distance (Levenshtein)</a>
+<a href="#p35">35 &middot; Longest Common Subsequence</a>
+<a href="#p36">36 &middot; Longest Common Substring</a>
+<a href="#p37">37 &middot; Word Break (DP)</a>
+<a href="#p38">38 &middot; Distinct Subsequences</a>
+<a href="#p39">39 &middot; Wildcard Matching</a>
+<a href="#p40">40 &middot; Regular Expression Matching (. and *)</a>
+</div>
+
+<div class="card" id="p01">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 01</span>
+    <span class="pattern-name">Null Terminator and strlen</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">In C, a string isn't a special type — it's just an array of characters with a contract: the last character is always <code>'\0'</code> (ASCII value 0). Everything from reading to copying to printing stops when it hits that sentinel. strlen just counts characters until it finds the '\0' — that's the whole secret.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">The null terminator is the only thing that separates a C string from raw bytes. Remove it (or forget it during manual construction) and every string function will read past the end of your buffer until it finds some zero byte in memory — which could be kilobytes away.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>String literal <code>"hello"</code> stores 6 bytes: h e l l o \0.</li>
+    <li><code>strlen</code> walks from index 0 until it finds <code>'\0'</code>, returns the count.</li>
+    <li>Buffer must be at least <code>strlen + 1</code> bytes to hold the string + terminator.</li>
+    <li>Manual string construction must explicitly place <code>'\0'</code> at the end.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">"hello" in memory:
+  index:  0    1    2    3    4    5
+  char:  'h'  'e'  'l'  'l'  'o'  '\0'
+  hex:   68   65   6C   6C   6F   00
+
+strlen("hello") → walks 0,1,2,3,4 → hits '\0' at 5 → returns 5
+sizeof("hello") → 6  (includes '\0')</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;   /* for strlen */
+
+/* Manual strlen — returns length without counting '\0' */
+size_t my_strlen(const char *s) {
+    size_t len = 0;
+    while (s[len] != '\0')   /* walk until null terminator */
+        len++;
+    return len;              /* does not include '\0' */
+}
+
+int main(void) {
+    char s[] = "hello";           /* 6 bytes: h e l l o \0 */
+    printf("strlen=%zu\n", strlen(s));      /* 5 */
+    printf("my_strlen=%zu\n", my_strlen(s));/* 5 */
+    printf("sizeof=%zu\n", sizeof(s));      /* 6 (includes \0) */
+
+    /* Manual string construction — must place '\0' */
+    char buf[6];
+    buf[0]='w'; buf[1]='o'; buf[2]='r'; buf[3]='l'; buf[4]='d';
+    buf[5] = '\0';             /* WITHOUT this, strlen reads past end! */
+    printf("%s len=%zu\n", buf, strlen(buf));   /* world 5 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">my_strlen("hello"):
+  s[0]='h' ≠ '\0' → len=1
+  s[1]='e' ≠ '\0' → len=2
+  s[2]='l' ≠ '\0' → len=3
+  s[3]='l' ≠ '\0' → len=4
+  s[4]='o' ≠ '\0' → len=5
+  s[5]='\0' → stop, return 5 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Buffer must hold strlen+1 bytes</div>
+    <p>If you declare <code>char buf[5]</code> and copy "hello" into it, there's no room for '\0'. The string appears to work but strlen and printf will read past the end. Always allocate <code>strlen(src) + 1</code> bytes. Better yet, use <code>strnlen</code> and <code>snprintf</code> in real code.</p>
+  </div>
+  <div class="leetcode"><span>N/A (C mechanics)</span><span>Foundation for all string problems</span></div>
+  <div class="trigger">When working with C strings → think: "every string ends in '\0'; buffer needs strlen+1 bytes."</div>
+</div>
+
+<div class="card" id="p02">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 02</span>
+    <span class="pattern-name">Manual strcpy and Buffer Safety</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">Copying a string in C is like transcribing a scroll — you copy character by character until you hit the end marker. The classic <code>strcpy</code> does exactly this. The danger: if you don't know how big your destination scroll is, you might write off the edge and overwrite the next scroll (adjacent memory) — a buffer overflow.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight"><code>strcpy</code> is unsafe because it trusts the destination is big enough. The safe pattern is always to use <code>snprintf(dest, sizeof(dest), "%s", src)</code> or <code>strncpy</code> (with explicit null termination), and always check that the destination buffer is large enough before copying.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Allocate destination: at least <code>strlen(src) + 1</code> bytes.</li>
+    <li>Copy byte by byte until and including the <code>'\0'</code>.</li>
+    <li>For safe copy: use <code>snprintf</code> which always null-terminates and never overflows.</li>
+    <li>Verify destination was large enough (check return value of snprintf).</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">src: [h][e][l][l][o][\0]
+dst: [?][?][?][?][?][?]   (need at least 6 bytes)
+
+strcpy loop:
+  i=0: dst[0]='h', i=1: dst[1]='e', ...
+  i=5: dst[5]='\0' → stop
+
+BUFFER OVERFLOW:
+src: [h][e][l][l][o][\0]
+dst: [?][?][?]            (only 3 bytes — writes into adjacent memory!)</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+/* Manual strcpy — educational only, use snprintf in real code */
+char *my_strcpy(char *dst, const char *src) {
+    char *start = dst;           /* save start to return */
+    while ((*dst++ = *src++))    /* copy including '\0'; loop ends when '\0' copied */
+        ;
+    return start;
+}
+
+/* Safe copy using snprintf — always null-terminates */
+void safe_copy(char *dst, size_t dst_size, const char *src) {
+    int written = snprintf(dst, dst_size, "%s", src);
+    if (written &gt;= (int)dst_size)
+        fprintf(stderr, "Warning: string truncated\n");
+}
+
+int main(void) {
+    char src[] = "hello world";
+
+    /* Safe: buffer sized correctly */
+    char dst1[20];
+    safe_copy(dst1, sizeof(dst1), src);
+    printf("copied: %s\n", dst1);
+
+    /* Dangerous: small buffer — snprintf truncates, not overflow */
+    char dst2[5];
+    safe_copy(dst2, sizeof(dst2), src);  /* "hell\0" — truncated, but safe */
+    printf("truncated: %s\n", dst2);     /* prints: hell */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">my_strcpy(dst, "hi"):
+  *dst++ = 'h' → dst[0]='h', not '\0' → continue
+  *dst++ = 'i' → dst[1]='i', not '\0' → continue
+  *dst++ = '\0' → dst[2]='\0', condition is '\0'=0=false → stop
+  dst = "hi\0" ✓
+
+safe_copy(dst2, 5, "hello world"):
+  snprintf writes min(11, 5-1)=4 chars + '\0'
+  dst2 = "hell\0"
+  written=11 >= 5 → prints truncation warning</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: strncpy does NOT always null-terminate</div>
+    <p><code>strncpy(dst, src, n)</code> copies at most n chars but if src is n or more chars long, the result is NOT null-terminated. You must manually add <code>dst[n-1] = '\0'</code>. This surprises nearly every C programmer. Prefer <code>snprintf</code> which always null-terminates within the given size.</p>
+  </div>
+  <div class="leetcode"><span>N/A (C mechanics)</span></div>
+  <div class="trigger">When copying a C string → think: "destination needs strlen+1 bytes; use snprintf for safety."</div>
+</div>
+
+
+<div class="card" id="p03">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 03</span>
+    <span class="pattern-name">Manual strcmp — Lexicographic Comparison</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">A dictionary sorts words by comparing letters one at a time. "apple" comes before "apply" because at position 4, 'e' (101) comes before 'y' (121) in ASCII. strcmp does exactly this: compare character by character; the first mismatch decides the order; if one string runs out first, it's "less than" the longer one.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">strcmp returns negative if s1 &lt; s2, 0 if equal, positive if s1 &gt; s2 — based on the first differing byte's ASCII values. Equality requires every character to match AND both strings end at the same position.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Walk both strings simultaneously while characters are equal and not '\0'.</li>
+    <li>When the loop ends: return <code>(unsigned char)s1[i] - (unsigned char)s2[i]</code>.</li>
+    <li>If both are '\0' at the same position, the strings are equal (returns 0).</li>
+    <li>Cast to <code>unsigned char</code> to avoid sign-extension issues with chars &gt; 127.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">strcmp("apple", "apply"):
+  i=0: 'a'=='a' → continue
+  i=1: 'p'=='p' → continue
+  i=2: 'p'=='p' → continue
+  i=3: 'l'=='l' → continue
+  i=4: 'e' vs 'y' → 101 - 121 = -20 → return negative (s1 &lt; s2)
+
+strcmp("cat", "cat"):
+  i=0,1,2: 'c','a','t' all match
+  i=3: '\0' == '\0' → return 0 (equal)</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+
+/* Manual strcmp: negative if s1&lt;s2, 0 if equal, positive if s1&gt;s2 */
+int my_strcmp(const char *s1, const char *s2) {
+    /* Walk while characters match and neither string has ended */
+    while (*s1 && *s1 == *s2) {
+        s1++;
+        s2++;
+    }
+    /* Return difference of first differing bytes (or both '\0' → 0) */
+    return (unsigned char)*s1 - (unsigned char)*s2;
+}
+
+int main(void) {
+    printf("%d\n", my_strcmp("apple", "apply"));  /* negative */
+    printf("%d\n", my_strcmp("cat",   "cat"));    /* 0 */
+    printf("%d\n", my_strcmp("z",     "a"));      /* positive */
+
+    /* Common use: sorting condition */
+    const char *words[] = {"banana", "apple", "cherry"};
+    /* Use strcmp result in conditions */
+    if (my_strcmp(words[0], words[1]) &gt; 0)
+        printf("banana comes after apple\n");
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">my_strcmp("cat", "car"):
+  *s1='c', *s2='c' → equal, advance
+  *s1='a', *s2='a' → equal, advance
+  *s1='t', *s2='r' → not equal, exit loop
+  return (unsigned char)'t' - (unsigned char)'r' = 116-114 = 2 (positive → s1 > s2)</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Don't compare strings with ==</div>
+    <p><code>if (s1 == s2)</code> compares pointer addresses, not string content. Two different string literals with the same content have different addresses (usually). Always use <code>strcmp(s1, s2) == 0</code> for content equality.</p>
+  </div>
+  <div class="leetcode"><span>N/A (C mechanics)</span><span>Valid Anagram · String sorting</span></div>
+  <div class="trigger">When comparing C strings → think: <code>strcmp == 0</code> for equal; never use <code>==</code> on char pointers.</div>
+</div>
+
+<div class="card" id="p04">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 04</span>
+    <span class="pattern-name">String Reversal In-Place</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">To reverse a sentence written on a strip of paper, you swap the first and last letters, then the second and second-to-last, and so on, moving inward until the two ends meet in the middle. Two pointers, one from each end, swapping and converging.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">In-place reversal uses two pointers (left at 0, right at len-1) that converge toward the center, swapping characters at each step. Stop when left &gt;= right. This uses O(1) extra space and works in O(n) time.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Compute length, set <code>lo = 0</code>, <code>hi = len - 1</code>.</li>
+    <li>While <code>lo &lt; hi</code>: swap <code>s[lo]</code> and <code>s[hi]</code>.</li>
+    <li>Advance <code>lo++</code>, retreat <code>hi--</code>.</li>
+    <li>Loop ends when pointers cross — string is fully reversed.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">"hello" → reverse → "olleh"
+
+Step 1: [h][e][l][l][o]   lo=0, hi=4 → swap h↔o
+        [o][e][l][l][h]   lo=1, hi=3 → swap e↔l
+        [o][l][l][e][h]   lo=2, hi=2 → lo >= hi, stop
+Result: "olleh" ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+void reverse_string(char *s) {
+    int lo = 0, hi = (int)strlen(s) - 1;
+    while (lo &lt; hi) {
+        char tmp = s[lo];   /* standard 3-step swap */
+        s[lo] = s[hi];
+        s[hi] = tmp;
+        lo++;
+        hi--;
+    }
+}
+
+int main(void) {
+    char s[] = "hello";       /* mutable: stack array */
+    reverse_string(s);
+    printf("%s\n", s);        /* "olleh" */
+
+    char t[] = "abcde";
+    reverse_string(t);
+    printf("%s\n", t);        /* "edcba" */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">"hello", lo=0, hi=4:
+  swap s[0]='h' ↔ s[4]='o' → "oellh", lo=1, hi=3
+  swap s[1]='e' ↔ s[3]='l' → "oleh...", lo=2, hi=2
+  lo >= hi → stop
+  result: "olleh" ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: String literals are immutable</div>
+    <p><code>char *s = "hello";</code> points to a string literal in read-only memory. Calling <code>reverse_string(s)</code> causes undefined behavior (usually a segfault). To get a mutable copy, use <code>char s[] = "hello";</code> which copies the literal onto the stack.</p>
+  </div>
+  <div class="leetcode"><span>344 · Reverse String</span><span>541 · Reverse String II</span></div>
+  <div class="trigger">When asked to reverse a string in-place → think: two pointers converging from both ends, swap until they meet.</div>
+</div>
+
+
+<div class="card" id="p05">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 05</span>
+    <span class="pattern-name">String Search — strstr Logic</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">Looking for the word "cat" in "the black cat sat" — you scan left to right; whenever you find a 'c', you check if the next two characters are 'a' and 't'. If yes, you found it. If no, you move forward one position and keep scanning. This is naïve string search, and it's what strstr does under the hood.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Naïve string search is O(n×m) but works perfectly for typical inputs. For every position in the haystack, attempt to match the needle character by character. The outer loop advances one step at a time; the inner loop checks the full needle. On first mismatch, break inner and advance outer.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>For each position <code>i</code> in <code>haystack</code> (while room remains for needle).</li>
+    <li>Try matching needle starting at <code>haystack[i]</code>.</li>
+    <li>If all needle chars match, return <code>&amp;haystack[i]</code>.</li>
+    <li>If any mismatch, advance <code>i</code> by 1 and retry.</li>
+    <li>Return NULL if no match found.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">haystack: "the black cat sat"
+needle:   "cat"
+
+i=0: 't'≠'c' skip
+i=1: 'h'≠'c' skip
+...
+i=10: 'c'=='c' → check 'a'=='a' → check 't'=='t' → MATCH at i=10
+return &haystack[10] → "cat sat"</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+/* Returns pointer to first occurrence of needle in haystack, or NULL */
+const char *my_strstr(const char *haystack, const char *needle) {
+    if (!*needle) return haystack;   /* empty needle matches at start */
+    size_t nlen = strlen(needle);
+    size_t hlen = strlen(haystack);
+    if (nlen &gt; hlen) return NULL;    /* needle longer than haystack */
+
+    for (size_t i = 0; i &lt;= hlen - nlen; i++) {
+        size_t j = 0;
+        while (j &lt; nlen &amp;&amp; haystack[i+j] == needle[j])
+            j++;                     /* advance while chars match */
+        if (j == nlen)
+            return &amp;haystack[i];     /* full needle matched here */
+    }
+    return NULL;
+}
+
+int main(void) {
+    const char *h = "the black cat sat";
+    const char *found = my_strstr(h, "cat");
+    if (found)
+        printf("Found: \"%s\"\n", found);   /* "cat sat" */
+    else
+        printf("Not found\n");
+
+    printf("strstr check: %s\n", strstr(h, "cat")); /* same result */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">haystack="hello world", needle="world"
+hlen=11, nlen=5, loop i=0..6:
+  i=0: h≠w → j=0 only
+  i=1: e≠w → j=0 only
+  ...
+  i=6: w==w → j=1: o==o → j=2: r==r → j=3: l==l → j=4: d==d → j=5==nlen → MATCH
+return &haystack[6] → "world" ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: O(n×m) worst case</div>
+    <p>Naïve search is slow for patterns like needle="aaab" in haystack="aaaa...aab" — it retries nearly every position. For production pattern matching with large inputs, use KMP (Pattern 31-32) which is O(n+m).</p>
+  </div>
+  <div class="leetcode"><span>28 · Find the Index of First Occurrence</span></div>
+  <div class="trigger">When searching for a substring → think: outer loop over haystack positions, inner loop matches needle.</div>
+</div>
+
+<div class="card" id="p06">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 06</span>
+    <span class="pattern-name">Character Frequency Count</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">A librarian counts how many copies of each book are on the shelf by walking along and making a tally mark for each title. In C, a character frequency array is exactly that tally: a 26-element array (or 256 for all ASCII) where each index represents a character and the value is how many times it appeared.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Characters are just small integers (ASCII 0-127). Use the character as an array index: <code>freq[c - 'a']++</code> for lowercase letters. This gives O(1) lookup and update, and the whole frequency table is built in O(n) time. It's the core building block for anagram checks, permutation problems, and sliding window frequency tracking.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Declare <code>int freq[26] = {0}</code> (or <code>freq[128]</code> for all ASCII).</li>
+    <li>Walk the string: for each char <code>c</code>, do <code>freq[c - 'a']++</code>.</li>
+    <li>To compare two strings' frequencies: build both tables, compare arrays.</li>
+    <li>To check if a char appears: <code>freq[c - 'a'] &gt; 0</code>.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">"banana":
+  b → freq[1]++
+  a → freq[0]++
+  n → freq[13]++
+  a → freq[0]++
+  n → freq[13]++
+  a → freq[0]++
+
+freq: a=3, b=1, n=2, rest=0</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#include &lt;ctype.h&gt;
+
+void char_frequency(const char *s, int freq[26]) {
+    memset(freq, 0, 26 * sizeof(int));   /* zero out */
+    for (; *s; s++) {
+        if (islower(*s))
+            freq[*s - 'a']++;   /* 'a'=0, 'b'=1, ..., 'z'=25 */
+    }
+}
+
+/* Check if two strings are anagrams */
+int is_anagram(const char *a, const char *b) {
+    if (strlen(a) != strlen(b)) return 0;   /* must be same length */
+    int fa[26], fb[26];
+    char_frequency(a, fa);
+    char_frequency(b, fb);
+    return memcmp(fa, fb, sizeof(fa)) == 0; /* byte-wise comparison */
+}
+
+int main(void) {
+    int freq[26];
+    char_frequency("banana", freq);
+    for (int i = 0; i &lt; 26; i++)
+        if (freq[i]) printf("%c:%d ", 'a'+i, freq[i]);
+    printf("\n");   /* a:3 b:1 n:2 */
+
+    printf("anagram: %d\n", is_anagram("listen", "silent"));  /* 1 */
+    printf("anagram: %d\n", is_anagram("hello",  "world"));   /* 0 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">is_anagram("listen", "silent"):
+  freq("listen"): e=1,i=1,l=1,n=1,s=1,t=1
+  freq("silent"): e=1,i=1,l=1,n=1,s=1,t=1
+  memcmp → 0 (equal) → return 1 (yes, anagram) ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Only works for lowercase ASCII</div>
+    <p><code>freq[c - 'a']</code> only works if <code>c</code> is guaranteed to be a lowercase letter. For mixed-case or arbitrary ASCII, use <code>freq[(unsigned char)c]</code> with a 128 or 256 element array. Always cast to <code>unsigned char</code> before using a char as an array index.</p>
+  </div>
+  <div class="leetcode"><span>242 · Valid Anagram</span><span>383 · Ransom Note</span><span>387 · First Unique Character</span></div>
+  <div class="trigger">When you need character counts → think: <code>int freq[26] = {0}; freq[c-'a']++</code>.</div>
+</div>
+
+
+<div class="card" id="p07">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 07</span>
+    <span class="pattern-name">Remove Duplicates from String</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">A bouncer at a club only lets each person in once. As you walk the guest list, you check a "seen" book. If the name is new, let them in and record them. If the name is already in the book, skip them. The result is a unique-only list in original order.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Use a boolean <code>seen[26]</code> array as a hash set for O(1) lookup. Walk the input string with a read pointer; only copy to the write pointer when the character hasn't been seen yet. This is an in-place two-pointer approach with O(n) time and O(1) space.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Initialize <code>seen[26] = {0}</code> and write index <code>w = 0</code>.</li>
+    <li>For each character <code>c</code> in the string:</li>
+    <li>If <code>!seen[c-'a']</code>: copy to <code>s[w++]</code>, mark <code>seen[c-'a'] = 1</code>.</li>
+    <li>After loop: null-terminate at <code>s[w] = '\0'</code>.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">"abacbc"
+  r=0: 'a' new → write, seen[a]=1, w=1
+  r=1: 'b' new → write, seen[b]=1, w=2
+  r=2: 'a' seen → skip
+  r=3: 'c' new → write, seen[c]=1, w=3
+  r=4: 'b' seen → skip
+  r=5: 'c' seen → skip
+  result: "abc\0"</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+void remove_duplicates(char *s) {
+    int seen[26] = {0};   /* boolean presence for 'a'..'z' */
+    int w = 0;            /* write index */
+    for (int r = 0; s[r]; r++) {
+        int idx = s[r] - 'a';
+        if (!seen[idx]) {
+            seen[idx] = 1;   /* mark as seen */
+            s[w++] = s[r];   /* copy to write position */
+        }
+    }
+    s[w] = '\0';          /* null-terminate the shortened string */
+}
+
+int main(void) {
+    char s[] = "abacbc";
+    remove_duplicates(s);
+    printf("%s\n", s);    /* "abc" */
+
+    char t[] = "programming";
+    remove_duplicates(t);
+    printf("%s\n", t);    /* "progamin" */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">"programming":
+  p→new w=1, r→new w=2, o→new w=3, g→new w=4,
+  r→seen skip, a→new w=5, m→new w=6, m→seen skip,
+  i→new w=7, n→new w=8, g→seen skip
+  s[8]='\0'
+  result: "progamin" ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Only handles lowercase a-z</div>
+    <p>The <code>seen[26]</code> approach assumes lowercase ASCII letters. For arbitrary characters, use <code>seen[128]</code> with <code>idx = (unsigned char)s[r]</code>. For Unicode, you'd need a hash set.</p>
+  </div>
+  <div class="leetcode"><span>316 · Remove Duplicate Letters</span><span>1081 · Smallest Subsequence</span></div>
+  <div class="trigger">When removing first-seen duplicates → think: <code>seen[26]</code> boolean set + two-index (read/write) walk.</div>
+</div>
+
+<div class="card" id="p08">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 08</span>
+    <span class="pattern-name">String Tokenizer — strtok Logic</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">You're cutting a pizza into slices along the scored lines. You find the first score line, cut there, hand off the slice, then look for the next score line from where you left off. strtok works the same way: find a delimiter, replace it with '\0' (the cut), return the token (the slice), and remember where the next search starts.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">strtok is destructive — it writes '\0' into the string at each delimiter. It uses a static pointer to remember its position across calls. Call with the string the first time, then pass NULL for subsequent tokens. Because it uses a hidden static variable, it is NOT thread-safe — use strtok_r in multithreaded code.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>First call: <code>strtok(str, delim)</code> — sets internal pointer to <code>str</code>, finds first token.</li>
+    <li>Replace delimiter with '\0', return pointer to start of token.</li>
+    <li>Subsequent calls: <code>strtok(NULL, delim)</code> — continues from saved position.</li>
+    <li>Returns NULL when no more tokens remain.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">"one,two,three"
+                ↑saved
+strtok(s,","):  finds ',', writes '\0' → "one\0two,three"
+                returns "one"
+strtok(NULL,","): resumes at 'two', finds ',' → "one\0two\0three"
+                returns "two"
+strtok(NULL,","): resumes at 'three', no ',' found → returns "three"
+strtok(NULL,","): returns NULL (done)</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+int main(void) {
+    char csv[] = "alice,bob,charlie,dave";   /* mutable copy required! */
+    const char *delim = ",";
+
+    /* First call: pass the string */
+    char *token = strtok(csv, delim);
+    while (token != NULL) {
+        printf("token: %s\n", token);
+        token = strtok(NULL, delim);   /* subsequent calls: pass NULL */
+    }
+    /* csv is now "alice\0bob\0charlie\0dave" — modified! */
+
+    /* Thread-safe version with strtok_r */
+    char path[] = "/usr/local/bin";
+    char *saveptr;           /* caller-managed state, not static */
+    char *part = strtok_r(path, "/", &amp;saveptr);
+    while (part) {
+        printf("part: %s\n", part);
+        part = strtok_r(NULL, "/", &amp;saveptr);
+    }
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">csv = "alice,bob"
+strtok(csv, ","):
+  scan: a,l,i,c,e → ',' found at i=5
+  csv[5] = '\0' → "alice\0bob"
+  saved_ptr = &csv[6] (points to 'b')
+  returns "alice"
+strtok(NULL, ","):
+  resume from saved_ptr='b'
+  scan: b,o,b → '\0' at end → no more commas
+  returns "bob"
+strtok(NULL, ","):
+  returns NULL</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: strtok modifies the string and is not reentrant</div>
+    <p>You cannot tokenize two strings simultaneously with strtok because it has one hidden static pointer shared across calls. Also, you cannot pass a string literal — strtok writes '\0' delimiters into the string, which crashes on read-only memory. Always pass a mutable copy (<code>char buf[] = "..."</code>). Use <code>strtok_r</code> for reentrancy.</p>
+  </div>
+  <div class="leetcode"><span>N/A (C standard library)</span><span>Used in: CSV parsing, path splitting</span></div>
+  <div class="trigger">When splitting a string by delimiter → think: strtok (first call with string, rest with NULL); use strtok_r for threads.</div>
+</div>
+
+
+<div class="card" id="p09">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 09</span>
+    <span class="pattern-name">atoi — String to Integer Conversion</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">You're reading a price tag "42" on a shelf. Your brain converts the characters '4' and '2' into the number forty-two: take the first digit (4), multiply by 10 to make room, add the next digit (2) — done. atoi does exactly this, digit by digit, handling an optional leading sign.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Each digit character has ASCII value ('0' + digit value), so <code>c - '0'</code> gives the numeric digit. Build the number left-to-right: <code>result = result * 10 + digit</code>. Handle optional leading sign and skip leading whitespace. This is O(n) and the basis of LeetCode 8 (myAtoi).</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Skip leading whitespace.</li>
+    <li>Check for optional '+' or '-' sign; record it.</li>
+    <li>While the current char is a digit: <code>result = result * 10 + (c - '0')</code>.</li>
+    <li>Apply sign. Clamp to INT_MAX / INT_MIN for robust implementation.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">" -42abc"
+  skip spaces → '-'
+  sign = -1, advance
+  '4': result = 0*10 + 4 = 4
+  '2': result = 4*10 + 2 = 42
+  'a': not digit → stop
+  return -1 * 42 = -42</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;limits.h&gt;
+#include &lt;ctype.h&gt;
+
+int my_atoi(const char *s) {
+    while (isspace(*s)) s++;       /* skip leading whitespace */
+
+    int sign = 1;
+    if (*s == '-') { sign = -1; s++; }
+    else if (*s == '+') s++;
+
+    long result = 0;
+    while (isdigit(*s)) {
+        result = result * 10 + (*s - '0');
+        /* clamp to avoid overflow before returning */
+        if (result * sign &gt;= INT_MAX) return INT_MAX;
+        if (result * sign &lt;= INT_MIN) return INT_MIN;
+        s++;
+    }
+    return (int)(sign * result);
+}
+
+int main(void) {
+    printf("%d\n", my_atoi("42"));        /* 42 */
+    printf("%d\n", my_atoi("  -42abc"));  /* -42 */
+    printf("%d\n", my_atoi("+100"));      /* 100 */
+    printf("%d\n", my_atoi("abc"));       /* 0 (no digits) */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">my_atoi("  -42"):
+  skip 2 spaces → '-'
+  sign=-1, s points to '4'
+  '4': result = 0*10+4 = 4
+  '2': result = 4*10+2 = 42
+  '\0': not digit, exit loop
+  return -1 * 42 = -42 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Integer overflow during accumulation</div>
+    <p>If the input string encodes a number larger than INT_MAX, naive <code>result = result * 10 + digit</code> overflows silently in C. Check for overflow before multiplying (compare <code>result &gt; (INT_MAX - digit) / 10</code>) or accumulate in a <code>long</code> and clamp before returning.</p>
+  </div>
+  <div class="leetcode"><span>8 · String to Integer (atoi)</span></div>
+  <div class="trigger">When parsing an integer from a string → think: skip spaces, handle sign, accumulate with <code>result = result*10 + (c-'0')</code>.</div>
+</div>
+
+<div class="card" id="p10">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 10</span>
+    <span class="pattern-name">itoa — Integer to String Conversion</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">Writing a number on paper: extract the last digit with modulo (<code>42 % 10 = 2</code>), write it, then shorten the number (<code>42 / 10 = 4</code>), repeat. But you wrote the digits in reverse order — so flip the result at the end. That's itoa in a nutshell.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Repeatedly take <code>n % 10</code> to get the least significant digit, convert to char with <code>'0' + digit</code>, append to buffer, then divide n by 10. The resulting string is reversed — reverse it at the end. Handle negative numbers by recording the sign and working with the absolute value.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Handle special case: n == 0 → "0".</li>
+    <li>If n &lt; 0: record sign, negate n (use <code>long</code> for INT_MIN).</li>
+    <li>While n &gt; 0: <code>buf[i++] = '0' + (n % 10)</code>; <code>n /= 10</code>.</li>
+    <li>If negative: <code>buf[i++] = '-'</code>.</li>
+    <li>Reverse <code>buf[0..i-1]</code>; null-terminate.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">itoa(1234):
+  1234 % 10 = 4 → buf="4"
+   123 % 10 = 3 → buf="43"
+    12 % 10 = 2 → buf="432"
+     1 % 10 = 1 → buf="4321"
+  n=0, stop
+  reverse → "1234\0" ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+/* Writes integer n as decimal string into buf. buf must be &gt;= 12 bytes. */
+void my_itoa(int n, char *buf) {
+    if (n == 0) { buf[0]='0'; buf[1]='\0'; return; }
+
+    int neg = (n &lt; 0);
+    long val = neg ? -(long)n : (long)n;   /* long handles INT_MIN */
+
+    int i = 0;
+    while (val &gt; 0) {
+        buf[i++] = '0' + (int)(val % 10);  /* least significant digit first */
+        val /= 10;
+    }
+    if (neg) buf[i++] = '-';   /* add sign last (will be reversed to front) */
+    buf[i] = '\0';
+
+    /* reverse: digits were written in reverse order */
+    int lo = 0, hi = i - 1;
+    while (lo &lt; hi) {
+        char tmp = buf[lo]; buf[lo] = buf[hi]; buf[hi] = tmp;
+        lo++; hi--;
+    }
+}
+
+int main(void) {
+    char buf[12];
+    my_itoa(1234,  buf); printf("%s\n", buf);   /* "1234" */
+    my_itoa(-567,  buf); printf("%s\n", buf);   /* "-567" */
+    my_itoa(0,     buf); printf("%s\n", buf);   /* "0" */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">my_itoa(-42, buf):
+  neg=1, val=42
+  42%10=2 → buf[0]='2', val=4
+   4%10=4 → buf[1]='4', val=0
+  exit loop
+  buf[2]='-', buf[3]='\0'
+  buf = "24-"
+  reverse [0..2]: '-','4','2' → buf = "-42\0" ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: INT_MIN cannot be negated as int</div>
+    <p>INT_MIN is -2147483648. <code>-(int)INT_MIN</code> overflows because 2147483648 doesn't fit in a signed int. Always widen to <code>long</code> before negating: <code>long val = -(long)n</code>.</p>
+  </div>
+  <div class="leetcode"><span>N/A (C mechanics)</span><span>Used in: custom number formatting</span></div>
+  <div class="trigger">When converting integer to string → think: repeated <code>n%10</code> → chars in reverse → flip the buffer.</div>
+</div>
+
+<!-- PATTERNS_END -->
+<script>hljs.highlightAll();</script>
+</body>
+</html>

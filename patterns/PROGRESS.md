@@ -7,7 +7,7 @@
 | index.html | nav | ✅ Done | 2026-04-24 |
 | arrays.html | 54 | 🔄 In Progress | — |
 | pointers.html | 30 | ✅ Done | 2026-04-24 |
-| strings.html | 40 | ⏳ Pending | — |
+| strings.html | 40 | 🔄 In Progress | — |
 | linkedlist.html | 35 | ⏳ Pending | — |
 | stacks.html | 32 | ⏳ Pending | — |
 | queues.html | 22 | ⏳ Pending | — |
@@ -25,6 +25,7 @@
 | ✅ 07 | pointers.html | 01-10 | feat(pointers): patterns 01-10 — what a pointer is, arithmetic, functions |
 | ✅ 08 | pointers.html | 11-20 | feat(pointers): patterns 11-20 — two-pointer, structs, dynamic memory |
 | ✅ 09 | pointers.html | 21-30 | feat(pointers): patterns 21-30 — embedded C, aliasing, pitfalls |
+| ✅ 10 | strings.html | 01-10 | feat(strings): patterns 01-10 — null terminator, strcpy, strcmp, reversal, search, frequency, atoi, itoa |
 
 ## arrays.html Progress
 - [x] Patterns 01–10 (Prefix Sum + Two Pointer basics)
@@ -39,7 +40,7 @@
 - [x] Patterns 21–30 (Embedded C, Aliasing, Pitfalls)
 
 ## strings.html Progress
-- [ ] Patterns 01–10 (Basics, Copy, Search, Frequency)
+- [x] Patterns 01–10 (Basics, Copy, Search, Frequency)
 - [ ] Patterns 11–20 (Sliding Window, Palindrome)
 - [ ] Patterns 21–30 (Two Pointer, Parsing)
 - [ ] Patterns 31–40 (Pattern Matching, DP, Manipulation)
