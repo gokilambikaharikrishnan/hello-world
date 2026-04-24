@@ -26,6 +26,7 @@
 | ✅ 08 | pointers.html | 11-20 | feat(pointers): patterns 11-20 — two-pointer, structs, dynamic memory |
 | ✅ 09 | pointers.html | 21-30 | feat(pointers): patterns 21-30 — embedded C, aliasing, pitfalls |
 | ✅ 10 | strings.html | 01-10 | feat(strings): patterns 01-10 — null terminator, strcpy, strcmp, reversal, search, frequency, atoi, itoa |
+| ✅ 11 | strings.html | 11-20 | feat(strings): patterns 11-20 — sliding window, anagram search, permutation, char replacement, exactly-k |
 
 ## arrays.html Progress
 - [x] Patterns 01–10 (Prefix Sum + Two Pointer basics)
@@ -41,7 +42,7 @@
 
 ## strings.html Progress
 - [x] Patterns 01–10 (Basics, Copy, Search, Frequency)
-- [ ] Patterns 11–20 (Sliding Window, Palindrome)
+- [x] Patterns 11–20 (Sliding Window, Palindrome)
 - [ ] Patterns 21–30 (Two Pointer, Parsing)
 - [ ] Patterns 31–40 (Pattern Matching, DP, Manipulation)
 

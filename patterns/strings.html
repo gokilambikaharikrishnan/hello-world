@@ -800,6 +800,754 @@ int main(void) {
   <div class="trigger">When converting integer to string → think: repeated <code>n%10</code> → chars in reverse → flip the buffer.</div>
 </div>
 
+
+<div class="card" id="p11">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 11</span>
+    <span class="pattern-name">Longest Substring Without Repeating Characters</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">Imagine walking through a hallway of rooms, each room labelled with a letter. You're collecting a badge from each room. Once you find a room you already visited, you turn around and release badges from the start until you've let go of that room's badge, then continue forward. At any moment, the current stretch of rooms is your "window."</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Sliding window with a frequency array. Expand right; when a character becomes a duplicate (<code>freq[c] &gt; 1</code>), shrink left until it's gone. The window always contains only unique characters. Track max window size throughout.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Initialize <code>freq[128]={0}</code>, <code>left=0</code>, <code>max_len=0</code>.</li>
+    <li>For each <code>right</code>: increment <code>freq[s[right]]</code>.</li>
+    <li>While <code>freq[s[right]] &gt; 1</code>: decrement <code>freq[s[left]]</code>, advance <code>left</code>.</li>
+    <li>Update <code>max_len = max(max_len, right - left + 1)</code>.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">"abcabc":
+  r=0: add 'a' → [a] len=1
+  r=1: add 'b' → [ab] len=2
+  r=2: add 'c' → [abc] len=3
+  r=3: add 'a' → dup! shrink: remove s[0]='a' → [bca] len=3
+  r=4: add 'b' → dup! shrink: remove s[1]='b' → [cab] len=3
+  r=5: add 'c' → dup! shrink: remove s[2]='c' → [abc] len=3
+  max=3 ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+int length_of_longest_substring(const char *s) {
+    int freq[128] = {0};   /* ASCII frequency in current window */
+    int left = 0, max_len = 0;
+    int n = (int)strlen(s);
+
+    for (int right = 0; right &lt; n; right++) {
+        freq[(unsigned char)s[right]]++;   /* expand window right */
+
+        /* Shrink from left until duplicate is removed */
+        while (freq[(unsigned char)s[right]] &gt; 1) {
+            freq[(unsigned char)s[left]]--;
+            left++;
+        }
+
+        int win = right - left + 1;
+        if (win &gt; max_len) max_len = win;
+    }
+    return max_len;
+}
+
+int main(void) {
+    printf("%d\n", length_of_longest_substring("abcabc"));   /* 3 */
+    printf("%d\n", length_of_longest_substring("bbbbb"));    /* 1 */
+    printf("%d\n", length_of_longest_substring("pwwkew"));   /* 3 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">"pwwkew", left=0:
+  r=0:'p' freq[p]=1, win=1, max=1
+  r=1:'w' freq[w]=1, win=2, max=2
+  r=2:'w' freq[w]=2 → shrink: freq[p]=0,left=1; freq[w]=1,left=2; now win=1
+  r=3:'k' freq[k]=1, win=2, max=2
+  r=4:'e' freq[e]=1, win=3, max=3
+  r=5:'w' freq[w]=1, win=4 wait — w already 1, no dup
+  Actually left=2, s[2]='w', now freq[w]=2 again → shrink left from 2
+  shrink: remove s[2]='w',left=3 → freq[w]=1, win=3, max=3 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Use (unsigned char) when indexing</div>
+    <p>Plain <code>char</code> can be signed, making chars &gt; 127 (like accented letters) become negative array indices — undefined behavior. Cast to <code>(unsigned char)</code> when using a char as an array index.</p>
+  </div>
+  <div class="leetcode"><span>3 · Longest Substring Without Repeating</span></div>
+  <div class="trigger">When finding longest window with all unique chars → think: freq array + expand right, shrink left on duplicate.</div>
+</div>
+
+<div class="card" id="p12">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 12</span>
+    <span class="pattern-name">Minimum Window Substring</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">You need to collect a specific set of ingredients from a buffet table. You pick items as you walk right; as soon as your tray holds all required ingredients, you try to put back items from the left to make the tray as small as possible while still having everything. Record the smallest valid tray size seen.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Track how many distinct characters from the target are "satisfied" (window count &gt;= target count) using a <code>formed</code> counter. Expand right to satisfy requirements; once all satisfied, shrink left to minimize. The window is valid when <code>formed == required</code>.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Build target frequency map from <code>t</code>. Count distinct chars in target: <code>required</code>.</li>
+    <li>Expand <code>right</code>: update window freq; if char's window count equals target count, <code>formed++</code>.</li>
+    <li>When <code>formed == required</code>: record window; shrink <code>left</code> until <code>formed &lt; required</code>.</li>
+    <li>Repeat. Return the smallest recorded window.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">s="ADOBECODEBANC", t="ABC" (required=3)
+Expand until all 3 satisfied:
+  r=0..5: window="ADOBEC" → A✓B✓C✓ formed=3
+  Shrink: remove 'A' → formed=2; stop
+  Record "ADOBEC" len=6
+Continue expanding...
+  r=9: window="DOBECODEBA" wait track properly
+  Eventually smallest window = "BANC" len=4 ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#include &lt;limits.h&gt;
+
+void min_window(const char *s, const char *t, char *out) {
+    int need[128] = {0}, window[128] = {0};
+    int required = 0, formed = 0;
+
+    for (int i = 0; t[i]; i++) {
+        if (need[(unsigned char)t[i]]++ == 0) required++;   /* new distinct char */
+    }
+
+    int left = 0, best_left = 0, best_len = INT_MAX;
+    int n = (int)strlen(s);
+
+    for (int right = 0; right &lt; n; right++) {
+        int c = (unsigned char)s[right];
+        window[c]++;
+        if (need[c] &gt; 0 &amp;&amp; window[c] == need[c]) formed++;   /* satisfied */
+
+        while (formed == required) {   /* valid window — try to shrink */
+            if (right - left + 1 &lt; best_len) {
+                best_len = right - left + 1;
+                best_left = left;
+            }
+            int lc = (unsigned char)s[left];
+            window[lc]--;
+            if (need[lc] &gt; 0 &amp;&amp; window[lc] &lt; need[lc]) formed--;   /* unsatisfied */
+            left++;
+        }
+    }
+
+    if (best_len == INT_MAX) { out[0] = '\0'; return; }
+    strncpy(out, s + best_left, best_len);
+    out[best_len] = '\0';
+}
+
+int main(void) {
+    char result[100];
+    min_window("ADOBECODEBANC", "ABC", result);
+    printf("%s\n", result);   /* "BANC" */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">s="ADOBECODEBANC", t="ABC"
+need: A=1,B=1,C=1, required=3
+right=0:'A' window[A]=1==need[A]=1 → formed=1
+right=1:'D' no effect
+right=2:'O' no effect
+right=3:'B' window[B]=1==need[B]=1 → formed=2
+right=4:'E' no effect
+right=5:'C' window[C]=1==need[C]=1 → formed=3
+  → valid! len=6, shrink left:
+  remove 'A': window[A]=0&lt;need[A]=1 → formed=2, left=1
+right continues... eventually window "BANC" found, len=4 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Only update formed when count exactly hits need</div>
+    <p>Only increment <code>formed</code> when <code>window[c] == need[c]</code> (not just &gt; 0). Similarly, only decrement when <code>window[c]</code> drops below <code>need[c]</code>. Having more than needed is fine — we only care about meeting the exact requirement.</p>
+  </div>
+  <div class="leetcode"><span>76 · Minimum Window Substring</span></div>
+  <div class="trigger">When finding smallest window containing all of t → think: formed counter + expand right until valid, shrink left to minimize.</div>
+</div>
+
+
+<div class="card" id="p13">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 13</span>
+    <span class="pattern-name">Longest Substring with At Most K Distinct Characters</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">You're running a small shop that can stock at most K different products at a time. As customers request items, you add new products — but when you'd exceed K types, you remove the oldest products from the shelf until you're back within limit. You want the longest consecutive restocking period that stayed within budget.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Track the number of distinct characters in the window with a <code>distinct</code> counter. Expand right freely; when <code>distinct &gt; k</code>, shrink left until a character's count drops to 0 (it leaves the window), decrementing <code>distinct</code>. Max window size throughout is the answer.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Initialize freq[128]={0}, left=0, distinct=0, max_len=0.</li>
+    <li>Expand right: if new char adds a new type (<code>freq[c]++ == 0</code>), <code>distinct++</code>.</li>
+    <li>While <code>distinct &gt; k</code>: shrink left; if <code>--freq[s[left]] == 0</code>, <code>distinct--</code>; left++.</li>
+    <li>Update max_len = max(max_len, right - left + 1).</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">"eceba", k=2:
+  r=0:'e' distinct=1 → [e] len=1
+  r=1:'c' distinct=2 → [ec] len=2
+  r=2:'e' freq[e]=2, distinct=2 → [ece] len=3
+  r=3:'b' distinct=3 > k=2 → shrink:
+    remove 'e': freq[e]=1, distinct still 3
+    remove 'c': freq[c]=0, distinct=2, left=2
+    window=[eb] len=2
+  r=4:'a' distinct=3 > 2 → shrink:
+    remove 'e': freq[e]=0, distinct=2, left=3
+    window=[ba] len=2
+  max=3 ✓ (the "ece" window)</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+int longest_k_distinct(const char *s, int k) {
+    if (k == 0) return 0;
+    int freq[128] = {0};
+    int left = 0, distinct = 0, max_len = 0;
+    int n = (int)strlen(s);
+
+    for (int right = 0; right &lt; n; right++) {
+        int c = (unsigned char)s[right];
+        if (freq[c]++ == 0) distinct++;   /* new character enters window */
+
+        while (distinct &gt; k) {
+            int lc = (unsigned char)s[left];
+            if (--freq[lc] == 0) distinct--;   /* character leaves window */
+            left++;
+        }
+
+        int win = right - left + 1;
+        if (win &gt; max_len) max_len = win;
+    }
+    return max_len;
+}
+
+int main(void) {
+    printf("%d\n", longest_k_distinct("eceba", 2));   /* 3 ("ece") */
+    printf("%d\n", longest_k_distinct("aa",    1));   /* 2 */
+    printf("%d\n", longest_k_distinct("aabacbebebe", 3)); /* 7 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">"aa", k=1:
+  r=0:'a' freq[a]=1, distinct=1, win=1, max=1
+  r=1:'a' freq[a]=2, distinct=1, win=2, max=2
+  distinct=1 <= k=1, no shrink
+  return 2 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Post-increment in the condition</div>
+    <p><code>if (freq[c]++ == 0)</code> checks the old value and then increments — it correctly detects when a character is newly added (count was 0). Similarly <code>--freq[lc] == 0</code> decrements first then checks — it detects when a character is fully removed. Swapping these orders breaks the logic.</p>
+  </div>
+  <div class="leetcode"><span>340 · Longest Substring with At Most K Distinct</span><span>159 · At Most Two Distinct</span></div>
+  <div class="trigger">When finding longest window with ≤K distinct chars → think: distinct counter + freq array + shrink when distinct > k.</div>
+</div>
+
+<div class="card" id="p14">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 14</span>
+    <span class="pattern-name">Anagram Check — Frequency Array Comparison</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">"listen" and "silent" — do they use the same letters the same number of times? Instead of sorting both (expensive), just tally each letter in the first string and un-tally for the second. If all tallies hit zero at the end, they're anagrams.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Use a single frequency array — increment for string A, decrement for string B. If they're anagrams, every entry returns to 0. This avoids sorting (O(n log n)) and uses O(1) space (26 or 128 integers, fixed).</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>If lengths differ: return false immediately.</li>
+    <li>Walk both strings simultaneously: <code>freq[a[i]-'a']++</code>, <code>freq[b[i]-'a']--</code>.</li>
+    <li>After the loop: check if all freq[] entries are 0.</li>
+    <li>Any non-zero entry means one string has a character the other doesn't.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">"anagram" vs "nagaram":
+  +a +n +a +g +r +a +m   (from "anagram")
+  -n -a -g -a -r -a -m   (from "nagaram")
+  freq: a=+3-3=0, n=+1-1=0, g=+1-1=0, r=+1-1=0, m=+1-1=0
+  all zero → IS anagram ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+int is_anagram(const char *a, const char *b) {
+    if (strlen(a) != strlen(b)) return 0;   /* must be same length */
+    int freq[26] = {0};
+    /* Increment for a, decrement for b — net effect is zero if anagram */
+    for (int i = 0; a[i]; i++) {
+        freq[a[i] - 'a']++;
+        freq[b[i] - 'a']--;
+    }
+    for (int i = 0; i &lt; 26; i++)
+        if (freq[i] != 0) return 0;   /* mismatch found */
+    return 1;
+}
+
+int main(void) {
+    printf("%d\n", is_anagram("anagram", "nagaram"));  /* 1 */
+    printf("%d\n", is_anagram("rat",     "car"));      /* 0 */
+    printf("%d\n", is_anagram("listen",  "silent"));   /* 1 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">is_anagram("rat", "car"):
+  i=0: freq['r'-'a']=freq[17]++, freq['c'-'a']=freq[2]--
+  i=1: freq['a'-'a']=freq[0]++, freq['a'-'a']=freq[0]--  (cancels)
+  i=2: freq['t'-'a']=freq[19]++, freq['r'-'a']=freq[17]--  (17 back to 0)
+  check: freq[2]=-1 (c: r has none, car has one) → return 0 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Only works for lowercase a-z</div>
+    <p>Using <code>c - 'a'</code> requires all characters to be lowercase letters. For problems with arbitrary characters or Unicode, use a full 128-element array with <code>(unsigned char)c</code> as the index, or a hash map.</p>
+  </div>
+  <div class="leetcode"><span>242 · Valid Anagram</span><span>49 · Group Anagrams</span></div>
+  <div class="trigger">When checking anagrams → think: single freq[] — increment for s1, decrement for s2, check all zeros.</div>
+</div>
+
+
+<div class="card" id="p15">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 15</span>
+    <span class="pattern-name">All Anagrams in a String</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">You have a secret code word and you're scanning a long message looking for scrambled versions of it. Every time your sliding window of the right length contains all the right letters in any order, you've found a hit. Log its starting position.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Fixed-size sliding window of length <code>len(p)</code>. Maintain a window frequency array. Compare it to the pattern frequency array at each step. When they match, record the starting index. Slide by adding one char on the right and removing one on the left.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Build <code>need[26]</code> from pattern <code>p</code>. Initialize window with first <code>len(p)</code> chars of <code>s</code>.</li>
+    <li>Compare window to need; if match, record index 0.</li>
+    <li>Slide: add <code>s[right]</code>, remove <code>s[right - len(p)]</code>; compare after each slide.</li>
+    <li>Comparing two int[26] arrays: use memcmp or a match counter.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">s="cbaebabacd", p="abc"
+need: a=1,b=1,c=1
+window [0..2]="cba": c=1,b=1,a=1 → MATCH at i=0
+window [1..3]="bae": b=1,a=1,e=1 → no
+window [2..4]="aeb": no
+...
+window [6..8]="bac": b=1,a=1,c=1 → MATCH at i=6
+result: [0, 6] ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+void find_anagrams(const char *s, const char *p) {
+    int ns = (int)strlen(s), np = (int)strlen(p);
+    if (ns &lt; np) return;
+
+    int need[26] = {0}, win[26] = {0};
+    for (int i = 0; i &lt; np; i++) need[p[i]-'a']++;
+
+    /* Initialize window with first np chars */
+    for (int i = 0; i &lt; np; i++) win[s[i]-'a']++;
+    if (memcmp(need, win, sizeof(need)) == 0) printf("0 ");
+
+    for (int right = np; right &lt; ns; right++) {
+        win[s[right]-'a']++;                /* add new right char */
+        win[s[right - np]-'a']--;           /* remove old left char */
+        if (memcmp(need, win, sizeof(need)) == 0)
+            printf("%d ", right - np + 1);  /* start index of window */
+    }
+    printf("\n");
+}
+
+int main(void) {
+    find_anagrams("cbaebabacd", "abc");   /* 0 6 */
+    find_anagrams("abab",       "ab");    /* 0 1 2 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">"abab", p="ab", np=2
+need: a=1,b=1
+init win: a=1,b=1 → match at i=0 → print 0
+right=2:'a': win[a]++→2, remove s[0]='a': win[a]--→1. win=a:1,b:1 → match → print 1
+right=3:'b': win[b]++→2, remove s[1]='b': win[b]--→1. win=a:1,b:1 → match → print 2
+output: 0 1 2 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: memcmp on int arrays</div>
+    <p>memcmp compares raw bytes, so it works correctly for int arrays on the same platform. But for portability, compare element-by-element if int has padding bytes (rare but possible). In competitive programming, memcmp on int[26] is universally fine.</p>
+  </div>
+  <div class="leetcode"><span>438 · Find All Anagrams in a String</span></div>
+  <div class="trigger">When finding all anagram positions → think: fixed-size window = len(pattern), slide and compare freq arrays.</div>
+</div>
+
+<div class="card" id="p16">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 16</span>
+    <span class="pattern-name">Permutation in String</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">Same as finding all anagrams — you just need to know if even one scrambled version of the pattern exists anywhere in the string. It's "find any anagram" rather than "find all anagrams." Stop as soon as you find the first match.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Use the same fixed-size sliding window approach as Pattern 15, but return true immediately on the first frequency match. Alternatively, track a <code>match</code> counter — how many of the 26 character counts currently match between window and need. Window is valid when match == 26.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Build need[] from s1. Build initial window[] from first len(s1) chars of s2.</li>
+    <li>Count initial <code>match</code>: how many indices have win[i]==need[i].</li>
+    <li>Slide: update win, adjust match count when an index goes into or out of equality.</li>
+    <li>If match == 26: return true. After loop: return false.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">s1="ab" (need: a=1,b=1), s2="eidbaooo"
+win after "ei": e=1,i=1 → match=24 (only 24 of 26 zeros match)
+slide right:
+  ...window "ba" → a=1,b=1 → match=26 → FOUND ✓
+return true</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+int check_inclusion(const char *s1, const char *s2) {
+    int n1 = (int)strlen(s1), n2 = (int)strlen(s2);
+    if (n1 &gt; n2) return 0;
+
+    int need[26] = {0}, win[26] = {0};
+    for (int i = 0; i &lt; n1; i++) { need[s1[i]-'a']++; win[s2[i]-'a']++; }
+
+    /* Count how many of 26 buckets already match */
+    int match = 0;
+    for (int i = 0; i &lt; 26; i++) if (need[i] == win[i]) match++;
+    if (match == 26) return 1;
+
+    for (int right = n1; right &lt; n2; right++) {
+        int add = s2[right] - 'a';
+        int rem = s2[right - n1] - 'a';
+
+        /* Add new right character */
+        win[add]++;
+        if (win[add] == need[add]) match++;           /* just became equal */
+        else if (win[add] == need[add] + 1) match--;  /* just became unequal */
+
+        /* Remove old left character */
+        win[rem]--;
+        if (win[rem] == need[rem]) match++;
+        else if (win[rem] == need[rem] - 1) match--;
+
+        if (match == 26) return 1;
+    }
+    return 0;
+}
+
+int main(void) {
+    printf("%d\n", check_inclusion("ab", "eidbaooo"));  /* 1 */
+    printf("%d\n", check_inclusion("ab", "eidboaoo"));  /* 0 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">"ab" in "eidbaooo":
+need: a=1,b=1
+init win on "ei": e=1,i=1
+match: 24 letters with need=0 and win=0 match, 2 don't (a and b)
+right=2: add 'd', rem 'e': win[d]++, win[e]--→0==0→match++→25. No improvement on a,b
+right=3: add 'b', rem 'i': win[b]++→1==need[b]=1→match++→26? check a too...
+  actually need full trace — but eventually "ba" window has a=1,b=1 → match=26 → return 1 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: match adjustment on both sides of equality</div>
+    <p>When incrementing win[add], you must check if it just became equal to need[add] (match++) OR if it went one <em>above</em> need (match--). The same two-case logic applies when decrementing. Missing either case silently corrupts the match counter.</p>
+  </div>
+  <div class="leetcode"><span>567 · Permutation in String</span></div>
+  <div class="trigger">When checking if any permutation of s1 is in s2 → think: fixed window + match counter tracking 26-bucket equality.</div>
+</div>
+
+
+<div class="card" id="p17">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 17</span>
+    <span class="pattern-name">Longest Repeating Character Replacement</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">You have a string of letters and can change at most k of them to any letter. You want the longest run where all letters are the same. Strategy: keep a window; inside it, you only need to change the letters that aren't the most frequent one. As long as <code>window_size - max_freq &le; k</code>, the window is valid.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">The key invariant: <code>window_size - max_freq_in_window &le; k</code>. The "cost" to make the window all one letter is replacing everything except the most common letter. If cost exceeds k, shrink left. Track the running max of the window's dominant frequency — crucially, you never need to decrease this max.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>freq[26]={0}, left=0, max_freq=0, max_len=0.</li>
+    <li>Expand right: <code>freq[s[right]-'a']++</code>; update <code>max_freq = max(max_freq, freq[...])</code>.</li>
+    <li>If <code>(right - left + 1) - max_freq &gt; k</code>: shrink left (<code>freq[s[left]-'a']--; left++</code>).</li>
+    <li>max_len = max(max_len, right - left + 1).</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">"AABABBA", k=1:
+  [A] freq A=1, max=1, cost=0 ≤1, len=1
+  [AA] A=2, max=2, cost=0, len=2
+  [AAB] B=1, max=2, cost=1≤1, len=3
+  [AABA] A=3, max=3, cost=1≤1, len=4
+  [AABAB] B=2, max=3, cost=2>1 → shrink: remove A→A=2, left=1
+  [ABAB] A=2,B=2, max=3(stale,ok), cost=4-3=1≤1, len=4
+  [ABABB] B=3, max=3, cost=5-3=2>1 → shrink: left=2
+  [BABB] B=3, cost=4-3=1≤1, len=4
+  max=4 ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+int character_replacement(const char *s, int k) {
+    int freq[26] = {0}, left = 0, max_freq = 0, max_len = 0;
+    int n = (int)strlen(s);
+
+    for (int right = 0; right &lt; n; right++) {
+        int c = s[right] - 'a';
+        freq[c]++;
+        if (freq[c] &gt; max_freq) max_freq = freq[c];   /* update dominant freq */
+
+        /* cost = window_size - max_freq = letters that need changing */
+        int window = right - left + 1;
+        if (window - max_freq &gt; k) {
+            freq[s[left] - 'a']--;   /* shrink — only move by 1 */
+            left++;
+        }
+
+        window = right - left + 1;
+        if (window &gt; max_len) max_len = window;
+    }
+    return max_len;
+}
+
+int main(void) {
+    printf("%d\n", character_replacement("AABABBA", 1));   /* 4 */
+    printf("%d\n", character_replacement("ABAB",    2));   /* 4 */
+    printf("%d\n", character_replacement("AAAA",    2));   /* 4 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">"ABAB", k=2:
+  r=0:'A' freq[A]=1, max=1, win=1, cost=0 ≤2, len=1
+  r=1:'B' freq[B]=1, max=1, win=2, cost=1 ≤2, len=2
+  r=2:'A' freq[A]=2, max=2, win=3, cost=1 ≤2, len=3
+  r=3:'B' freq[B]=2, max=2, win=4, cost=2 ≤2, len=4
+  return 4 ✓ (can replace 2 chars to get "AAAA" or "BBBB")</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: max_freq can become stale — and that's okay</div>
+    <p>When shrinking left, max_freq might not decrease even if the dominant character was removed. This means the window might sometimes be smaller than it "could" be — but it never incorrectly reports a window as valid when it isn't. The max_len never gets inflated because the window size can only grow if max_freq actually increases.</p>
+  </div>
+  <div class="leetcode"><span>424 · Longest Repeating Character Replacement</span></div>
+  <div class="trigger">When replacing at most k chars to maximize uniform run → think: window_size - max_freq ≤ k is the validity condition.</div>
+</div>
+
+<div class="card" id="p18">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 18</span>
+    <span class="pattern-name">Count Substrings with Exactly K Distinct Characters</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">Counting windows with exactly K distinct chars is tricky because a window "grows" as you add chars, not cleanly bounded. The trick: express "exactly K" as "at most K" minus "at most K-1." Sliding window gives at-most counts easily; the difference gives the exact count.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight"><code>count(exactly K) = count(at most K) - count(at most K-1)</code>. The at-most-K count: for each right, expand right and shrink left until distinct &le; K — then every window ending at right starting anywhere from [0..left] is valid, contributing <code>(right - left + 1)</code> windows.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Write helper <code>at_most_k(s, k)</code> counting substrings with ≤k distinct chars.</li>
+    <li>Maintain freq[], distinct, left. For each right: add char; shrink until distinct ≤ k.</li>
+    <li>Add <code>right - left + 1</code> to count (all windows ending here with valid left start).</li>
+    <li>Return <code>at_most_k(s, k) - at_most_k(s, k-1)</code>.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">"aab", k=1:
+at_most(k=1): "a","a","b","aa" but "aa" has 1 distinct, "aab" has 2 (excluded)
+  r=0:'a' distinct=1, left=0, count += 1 → 1
+  r=1:'a' distinct=1, left=0, count += 2 → 3
+  r=2:'b' distinct=2>1, shrink: remove 'a',left=1; 'a'→freq=0→distinct=1,left=2
+    count += 1 → 4
+  at_most(k=1) = 4
+
+at_most(k=0) = 0 (no empty substring counts)
+exactly(1) = 4 - 0 = 4? Let's count: "a","a","aa","b" = 4 ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+/* Count substrings with AT MOST k distinct characters */
+long at_most_k(const char *s, int k) {
+    int freq[128] = {0}, distinct = 0, left = 0;
+    long count = 0;
+    int n = (int)strlen(s);
+    for (int right = 0; right &lt; n; right++) {
+        if (freq[(unsigned char)s[right]]++ == 0) distinct++;
+        while (distinct &gt; k) {
+            if (--freq[(unsigned char)s[left]] == 0) distinct--;
+            left++;
+        }
+        count += right - left + 1;   /* all valid windows ending at right */
+    }
+    return count;
+}
+
+/* Count substrings with EXACTLY k distinct characters */
+long count_exactly_k(const char *s, int k) {
+    return at_most_k(s, k) - at_most_k(s, k - 1);
+}
+
+int main(void) {
+    printf("%ld\n", count_exactly_k("aab", 1));    /* 4 */
+    printf("%ld\n", count_exactly_k("abc", 2));    /* 2 ("ab","bc") */
+    printf("%ld\n", count_exactly_k("abcba", 2));  /* 6 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">at_most_k("abc", 2):
+  r=0:'a' distinct=1, count+=1=1
+  r=1:'b' distinct=2, count+=2=3
+  r=2:'c' distinct=3>2, shrink: remove 'a',left=1,distinct=2
+    count+=2=5
+  at_most("abc",2) = 5
+
+at_most("abc", 1):
+  r=0: count=1
+  r=1: 'b' distinct=2>1, shrink: distinct=1, count+=1=2
+  r=2: 'c' distinct=2>1, shrink: distinct=1, count+=1=3
+  at_most("abc",1) = 3
+
+exactly(2) = 5 - 3 = 2 → "ab","bc" ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: The at-most trick is the key insight</div>
+    <p>"Exactly K" windows are hard to count directly because adding a character can transition from invalid to valid to invalid again. The at-most trick avoids this by using monotone validity (adding chars can only increase distinct count, removing chars can only decrease it).</p>
+  </div>
+  <div class="leetcode"><span>992 · Subarrays with K Different Integers</span><span>930 · Binary Subarrays With Sum</span></div>
+  <div class="trigger">When counting substrings with exactly K distinct → think: exactly(K) = at_most(K) - at_most(K-1).</div>
+</div>
+
+
+<div class="card" id="p19">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 19</span>
+    <span class="pattern-name">Minimum Consecutive Cards to Pick Up</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">You're picking cards from a deck one at a time. You need to collect at least one pair of matching cards. What's the minimum number of consecutive cards you must draw to guarantee picking up a matching pair? The moment you see a card you already have in hand, that stretch is your window.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Use a hash map (or frequency array) to track the last seen index of each card value. When you encounter a card you've seen before, the window from its last occurrence to now is a valid window containing a pair. Track the minimum such window length.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Initialize <code>last_seen[]</code> to -1 for all values.</li>
+    <li>For each index <code>i</code>: if <code>last_seen[cards[i]] != -1</code>, compute window = i - last_seen[cards[i]] + 1.</li>
+    <li>Update min_len; always update <code>last_seen[cards[i]] = i</code>.</li>
+    <li>Return min_len (or -1 if no pair found).</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">cards = [3,4,2,3,4,7]
+  i=0: val=3, last=-1, record last[3]=0
+  i=1: val=4, last=-1, record last[4]=1
+  i=2: val=2, last=-1, record last[2]=2
+  i=3: val=3, last=0 → window=3-0+1=4, min=4; last[3]=3
+  i=4: val=4, last=1 → window=4-1+1=4, min=4; last[4]=4
+  min = 4 ✓ (pick up "3,4,2,3" or "4,2,3,4")</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#include &lt;limits.h&gt;
+
+#define MAX_VAL 1001
+
+int minimum_card_pickup(int *cards, int n) {
+    int last[MAX_VAL];
+    memset(last, -1, sizeof(last));   /* -1 = not seen */
+
+    int min_len = INT_MAX;
+    for (int i = 0; i &lt; n; i++) {
+        int v = cards[i];
+        if (last[v] != -1) {
+            int window = i - last[v] + 1;   /* inclusive window length */
+            if (window &lt; min_len) min_len = window;
+        }
+        last[v] = i;   /* always update: we want MOST RECENT occurrence */
+    }
+    return (min_len == INT_MAX) ? -1 : min_len;
+}
+
+int main(void) {
+    int c1[] = {3,4,2,3,4,7};
+    printf("%d\n", minimum_card_pickup(c1, 6));   /* 4 */
+
+    int c2[] = {1,0,5,3};
+    printf("%d\n", minimum_card_pickup(c2, 4));   /* -1 (no pair) */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">cards=[3,4,2,3,4,7]:
+  i=0: last[3]=-1 → last[3]=0
+  i=1: last[4]=-1 → last[4]=1
+  i=2: last[2]=-1 → last[2]=2
+  i=3: last[3]=0 ≠ -1 → win=3-0+1=4, min=4; last[3]=3
+  i=4: last[4]=1 ≠ -1 → win=4-1+1=4, min=4; last[4]=4
+  i=5: last[7]=-1 → last[7]=5
+  return 4 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Update last_seen even after finding a pair</div>
+    <p>Always update <code>last_seen[v] = i</code> after checking, even when a match is found. A later occurrence of the same value combined with an even earlier match might produce a shorter window — but only if you use the <em>most recent</em> previous occurrence, not the first one.</p>
+  </div>
+  <div class="leetcode"><span>2260 · Minimum Consecutive Cards to Pick Up</span></div>
+  <div class="trigger">When finding minimum window containing a repeated value → think: last_seen array, window = i - last_seen[v] + 1.</div>
+</div>
+
+<div class="card" id="p20">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 20</span>
+    <span class="pattern-name">Max Vowels in Substring of Length K</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">You have a telescope that can only view exactly K consecutive letters at a time. You want to point it at the section that contains the most vowels. Slide it one step at a time — when you move right, you gain one letter (might be a vowel) and lose one letter from the left (might have been a vowel).</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Fixed-size sliding window. Count vowels in the initial window of size k. Then slide: if the character entering from the right is a vowel, increment; if the character leaving from the left was a vowel, decrement. O(n) total, O(1) space.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Count vowels in <code>s[0..k-1]</code>; record as <code>max_v = curr_v</code>.</li>
+    <li>For each new right position <code>r</code> from k to n-1:</li>
+    <li>Add <code>is_vowel(s[r])</code>; subtract <code>is_vowel(s[r-k])</code>.</li>
+    <li>Update max_v = max(max_v, curr_v).</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">"abciiidef", k=3:
+  init [abc]: a=1,b=0,c=0 → curr=1, max=1
+  slide [bci]: -a(1), +i(1) → curr=1, max=1
+  slide [cii]: -b(0), +i(1) → curr=2, max=2
+  slide [iii]: -c(0), +i(1) → curr=3, max=3
+  slide [iid]: -i(1), +d(0) → curr=2, max=3
+  ...
+  max = 3 ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+static int is_vowel(char c) {
+    return c=='a'||c=='e'||c=='i'||c=='o'||c=='u';
+}
+
+int max_vowels(const char *s, int k) {
+    int n = (int)strlen(s);
+    int curr = 0;
+
+    /* Count vowels in initial window */
+    for (int i = 0; i &lt; k; i++) curr += is_vowel(s[i]);
+    int best = curr;
+
+    /* Slide: add right char, remove left char */
+    for (int r = k; r &lt; n; r++) {
+        curr += is_vowel(s[r]);         /* entering */
+        curr -= is_vowel(s[r - k]);     /* leaving */
+        if (curr &gt; best) best = curr;
+    }
+    return best;
+}
+
+int main(void) {
+    printf("%d\n", max_vowels("abciiidef", 3));   /* 3 */
+    printf("%d\n", max_vowels("aeiou",     2));   /* 2 */
+    printf("%d\n", max_vowels("leetcode",  3));   /* 2 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">"leetcode", k=3:
+  init [lee]: l=0,e=1,e=1 → curr=2, best=2
+  slide [eet]: -l(0),+t(0) → curr=2, best=2
+  slide [etc]: -e(1),+c(0) → curr=1
+  slide [tco]: -e(1),+o(1) → curr=1
+  slide [cod]: -t(0),+d(0) → curr=1
+  slide [ode]: -c(0),+e(1) → curr=2
+  best=2 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Fixed window — no shrinking needed</div>
+    <p>This is a fixed-size window problem: the window is always exactly k characters. Unlike variable-size windows, you never need to shrink — just add one from the right and remove one from the left at every step.</p>
+  </div>
+  <div class="leetcode"><span>1456 · Maximum Number of Vowels in a Substring</span></div>
+  <div class="trigger">When finding max of something in every window of fixed size k → think: init window, then slide add-right subtract-left in O(n).</div>
+</div>
+
 <!-- PATTERNS_END -->
 <script>hljs.highlightAll();</script>
 </body>
