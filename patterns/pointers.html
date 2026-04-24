@@ -828,6 +828,709 @@ safe_free(&p):
   <div class="trigger">When you see: free(p) &#8594; always follow with p = NULL; never return &local_var; always check malloc != NULL</div>
 </div>
 
+<!-- ================================================================ P11 -->
+<div class="card" id="p11">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 11</span>
+    <span class="pattern-name">Two Pointer: Left-Right Convergence with Actual Pointers</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Instead of using integer indices left and right, use actual pointers lo and hi that point directly into the array. Increment lo with lo++ and decrement hi with hi--. The logic is identical to the index version, but you avoid the arr[index] dereference every time — the pointer IS the reference.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    <code>int *lo = arr; int *hi = arr + n - 1;</code> — lo and hi point to the first and last elements. Compare with <code>lo &lt; hi</code>. Dereference directly: <code>*lo</code> and <code>*hi</code>. Advance with lo++ and hi--.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* Check if sorted array is a palindrome using raw pointers. */
+int is_palindrome_arr(int *arr, int n) {
+    int *lo = arr;           /* lo points to first element */
+    int *hi = arr + n - 1;  /* hi points to last element */
+
+    while (lo &lt; hi) {       /* stop when pointers meet or cross */
+        if (*lo != *hi) return 0;   /* mismatch: not a palindrome */
+        lo++;    /* advance lo pointer right */
+        hi--;    /* advance hi pointer left */
+    }
+    return 1;
+}
+
+/* Reverse array in-place using pointers */
+void reverse_ptr(int *arr, int n) {
+    int *lo = arr;
+    int *hi = arr + n - 1;
+    while (lo &lt; hi) {
+        int tmp = *lo;
+        *lo = *hi;
+        *hi = tmp;
+        lo++; hi--;
+    }
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">arr=[1,2,3,2,1], n=5
+lo=&arr[0]=0x100, hi=&arr[4]=0x110
+
+*lo=1, *hi=1 equal → lo=0x104, hi=0x10C
+*lo=2, *hi=2 equal → lo=0x108, hi=0x108
+lo >= hi → stop, return 1 ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Using lo &lt;= hi instead of lo &lt; hi</div>
+    <p>When n is odd, lo and hi both end up pointing to the middle element. Comparing the middle element to itself is fine — but then lo++ and hi-- would cross, and the next iteration with <code>lo &lt;= hi</code> would now have lo pointing past hi. With <code>lo &lt; hi</code>, the loop stops correctly when they meet at the middle.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>125 &middot; Valid Palindrome</span>
+    <span>167 &middot; Two Sum II</span>
+    <span>344 &middot; Reverse String</span>
+  </div>
+  <div class="trigger">When you see: two-pointer on array using C pointers &#8594; int *lo=arr; int *hi=arr+n-1; compare with lo&lt;hi; dereference with *lo, *hi</div>
+</div>
+
+<!-- ================================================================ P12 -->
+<div class="card" id="p12">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 12</span>
+    <span class="pattern-name">Fast-Slow Pointer (Floyd&rsquo;s Cycle Detection)</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Two runners on a circular track: one runs twice as fast as the other. If the track is circular, the fast runner will lap the slow one — they will meet.
+    If the track is straight (no cycle), the fast runner reaches the end first — they never meet.
+    Use a slow pointer (moves 1 step) and a fast pointer (moves 2 steps) to detect cycles in linked structures.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    If slow and fast ever point to the same node, there is a cycle. If fast reaches NULL, there is no cycle. This works in O(n) time with O(1) space — no visited array needed.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">typedef struct Node { int val; struct Node *next; } Node;
+
+/* Returns 1 if linked list has a cycle, 0 otherwise. */
+int has_cycle(Node *head) {
+    Node *slow = head;   /* moves 1 step per iteration */
+    Node *fast = head;   /* moves 2 steps per iteration */
+
+    while (fast != NULL &amp;&amp; fast-&gt;next != NULL) {
+        slow = slow-&gt;next;          /* 1 step */
+        fast = fast-&gt;next-&gt;next;   /* 2 steps */
+        if (slow == fast) return 1; /* same node = cycle detected */
+    }
+    return 0;   /* fast hit NULL: no cycle */
+}
+
+/* Find middle node of a linked list (no cycle assumed). */
+Node *find_middle(Node *head) {
+    Node *slow = head;
+    Node *fast = head;
+    while (fast != NULL &amp;&amp; fast-&gt;next != NULL) {
+        slow = slow-&gt;next;
+        fast = fast-&gt;next-&gt;next;
+    }
+    return slow;   /* when fast reaches end, slow is at the middle */
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">List: 1→2→3→4→5→3 (cycle at node 3)
+
+slow=1, fast=1
+iter1: slow=2, fast=3
+iter2: slow=3, fast=5
+iter3: slow=4, fast=4 (fast: 5→3, then 3→4)
+wait:  slow=4, fast: 5-&gt;next-&gt;next = 3-&gt;next = 4
+slow==fast==4 → has cycle = 1 ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Checking fast != NULL but not fast-&gt;next != NULL</div>
+    <p>Fast pointer moves two steps: <code>fast = fast-&gt;next-&gt;next</code>. If fast is non-NULL but fast-&gt;next is NULL, then fast-&gt;next-&gt;next dereferences NULL and crashes. Always check both: <code>fast != NULL &amp;&amp; fast-&gt;next != NULL</code> before moving fast two steps.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>141 &middot; Linked List Cycle</span>
+    <span>876 &middot; Middle of the Linked List</span>
+    <span>142 &middot; Linked List Cycle II</span>
+  </div>
+  <div class="trigger">When you see: detect cycle or find middle in linked list &#8594; think: slow moves 1 step, fast moves 2 steps; if they meet there's a cycle</div>
+</div>
+
+<!-- ================================================================ P13 -->
+<div class="card" id="p13">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 13</span>
+    <span class="pattern-name">Two Pointer: Partition In Place</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Rearrange an array so all elements satisfying a condition come before all elements that don't — without extra space.
+    A left pointer scans for elements that should be on the right, a right pointer scans for elements that should be on the left. When both find their targets, swap them. This is the core of quicksort's partition step.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Left pointer searches rightward for a "wrong" element (one that should be on the right). Right pointer searches leftward for a "wrong" element (one that should be on the left). Swap them. Repeat until pointers cross.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* Partition: move elements < pivot to left, >= pivot to right.
+   Returns pointer to the first element >= pivot. */
+int *partition(int *lo, int *hi, int pivot) {
+    int *left  = lo;
+    int *right = hi - 1;   /* hi is one past end; start at last element */
+
+    while (left &lt;= right) {
+        while (left  &lt;= right &amp;&amp; *left  &lt;  pivot) left++;   /* find left wrongdoer */
+        while (left  &lt;= right &amp;&amp; *right &gt;= pivot) right--;  /* find right wrongdoer */
+        if (left &lt; right) {
+            int tmp = *left; *left = *right; *right = tmp;
+            left++; right--;
+        }
+    }
+    return left;   /* left now points to first element >= pivot */
+}
+
+/* Quicksort using pointer-based partition */
+void quicksort(int *lo, int *hi) {  /* hi = one past last element */
+    if (hi - lo &lt;= 1) return;
+    int pivot = *(lo + (hi - lo) / 2);
+    int *mid = partition(lo, hi, pivot);
+    quicksort(lo, mid);
+    quicksort(mid, hi);
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">arr=[3,1,4,1,5,9,2,6], pivot=4
+left=&arr[0], right=&arr[7]
+
+left stops at 3 (3<4, keep going)... stops at 4 (4>=4)
+right stops at 2 (2<4, wrong side)
+swap arr[2](4) ↔ arr[6](2): [3,1,2,1,5,9,4,6]
+left moves to arr[3], right to arr[5]
+... continues until left crosses right
+partition returns pointer to first element >= 4</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Infinite loop when all elements equal pivot</div>
+    <p>If all elements equal the pivot, both inner while loops exit immediately without moving pointers, and no swap is made. The outer loop then runs forever. Always advance both pointers after a swap (<code>left++; right--</code>) to guarantee progress.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>75 &middot; Sort Colors</span>
+    <span>912 &middot; Sort an Array (quicksort)</span>
+    <span>215 &middot; Kth Largest Element</span>
+  </div>
+  <div class="trigger">When you see: partition array around a value in-place &#8594; think: left scans right for violations, right scans left for violations, swap them</div>
+</div>
+
+<!-- ================================================================ P14 -->
+<div class="card" id="p14">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 14</span>
+    <span class="pattern-name">Read-Write Pointer: Compaction</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    You want to remove certain elements from an array in-place, shifting remaining elements together.
+    Use two pointers: a read pointer that scans every element, and a write pointer that only advances when an element should be kept.
+    Elements to keep get written to the write position. The write pointer's final position is the new length.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Read pointer always advances. Write pointer advances only on "keep" elements. At the end, everything from write pointer onward is considered removed (just ignore it — no need to zero it out for most problems).
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* Remove all occurrences of 'val' from arr in-place.
+   Returns the new length. Elements at [new_len..n-1] are don't-care. */
+int remove_element(int *arr, int n, int val) {
+    int *write = arr;      /* write pointer: next slot for a kept element */
+
+    for (int *read = arr; read &lt; arr + n; read++) {
+        if (*read != val) {        /* this element should be kept */
+            *write = *read;        /* copy it to the write position */
+            write++;               /* advance write pointer */
+        }
+        /* if *read == val: skip it — read advances, write stays */
+    }
+    return (int)(write - arr);   /* pointer difference = new length */
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">arr=[3,2,2,3], val=3
+write=&arr[0], read scans:
+
+read=&arr[0](3): 3==val → skip, write stays
+read=&arr[1](2): 2!=3  → *write=2, write=&arr[1]
+read=&arr[2](2): 2!=3  → *write=2, write=&arr[2]
+read=&arr[3](3): 3==val → skip
+
+write-arr = 2 → new length = 2
+arr=[2,2,2,3] (only first 2 elements matter) ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Forgetting the write-read start position</div>
+    <p>Both write and read can start at arr (the beginning). Read always advances. Write only advances on kept elements. If you start write at arr+1 (thinking "arr[0] is always kept"), you miss the case where arr[0] should be removed. Start both at arr and let the condition determine what happens at index 0.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>27 &middot; Remove Element</span>
+    <span>26 &middot; Remove Duplicates from Sorted Array</span>
+    <span>283 &middot; Move Zeroes</span>
+  </div>
+  <div class="trigger">When you see: remove elements in-place from array &#8594; think: read pointer scans all, write pointer advances only on kept elements, return write-arr</div>
+</div>
+
+<!-- ================================================================ P15 -->
+<div class="card" id="p15">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 15</span>
+    <span class="pattern-name">Two Pointer: Merge Two Sorted Arrays</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Merge two sorted arrays into one sorted result. Use a pointer into each source array and a pointer into the destination. At each step, pick the smaller of the two current elements, write it to the destination, and advance the chosen source pointer. When one source is exhausted, copy the rest of the other.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Both source arrays are sorted so the next smallest element is always at the current head of one of them. Three pointers: p1 into A, p2 into B, dest into result. Advance p1 or p2 based on which is smaller.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* Merge sorted arrays A (size m) and B (size n) into result (size m+n). */
+void merge_sorted(int *A, int m, int *B, int n, int *result) {
+    int *p1   = A;          /* pointer into A */
+    int *p2   = B;          /* pointer into B */
+    int *dest = result;     /* pointer into destination */
+
+    while (p1 &lt; A + m &amp;&amp; p2 &lt; B + n) {
+        if (*p1 &lt;= *p2) {
+            *dest++ = *p1++;   /* A's current is smaller: take it */
+        } else {
+            *dest++ = *p2++;   /* B's current is smaller: take it */
+        }
+    }
+    /* copy any remaining elements from whichever source is not exhausted */
+    while (p1 &lt; A + m) *dest++ = *p1++;
+    while (p2 &lt; B + n) *dest++ = *p2++;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">A=[1,3,5], B=[2,4,6], result=[]
+
+*p1=1, *p2=2: 1<=2 → result=[1], p1=&A[1]
+*p1=3, *p2=2: 3>2  → result=[1,2], p2=&B[1]
+*p1=3, *p2=4: 3<=4 → result=[1,2,3], p1=&A[2]
+*p1=5, *p2=4: 5>4  → result=[1,2,3,4], p2=&B[2]
+*p1=5, *p2=6: 5<=6 → result=[1,2,3,4,5], p1=A+3 (exhausted)
+copy B remainder: result=[1,2,3,4,5,6] ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Forgetting to copy the remaining elements of the non-exhausted source</div>
+    <p>The while loop exits as soon as ONE source is exhausted. The other source may still have elements. Without the two trailing while loops, those elements are silently dropped. Always add the "copy remainder" step for both sources after the main loop.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>88 &middot; Merge Sorted Array</span>
+    <span>21 &middot; Merge Two Sorted Lists</span>
+    <span>23 &middot; Merge K Sorted Lists</span>
+  </div>
+  <div class="trigger">When you see: merge two sorted sequences &#8594; think: three pointers (p1, p2, dest), always pick smaller, copy remainder at the end</div>
+</div>
+
+<!-- ================================================================ P16 -->
+<div class="card" id="p16">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 16</span>
+    <span class="pattern-name">Pointer in Structs: Building Linked Data Structures</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    A struct can contain a pointer to another struct of the same type. This is how linked lists, trees, and graphs are built in C.
+    Each node owns its data and a pointer to the next node. The last node's next pointer is NULL — the sentinel that marks the end.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    A self-referential struct: <code>struct Node { int val; struct Node *next; }</code>. The pointer inside the struct is how nodes chain together. NULL terminates the chain. You traverse by following next pointers until NULL.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+typedef struct Node {
+    int val;
+    struct Node *next;   /* pointer to next node — self-referential */
+} Node;
+
+/* Create a new heap-allocated node */
+Node *new_node(int val) {
+    Node *n = malloc(sizeof(Node));
+    if (n) { n-&gt;val = val; n-&gt;next = NULL; }
+    return n;
+}
+
+/* Prepend to list: new node becomes the new head */
+Node *prepend(Node *head, int val) {
+    Node *n = new_node(val);
+    n-&gt;next = head;   /* new node points to old head */
+    return n;          /* new node is the new head */
+}
+
+/* Traverse and print the list */
+void print_list(Node *head) {
+    for (Node *cur = head; cur != NULL; cur = cur-&gt;next)
+        printf("%d → ", cur-&gt;val);
+    printf("NULL\n");
+}
+
+/* Free all nodes */
+void free_list(Node *head) {
+    while (head) {
+        Node *tmp = head-&gt;next;  /* save next before freeing current */
+        free(head);
+        head = tmp;
+    }
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">head = NULL
+prepend(head, 3): node3{val=3, next=NULL}, head=node3
+prepend(head, 2): node2{val=2, next=node3}, head=node2
+prepend(head, 1): node1{val=1, next=node2}, head=node1
+
+print: 1 → 2 → 3 → NULL ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Losing the list head when freeing</div>
+    <p>When freeing a linked list, always save <code>head-&gt;next</code> to a temporary before calling <code>free(head)</code>. After free, head's memory is returned to the allocator — accessing head-&gt;next afterward is use-after-free. The pattern: <code>tmp = head-&gt;next; free(head); head = tmp;</code></p>
+  </div>
+
+  <div class="leetcode">
+    <span>206 &middot; Reverse Linked List</span>
+    <span>21 &middot; Merge Two Sorted Lists</span>
+    <span>141 &middot; Linked List Cycle</span>
+  </div>
+  <div class="trigger">When you see: linked node structure &#8594; struct with *next pointer; traverse with cur=cur-&gt;next; always save next before freeing</div>
+</div>
+
+<!-- ================================================================ P17 -->
+<div class="card" id="p17">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 17</span>
+    <span class="pattern-name">Arrow vs Dot Operator</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Two operators access struct members: dot (.) and arrow (-&gt;).
+    Dot is for when you have the struct directly (a value). Arrow is for when you have a pointer to a struct.
+    Arrow is just shorthand: <code>p-&gt;field</code> means exactly <code>(*p).field</code> — dereference then access.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    If you have <code>Node n</code>: use n.val. If you have <code>Node *p</code>: use p-&gt;val (same as (*p).val). The compiler will tell you if you mix them up — it's a hard error, not silent.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">typedef struct { int x; int y; } Point;
+
+void demo(void) {
+    Point  p1 = {3, 4};   /* p1 is a struct VALUE on the stack */
+    Point *p2 = &amp;p1;      /* p2 is a POINTER to the struct */
+
+    /* Dot operator: used directly on a struct value */
+    printf("%d\n", p1.x);    /* 3 — p1 is a value, use dot */
+
+    /* Arrow operator: used on a pointer to struct */
+    printf("%d\n", p2-&gt;x);   /* 3 — p2 is a pointer, use arrow */
+
+    /* Arrow is identical to dereference + dot */
+    printf("%d\n", (*p2).x);  /* 3 — same as p2->x, just more verbose */
+
+    /* Modifying through a pointer */
+    p2-&gt;y = 10;              /* writes to p1.y through the pointer */
+    printf("%d\n", p1.y);    /* prints 10 — p1 was modified via p2 */
+}
+
+/* In linked list traversal — always arrow since we have pointers */
+void traverse(Node *cur) {
+    while (cur != NULL) {
+        printf("%d\n", cur-&gt;val);   /* cur is a pointer → arrow */
+        cur = cur-&gt;next;            /* cur->next is also a pointer */
+    }
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">p1 at 0x1000: {x=3, y=4}
+p2 = 0x1000
+
+p1.x  → direct access field x of p1 = 3
+p2->x → *(p2).x = *(0x1000).x = 3  ✓
+p2->y = 10 → writes 10 to 0x1004 → p1.y = 10  ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Using dot on a pointer (or arrow on a value)</div>
+    <p><code>p2.x</code> where p2 is a pointer is a compile error — "request for member in something not a struct." <code>p1-&gt;x</code> where p1 is a struct value (not a pointer) is also an error. The compiler catches this, but the message can be confusing. Rule: pointer = arrow, value = dot.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>Underpins: all struct-based problems (linked lists, trees)</span>
+  </div>
+  <div class="trigger">When you see: struct variable → use dot (.); pointer to struct → use arrow (-&gt;); remember: p-&gt;x == (*p).x</div>
+</div>
+
+<!-- ================================================================ P18 -->
+<div class="card" id="p18">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 18</span>
+    <span class="pattern-name">Dynamic Memory: malloc / calloc / realloc / free</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Stack memory is automatic but limited and destroyed when a function returns. Heap memory is explicitly requested and lasts until you free it.
+    malloc asks the OS for a chunk of memory of given byte count. You get a void* to its start. You are responsible for freeing it exactly once when done.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    malloc = allocate uninitialized. calloc = allocate AND zero it out. realloc = resize an existing allocation. free = release back to the OS. Every malloc must pair with exactly one free.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+int main(void) {
+    /* malloc: allocate n ints, contents are garbage */
+    int n = 10;
+    int *arr = malloc(n * sizeof(int));   /* n * 4 bytes = 40 bytes */
+    if (!arr) return 1;                   /* always check for failure */
+
+    /* calloc: allocate n ints, all zeroed */
+    int *zeroed = calloc(n, sizeof(int)); /* same size, but initialized to 0 */
+    if (!zeroed) { free(arr); return 1; }
+
+    /* realloc: grow or shrink an allocation */
+    int new_n = 20;
+    int *bigger = realloc(arr, new_n * sizeof(int));
+    if (!bigger) {
+        /* realloc failed: arr is still valid, do NOT free arr here */
+        free(zeroed); free(arr); return 1;
+    }
+    arr = bigger;   /* realloc may have moved the memory; use the new pointer */
+
+    /* free: release memory; always set pointer to NULL after */
+    free(arr);    arr    = NULL;
+    free(zeroed); zeroed = NULL;
+    return 0;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">malloc(40):  OS gives us block at 0x3000, contents=garbage
+calloc(10,4): OS gives block at 0x4000, all bytes = 0
+realloc(0x3000, 80): may return 0x3000 (extended in place)
+                     or new address 0x5000 (moved)
+Always use the returned pointer, not the original.</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: arr = realloc(arr, new_size) — losing the original pointer on failure</div>
+    <p>If realloc fails, it returns NULL — but the original memory is still valid and still allocated. If you write <code>arr = realloc(arr, ...)</code> and it fails, arr is now NULL and the original block is leaked forever. Always use a temp: <code>int *tmp = realloc(arr, ...); if (tmp) arr = tmp; else /* handle error, arr still valid */;</code></p>
+  </div>
+
+  <div class="leetcode">
+    <span>Underpins: dynamic arrays, variable-size outputs</span>
+    <span>Underpins: building linked lists / trees on the heap</span>
+  </div>
+  <div class="trigger">When you see: need heap memory &#8594; malloc+NULL check; zero-init → calloc; resize → realloc with temp pointer; always free once and set to NULL</div>
+</div>
+
+<!-- ================================================================ P19 -->
+<div class="card" id="p19">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 19</span>
+    <span class="pattern-name">Memory Leak: When free() Is Missed</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    A memory leak is when you allocate heap memory but lose all pointers to it — so you can never free it.
+    The memory stays consumed for the lifetime of the process. Tiny leaks in short programs are harmless. Leaks in long-running servers or embedded systems cause them to run out of memory and crash hours or days later.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    A leak happens when the last pointer to a heap block is overwritten or goes out of scope without free being called first. Common causes: early return, exception-like flow, loop that forgets to free old allocations before reassigning the pointer.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">#include &lt;stdlib.h&gt;
+
+/* LEAK: early return without freeing */
+int process(int n) {
+    int *buf = malloc(n * sizeof(int));
+    if (!buf) return -1;
+
+    if (n &lt; 0) return -2;   /* BUG: buf is leaked here — malloc'd but never freed */
+
+    /* ... use buf ... */
+    free(buf);
+    return 0;
+}
+
+/* FIX: always free before returning */
+int process_fixed(int n) {
+    int *buf = malloc(n * sizeof(int));
+    if (!buf) return -1;
+
+    if (n &lt; 0) {
+        free(buf);   /* free BEFORE returning on error path */
+        return -2;
+    }
+
+    /* ... use buf ... */
+    free(buf);
+    return 0;
+}
+
+/* LEAK: pointer overwritten in loop without freeing old allocation */
+void loop_leak(int iters) {
+    int *p = NULL;
+    for (int i = 0; i &lt; iters; i++) {
+        p = malloc(sizeof(int));   /* BUG: previous p (if any) is leaked */
+        *p = i;
+    }
+    free(p);   /* only the LAST allocation is freed */
+}
+
+/* FIX: free old allocation before reassigning */
+void loop_fixed(int iters) {
+    int *p = NULL;
+    for (int i = 0; i &lt; iters; i++) {
+        free(p);                    /* free previous iteration's allocation */
+        p = malloc(sizeof(int));
+        if (p) *p = i;
+    }
+    free(p);
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">loop_leak(3):
+  i=0: p=malloc() → 0x100
+  i=1: p=malloc() → 0x200 (0x100 is NOW LEAKED — pointer lost)
+  i=2: p=malloc() → 0x300 (0x200 is NOW LEAKED)
+  free(p): frees 0x300 only
+  0x100 and 0x200 are leaked forever until process exits ✗</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Thinking the OS will clean up leaks immediately</div>
+    <p>Modern OSes reclaim all memory when a process exits. So short programs that leak don't visibly crash. This hides leaks during testing. Long-running processes (servers, embedded firmware) never exit — leaks accumulate until memory is exhausted. Always free what you allocate, even if "the OS will clean it up."</p>
+  </div>
+
+  <div class="leetcode">
+    <span>Underpins: correct C implementations of any heap-using algorithm</span>
+  </div>
+  <div class="trigger">When you see: malloc in a loop or early-return paths &#8594; trace every exit path and ensure free() is called on every malloc'd pointer before that exit</div>
+</div>
+
+<!-- ================================================================ P20 -->
+<div class="card" id="p20">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 20</span>
+    <span class="pattern-name">Stack vs Heap: Pointer Lifetime Rules</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Every variable lives either on the stack (automatic, destroyed when the function returns) or on the heap (manual, lives until you free it).
+    Pointers to stack variables become dangling the moment the function returns. Pointers to heap variables are valid until free() is called — regardless of which function created them.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Rule: a pointer may only outlive the data it points to if the data is on the heap. If a function allocates on the stack and returns a pointer to it, the pointer is immediately invalid. Use heap allocation (malloc) whenever a value must outlive the function that created it.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+/* WRONG: returns pointer to stack variable */
+int *stack_return(void) {
+    int x = 42;          /* x lives on the stack of this function */
+    return &amp;x;           /* stack frame destroyed on return; pointer is instantly invalid */
+}
+
+/* CORRECT: heap data outlives the function */
+int *heap_return(int val) {
+    int *p = malloc(sizeof(int));
+    if (p) *p = val;    /* p lives on the heap; valid until caller calls free(p) */
+    return p;
+}
+
+/* CORRECT: output parameter pattern (no heap needed) */
+void fill_value(int *out, int val) {
+    *out = val;          /* caller passes a pointer to THEIR variable; we write through it */
+}
+
+/* String duplication: classic heap pattern */
+char *my_strdup(const char *s) {
+    size_t len = strlen(s) + 1;          /* +1 for null terminator */
+    char *copy = malloc(len);
+    if (copy) memcpy(copy, s, len);      /* copy all bytes including '\0' */
+    return copy;                          /* caller must free this */
+}
+
+int main(void) {
+    int val;
+    fill_value(&amp;val, 99);   /* val lives in main's stack frame — safe */
+
+    int *p = heap_return(7);
+    /* use *p ... */
+    free(p);               /* caller's responsibility */
+    return 0;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">stack_return():
+  x at stack 0x7ff0 = 42
+  return 0x7ff0
+  ← function returns, stack frame gone, 0x7ff0 is now invalid
+  caller dereferences 0x7ff0 → undefined behavior (garbage or crash) ✗
+
+heap_return(7):
+  p = malloc(4) → 0x3000 on heap
+  *p = 7
+  return 0x3000
+  ← function returns, heap memory 0x3000 still valid
+  caller uses *p → 7  ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Returning a local array from a function</div>
+    <p>Same problem as returning a local variable's address, but trickier because arrays don't look like "variables." <code>int arr[10]; return arr;</code> — arr decays to &arr[0], a pointer to stack memory. After return, that memory is gone. If you need to return an array, malloc it on the heap and return the pointer.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>Underpins: all C functions returning dynamically-sized data</span>
+  </div>
+  <div class="trigger">When you see: function that must return data to the caller &#8594; either use heap (malloc, caller frees) or output pointer parameter (caller provides the buffer)</div>
+</div>
+
 <!-- PATTERNS_END -->
 <script>hljs.highlightAll();</script>
 </body>
