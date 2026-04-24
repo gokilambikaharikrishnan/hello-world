@@ -2548,6 +2548,678 @@ i=4: 4 > max_reach=3 → return 0 ✓ (stuck)</div>
   <div class="trigger">When you see: can you reach the end with jump values &#8594; think: greedy max_reach — if current index &gt; max_reach you're stuck</div>
 </div>
 
+<!-- ================================================================ P31 -->
+<div class="card" id="p31">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 31</span>
+    <span class="pattern-name">Greedy: Jump Game II (Minimum Jumps to Reach End)</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Same jumping platforms, but now you want the fewest jumps to reach the end.
+    Think of it as BFS in disguise: each "jump" covers a range of reachable positions.
+    From your current range, find the farthest you can reach in one more jump. When you exhaust your current range, you must take another jump.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Maintain a "current window" [current_start..current_end]. Walk through this window tracking the farthest next-jump reach. When you reach current_end, increment jump count and set the new window to [current_end+1..farthest_reach].
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* Minimum number of jumps to reach the last index. Guaranteed reachable. */
+int jump_min(int *arr, int n) {
+    int jumps        = 0;   /* total jumps taken */
+    int current_end  = 0;   /* farthest index reachable with 'jumps' jumps */
+    int farthest     = 0;   /* farthest index reachable with 'jumps+1' jumps */
+
+    for (int i = 0; i &lt; n - 1; i++) {   /* don't need to jump FROM the last index */
+        int reach = i + arr[i];
+        if (reach &gt; farthest) farthest = reach;   /* update best next jump */
+
+        if (i == current_end) {     /* exhausted current jump range */
+            jumps++;                /* must take another jump */
+            current_end = farthest; /* new range is everything reachable in one more jump */
+        }
+    }
+    return jumps;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">arr = [2, 3, 1, 1, 4]
+
+i=0: reach=2, farthest=2, i==current_end(0) → jumps=1, current_end=2
+i=1: reach=4, farthest=4
+i=2: reach=3, farthest=4, i==current_end(2) → jumps=2, current_end=4
+i=3: reach=4, farthest=4
+(i reaches n-1=4, loop ends)
+
+return 2 ✓ (jump from 0→1→4)</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Looping up to n instead of n-1</div>
+    <p>The loop should run <code>i &lt; n - 1</code>. If you loop to <code>i &lt; n</code>, when i reaches the last index (n-1) and i == current_end, you increment jumps unnecessarily. You don't need to jump FROM the last index.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>45 &middot; Jump Game II</span>
+    <span>55 &middot; Jump Game</span>
+    <span>1345 &middot; Jump Game IV</span>
+  </div>
+  <div class="trigger">When you see: minimum jumps to reach end &#8594; think: greedy BFS window — extend window, increment jumps when window exhausted</div>
+</div>
+
+<!-- ================================================================ P32 -->
+<div class="card" id="p32">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 32</span>
+    <span class="pattern-name">Greedy: Gas Station Circular Tour</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    You drive a circular route of gas stations. Each station has some gas and costs some gas to reach the next one.
+    You need to find the starting station from which you can complete the full circuit.
+    Key insight: if you run out of gas at station k starting from station i, then no station between i and k can be a valid start either (they all have the same deficit plus less surplus built up).
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    First check: if total gas &lt; total cost, no solution exists. Otherwise, exactly one starting point works. Greedily: start at 0, track running tank. When tank goes negative, the start station must be after the current failure point.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* Find the starting gas station index for a complete circuit, or -1. */
+int can_complete_circuit(int *gas, int *cost, int n) {
+    int total_surplus = 0;   /* net gas over entire circuit (feasibility check) */
+    int tank          = 0;   /* running gas in tank from current start candidate */
+    int start         = 0;   /* current candidate starting station */
+
+    for (int i = 0; i &lt; n; i++) {
+        int net = gas[i] - cost[i];     /* net gain/loss at station i */
+        total_surplus += net;
+        tank          += net;
+
+        if (tank &lt; 0) {
+            /* ran out of gas: starting from 'start' through i doesn't work */
+            /* any station from start..i is also invalid (would have even less gas) */
+            start = i + 1;   /* try starting from the next station */
+            tank  = 0;       /* reset the tank for the new start candidate */
+        }
+    }
+
+    return total_surplus &lt; 0 ? -1 : start;  /* if total net is negative, no solution */
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">gas=[1,2,3,4,5]  cost=[3,4,5,1,2]
+
+i=0: net=-2, tank=-2 < 0 → start=1, tank=0
+i=1: net=-2, tank=-2 < 0 → start=2, tank=0
+i=2: net=-2, tank=-2 < 0 → start=3, tank=0
+i=3: net=3,  tank=3
+i=4: net=3,  tank=6
+
+total_surplus = (-2-2-2+3+3) = 0 >= 0 → return start=3 ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Resetting start to i+1 without resetting tank</div>
+    <p>When you update <code>start = i + 1</code>, you must also reset <code>tank = 0</code>. The new candidate starts with an empty tank. If you carry the negative tank forward, all subsequent candidates will look worse than they are.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>134 &middot; Gas Station</span>
+    <span>1564 &middot; Put Boxes Into the Warehouse I</span>
+    <span>860 &middot; Lemonade Change</span>
+  </div>
+  <div class="trigger">When you see: circular route feasibility with net gains/losses &#8594; think: greedy start candidate + total surplus check</div>
+</div>
+
+<!-- ================================================================ P33 -->
+<div class="card" id="p33">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 33</span>
+    <span class="pattern-name">Greedy: Assign Cookies (Two-Sorted-Array Matching)</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Children want cookies. Each child has a minimum greed factor; each cookie has a size.
+    You want to satisfy as many children as possible.
+    Greedy approach: sort both arrays. Assign the smallest sufficient cookie to the least greedy satisfied child. Don't waste a large cookie on an easy-to-please child.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Sort children by greed (ascending) and cookies by size (ascending). Use two pointers: if the current cookie satisfies the current child, match them (advance both). Otherwise the cookie is too small — try the next larger cookie.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* Maximum number of content children. g[]=greed factors, s[]=cookie sizes. */
+int find_content_children(int *g, int gn, int *s, int sn) {
+    qsort(g, gn, sizeof(int), cmp_asc);   /* sort children by greed ascending */
+    qsort(s, sn, sizeof(int), cmp_asc);   /* sort cookies by size ascending */
+
+    int child  = 0;   /* pointer for children (least greedy first) */
+    int cookie = 0;   /* pointer for cookies (smallest first) */
+
+    while (child &lt; gn &amp;&amp; cookie &lt; sn) {
+        if (s[cookie] &gt;= g[child]) {   /* this cookie is big enough for this child */
+            child++;                    /* child is satisfied, move to next child */
+        }
+        cookie++;   /* always try the next cookie (whether this one worked or not) */
+    }
+    return child;   /* total satisfied children */
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">g=[1,2,3] (greed), s=[1,1] (cookies)  both sorted
+
+child=0(g=1), cookie=0(s=1): 1>=1 → child=1, cookie=1
+child=1(g=2), cookie=1(s=1): 1<2  → cookie=2 (out of cookies)
+return 1 ✓ (only 1 child can be satisfied)</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Advancing cookie pointer only on success</div>
+    <p>The cookie pointer must advance on every iteration, regardless of whether the cookie satisfied the child. If the cookie is too small for the current child, it's also too small for any future (greedier) child — discard it by advancing. Only the child pointer advances on success.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>455 &middot; Assign Cookies</span>
+    <span>2410 &middot; Maximum Matching of Players With Trainers</span>
+    <span>826 &middot; Most Profit Assigning Work</span>
+  </div>
+  <div class="trigger">When you see: greedily match sorted elements from two arrays &#8594; think: sort both, two pointers — advance match pointer on success, resource pointer always</div>
+</div>
+
+<!-- ================================================================ P34 -->
+<div class="card" id="p34">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 34</span>
+    <span class="pattern-name">Matrix: Spiral Order Traversal</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Traverse a matrix like unwrapping the layers of an onion, starting from the outside and spiraling inward.
+    Maintain four boundaries: top, bottom, left, right. Traverse the top row left-to-right, right column top-to-bottom, bottom row right-to-left, left column bottom-to-top. Then shrink each boundary inward and repeat.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Four boundary variables (top, bottom, left, right). After each edge traversal, shrink that boundary inward. Stop when top &gt; bottom or left &gt; right.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* Traverse matrix in spiral order. result must be pre-allocated to rows*cols. */
+void spiral_order(int matrix[][100], int rows, int cols, int *result) {
+    int top = 0, bottom = rows - 1;
+    int left = 0, right  = cols - 1;
+    int k = 0;   /* index into result array */
+
+    while (top &lt;= bottom &amp;&amp; left &lt;= right) {
+        /* traverse top row: left to right */
+        for (int c = left; c &lt;= right; c++)   result[k++] = matrix[top][c];
+        top++;    /* top row consumed, shrink top boundary down */
+
+        /* traverse right column: top to bottom */
+        for (int r = top; r &lt;= bottom; r++)   result[k++] = matrix[r][right];
+        right--;  /* right column consumed, shrink right boundary left */
+
+        /* traverse bottom row: right to left (only if a row remains) */
+        if (top &lt;= bottom) {
+            for (int c = right; c &gt;= left; c--) result[k++] = matrix[bottom][c];
+            bottom--;
+        }
+
+        /* traverse left column: bottom to top (only if a column remains) */
+        if (left &lt;= right) {
+            for (int r = bottom; r &gt;= top; r--) result[k++] = matrix[r][left];
+            left++;
+        }
+    }
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">matrix = [[1,2,3],[4,5,6],[7,8,9]]
+
+top=0,bottom=2,left=0,right=2
+Top row:    1 2 3      → top=1
+Right col:  6 9        → right=1
+Bottom row: 8 7        → bottom=1
+Left col:   4          → left=1
+top=1,bottom=1,left=1,right=1
+Top row:    5          → top=2
+top>bottom, stop
+
+result: [1,2,3,6,9,8,7,4,5] ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Not guarding the bottom-row and left-column traversals</div>
+    <p>After traversing the top row and right column, you may have consumed all rows (top &gt; bottom) or all columns (left &gt; right). Without the guards <code>if (top &lt;= bottom)</code> and <code>if (left &lt;= right)</code>, you'll traverse the same elements again in reverse, producing duplicates.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>54 &middot; Spiral Matrix</span>
+    <span>59 &middot; Spiral Matrix II</span>
+    <span>885 &middot; Spiral Matrix III</span>
+  </div>
+  <div class="trigger">When you see: spiral or layer-by-layer matrix traversal &#8594; think: four boundaries, shrink after each edge, guard inner traversals</div>
+</div>
+
+<!-- ================================================================ P35 -->
+<div class="card" id="p35">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 35</span>
+    <span class="pattern-name">Matrix: Set Row and Column to Zero</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    If any cell in a matrix is zero, set its entire row and column to zero.
+    The naive approach reads a cell, sees zero, sets the row/column, but now new zeros might be seen in later passes — wrong!
+    The fix: first make note of WHICH rows and columns contain zeros (using the first row/column as flags), THEN do the zeroing.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Two-pass approach: pass 1 marks which rows and columns need zeroing (using a separate boolean array, or the first row/column as an O(1) in-place flag). Pass 2 applies the zeros.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* Set entire row and column to 0 for every cell that contains 0.
+   O(m*n) time, O(m+n) space for the flag arrays. */
+void set_zeros(int matrix[][100], int rows, int cols) {
+    int zero_rows[100] = {0};   /* zero_rows[i]=1 means row i should be zeroed */
+    int zero_cols[100] = {0};   /* zero_cols[j]=1 means col j should be zeroed */
+
+    /* pass 1: find which rows and columns contain zeros */
+    for (int r = 0; r &lt; rows; r++)
+        for (int c = 0; c &lt; cols; c++)
+            if (matrix[r][c] == 0) {
+                zero_rows[r] = 1;   /* mark this row */
+                zero_cols[c] = 1;   /* mark this column */
+            }
+
+    /* pass 2: zero out marked rows */
+    for (int r = 0; r &lt; rows; r++)
+        if (zero_rows[r])
+            for (int c = 0; c &lt; cols; c++) matrix[r][c] = 0;
+
+    /* pass 3: zero out marked columns */
+    for (int c = 0; c &lt; cols; c++)
+        if (zero_cols[c])
+            for (int r = 0; r &lt; rows; r++) matrix[r][c] = 0;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">matrix = [[1,1,1],[1,0,1],[1,1,1]]
+
+Pass 1: matrix[1][1]=0 → zero_rows[1]=1, zero_cols[1]=1
+Pass 2: zero row 1     → [[1,1,1],[0,0,0],[1,1,1]]
+Pass 3: zero col 1     → [[1,0,1],[0,0,0],[1,0,1]] ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Zeroing in a single pass (causes cascade)</div>
+    <p>If you zero a cell's row/column immediately when you find a 0, the newly written zeros will be found in later iterations and cascade — zeroing rows/columns that originally had no zeros. Always separate the "detection" pass from the "zeroing" pass.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>73 &middot; Set Matrix Zeroes</span>
+    <span>2033 &middot; Minimum Operations to Make a Uni-Value Grid</span>
+    <span>1572 &middot; Matrix Diagonal Sum</span>
+  </div>
+  <div class="trigger">When you see: matrix in-place transformation that depends on original values &#8594; think: mark first, apply second — never modify and read in the same pass</div>
+</div>
+
+<!-- ================================================================ P36 -->
+<div class="card" id="p36">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 36</span>
+    <span class="pattern-name">Matrix: Rotate 90 Degrees In-Place</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Rotate an n&times;n matrix 90 degrees clockwise. No extra matrix allowed.
+    The trick is a two-step process: first transpose the matrix (flip along the diagonal), then reverse each row. These two operations together produce a 90-degree clockwise rotation.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Clockwise 90&deg; = transpose + reverse each row. Counter-clockwise 90&deg; = transpose + reverse each column. Memorize this: it appears constantly in interview problems.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* Rotate n x n matrix 90 degrees clockwise in-place. */
+void rotate_90(int m[][100], int n) {
+    /* Step 1: Transpose — swap m[i][j] with m[j][i] */
+    for (int i = 0; i &lt; n; i++) {
+        for (int j = i + 1; j &lt; n; j++) {   /* j starts at i+1 to avoid double-swapping */
+            int tmp = m[i][j];
+            m[i][j] = m[j][i];
+            m[j][i] = tmp;
+        }
+    }
+
+    /* Step 2: Reverse each row */
+    for (int i = 0; i &lt; n; i++) {
+        int lo = 0, hi = n - 1;
+        while (lo &lt; hi) {
+            int tmp = m[i][lo]; m[i][lo] = m[i][hi]; m[i][hi] = tmp;
+            lo++; hi--;
+        }
+    }
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">matrix = [[1,2,3],[4,5,6],[7,8,9]]
+
+After transpose:
+  [[1,4,7],[2,5,8],[3,6,9]]
+
+After reverse each row:
+  [[7,4,1],[8,5,2],[9,6,3]] ✓ (90° clockwise)</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Starting inner loop at j=0 instead of j=i+1 in transpose</div>
+    <p>Transposing means swapping m[i][j] with m[j][i]. If you start j at 0, you swap every pair twice — the matrix ends up unchanged. Start j at i+1 to visit each off-diagonal pair exactly once.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>48 &middot; Rotate Image</span>
+    <span>1886 &middot; Determine Whether Matrix Can Be Obtained By Rotation</span>
+    <span>54 &middot; Spiral Matrix</span>
+  </div>
+  <div class="trigger">When you see: rotate matrix 90° in-place &#8594; think: transpose (swap m[i][j] ↔ m[j][i]) then reverse each row</div>
+</div>
+
+<!-- ================================================================ P37 -->
+<div class="card" id="p37">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 37</span>
+    <span class="pattern-name">Matrix: Word Search (DFS on Grid)</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Search a grid for a word that can be spelled by moving to adjacent (up/down/left/right) cells, without revisiting a cell.
+    Try each cell as a starting point. From there, do a depth-first search: mark the current cell as visited, recurse into neighbors matching the next letter, then unmark (backtrack) when done.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    DFS + backtracking on a grid. Mark a cell visited by temporarily changing its value (e.g., to '#'), recurse, then restore it. This avoids needing a separate visited array.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* DFS helper: returns 1 if word[idx..] can be spelled starting at (r,c). */
+int dfs(char board[][8], int rows, int cols, char *word, int idx, int r, int c) {
+    if (word[idx] == '\0') return 1;   /* all characters matched — word found */
+    if (r &lt; 0 || r &gt;= rows || c &lt; 0 || c &gt;= cols) return 0;  /* out of bounds */
+    if (board[r][c] != word[idx]) return 0;    /* current cell doesn't match */
+
+    char saved = board[r][c];
+    board[r][c] = '#';    /* mark as visited: prevents revisiting this cell */
+
+    /* try all 4 directions for the next character */
+    int found = dfs(board, rows, cols, word, idx+1, r-1, c) ||
+                dfs(board, rows, cols, word, idx+1, r+1, c) ||
+                dfs(board, rows, cols, word, idx+1, r, c-1) ||
+                dfs(board, rows, cols, word, idx+1, r, c+1);
+
+    board[r][c] = saved;  /* backtrack: restore cell so other paths can use it */
+    return found;
+}
+
+int word_search(char board[][8], int rows, int cols, char *word) {
+    for (int r = 0; r &lt; rows; r++)
+        for (int c = 0; c &lt; cols; c++)
+            if (dfs(board, rows, cols, word, 0, r, c)) return 1;
+    return 0;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">board = [['A','B','C'],['S','F','C'],['A','D','E']],  word="ABCCED"
+
+Start dfs at (0,0)='A' matches word[0]
+  Mark (0,0)='#', try neighbors for word[1]='B'
+  (0,1)='B' matches → mark (0,1)='#', try for word[2]='C'
+    (0,2)='C' matches → ... eventually spells ABCCED ✓
+  Restore all cells after finding</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Forgetting to restore the cell after backtracking</div>
+    <p>If you mark a cell visited but never restore it, a successful path in one branch will block other branches from using that cell. The restore step (<code>board[r][c] = saved</code>) after the recursive calls is mandatory. Without it, the first path explored "eats up" cells permanently.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>79 &middot; Word Search</span>
+    <span>212 &middot; Word Search II</span>
+    <span>980 &middot; Unique Paths III</span>
+  </div>
+  <div class="trigger">When you see: find path spelling a word in a grid &#8594; think: DFS from each cell, mark visited with '#', restore on backtrack</div>
+</div>
+
+<!-- ================================================================ P38 -->
+<div class="card" id="p38">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 38</span>
+    <span class="pattern-name">Hashmap: Two Sum (Single Pass)</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Find two numbers in an array that sum to a target. The brute force tries every pair (O(n&sup2;)).
+    The hashmap trick: as you visit each number, check if its complement (target &minus; current) was already seen.
+    If yes, you found the pair. If no, store the current number in the map for future lookups.
+    One pass through the array, O(1) lookup per step.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    For every element x, its required partner is (target - x). Store each element in a hash map as you go. Before storing, check if (target - x) is already in the map. If yes — instant O(1) answer.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* Two Sum using a simple open-addressing hash map (for values 0..9999). */
+#define MAP_SIZE 10007
+
+typedef struct { int key; int val; int used; } Entry;
+Entry map[MAP_SIZE];
+
+void map_clear(void) { for (int i = 0; i &lt; MAP_SIZE; i++) map[i].used = 0; }
+
+/* Store key→value. Simple linear probing. */
+void map_put(int key, int val) {
+    int h = ((unsigned)key) % MAP_SIZE;
+    while (map[h].used &amp;&amp; map[h].key != key) h = (h + 1) % MAP_SIZE;
+    map[h] = (Entry){key, val, 1};
+}
+
+/* Return stored value for key, or -1 if not found. */
+int map_get(int key) {
+    int h = ((unsigned)key) % MAP_SIZE;
+    while (map[h].used) {
+        if (map[h].key == key) return map[h].val;
+        h = (h + 1) % MAP_SIZE;
+    }
+    return -1;
+}
+
+/* Find indices i,j such that arr[i]+arr[j]==target. Fills out[0] and out[1]. */
+void two_sum(int *arr, int n, int target, int *out) {
+    map_clear();
+    for (int i = 0; i &lt; n; i++) {
+        int complement = target - arr[i];        /* what value do we need? */
+        int j = map_get(complement);             /* has it been seen before? */
+        if (j != -1) { out[0] = j; out[1] = i; return; }
+        map_put(arr[i], i);                      /* store current value → its index */
+    }
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">arr = [2, 7, 11, 15],  target = 9
+
+i=0: complement=7,  map_get(7)=-1 (not seen), store map[2]=0
+i=1: complement=2,  map_get(2)=0 (found!) → return indices [0,1] ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Looking up arr[i] in the map before checking for complement</div>
+    <p>Check for the complement FIRST, then store arr[i]. If you store arr[i] first and then check, you might match an element with itself when target is double that element (e.g., arr = [3, 5], target = 6 — you don't want index 0 to match itself).</p>
+  </div>
+
+  <div class="leetcode">
+    <span>1 &middot; Two Sum</span>
+    <span>167 &middot; Two Sum II</span>
+    <span>15 &middot; 3Sum</span>
+  </div>
+  <div class="trigger">When you see: find pair summing to target in unsorted array &#8594; think: hashmap — store each element, check complement before inserting</div>
+</div>
+
+<!-- ================================================================ P39 -->
+<div class="card" id="p39">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 39</span>
+    <span class="pattern-name">Hashmap: Subarray Sum Equals K (Prefix + HashMap)</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Count subarrays whose elements sum to exactly K. Two pointers won't work here because the array can have negative numbers.
+    Instead, build running prefix sums. For each prefix sum P at index i, you need to know: how many earlier prefix sums equaled P&minus;K? Because if prefix[j] = P&minus;K, then sum(j+1..i) = K.
+    Store prefix sum frequencies in a hashmap.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    sum(j+1..i) = prefix[i] &minus; prefix[j]. If this equals K, then prefix[j] = prefix[i] &minus; K. Count how many times (prefix[i] &minus; K) appeared as a prefix sum so far.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* Count subarrays with sum exactly equal to k. Works with negative numbers. */
+int subarray_sum_k(int *arr, int n, int k) {
+    /* Simple hash map for prefix sum frequencies: key=prefix_sum, value=count */
+    /* For interview, assume prefix sums fit in a reasonable range. */
+    /* Here we simulate with a fixed-size map for values -10000..10000 */
+    #define OFFSET 10000
+    #define RANGE  20001
+    int freq[RANGE] = {0};
+
+    freq[0 + OFFSET] = 1;   /* empty prefix (sum=0) has been seen once before starting */
+
+    int prefix = 0;   /* running prefix sum */
+    int count  = 0;
+
+    for (int i = 0; i &lt; n; i++) {
+        prefix += arr[i];           /* extend prefix sum to include arr[i] */
+
+        /* how many earlier prefixes equal (prefix - k)? */
+        /* each one of those creates a valid subarray ending at i */
+        int need = prefix - k;
+        if (need + OFFSET &gt;= 0 &amp;&amp; need + OFFSET &lt; RANGE)
+            count += freq[need + OFFSET];
+
+        freq[prefix + OFFSET]++;    /* record this prefix sum for future lookups */
+    }
+    return count;
+    #undef OFFSET
+    #undef RANGE
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">arr = [1, 1, 1],  k = 2
+freq[0] = 1 (empty prefix)
+
+i=0: prefix=1, need=1-2=-1, freq[-1]=0, count=0, freq[1]++
+i=1: prefix=2, need=2-2=0,  freq[0]=1,  count=1, freq[2]++
+i=2: prefix=3, need=3-2=1,  freq[1]=1,  count=2, freq[3]++
+
+return 2 ✓  (subarrays [1,1] starting at 0 and at 1)</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Not seeding freq[0] = 1 before starting</div>
+    <p>The empty prefix (prefix sum = 0 before any elements) must be in the map with count 1. If you don't seed it, subarrays that start from index 0 (where prefix[i] == k exactly) will not be counted. Always initialize <code>freq[0] = 1</code> before the loop.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>560 &middot; Subarray Sum Equals K</span>
+    <span>974 &middot; Subarray Sums Divisible by K</span>
+    <span>525 &middot; Contiguous Array (0s and 1s)</span>
+  </div>
+  <div class="trigger">When you see: count subarrays with exact sum (with possible negatives) &#8594; think: prefix sum + hashmap of frequencies, seed freq[0]=1</div>
+</div>
+
+<!-- ================================================================ P40 -->
+<div class="card" id="p40">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 40</span>
+    <span class="pattern-name">Hashmap: Longest Consecutive Sequence</span>
+  </div>
+
+  <div class="section-label">&#9312; Story First</div>
+  <div class="story">
+    Find the longest run of consecutive integers in an unsorted array (e.g., [5,3,1,2,4] → length 5).
+    Sorting would work in O(n log n), but the problem asks for O(n).
+    Load everything into a hash set. For each number that is the START of a sequence (num&minus;1 is NOT in the set), count how long the sequence runs by repeatedly checking if num+1 exists.
+  </div>
+
+  <div class="section-label">&#9313; The Insight</div>
+  <div class="insight">
+    Only start counting from the beginning of a sequence (num&minus;1 not in set). This ensures each number is visited at most once across all counting loops, giving O(n) total.
+  </div>
+
+  <div class="section-label">&#9316; Annotated Code</div>
+<pre><code class="language-c">/* Longest consecutive sequence. O(n) time, O(n) space.
+   Using a boolean array as hash set (values assumed 0..9999). */
+int longest_consecutive(int *arr, int n) {
+    int in_set[10000] = {0};
+    for (int i = 0; i &lt; n; i++)
+        if (arr[i] &gt;= 0 &amp;&amp; arr[i] &lt; 10000)
+            in_set[arr[i]] = 1;   /* insert all values into the set */
+
+    int max_len = 0;
+
+    for (int i = 0; i &lt; n; i++) {
+        int num = arr[i];
+        if (num &lt;= 0 || !in_set[num - 1]) {  /* only start from beginning of a sequence */
+            int len = 1;
+            while (num + len &lt; 10000 &amp;&amp; in_set[num + len])
+                len++;   /* extend the sequence as far as consecutive numbers go */
+            if (len &gt; max_len) max_len = len;
+        }
+    }
+    return max_len;
+}</code></pre>
+
+  <div class="section-label">&#9317; Dry Run</div>
+  <div class="dry-run">arr = [100, 4, 200, 1, 3, 2]
+
+in_set: 1,2,3,4,100,200 all marked
+
+i=0: num=100, in_set[99]=0 → start: 100,101?→no  len=1
+i=1: num=4,   in_set[3]=1  → not a start, skip
+i=2: num=200, in_set[199]=0 → start: 200,201?→no len=1
+i=3: num=1,   in_set[0]=0  → start: 1,2✓,3✓,4✓,5?→no  len=4 ← max
+i=4: num=3,   in_set[2]=1  → not a start, skip
+i=5: num=2,   in_set[1]=1  → not a start, skip
+
+return 4 ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Gotcha: Starting the count from every element (making it O(n&sup2;))</div>
+    <p>If you start counting from every element (not just sequence starters), numbers in the middle of a long sequence will each trigger a full count of their sub-sequence. The total work becomes O(n) elements &times; O(n) counting = O(n&sup2;). The check <code>num-1 not in set</code> ensures counting only happens once per sequence.</p>
+  </div>
+
+  <div class="leetcode">
+    <span>128 &middot; Longest Consecutive Sequence</span>
+    <span>298 &middot; Binary Tree Longest Consecutive Sequence</span>
+    <span>549 &middot; Binary Tree Longest Consecutive Sequence II</span>
+  </div>
+  <div class="trigger">When you see: longest run of consecutive integers in O(n) &#8594; think: hash set + only start counting when (num-1) is not in the set</div>
+</div>
+
 <!-- PATTERNS_END -->
 <script>hljs.highlightAll();</script>
 </body>
