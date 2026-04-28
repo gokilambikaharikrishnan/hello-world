@@ -3508,12 +3508,11 @@ T (°C)  | f_T   | Notes
           <span class="formula-line">In LFP plateau (dV/dSoC ≈ 0.5mV/% → 0.5mV per 2.8Ah), ΔV = 30mV → ΔQ ≈ 168 mAh</span>
           <span class="formula-line">t_bal = ΔQ / I_bal = 168 mAh / 3 mA = 56 hours</span>
           <span class="formula-caption">
-            This reveals a fundamental limitation of passive top balancing: 56 hours to correct a
-            30 mV imbalance. In practice, balancing occurs in parallel with charging (extending charge
-            time) or during rest periods. The 10Ω resistor choice must balance heat dissipation
-            (90 μW × 16 cells = 1.44 mW total — negligible) against balancing speed.
-            Larger packs with 100mV imbalances may take several days — motivating active balancing
-            for high-power applications.
+            This shows the key limitation of passive balancing: 56 hours to fix a 30 mV gap.
+            In practice, balancing runs during charging or rest periods rather than as a separate
+            step. The 10Ω choice keeps heat to 90 μW per cell (negligible) at the cost of speed.
+            For packs with larger imbalances (100+ mV), passive balancing can take days —
+            which is why active balancing is used in high-power applications where time matters.
           </span>
         </div>
       </div>
@@ -3526,10 +3525,9 @@ T (°C)  | f_T   | Notes
       <div class="section-number">2.10</div>
       <h2 class="section-title">BMS Commissioning — Practical First-Power Checklist</h2>
       <p class="section-intro">
-        Theory becomes hardware when the pack is assembled on the bench for the first time. This section
-        walks through the commissioning procedure that production engineers follow before a new BMS
-        design is trusted with a live pack — covering pre-power checks, initial calibration, protection
-        threshold verification, and SoC initialisation.
+        At some point, the design leaves the computer and becomes real hardware on a bench.
+        This section walks through the first-power procedure: the checks and calibrations
+        that a production engineer runs before trusting a new BMS design with a live battery pack.
       </p>
 
       <div class="subsection">
