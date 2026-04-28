@@ -2756,25 +2756,25 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           reduce accessible capacity:
         </p>
         <p>
-          <strong>Mechanism 1 — Concentration Polarization:</strong> Li⁺ ions migrate from
-          anode to cathode through the electrolyte. At high current, the supply of Li⁺ at the
-          cathode surface depletes faster than bulk diffusion can replenish it. The local Li⁺
-          concentration drops, raising the cathode overpotential. The cell terminal voltage
-          sags below the cutoff threshold while lithium remains in the electrode interior.
+          <strong>Mechanism 1 — Lithium runs out at the surface:</strong> Lithium ions travel
+          through the liquid electrolyte from anode to cathode during discharge. At high
+          current, ions arrive at the cathode surface faster than new ones can migrate through
+          the electrolyte. The surface area runs low on lithium, the voltage drops, and the
+          BMS sees a low-voltage alarm — even though much lithium remains deeper in the cell.
         </p>
         <p>
-          <strong>Mechanism 2 — Solid-State Diffusion Limitation:</strong> Inside each electrode
-          particle, Li⁺ must diffuse from the surface to the core. At high current, surface
-          Li concentration reaches saturation (during charge) or depletion (during discharge)
-          before the particle interior equilibrates. This creates a "utilization front" that
-          doesn't reach the core — leaving lithium stranded in inaccessible interior sites.
+          <strong>Mechanism 2 — Lithium gets stuck inside the particles:</strong> Inside each
+          electrode particle, lithium also has to travel from the surface toward the centre.
+          At high current, the outer shell of the particle gets used up (during discharge)
+          or filled up (during charge) before the inside can equalise. The "front" of
+          utilisation stalls near the surface, leaving lithium locked in the particle core.
         </p>
         <p>
-          <strong>Mechanism 3 — Thermal Effect:</strong> High current generates heat (I²R).
-          Temperature rise during discharge increases ionic conductivity (reducing IR drop and
-          polarization) — a partially compensating effect. At moderate C-rates for LFP, the
-          thermal effect can nearly cancel the diffusion limitation for short bursts.
-          This is why LFP pulse power can exceed the "expected" limit from steady-state Peukert.
+          <strong>Mechanism 3 — Heat partially cancels the problem:</strong> High current also
+          generates heat (I²R). Warmer electrolyte conducts lithium more easily, which
+          partially offsets the two effects above. For LFP at moderate rates, this warming
+          effect is significant — it's why LFP can briefly exceed what the Peukert equation
+          alone would predict during short power bursts.
         </p>
 
         <div class="formula-block" style="text-align:left;">
