@@ -1041,35 +1041,33 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
       <div class="subsection">
         <div class="subsection-title">Cylindrical Cells — 18650, 21700, 4680</div>
         <p>
-          Cylindrical cells are wound — a long strip of anode material, separator, cathode material,
-          and another separator is wound around a mandrel like a roll of paper towel, then inserted
-          into a steel can. The numbers in the name are the dimensions: an 18650 is
-          <strong>18 mm diameter × 65 mm length</strong>. A 21700 is 21 mm × 70 mm. A 4680 is
-          46 mm × 80 mm.
+          Cylindrical cells are made by rolling everything up into a tight tube — like a roll of
+          paper towel — and sealing it inside a steel can. The numbers in the name are simply the
+          dimensions: an 18650 is <strong>18 mm wide and 65 mm tall</strong>. A 21700 is
+          21 mm × 70 mm. A 4680 is 46 mm × 80 mm.
         </p>
         <p>
-          <strong>Why those numbers matter:</strong> Volume scales as r²×h, so going from 18650
-          to 4680 increases cell volume by a factor of ~(23/9)² × (80/65) ≈ 6.9×. Tesla's 4680
-          cell contains approximately 5–6× more energy than an 18650, but far fewer cells are
-          needed per pack — reducing tab welding complexity and associated failure modes.
+          Bigger diameter means a lot more volume: the 4680 holds roughly 5 to 6 times more
+          energy than an 18650. Tesla uses 4680s because you need far fewer cells per pack —
+          fewer cells means fewer connections to make and fewer things that can fail.
         </p>
         <p>
-          Cylindrical cells have inherent mechanical strength from the steel can. The wound structure
-          means current must flow from the jelly roll core to the terminals through the winding —
-          this creates moderate internal resistance compared to prismatic designs. The cylindrical
-          geometry creates inefficient packing in rectangular module designs (air gaps between cylinders).
+          The steel can gives cylindrical cells great mechanical strength. Their main
+          disadvantages: moderate internal resistance, and the round shape wastes space when
+          you try to pack them into rectangular modules — there are always gaps between the
+          cylinders.
         </p>
         <div class="callout callout-warning">
           <div class="callout-icon">🌡</div>
           <div class="callout-body">
-            <div class="callout-title">Cylindrical Thermal Profile</div>
+            <div class="callout-title">Heat Problem in Large Cylindrical Cells</div>
             <p>
-              Heat is generated throughout the jelly roll but must escape radially through the steel
-              can to reach the cooling surface. For small cells (18650), the thermal path is short.
-              For large-format cylinders (4680), the center can run significantly hotter than the
-              surface. At high C-rates, center-to-surface temperature gradients of 15–20°C are possible,
-              accelerating degradation non-uniformly. BMS thermal management must account for this
-              internal gradient, not just the surface temperature.
+              Heat generated inside a cylindrical cell has to travel outward through the steel
+              can to escape. In small cells (18650), that distance is short and heat escapes
+              easily. In large-format cylinders (4680), the center of the cell can run 15 to
+              20 degrees hotter than the surface when charging or discharging hard. This matters
+              for the BMS — a temperature sensor on the outside surface will underreport what
+              is happening at the core, where the hottest and fastest-aging chemistry occurs.
             </p>
           </div>
         </div>
