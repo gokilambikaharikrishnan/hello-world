@@ -3861,30 +3861,29 @@ T (°C)  | f_T   | Notes
       </div>
 
       <div class="subsection">
-        <div class="subsection-title">EIS — Electrochemical Impedance Spectroscopy for SOH Screening</div>
+        <div class="subsection-title">EIS — Impedance Spectroscopy for SOH Screening</div>
         <p>
-          For second-life sorting, the fastest cell characterisation method is Electrochemical
-          Impedance Spectroscopy (EIS). EIS applies a small AC perturbation at multiple frequencies
-          and measures the cell's complex impedance response:
+          For sorting second-life cells quickly, the most useful tool is Electrochemical
+          Impedance Spectroscopy (EIS). Instead of running a slow discharge to measure
+          capacity, EIS sends a tiny alternating current through the cell at many different
+          frequencies and reads how the cell responds. Different parts of the cell's aging
+          show up at different frequencies:
         </p>
         <div class="formula-block">
-          <span class="formula-label">EIS Impedance at Key Frequencies</span>
-          <span class="formula-line">High frequency (1–10 kHz): Z_real ≈ R₀ (ohmic resistance, primarily SEI + electrolyte)</span>
-          <span class="formula-line">Mid frequency (1–100 Hz): Z shows semicircle → R_ct (charge transfer resistance, SEI thickness proxy)</span>
-          <span class="formula-line">Low frequency (0.01–1 Hz): Warburg impedance → diffusion characteristics in solid phase</span>
+          <span class="formula-label">EIS Response at Key Frequencies</span>
+          <span class="formula-line">High frequency (1–10 kHz): reveals R₀ — the ohmic resistance (SEI thickness + electrolyte)</span>
+          <span class="formula-line">Mid frequency (1–100 Hz): shows the charge transfer resistance — a proxy for SEI thickness</span>
+          <span class="formula-line">Low frequency (0.01–1 Hz): shows diffusion characteristics inside the electrode particles</span>
           <span class="formula-caption">
-            A cell with thick SEI shows elevated R_ct in the mid-frequency semicircle.
-            R₀ increase correlates with electrolyte degradation and separator resistance increase.
-            Warburg slope changes correlate with active material loss.
-            EIS gives a complete fingerprint of the cell's degradation state in &lt;5 minutes per cell —
-            making it the preferred screening tool before second-life assembly.
+            Together these give a complete fingerprint of the cell's degradation state in
+            under 5 minutes — far faster than a full discharge test. Thick SEI shows up as a
+            larger mid-frequency arc. Electrolyte breakdown shows up as higher R₀.
           </span>
         </div>
         <p>
-          Dedicated EIS instruments (Gamry, Bio-Logic) are lab tools costing $10k–$50k.
-          Embedded EIS capabilities are now appearing in next-generation BMS AFE ICs — allowing
-          continuous in-pack impedance monitoring without cell removal, enabling real-time SOH
-          tracking throughout the second-life deployment.
+          Dedicated EIS instruments cost $10k–$50k (lab grade). Embedded EIS is now appearing
+          in next-generation BMS AFE chips — allowing the BMS to measure impedance continuously
+          while the pack is in service, without removing or discharging cells.
         </p>
       </div>
     </section>
