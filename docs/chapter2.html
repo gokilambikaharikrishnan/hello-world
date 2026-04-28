@@ -3236,31 +3236,23 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
       <div class="section-number">2.8</div>
       <h2 class="section-title">Temperature Effects on LFP Cell Performance</h2>
       <p class="section-intro">
-        Temperature is the single most influential external variable in Li-ion cell behaviour.
-        It affects capacity, internal resistance, safe operating rates, and calendar life simultaneously.
-        For a BMS engineer, understanding the temperature dependencies is not optional — every protection
-        threshold, every SoC correction, and every charging algorithm must be temperature-aware.
+        Temperature is the single biggest outside factor affecting how an LFP cell behaves.
+        It changes how much capacity the cell can deliver, how fast it charges safely, how
+        long it lasts, and how much its voltage sags under load — all at the same time.
+        Every BMS protection limit, SOC correction, and charging algorithm must account for
+        temperature or it will be wrong in cold winters and hot summers.
       </p>
 
       <div class="subsection">
-        <div class="subsection-title">The Arrhenius Foundation — Why Temperature Matters Exponentially</div>
+        <div class="subsection-title">Why Temperature Has Such a Large Effect</div>
         <p>
-          Electrochemical reaction rates in a Li-ion cell obey the Arrhenius equation. The rate constant
-          k for any reaction scales as:
-        </p>
-        <div class="formula-block">
-          <span class="formula-label">Arrhenius Rate Law</span>
-          <span class="formula-line">k(T) = A × exp(−Eₐ / R×T)</span>
-          <span class="formula-caption">
-            A = pre-exponential factor, Eₐ = activation energy (J/mol), R = 8.314 J/mol·K, T = temperature in Kelvin.
-            For Li⁺ transport through SEI layer, Eₐ ≈ 50–80 kJ/mol. A 10°C rise doubles the reaction rate.
-          </span>
-        </div>
-        <p>
-          This exponential dependence means that both <em>beneficial</em> reactions (ion transport, faster
-          charge kinetics at high temperature) and <em>harmful</em> reactions (SEI growth, electrolyte
-          decomposition) accelerate together. The BMS cannot capture the benefit without accepting
-          accelerated aging — temperature management is always a trade-off.
+          The chemical reactions inside a battery all go faster as temperature rises —
+          this is a universal law of chemistry (the Arrhenius equation). The practical
+          rule for LFP: every 10°C increase approximately <strong>doubles the speed</strong>
+          of chemical reactions. That applies equally to good reactions (faster ion movement,
+          better charge kinetics) and bad ones (faster SEI growth, faster electrolyte
+          breakdown). You can't have one without the other — managing temperature
+          is always a trade-off.
         </p>
       </div>
 
