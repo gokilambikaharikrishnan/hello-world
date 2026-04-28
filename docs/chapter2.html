@@ -911,29 +911,28 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
       <div class="subsection" id="lfp-reaction">
         <div class="subsection-title">The LFP Cathode Reaction — Step by Step</div>
         <p>
-          Lithium iron phosphate adopts the olivine crystal structure (orthorhombic, space group
-          <em>Pnma</em>). The iron atoms occupy octahedral sites coordinated by six oxygen atoms.
-          The phosphorus atoms sit in tetrahedral PO₄ groups. Lithium ions occupy one-dimensional
-          channels (M1 sites) that run parallel to the b-axis — the highway along which Li⁺ ions
-          must travel during intercalation.
+          Inside the LFP positive electrode, the crystal is built so that lithium ions sit in
+          channels running through it. When the battery charges, lithium ions are pulled out
+          of those channels. When it discharges, they slot back in.
         </p>
         <p>
-          Unlike NMC and NCA, where lithium extraction creates a continuous solid-solution
-          (the Li content varies smoothly with SoC), LFP follows a <strong>two-phase
-          mechanism</strong>. There are only two stable phases:
+          LFP behaves differently from NMC and NCA in one important way: it does not gradually
+          change as lithium moves in and out. Instead it switches sharply between just two states —
+          a "full" form and an "empty" form. There is no in-between state:
         </p>
         <ul class="content-list">
-          <li><strong>LiFePO₄</strong> — the fully lithiated phase (discharged cathode). Iron is
-          in the +2 oxidation state (Fe²⁺). Unit cell volume: ~291 ų.</li>
-          <li><strong>FePO₄</strong> — the delithiated phase (charged cathode). Iron is in the
-          +3 oxidation state (Fe³⁺). Unit cell volume: ~272 ų.</li>
+          <li><strong>Full form (LiFePO₄)</strong> — the cathode with lithium inside. This is
+          the state when the battery is discharged and the cathode has all its lithium back.</li>
+          <li><strong>Empty form (FePO₄)</strong> — the cathode with lithium removed. This is
+          the state when the battery is fully charged and all lithium has been pulled out of
+          the cathode.</li>
         </ul>
         <p>
-          During charging, a phase boundary moves through each LFP particle from the outside
-          inward, converting LiFePO₄ → FePO₄. During discharge, the boundary moves outward,
-          converting FePO₄ → LiFePO₄. While both phases coexist in a particle, the
-          thermodynamic equilibrium potential is fixed at ~3.45V vs Li/Li⁺ — the potential
-          of the FePO₄/LiFePO₄ phase boundary. This is what causes the flat OCV plateau.
+          During charging, the crystal switches from the full form to the empty form, particle by
+          particle. During discharge, it switches back. While both forms exist side by side inside
+          the material (which is true for most of the charge and discharge cycle), the voltage is
+          held completely steady — this is exactly what causes the flat voltage plateau that makes
+          LFP so tricky to measure.
         </p>
         <div class="formula-block green-theme">
           <span class="formula-label">LFP Cathode Half-Reaction</span>
@@ -962,22 +961,19 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <div class="callout-body">
             <div class="callout-title">Upper Limit: 3.65 V — Why This Number</div>
             <p>
-              At 3.65V, the LFP cathode is fully delithiated (all sites converted to FePO₄).
-              There are no more empty Li⁺ slots in the cathode crystal. Continued charging cannot
-              do useful electrochemistry. Instead:
+              At 3.65V, the positive electrode is completely full — every available slot in the
+              crystal has been vacated by lithium. There is nothing left for the charger to do
+              useful work on. If charging continues past this point:
             </p>
             <p>
-              Above ~3.75V: Electrolyte begins oxidizing at the cathode surface, forming a
-              growing CEI (cathode-electrolyte interphase) layer. This permanently increases
-              impedance. Above ~4.0V: Iron dissolution begins — Fe³⁺ ions dissolve from the
-              FePO₄ lattice into the electrolyte, migrate to the anode, and deposit as iron
-              metal dendrites that can puncture the separator. Above ~4.2V on the anode side:
-              lithium plating occurs — metallic lithium dendrites form.
-            </p>
-            <p>
-              The 3.65V cutoff provides ~100mV margin above the plateau, balancing full capacity
-              utilization against electrolyte stability. Set it to 3.75V and you gain a few
-              percent capacity but accelerate aging by 2–5× in the cells that chronically reach it.
+              Above about 3.75V: the liquid electrolyte starts breaking down on the positive
+              electrode surface, leaving behind a growing residue layer that permanently increases
+              internal resistance. Above 4.0V: tiny amounts of iron start dissolving out of the
+              crystal, drifting across to the negative electrode, and depositing there — eventually
+              forming metallic spikes that can poke through the separator. The 3.65V cutoff is set
+              just above the normal operating plateau to get full capacity while keeping the
+              electrolyte stable. Raising it to 3.75V gains a few percent more capacity but causes
+              2 to 5 times faster aging in cells that regularly reach it.
             </p>
           </div>
         </div>
@@ -985,30 +981,30 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="callout callout-warning">
           <div class="callout-icon">⬇</div>
           <div class="callout-body">
-            <div class="callout-title">Lower Limit: 2.5 V — Copper Dissolution Threshold</div>
+            <div class="callout-title">Lower Limit: 2.5 V — Copper Corrosion Threshold</div>
             <p>
-              The anode copper current collector is electrochemically stable as long as the
-              anode potential remains low. As the cell discharges deeply, the anode potential
-              rises toward the standard potential of the Cu/Cu²⁺ couple (+0.34V vs SHE,
-              or approximately +3.4V vs Li/Li⁺ at the anode). At cell terminal voltages below
-              ~2.5V, the copper collector begins to oxidize — Cu → Cu²⁺ + 2e⁻.
+              Inside the negative electrode there is a thin copper foil that the active material
+              is coated onto. At normal voltages this copper is stable. But when the cell is
+              drained below about 2.5V, the chemistry inside the cell shifts enough that copper
+              starts dissolving off that foil into the liquid electrolyte.
             </p>
             <p>
-              Cu²⁺ ions dissolve into the electrolyte, migrate to the cathode, and deposit
-              on the LFP surface, blocking Li⁺ intercalation sites. They also deposit on
-              the separator, potentially nucleating dendritic shorts. Even a single 0V event
-              can deposit enough copper to measurably increase impedance and reduce capacity.
-              Repeated deep discharges below 2.5V are cumulative and irreversible.
+              Those dissolved copper particles drift across and deposit on the separator —
+              the thin film that keeps the two electrodes apart. Over time they can build up
+              into bridges that cause an internal short circuit. Even a single discharge all the
+              way to zero volts can deposit enough copper to noticeably increase resistance and
+              reduce capacity. Every deep over-discharge event below 2.5V adds more damage,
+              and none of it can be undone.
             </p>
           </div>
         </div>
 
         <p>
-          <strong>Nominal voltage (3.2–3.3V) vs. operating range:</strong> The nominal voltage
-          is the average voltage during a standard 0.2C discharge at 25°C — this is the voltage
-          you use for energy calculations (Wh = Ah × V_nominal). It is not the open-circuit
-          voltage at any particular SoC; it is the time-averaged value across the discharge curve.
-          For LFP, the flat plateau means this average closely matches the plateau potential.
+          <strong>Nominal voltage (3.2–3.3V) vs. the full operating range:</strong> When a cell
+          is described as "3.2V nominal," that is the average voltage you see during a typical
+          slow discharge — not the voltage at any specific point. It is the number you use for
+          energy calculations (watt-hours = amp-hours × nominal voltage). For LFP, the flat
+          plateau means this average closely matches what you actually see for most of the cycle.
         </p>
 
         <p>
