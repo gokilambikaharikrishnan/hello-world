@@ -608,53 +608,49 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
       <div class="subsection" id="intercalation">
         <div class="subsection-title">Intercalation — What Physically Happens When a Li-ion Cell Charges</div>
         <p>
-          The word "intercalation" comes from the Latin <em>intercalare</em> — to insert between.
-          In lithium-ion batteries, it describes the process by which lithium ions are inserted into
-          (or extracted from) the crystal lattice of an electrode material, without permanently
-          altering that material's structure.
+          "Intercalation" just means inserting something between layers. In a lithium-ion battery,
+          it describes how lithium ions slide into — or back out of — the electrode materials,
+          without permanently changing those materials in any way.
         </p>
         <p>
-          Think of it like this: imagine a stack of pancakes. Each pancake is a graphene layer in
-          the graphite anode. The gaps between pancakes are where Li⁺ ions park during charging.
-          When you charge the battery, Li⁺ ions squeeze between the graphene layers and sit there,
-          electrostatically held. When you discharge, they unsqueeze and leave. The pancakes
-          (graphene layers) barely change shape — just expand slightly (3.5% for graphite) when
-          the Li⁺ ions are inside.
+          Picture a stack of pancakes. Each pancake is a thin layer of graphite inside the negative
+          electrode. The gaps between the pancakes are where lithium ions park when the battery
+          is charging. Ions slide in, sit between the layers, and stay there. When the battery
+          discharges, they slide back out. The pancake layers barely change shape — they expand
+          by only about 3.5% when the ions are inside.
         </p>
         <p>
-          This is fundamentally different from lead-acid, where the electrode <em>is consumed</em>
-          in the reaction (lead converts to lead sulfate). In intercalation, the electrode hosts
-          lithium reversibly — like a hotel that houses guests without changing its structure.
-          This reversibility is why Li-ion achieves 10× more cycles than lead-acid.
+          This is completely different from lead-acid batteries, where the electrode material is
+          actually consumed and chemically transformed during each cycle — which is why it wears
+          out. In a lithium-ion battery, the electrodes are just hosts. The lithium checks in and
+          checks out, and the hotel stays intact. That is why lithium-ion lasts 10× more cycles
+          than lead-acid.
         </p>
 
-        <div class="subsection-sub">Discharge — Following a Li⁺ Ion on Its Journey</div>
+        <div class="subsection-sub">Discharge — Following a Lithium Ion on Its Journey</div>
         <p>
-          Start: the cell is fully charged. The anode is a graphite crystal fully loaded with Li⁺
-          ions between its layers (LiC₆). The cathode is FePO₄ — fully depleted lithium iron
-          phosphate, all Li⁺ slots empty.
+          Start: the cell is fully charged. The negative electrode (anode) is a graphite crystal
+          packed with lithium ions sitting between its layers. The positive electrode (cathode)
+          is empty — all its lithium slots are vacant, waiting.
         </p>
         <p>
-          You connect a load (a lamp). Here is what happens at the atomic scale in the next
-          microseconds:
+          You connect a device. Here is what happens, step by step:
         </p>
         <ul class="content-list num">
-          <li><strong>Oxidation at anode:</strong> A Li⁺ ion deintercalates from the graphite anode.
-          The graphite simultaneously releases one electron. The Li⁺ enters the electrolyte.
-          The electron enters the copper current collector, flows through the external circuit
-          (through your lamp, doing work), arrives at the aluminum current collector.</li>
-          <li><strong>Ion migration:</strong> The Li⁺ ion migrates through the electrolyte —
-          pulled toward the cathode by the electric field gradient. This migration is rate-limited
-          by ionic conductivity and the Li⁺ diffusion coefficient in the electrolyte
-          (~10⁻⁶ cm²/s at 25°C). This is why charge rate has limits — you cannot push ions
-          faster than diffusion allows.</li>
-          <li><strong>Reduction at cathode:</strong> The Li⁺ ion reaches the LFP cathode and
-          intercalates into an empty site in the FePO₄ crystal. Simultaneously, the electron
-          arriving from the external circuit reduces Fe³⁺ to Fe²⁺, maintaining charge neutrality.
-          The crystal site now holds LiFePO₄.</li>
-          <li><strong>Result:</strong> One Li⁺ has moved from anode to cathode. One electron has
-          flowed through the external circuit. The process repeats approximately 6×10²³ times
-          per mole of lithium (Avogadro's number) to fully discharge the cell.</li>
+          <li><strong>Ion leaves the anode:</strong> A lithium ion slides out from between the
+          graphite layers. As it leaves, it also releases one electron. The ion enters the liquid
+          electrolyte. The electron enters the copper foil, travels through the wire and through
+          your device (doing useful work), and arrives at the other side.</li>
+          <li><strong>Ion travels through the electrolyte:</strong> The lithium ion drifts through
+          the liquid electrolyte toward the positive electrode. This travel takes time — ions cannot
+          be pushed infinitely fast. This is exactly why there are limits on how fast you can charge
+          a battery: push too hard and the ions pile up at the surface instead of flowing smoothly.</li>
+          <li><strong>Ion arrives at the cathode:</strong> The lithium ion slots into an empty spot
+          in the LFP crystal. At the same moment, the electron arriving from the wire is absorbed,
+          completing the circuit. The crystal now holds a lithium ion in that slot.</li>
+          <li><strong>Net result:</strong> One lithium ion moved from the negative electrode to the
+          positive electrode. One electron flowed through the wire as useful current. Repeat this
+          billions of billions of times per second and you have a battery powering a device.</li>
         </ul>
 
         <div class="formula-block green-theme">
@@ -667,39 +663,38 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
 
         <div class="subsection-sub">Charge — Reversing the Process</div>
         <p>
-          During charging, an external power supply forces electrons backward — from the aluminum
-          current collector (cathode) through the supply and into the copper collector (anode).
-          This non-spontaneous electron flow drives the non-spontaneous chemistry: Li⁺ is pulled
-          out of the LiFePO₄ cathode (Fe²⁺ oxidized back to Fe³⁺), travels through the electrolyte,
-          and reintercalates into the graphite anode. The energy you put in (from the charger)
-          is stored as chemical potential.
+          Charging is just the same process run in reverse. The charger pushes electrons backward
+          through the wire, which forces the lithium ions to travel back from the positive electrode
+          to the negative electrode through the electrolyte. The energy from the charger gets stored
+          as chemical energy — the lithium ions sitting between the graphite layers, ready to flow
+          again on the next discharge.
         </p>
         <p>
-          The efficiency of this round trip is the <strong>coulombic efficiency</strong>
-          (η ≈ 99–99.9% for LFP) — almost all charge put in can be recovered. The small fraction
-          lost (0.1–1%) goes to side reactions, primarily continued SEI layer growth on the anode.
-          Over thousands of cycles, this tiny loss per cycle accumulates into measurable capacity
-          fade — the subject of Section 2.7.
+          This round trip is very efficient for LFP — you recover about 99 to 99.9% of the charge
+          you put in. The tiny fraction that is lost (less than 1%) goes into a slow side reaction
+          that gradually builds up a thin film on the anode. Over thousands of cycles, that tiny
+          per-cycle loss adds up to noticeable capacity reduction — the subject of Section 2.7.
         </p>
 
         <div class="callout callout-physics">
           <div class="callout-icon">⚛</div>
           <div class="callout-body">
-            <div class="callout-title">Why BMS Designers Must Understand Intercalation Kinetics</div>
+            <div class="callout-title">Why the BMS Must Limit Charge Speed</div>
             <p>
-              Intercalation is not instantaneous. Li⁺ diffusion into the electrode particle is
-              governed by Fick's second law, with diffusion coefficients ranging from
-              10⁻¹⁵ to 10⁻¹¹ m²/s depending on material and temperature. At high charge rates
-              (≥2C), Li⁺ cannot penetrate deep into the particle before more arrives — concentration
-              polarization builds up at the particle surface, and local surface potential rises above
-              the anode equilibrium potential, causing lithium plating instead of intercalation.
+              Lithium ions do not move instantly. They drift through the electrolyte and diffuse
+              into the electrode particles at a speed that depends on temperature and the material
+              itself. If you try to charge too fast, ions arrive at the electrode surface faster
+              than they can be absorbed into the crystal. They pile up on the surface and deposit
+              as metallic lithium instead of slotting in neatly — this is lithium plating, and it
+              permanently damages the cell.
             </p>
             <p>
-              This is why the BMS must enforce charge rate limits — not as arbitrary conservative
-              specs, but because exceeding them initiates a physically distinct, damaging reaction.
-              At low temperature, diffusion slows further, dramatically lowering the safe charge
-              rate threshold. A cell that accepts 0.5C safely at 25°C may plate lithium at just
-              0.05C at −10°C.
+              This is the physical reason why the BMS enforces charge rate limits. It is not
+              arbitrary caution — exceeding the limit triggers a completely different, damaging
+              reaction. Cold temperatures make this worse: ions move slower when cold, so the
+              safe charging speed drops dramatically below zero degrees. A cell that charges
+              safely at a moderate rate at room temperature may plate lithium at the same rate
+              at minus 10 degrees Celsius.
             </p>
           </div>
         </div>
