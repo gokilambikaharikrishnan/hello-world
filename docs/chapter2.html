@@ -3326,20 +3326,22 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           </div>
         </div>
         <p>
-          At high temperature, electrolyte solvents (EC, DMC) begin oxidising at the cathode surface
-          above ~60°C, generating CO₂ and CO gas. This is detectable as a rise in cell internal pressure.
-          Prismatic cells with pressure vents will vent above a threshold — the BMS should interpret
-          a sudden drop in internal resistance (gas between electrodes reduces contact) as a sign of
-          thermal stress, even before temperature sensors respond.
+          Above about 60°C, the liquid electrolyte inside the cell starts to break down,
+          producing carbon dioxide and carbon monoxide gas. This builds internal pressure.
+          Prismatic cells have pressure relief vents that open when pressure gets too high.
+          A useful early warning: a sudden drop in internal resistance (gas forming between
+          the electrodes reduces their contact) can be detected by the BMS before the
+          temperature sensor even registers the stress.
         </p>
       </div>
 
       <div class="subsection">
         <div class="subsection-title">Capacity Derating — The Temperature Lookup Table</div>
         <p>
-          Production BMS firmware implements temperature-indexed capacity derating factors to ensure
-          SoC estimates remain accurate across the operating temperature range. The nominal capacity
-          Q_nom is measured at 25°C, 0.2C. At any other temperature, the actual usable capacity is:
+          The rated capacity of 280 Ah is measured at 25°C. At any other temperature, the cell
+          can deliver more or less — the BMS must account for this or the SOC display will lie.
+          The way it works: the BMS has a small lookup table mapping temperature to a correction
+          factor, and multiplies the nominal capacity by that factor before calculating SOC:
         </p>
         <div class="formula-block">
           <span class="formula-label">Temperature-Derated Capacity</span>
@@ -3361,11 +3363,11 @@ T (°C)  | f_T   | Notes
  60     | 0.88  | Hard cutoff recommended</span>
         </div>
         <p>
-          This table is stored in MCU flash. At each SoC calculation cycle, the firmware reads the
-          battery temperature, interpolates f_T, and uses Q_usable(T) as the denominator in the
-          SoC formula instead of the fixed Q_nom. Without this correction, a cold pack reading
-          88% capacity would display as 88% SoC when the actual usable energy relative to rated
-          is only 88% × 88% ≈ 77%.
+          The table sits in flash memory. Every SOC update, the firmware reads the temperature,
+          looks up the factor, and uses the derated capacity instead of the fixed 280 Ah figure.
+          Without this: a pack at 0°C has roughly 88% of its rated capacity available, but it
+          is also reporting 88% SOC — so the real usable energy is 88% × 88% ≈ 77% of rated.
+          That 11% gap is why loads shut down earlier than expected on cold mornings.
         </p>
       </div>
 
