@@ -2176,11 +2176,10 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
       <div class="section-number">Section 2.7</div>
       <h2 class="section-title">SOH, Aging &amp; Degradation</h2>
       <p class="section-intro">
-        A new LFP cell rated at 280Ah will not deliver 280Ah forever. Electrochemical
-        degradation processes, operating continuously both when the cell is in use and when it
-        is at rest, slowly consume its usable capacity. Understanding these processes allows
-        the BMS to track health, predict end-of-life, and optimize operation to extend
-        service life.
+        A new LFP cell rated at 280Ah will not deliver 280Ah forever. Slow chemical processes
+        eat away at its capacity whether the cell is in use or sitting idle. Understanding
+        these processes lets the BMS track the battery's health, predict when it will need
+        replacing, and operate it in ways that slow the decline.
       </p>
 
       <!-- SOH Definition -->
@@ -2197,15 +2196,16 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <span class="formula-caption">Industry standard end-of-life threshold: SOH = 80%. At 80% SOH, a 280Ah cell delivers 224Ah. For ESS applications, cells are often replaced at 70–75% SOH to maintain minimum runtime guarantees.</span>
         </div>
         <p>
-          <strong>Alternative SOH definition (impedance-based):</strong> Some BMS designs use
-          internal resistance as a proxy for SOH. As cells age, internal resistance increases
-          due to SEI growth and electrode particle fragmentation. The relationship is not linear
-          but monotonic:
+          <strong>Alternative SOH measure — internal resistance:</strong> Some BMS designs
+          track internal resistance instead of capacity. As cells age, resistance rises due
+          to chemical changes inside. This is not a perfect substitute — a cell can look
+          healthy by resistance but have lost significant capacity, or vice versa — but it
+          is a useful early warning trend that doesn't require a full discharge test:
         </p>
         <div class="formula-block">
-          <span class="formula-label">SOH (Impedance-Based Approximation)</span>
+          <span class="formula-label">SOH (Resistance-Based Approximation)</span>
           <span class="formula-line">SOH_R = R₀_initial / R₀_current × 100%</span>
-          <span class="formula-caption">Usable for trend monitoring but not for accurate capacity reporting. A cell may show 90% SOH_R while being at 80% capacity SOH, or vice versa, depending on the primary degradation mode.</span>
+          <span class="formula-caption">Good for trend monitoring but not for accurate capacity reporting. Use as a supplementary health indicator alongside capacity-based SOH.</span>
         </div>
 
         <div class="subsection-sub">How SOH is Measured in Practice by the BMS</div>
