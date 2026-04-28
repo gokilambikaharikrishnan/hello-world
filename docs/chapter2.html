@@ -3769,12 +3769,13 @@ T (°C)  | f_T   | Notes
           <div class="callout-body">
             <div class="callout-title">SoP Must Be Updated Every 100ms in UPS Applications</div>
             <p>
-              UPS systems respond to mains failure in &lt;10ms. The inverter immediately asks for
-              full rated power. If the BMS's SoP estimate is stale (last updated 1 second ago at
-              a different temperature/SoC), the current command may exceed the actual capability —
-              causing a voltage collapse that takes the UPS offline exactly when it is needed.
-              Production BMS firmware runs the SoP calculation in the 100ms task loop, not the
-              1-second slow loop, and broadcasts it on the CAN bus as a priority message.
+              A UPS switches to battery in less than 10 ms when mains power fails. The inverter
+              immediately demands full rated power. If the BMS's SoP figure is one second old —
+              from when the temperature or SOC was slightly different — the inverter may ask for
+              more than the pack can currently deliver. The result: a voltage collapse that takes
+              the UPS offline at exactly the wrong moment. Production BMS firmware calculates SoP
+              in the 100 ms task loop (not the slower 1-second loop) and broadcasts it on CAN
+              as a high-priority message.
             </p>
           </div>
         </div>
@@ -3783,18 +3784,18 @@ T (°C)  | f_T   | Notes
       <div class="subsection">
         <div class="subsection-title">Resistance Growth — SOH's Impact on SoP</div>
         <p>
-          As cells age, not only does capacity (Q) decrease, but internal resistance (R) increases.
-          The resistance growth follows a slower trajectory than capacity fade but compounds SoP
-          degradation dramatically at end of life:
+          As cells age, two things get worse simultaneously: capacity goes down, and
+          internal resistance goes up. The resistance growth is slower, but it hits peak
+          power capability harder than capacity fade alone suggests:
         </p>
         <div class="formula-block">
           <span class="formula-label">Resistance Growth Model</span>
           <span class="formula-line">R(N, T) = R₀_fresh × (1 + γ_cyc × N + γ_cal × t_cal)</span>
           <span class="formula-caption">
-            γ_cyc ≈ 0.0002 per cycle (LFP at 1C, 25°C). At 2000 cycles: R = R₀_fresh × 1.4.
-            A 40% resistance increase at SOH = 80% means I_max = (OCV − V_min) / (1.4 × R₀_fresh),
-            so peak current capability is reduced by ~30% even though capacity is only down 20%.
-            For UPS sizing, always derate peak power by the resistance growth factor.
+            γ_cyc ≈ 0.0002 per cycle for LFP at 1C, 25°C. At 2000 cycles: R = R₀_fresh × 1.4.
+            A 40% resistance increase at SOH = 80% means peak current capability drops ~30% —
+            even though capacity is only down 20%. Always derate peak power for aged packs,
+            not just energy.
           </span>
         </div>
       </div>
