@@ -2208,19 +2208,18 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <span class="formula-caption">Good for trend monitoring but not for accurate capacity reporting. Use as a supplementary health indicator alongside capacity-based SOH.</span>
         </div>
 
-        <div class="subsection-sub">How SOH is Measured in Practice by the BMS</div>
+        <div class="subsection-sub">How the BMS Measures SOH in Practice</div>
         <p>
-          The most accurate method requires a <strong>reference performance test (RPT)</strong>:
-          a full charge to 100% followed by a controlled 0.2C discharge to cutoff, with precise
-          coulomb counting. This gives Q_actual directly. The BMS can trigger an RPT automatically
-          once every 30–100 cycles, typically during a low-priority period (e.g., overnight when
-          grid is available).
+          The most accurate way is a <strong>reference performance test (RPT)</strong>:
+          charge fully to 100%, then discharge at a slow, controlled rate (0.2C) down to
+          the cutoff voltage while precisely counting every ampere-hour. This gives the true
+          current capacity directly. The BMS can run this test automatically every 30–100
+          cycles, typically at night when no other demand is placed on the system.
         </p>
         <p>
-          Between RPTs, the BMS tracks SOH incrementally: each full or near-full cycle, the
-          actual discharged Ah is recorded. A rolling average of the last N full-cycle capacities
-          gives a running estimate of Q_actual. This "forgetting factor" approach lets the BMS
-          track gradual capacity fade without requiring a formal RPT.
+          Between tests, the BMS keeps a rolling average of the actual Ah delivered on each
+          full (or near-full) cycle. This running average acts as a live capacity estimate
+          that drifts slowly downward as the cell ages, without needing a formal test.
         </p>
       </div>
 
