@@ -3558,22 +3558,23 @@ T (°C)  | f_T   | Notes
       <div class="subsection">
         <div class="subsection-title">Phase 2 — Initial SoC Calibration</div>
         <p>
-          The BMS's SoC estimate is only as good as its initial condition. On first power with
-          cells at an unknown SoC, the BMS must perform an OCV-based SoC initialisation:
+          The BMS's SOC estimate is only as reliable as its starting point. With fresh cells
+          at an unknown charge level, the BMS needs to measure the resting voltage to
+          get its first estimate:
         </p>
         <div class="formula-block">
-          <span class="formula-label">Boot SoC Initialisation Protocol</span>
-          <span class="formula-line">1. Apply I = 0 (open circuit) for t_rest ≥ 30 min</span>
-          <span class="formula-line">2. Read V_cell for all N cells</span>
-          <span class="formula-line">3. Check ΔV_max − ΔV_min &lt; 50mV (cell balance acceptable)</span>
-          <span class="formula-line">4. Map V_OCV → SoC via lookup table for each cell</span>
-          <span class="formula-line">5. Set SoC_initial = average of all cell SoC values</span>
-          <span class="formula-line">6. Flag cells with SoC deviation &gt;5% for investigation</span>
+          <span class="formula-label">Boot SOC Initialisation Protocol</span>
+          <span class="formula-line">1. Let pack sit with no current for at least 30 minutes</span>
+          <span class="formula-line">2. Read resting voltage of every cell</span>
+          <span class="formula-line">3. Check that the difference between highest and lowest cell voltage is less than 50 mV</span>
+          <span class="formula-line">4. Look up each cell's voltage in the OCV table to get initial SOC</span>
+          <span class="formula-line">5. Set the starting SOC to the average across all cells</span>
+          <span class="formula-line">6. Flag any cell more than 5% away from average for investigation</span>
           <span class="formula-caption">
-            Why 30 minutes? After a discharge or charge event, surface concentration gradients
-            persist in the electrodes. The OCV measured immediately after current stops includes
-            a diffusion overpotential that decays with time constant τ ≈ R₁ × C₁ ≈ 100–300s.
-            30 minutes ensures the cell has fully relaxed to true thermodynamic OCV.
+            Why 30 minutes? After any charge or discharge event, the voltage takes time to
+            settle. The reading immediately after current stops includes an extra voltage
+            component from diffusion inside the particles, which decays over a few minutes.
+            30 minutes ensures the voltage has settled to the true resting level.
           </span>
         </div>
       </div>
