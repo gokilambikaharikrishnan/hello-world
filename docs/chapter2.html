@@ -1167,27 +1167,27 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
 
       <!-- Open Circuit Voltage -->
       <div class="subsection">
-        <div class="subsection-title">Open-Circuit Voltage (OCV) — The Thermodynamic Truth</div>
+        <div class="subsection-title">Open-Circuit Voltage (OCV) — The Most Honest Reading</div>
         <p>
-          The <strong>open-circuit voltage</strong> is the cell terminal voltage measured when
-          no current flows and the cell has been at rest long enough for all internal
-          concentration gradients to equilibrate. It is the thermodynamic quantity — the true
-          electrochemical potential difference between cathode and anode at the current
-          state of lithiation.
+          The <strong>open-circuit voltage</strong> is the voltage you measure at the cell
+          terminals when no current is flowing and the cell has been sitting quietly long enough
+          to fully settle. It gives you the clearest possible picture of the cell's true charge
+          state — because when nothing is flowing, there are no extra voltage effects hiding the
+          real value.
         </p>
         <p>
-          OCV is the most reliable voltage measurement you can make. It is not affected by ohmic
-          drop (no current → no IR drop), not affected by diffusion polarization (equilibrated),
-          and highly reproducible at the same temperature and SoC. This is why OCV is the gold
-          standard for SOC calibration — if you can measure OCV, you can look up SoC in a
-          pre-characterized table.
+          OCV is the most reliable voltage measurement you can make on a battery. It does not
+          change with how thick the wires are, how hot the connectors are, or how fast current
+          was flowing before. This is why it is the reference point for calibrating charge state
+          estimates — if you measure OCV, you can look it up in a pre-built table to find the
+          corresponding charge level.
         </p>
         <p>
           <strong>The catch:</strong> you can only measure true OCV when no current is flowing
-          <em>and</em> you have waited long enough. For LFP cells, "long enough" is surprisingly
-          long — 30 minutes to 4+ hours, depending on temperature and how recently the cell
-          was disturbed. The reason is slow Li⁺ diffusion equilibration within electrode particles
-          after current stops.
+          <em>and</em> you have waited long enough for the cell to settle. For LFP cells this
+          takes surprisingly long — 30 minutes to 4 or more hours, depending on temperature and
+          how recently the cell was used. The reason is that lithium ions take time to redistribute
+          evenly inside the electrode particles after current stops.
         </p>
       </div><!-- end OCV subsection -->
 
@@ -1209,15 +1209,16 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         </div>
 
         <p>
-          Recall from the electrochemistry: LFP operates via a two-phase mechanism. While both
-          FePO₄ and LiFePO₄ phases coexist in the electrode particles, the cell potential is
-          pinned at the equilibrium potential of the phase boundary: <strong>~3.35–3.38V</strong>.
-          This pinning holds from approximately <strong>20% SoC to 90% SoC</strong> — covering
-          70% of the cell's usable range.
+          As we covered earlier, LFP's crystal switches between just two states — full and empty
+          — rather than changing gradually. While both states coexist inside the electrode
+          particles, which is the case for most of the charge and discharge cycle, the voltage is
+          held completely steady at around <strong>3.35 to 3.38V</strong>. This flat region
+          covers from about <strong>20% to 90% charged</strong> — the vast majority of normal use.
         </p>
         <p>
-          The result: a real LFP cell's OCV varies by only <strong>50 mV</strong> across the
-          20–80% SoC range where you actually operate the cell most of the time.
+          The result: a real LFP cell's voltage changes by only <strong>50 millivolts</strong>
+          across the 20 to 80% charge range. That is one-twentieth of a volt across the range
+          you use every single day.
         </p>
 
         <div class="callout callout-key">
@@ -1254,12 +1255,12 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           </table>
         </div>
         <p style="margin-top:1rem;">
-          Look at the column <strong>"Δ from prev SoC"</strong>. In the critical 30–80% SoC range
-          — where you operate a home ESS during daily cycling — the voltage change per 10% SoC
-          is 2–13 mV. Compare this to the measurement precision of a typical 12-bit ADC with a
-          5V reference: 5000 mV / 4096 ≈ <strong>1.2 mV per count</strong>. Noise, temperature
-          drift, and component tolerances typically add another 1–3 mV of uncertainty. The ADC
-          resolution is comparable to the voltage signal you're trying to measure.
+          Look at the <strong>"Δ from prev SoC"</strong> column. In the 30 to 80% range —
+          where a home energy storage system operates every day — the voltage shifts by only
+          2 to 13 millivolts for every 10% change in charge level. Electronic measurement
+          circuits have noise of 1 to 3 millivolts just from temperature drift and component
+          tolerances. The voltage signal you are trying to read is about the same size as
+          the noise in your measurement. That is why voltage alone cannot tell you the charge level.
         </p>
 
         <div class="callout callout-warning">
