@@ -1737,10 +1737,10 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
       <div class="section-number">Section 2.6</div>
       <h2 class="section-title">SOC Estimation — Five Techniques</h2>
       <p class="section-intro">
-        State of Charge estimation is the most algorithmically demanding function of the BMS.
-        No single technique is perfect. Each has a specific accuracy profile, computational cost,
-        and failure mode. Knowing all five — and understanding why each exists — is essential
-        for BMS architecture decisions.
+        Figuring out how full the battery is — the State of Charge — is the hardest job
+        the BMS has to do. No single method works perfectly in all situations. Each of the
+        five techniques covered here has a different strength, weakness, and cost. Understanding
+        all five is what lets a BMS engineer choose the right combination for a given product.
       </p>
 
       <div class="callout callout-key">
@@ -1748,12 +1748,14 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="callout-body">
           <div class="callout-title">Why We Need SOC Estimation at All — The Fundamental Problem</div>
           <p>
-            A lead-acid battery shows its state of charge directly in its terminal voltage:
-            12.6V ≈ 100%, 12.0V ≈ 50%, 11.8V ≈ 20%. The slope is steep enough to be useful.
-            An LFP cell at 3.34V is anywhere from 30% to 70% SoC. <strong>You fundamentally
-            cannot read SoC from LFP voltage during normal operation.</strong> This is not an
-            engineering limitation to be designed around — it is a consequence of the two-phase
-            thermodynamics described in Section 2.4. The BMS must estimate SoC by other means.
+            A lead-acid battery is easy: its voltage drops noticeably as it drains.
+            12.6 V means full, 12.0 V means half, 11.8 V means almost empty. Any voltmeter
+            can tell you where you are. LFP is the opposite: a cell sitting at 3.34 V could
+            be anywhere from 30% to 70% full — the voltage barely moves across most of the
+            range. <strong>You cannot reliably read LFP state of charge from voltage alone
+            during normal use.</strong> This is not a flaw in the design — it is a side
+            effect of how the olivine crystal chemistry works (covered in Section 2.4).
+            The BMS has to use smarter methods.
           </p>
         </div>
       </div>
