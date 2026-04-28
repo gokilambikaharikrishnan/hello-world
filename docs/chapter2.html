@@ -2039,23 +2039,17 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
             </div>
           </div>
 
-          <div class="subsection-sub">Computational Cost on Embedded MCU</div>
+          <div class="subsection-sub">Computational Cost</div>
           <p>
-            For a 2-state EKF (SoC + V_C1), the per-sample computation involves:
+            Despite the complex mathematics, EKF is very lightweight on modern microcontrollers:
           </p>
           <ul class="content-list">
-            <li><strong>Matrix operations:</strong> 2×2 matrix multiply, invert (scalar for 1 measurement), add → approximately 20–40 floating point operations per cell per sample</li>
-            <li><strong>OCV lookup:</strong> Table interpolation, or polynomial fit evaluation (~10 ops)</li>
-            <li><strong>Total per cell per sample:</strong> ~50–80 FLOP</li>
-            <li><strong>For a 16-cell pack at 4 Hz sample rate:</strong> ~3,200–5,120 FLOP/s</li>
-            <li><strong>Cortex-M4F (FPU) at 168 MHz:</strong> ~84 MFLOP/s capacity — EKF for 16 cells consumes &lt;0.006% of MCU time</li>
-            <li><strong>Cortex-M0 (no FPU):</strong> Software FP is ~20–50× slower. EKF is feasible but consumes ~0.5–2% of MCU time. Still fine.</li>
+            <li>About 50–80 small math operations per cell per sample</li>
+            <li>For a 16-cell pack sampled 4 times per second: roughly 3,200–5,120 operations/second</li>
+            <li>On an STM32 Cortex-M4 (168 MHz): uses less than <strong>0.01% of processor time</strong></li>
+            <li>Even on the slower Cortex-M0 with software floating point: still under 2% — well within budget</li>
+            <li>RAM needed for a 16-cell pack: approximately <strong>14 KB total</strong></li>
           </ul>
-          <p>
-            <strong>RAM requirement:</strong> Per cell: P matrix (4 floats) + x state (2 floats) +
-            OCV table (100 points × 2 floats) + RC params (4 floats) ≈ 880 bytes per cell.
-            16-cell pack: ~14 KB total. Easily within even a small STM32F0 (4–16 KB RAM minimum).
-          </p>
           <div class="technique-meta">
             <div class="technique-meta-item"><span class="technique-meta-label">Best Use</span><span class="technique-meta-value">High-accuracy BMS, safety-critical ESS</span></div>
             <div class="technique-meta-item"><span class="technique-meta-label">Accuracy</span><span class="technique-meta-value best">±1–4% typical</span></div>
