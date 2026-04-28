@@ -2685,29 +2685,25 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
       <div class="subsection">
         <div class="subsection-title">NCA (LiNi₀.₈Co₀.₁₅Al₀.₀₅O₂) — High Energy Density, Tight Margins</div>
         <p>
-          NCA substitutes aluminum for manganese in the NMC layered structure. The result is
-          the highest energy density cathode in commercial production (~200–280 Wh/kg at cell
-          level). Tesla's original 18650-format cells (Panasonic NCA) demonstrated this
-          chemistry's potential. Modern 4680 cells also use NCA-based formulations.
-        </p>
-        <p>
-          Aluminum in NCA plays the same structural stabilization role as manganese in NMC, but
-          Al³⁺ is a smaller ion that increases the structural stability compared to Mn⁴⁺. This
-          allows even higher nickel content (0.80 vs 0.60–0.80 in NMC) for maximum energy density.
+          NCA replaces manganese with aluminium in the layered structure. Aluminium is a
+          smaller, more stable atom that lets NMC push nickel content even higher (up to 80%)
+          without the structure collapsing. The result is the highest energy density of any
+          major cathode chemistry in production today — 200–280 Wh/kg at cell level.
+          Tesla's original cylindrical cells and modern 4680 cells use NCA-based formulations.
         </p>
         <ul class="content-list cross">
-          <li>Thermal onset temperature for O₂ release: ~160°C — worst of all major cathode chemistries</li>
-          <li>Very sensitive to moisture — requires dry room manufacturing (&lt;0.1% RH)</li>
-          <li>Higher self-discharge than LFP or NMC at elevated temperatures</li>
-          <li>Requires very precise voltage management — tighter tolerance BMS hardware</li>
-          <li>Cobalt content (15%) creates same supply chain vulnerability as NMC</li>
+          <li>Starts releasing oxygen at ~160°C — the lowest onset temperature of any major chemistry</li>
+          <li>Very sensitive to moisture — must be manufactured in near-zero humidity environments</li>
+          <li>Higher self-discharge than LFP or NMC at warm temperatures</li>
+          <li>Requires very precise voltage control — tighter-tolerance BMS hardware throughout</li>
+          <li>Contains 15% cobalt, creating the same supply chain and ethical concerns as NMC</li>
         </ul>
         <p>
-          For a BMS engineer, NCA represents the highest-performance, highest-risk chemistry.
-          Every protection margin needs to be tighter, every temperature threshold lower, and
-          every SOC uncertainty smaller. The BMS complexity (and cost) scales accordingly.
-          This is one reason why large NCA packs (EVs, aircraft) use EKF or more advanced SOC
-          algorithms — the consequences of under- or over-charging are severe.
+          NCA is the highest-energy, highest-risk chemistry. Every protection limit must
+          be tighter, every temperature threshold must be lower, and the SOC estimate must
+          be more accurate — because the consequences of getting it wrong are worse.
+          This is why large NCA packs (in EVs and aircraft) typically run EKF or more
+          sophisticated SOC algorithms.
         </p>
       </div><!-- end NCA -->
 
