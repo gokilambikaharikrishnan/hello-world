@@ -1880,9 +1880,11 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         </div>
         <div class="technique-body">
           <p>
-            The Equivalent Circuit Model replaces the electrochemical cell with an electrical
-            circuit that has the same terminal voltage behaviour. The most common form is the
-            Thevenin model, also called the RC model:
+            The Equivalent Circuit Model (ECM) is a smarter approach: instead of just counting
+            electrons, it builds a simple electrical model of the battery that predicts what the
+            terminal voltage <em>should</em> be at any given state and current. If the measured
+            voltage differs from the prediction, the BMS knows its SOC estimate needs adjusting.
+            The most common form is the Thevenin model (also called the 1RC model):
           </p>
           <div class="diagram-box" style="margin:1.5rem 0; padding:1.5rem;">
             <svg viewBox="0 0 500 140" width="100%" style="max-width:500px; display:block; margin:0 auto;">
@@ -1926,26 +1928,24 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
             </p>
           </div>
 
-          <p><strong>What each element represents physically:</strong></p>
+          <p><strong>What each element represents:</strong></p>
           <ul class="content-list">
-            <li><strong>OCV(SoC, T):</strong> The thermodynamic equilibrium voltage — the same
-            OCV-SoC table as Method T1, but now used as a model input, not the sole SOC estimator.
-            Updated as SoC is estimated.</li>
-            <li><strong>R₀ (ohmic resistance):</strong> Immediate voltage drop when current changes.
-            Combines contact resistance, electrolyte bulk resistance, and current collector resistance.
-            Characterizable from current-pulse tests. Changes with temperature and aging.</li>
-            <li><strong>R₁C₁ (RC network):</strong> The relaxation dynamics. When current stops,
-            the voltage doesn't jump instantly to OCV — it relaxes exponentially with time constant
-            τ = R₁×C₁ (~30–300 seconds for LFP). Models the diffusion polarization that builds
-            and decays with current history.</li>
+            <li><strong>OCV(SoC, T):</strong> The resting voltage that the cell would settle at
+            if current stopped — the same OCV table from Method T1, now used as a live model
+            input that updates as SoC changes.</li>
+            <li><strong>R₀ (ohmic resistance):</strong> The instant voltage drop the moment
+            current flows — like a fixed resistor. Changes with temperature and ages over time.</li>
+            <li><strong>R₁C₁ (RC network):</strong> The slow voltage recovery after current
+            changes. When you stop drawing current, the voltage doesn't snap back to OCV
+            immediately — it creeps up over 30–300 seconds. This element captures that delay.</li>
           </ul>
           <p>
-            <strong>SOC estimation using ECM:</strong> The model predicts V_terminal given current
-            history and assumed SoC. The SoC is updated iteratively (usually via an optimization
-            step) to minimize the error between predicted and measured terminal voltage. This is
-            better than pure coulomb counting because it uses voltage as a correction signal — but
-            for LFP, with its flat OCV curve, the voltage correction is weak and the model still
-            relies heavily on current integration.
+            <strong>How the ECM estimates SOC:</strong> Every sample, the model calculates
+            what the terminal voltage should be for the current SOC estimate. If the measured
+            voltage is different, the BMS nudges the SOC estimate until they match. This is
+            better than pure coulomb counting because voltage is used as a reality check — but
+            for LFP, with its very flat OCV curve, the voltage carries little information in
+            the mid-range, so the ECM still leans heavily on current counting.
           </p>
           <div class="technique-meta">
             <div class="technique-meta-item"><span class="technique-meta-label">Best Use</span><span class="technique-meta-value">Mid-tier BMS, Kalman filter base model</span></div>
