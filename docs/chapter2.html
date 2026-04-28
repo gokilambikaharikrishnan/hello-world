@@ -3652,10 +3652,11 @@ T (°C)  | f_T   | Notes
       </div>
 
       <div class="subsection">
-        <div class="subsection-title">Phase 4 — SoC Accuracy Verification via Reference Discharge</div>
+        <div class="subsection-title">Phase 4 — SOC Accuracy Verification via Reference Discharge</div>
         <p>
-          After protection thresholds are confirmed, perform a full Reference Performance Test (RPT)
-          to calibrate the SoC estimator against a known ground truth:
+          With protections confirmed, the next step is to verify that the BMS's SOC estimate
+          is accurate. This is done with a Reference Performance Test (RPT) — a full, slow
+          discharge that provides a reliable ground-truth measurement:
         </p>
         <div class="formula-block">
           <span class="formula-label">RPT Protocol (IEC 62620 basis)</span>
@@ -3681,10 +3682,10 @@ T (°C)  | f_T   | Notes
       <div class="section-number">2.11</div>
       <h2 class="section-title">SOH Trending and State-of-Power (SoP)</h2>
       <p class="section-intro">
-        State of Health is not a binary — it is a continuous variable that the BMS must track
-        over years of operation. Understanding how to trend SOH, predict end-of-life, and
-        compute State-of-Power (the maximum instantaneous current the pack can deliver) allows
-        the system to give the host controller accurate capability information at all times.
+        State of Health is not a yes/no value — it is a number that drifts slowly downward
+        over years of use. This section covers how the BMS tracks that drift, predicts how
+        much life is left, and computes State-of-Power (SoP) — the maximum current the pack
+        can safely deliver right now, given its current charge level, temperature, and age.
       </p>
 
       <div class="subsection">
