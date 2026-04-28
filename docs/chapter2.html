@@ -3445,12 +3445,13 @@ T (°C)  | f_T   | Notes
         <div class="callout callout-info">
           <div class="callout-icon">📐</div>
           <div class="callout-body">
-            <div class="callout-title">Why V_nom is a Safe Approximation for Runtime</div>
+            <div class="callout-title">Why Using Nominal Voltage is Good Enough for LFP</div>
             <p>
-              Using V_nom = 51.2V for energy calculation introduces ≤3% error for LFP packs in the
-              20–90% SoC range because the flat OCV curve maintains voltage close to nominal throughout.
-              For NMC (sloped OCV), you would need to integrate the OCV-SoC curve to get accurate energy.
-              This is one of the underappreciated practical advantages of LFP's flat curve.
+              Using a fixed 51.2 V for the energy calculation introduces less than 3% error for
+              LFP packs in the 20–90% SOC range. This is because the flat OCV curve keeps the
+              voltage close to nominal throughout most of the discharge. With NMC, the voltage
+              drops much more noticeably as the cell discharges, so you'd need to integrate
+              the curve to get accurate energy — an extra step LFP largely avoids.
             </p>
           </div>
         </div>
