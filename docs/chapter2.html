@@ -2311,22 +2311,23 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
       <div class="subsection" id="calendar-aging">
         <div class="subsection-title">Calendar Aging — Degradation Without Use</div>
         <p>
-          A cell stored on a shelf at full charge is aging. Calendar aging affects every LFP
-          installation — UPS batteries that sit charged for months between discharge events are
-          subject to calendar aging that can be the dominant life-limiting factor.
+          A cell stored at full charge is aging even when nothing is drawing from it.
+          For UPS batteries that sit charged for months waiting for a power outage,
+          this kind of idle aging can actually be the main reason they wear out.
         </p>
         <p>
-          The three primary calendar aging mechanisms:
+          Three things cause calendar aging:
         </p>
         <ul class="content-list">
-          <li><strong>SEI growth (dominant):</strong> As described above — slow but continuous
-          even without cycling. Rate approximately quadrupled for each 10°C temperature increase.</li>
-          <li><strong>Electrolyte decomposition at high SoC:</strong> Holding LFP at 100% SoC
-          (3.65V/cell) accelerates electrolyte oxidation at the cathode surface. Storage at
-          50% SoC significantly reduces this mechanism compared to 100% SoC storage.</li>
-          <li><strong>Lithium plating self-discharge:</strong> In cells that have experienced
-          lithium plating (see below), the plated lithium reacts with electrolyte, consuming
-          lithium and electrolyte — accelerating degradation in already-stressed cells.</li>
+          <li><strong>SEI growth (the main one):</strong> As described above — slow and
+          continuous even without any current flowing. The rate roughly quadruples for
+          every 10°C rise in temperature.</li>
+          <li><strong>Electrolyte breakdown at high charge:</strong> Keeping LFP at 100%
+          (3.65 V/cell) speeds up chemical breakdown at the cathode surface. Storing at
+          50% SoC is significantly better.</li>
+          <li><strong>Reactions from previous lithium plating:</strong> In cells that have
+          already been charged too aggressively (see below), leftover metallic lithium
+          keeps reacting with the electrolyte even during storage, causing additional ongoing damage.</li>
         </ul>
 
         <div class="table-wrapper">
