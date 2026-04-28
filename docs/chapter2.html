@@ -3808,17 +3808,18 @@ T (°C)  | f_T   | Notes
       <div class="section-number">2.12</div>
       <h2 class="section-title">Second-Life Batteries — BMS Implications for Repurposed Cells</h2>
       <p class="section-intro">
-        When an LFP pack reaches 80% SOH in its primary application (e.g., an EV), it is not dead —
-        it has roughly 60–70% of its original useful life remaining in a less demanding second-life
-        application such as stationary energy storage. Understanding what changes in the BMS when
-        managing aged cells is increasingly important as second-life ESS deployments grow.
+        When an LFP pack from an electric vehicle reaches 80% SOH, it's retired from the EV —
+        but it still has roughly 60–70% of its original life left for a less demanding role
+        like stationary energy storage. Managing aged cells requires updating the BMS parameters,
+        not just plugging the old pack into a new system.
       </p>
 
       <div class="subsection">
         <div class="subsection-title">What Changes When Cells Age — BMS Parameter Updates Required</div>
         <p>
-          An aged cell at 80% SOH is a fundamentally different electrochemical device than a fresh cell.
-          The BMS must be reconfigured, not just recalibrated:
+          An aged cell at 80% SOH behaves differently from a fresh one. The BMS cannot
+          just recalibrate — it needs to be reconfigured with new values that reflect the
+          cell's actual current state:
         </p>
         <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin:1.5rem 0;">
           <div class="stat-card">
