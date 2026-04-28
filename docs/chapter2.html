@@ -2129,41 +2129,39 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
       <div class="subsection">
         <div class="subsection-title">SOC Initialisation on Power-Up — What Happens at Boot</div>
         <p>
-          Every BMS faces a critical question at power-up: <em>what is the current SOC?</em>
-          The answer determines whether the first charge or discharge cycle is safe. A bad
-          initial SOC can cause the pack to be over-discharged (BMS thinks it has 50% remaining
-          when it actually has 20%) or over-charged (thinks it's at 80% when it's at 95%).
+          When the BMS first powers on, it doesn't know how full the battery is. Getting
+          this right matters: if the BMS thinks there's 50% charge left when there's only
+          20%, the load may over-discharge the pack. Three strategies handle this:
         </p>
 
-        <p><strong>Strategy 1 — NVRAM stored SOC (preferred):</strong> The BMS writes the current
-        SOC to non-volatile memory (NVM) before every power-off and at regular intervals during
-        operation. On boot, it reads the stored value and uses it as the initial condition. If
-        the time elapsed since last write is short, this is highly accurate. If the system was off
-        for weeks, self-discharge must be estimated and subtracted (~1–3% per month for LFP at 25°C).</p>
+        <p><strong>Strategy 1 — Saved SOC from last shutdown (preferred):</strong> The BMS
+        writes its SOC estimate to permanent memory before powering off, and reads it back
+        on boot. If the system was off for only a short time, this is very accurate. If it
+        was off for weeks, the BMS subtracts a small amount for self-discharge
+        (~1–3% per month for LFP at 25°C).</p>
 
-        <p><strong>Strategy 2 — OCV measurement at boot:</strong> If NVRAM is unavailable or
-        corrupted, wait for the pack to rest (no current flowing), measure OCV, and look up SoC.
-        For LFP this gives ±5–15% accuracy in the plateau region, but is reliable at the edges.
-        If OCV reads 3.60V or higher, SOC &gt; 90% with certainty. If OCV reads 3.20V or lower,
-        SOC &lt; 15% with certainty. The uncertain zone is the plateau, where more sophisticated
-        boot-time estimation is needed.</p>
+        <p><strong>Strategy 2 — Measure resting voltage at boot:</strong> If no saved value
+        is available, the BMS reads the resting voltage and looks up SOC in a table.
+        For LFP this is only ±5–15% accurate in the flat middle range, but is reliable
+        at the extremes: above 3.60 V means &gt;90% full; below 3.20 V means &lt;15% full.
+        The uncertain zone is the flat plateau in between.</p>
 
-        <p><strong>Strategy 3 — Conservative boot SOC:</strong> If OCV is in the plateau and NVRAM
-        is unavailable, some BMS designs boot with a conservative estimate (e.g., 50% SOC) and
-        rely on the first charge cycle to reset the coulomb counter to 100% at end-of-charge.
-        This is safe for UPS applications where the pack is immediately float-charged.</p>
+        <p><strong>Strategy 3 — Safe fallback guess:</strong> If the voltage is in the flat
+        plateau and no saved value exists, some BMS designs start at 50% SOC and wait for
+        the first full charge to reset the count to 100%. This is safe for UPS systems
+        that are immediately plugged in and charged.</p>
 
         <div class="callout callout-warning">
           <div class="callout-icon">⚠</div>
           <div class="callout-body">
-            <div class="callout-title">NVRAM Corruption — The Boot Failure Mode</div>
+            <div class="callout-title">Corrupted Memory — A Real Failure Mode</div>
             <p>
-              NVRAM can be corrupted by power loss during a write, electrostatic discharge, or
-              flash endurance exhaustion (STM32 internal flash: ~10,000 write cycles). The BMS
-              must always write with a validity checksum (CRC-16 or CRC-32) and verify on read.
-              If the checksum fails, fall back to OCV measurement rather than trusting corrupted
-              data. Overconfident SOC initialization from corrupted NVM is a documented root cause
-              of over-discharge events in field-deployed BMS systems.
+              The saved SOC can be corrupted by power loss during writing, or when the
+              memory chip has been written too many times (STM32 internal flash wears out
+              after ~10,000 writes). The BMS should always save a checksum alongside the
+              SOC value and verify it on read. If the check fails, fall back to voltage
+              measurement instead of using bad data. Trusting corrupted SOC data is a
+              known cause of real-world over-discharge events.
             </p>
           </div>
         </div>
