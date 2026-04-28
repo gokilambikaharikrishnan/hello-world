@@ -3259,42 +3259,34 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
       <div class="subsection">
         <div class="subsection-title">Low-Temperature Effects — The Lithium Plating Cliff</div>
         <p>
-          Below 0°C, the graphite anode's ability to intercalate Li⁺ ions during charging is severely
-          impaired. The Li⁺ ions arrive at the anode surface faster than they can be absorbed into the
-          graphite lattice. When this happens, lithium deposits as metallic lithium on the anode surface —
-          a process called <strong>lithium plating</strong>.
+          Below 0°C, the graphite anode can no longer absorb lithium ions as fast as they
+          arrive during charging. Instead of sliding into the crystal lattice, the lithium
+          is forced to deposit as solid metal on the surface — the lithium plating problem
+          described in section 2.7.
         </p>
         <div class="callout callout-danger">
           <div class="callout-icon">🧊</div>
           <div class="callout-body">
-            <div class="callout-title">Lithium Plating — The Irreversible Failure Mode</div>
+            <div class="callout-title">Cold Charging — A Hard Limit</div>
             <p>
-              Metallic lithium deposited on the anode does not re-intercalate cleanly. Some of it
-              reacts with electrolyte to form "dead lithium" — isolated metallic islands encapsulated
-              in SEI material. This permanently reduces lithium inventory and capacity. Some deposited
-              lithium forms dendritic structures that grow across the separator and cause an internal
-              short circuit — the root cause of many Li-ion fires and failures. At −20°C,
-              <strong>charging is absolutely prohibited</strong>. At 0°C to 5°C, charging must be
-              derated to ≤0.2C. The BMS enforces these limits via a temperature-indexed charge
-              rate lookup table that overrides all other charge commands.
+              Once metallic lithium deposits on the anode, most of it doesn't go back in
+              cleanly. It reacts with the electrolyte to form "dead lithium" that permanently
+              reduces capacity. The worst deposits grow into dendrite spikes that can pierce
+              the separator and cause an internal short — a root cause of many real Li-ion
+              fires. The BMS must enforce these hard limits:
+              <strong>no charging at or below −20°C, and charge at no more than 0.2C between
+              0°C and 5°C</strong>. These limits override any external command. The BMS uses
+              a temperature-indexed table of maximum charge rates that updates continuously.
             </p>
           </div>
         </div>
         <p>
-          Low temperature also dramatically increases internal resistance. The ohmic resistance R₀
-          and the RC diffusion impedance R₁C₁ both increase because:
-        </p>
-        <ul style="color:var(--text-secondary); line-height:1.9; padding-left:1.5rem;">
-          <li>Ion conductivity in the electrolyte solution drops (viscosity increases)</li>
-          <li>Li⁺ desolvation energy at the electrode surface increases</li>
-          <li>SEI ionic conductance decreases</li>
-          <li>Solid-state diffusion in graphite slows (lower D_Li)</li>
-        </ul>
-        <p>
-          At −20°C, the internal resistance of an LFP cell is typically 3–4× higher than at 25°C.
-          With a 280Ah prismatic cell having R₀ = 0.4 mΩ at 25°C, at −20°C R₀ ≈ 1.5 mΩ.
-          At 100A discharge, the IR drop is 150 mV — enough to falsely trigger undervoltage
-          protection before the cell is actually depleted.
+          Cold also raises internal resistance significantly. At −20°C, all the ion-moving
+          processes slow down: the electrolyte thickens, the SEI lets ions through more
+          slowly, and lithium moves more slowly inside the graphite. The net result is that
+          the 280Ah cell's internal resistance at −20°C is typically 3–4× higher than at
+          25°C. At 100A, this raises the voltage drop by about 150 mV — enough to trigger
+          a false undervoltage alarm before the cell is actually depleted.
         </p>
         <div class="formula-block">
           <span class="formula-label">Temperature-Corrected IR Drop</span>
