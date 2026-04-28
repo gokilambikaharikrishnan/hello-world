@@ -2021,21 +2021,20 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <div class="callout callout-physics">
             <div class="callout-icon">⚛</div>
             <div class="callout-body">
-              <div class="callout-title">Why EKF Handles LFP Better Than Simple Methods — But Still Struggles</div>
+              <div class="callout-title">Why the EKF Still Struggles with LFP</div>
               <p>
-                The Kalman gain K is proportional to ∂OCV/∂SoC — the slope of the OCV curve.
-                For LFP in the plateau region (20–80% SoC), this slope is nearly zero (~0.5 mV/%SoC).
-                This means K ≈ 0 and the voltage innovation y[k] contributes almost nothing to
-                correcting SoC. The EKF is effectively running as a pure coulomb counter in the
-                middle SoC range. It only gets strong voltage correction at the edges (&lt;20%
-                and &gt;90% SoC) where the curve steepens.
+                The EKF uses the difference between predicted and measured voltage as a
+                correction signal. But in the middle of the LFP range (20–80% SoC), the
+                OCV curve is almost completely flat — about 0.5 mV per 1% SoC change.
+                That is a tiny signal buried in normal measurement noise. So the filter
+                essentially ignores the voltage in this range and falls back to counting
+                current, just like a simple coulomb counter.
               </p>
               <p>
-                This is not a failure of the EKF algorithm — it is a fundamental information-theoretic
-                limit. There is simply insufficient voltage information in the LFP flat region.
-                No algorithm can extract what is not there. The EKF does extract what little voltage
-                information exists, and it handles transitions in and out of the plateau region
-                optimally — which is why it outperforms simple methods.
+                This is not a flaw in the EKF — it is simply that the information isn't
+                there in the voltage to begin with. No algorithm can extract what doesn't
+                exist. The EKF's real advantage is at the edges (&lt;20% and &gt;90% SoC),
+                where the OCV curve steepens and voltage becomes meaningful again.
               </p>
             </div>
           </div>
