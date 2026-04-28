@@ -3374,25 +3374,26 @@ T (°C)  | f_T   | Notes
       <div class="subsection">
         <div class="subsection-title">Temperature Sensor Placement — Where to Measure</div>
         <p>
-          Temperature measurement location matters significantly. A single sensor on the battery
-          management board will not reflect the temperature inside the cell core. The thermal
-          gradient across a 280Ah prismatic cell can be 5–15°C between the cell surface and the
-          core under high-rate discharge.
+          Where you place the temperature sensor matters a lot. A sensor on the BMS circuit
+          board can be 10–15°C cooler than the inside of the cell core during a high-current
+          discharge — that gap can be the difference between a correct safety decision and
+          a missed alarm.
         </p>
         <div class="callout callout-info">
           <div class="callout-icon">🌡</div>
           <div class="callout-body">
-            <div class="callout-title">Best Practice: Multi-Point Temperature Monitoring</div>
+            <div class="callout-title">Best Practice: Four Sensor Positions</div>
             <ul style="margin:0.5rem 0 0 1rem; line-height:1.9;">
-              <li><strong>NTC thermistor at cell surface midpoint</strong> — catches bulk thermal events</li>
-              <li><strong>NTC at terminal tab</strong> — catches tab/busbar resistance heating</li>
-              <li><strong>NTC at pack inlet and outlet</strong> — monitors airflow/cooling effectiveness</li>
-              <li><strong>PCB ambient sensor</strong> — reference for BMS IC derating</li>
+              <li><strong>Middle of the cell surface</strong> — catches the main heat buildup</li>
+              <li><strong>At the terminal tabs</strong> — catches heating at the connection points and busbars</li>
+              <li><strong>Pack air inlet and outlet</strong> — shows whether cooling airflow is working</li>
+              <li><strong>On the BMS board itself</strong> — reference for the BMS chip's own temperature limits</li>
             </ul>
             <p style="margin-top:0.5rem;">
-              The BMS uses the <em>maximum</em> temperature reading across all sensors for protection
-              decisions, and the <em>average</em> reading for SoC correction. These two values will
-              diverge during high-rate events — this divergence itself is diagnostic information.
+              The BMS uses the <em>highest</em> reading across all sensors for safety cutoffs,
+              and the <em>average</em> reading for SOC correction. During fast discharge, these
+              two values diverge noticeably — and that divergence is itself a useful signal
+              that the pack is under thermal stress.
             </p>
           </div>
         </div>
