@@ -3151,18 +3151,17 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <div class="callout-body">
             <div class="callout-title">Why Balancing During Charging (Not Discharging) Is More Effective</div>
             <p>
-              During charging, all cells are approaching their upper voltage limit. The cell with
-              the highest SoC (smallest capacity or previously overcharged) hits the OVP threshold
-              first. Balancing at this point — bleeding charge off the high cell — is energy-efficient
-              because you're only dissipating the excess that would have been wasted anyway in the
-              charge termination logic.
+              During charging, all cells are heading toward their upper voltage limit. The cell
+              that is slightly more full hits the limit first. Balancing it at that point —
+              bleeding off a little charge — is very efficient because you are only getting
+              rid of the excess that the charge controller was going to stop at anyway.
             </p>
             <p>
-              During discharging, the weakest cell hits the UVP threshold first. "Balancing" by
-              supplying additional current to the weak cell from stronger cells (active balancing)
-              extends runtime, but requires more complex circuitry and only helps if the imbalance
-              is SoC-based (not capacity-based). A cell with lower capacity will always reach UVP
-              first regardless of SoC balancing.
+              During discharging, the weakest cell hits the lower limit first. Active balancing
+              can top up that cell using energy from the stronger cells, extending runtime —
+              but it needs more complex electronics and only helps if the imbalance is in
+              charge level. If the weak cell simply has less capacity than the others, it will
+              always run out first no matter how much balancing is done.
             </p>
           </div>
         </div>
