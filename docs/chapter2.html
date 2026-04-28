@@ -3071,10 +3071,11 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <span class="formula-caption">A 2P group of 280Ah cells: Q = 2 × 280Ah = 560Ah. Current splits between parallel cells proportionally to their impedance — lower impedance carries more current.</span>
         </div>
         <p>
-          Parallel cells are inherently self-balancing — any voltage imbalance drives a
-          circulating current that equalizes them. This is both an advantage (no active balancing
-          within a parallel group needed) and a risk (if one parallel cell fails internally, it
-          sucks charge from its neighbors at potentially destructive rates).
+          Parallel cells naturally balance themselves — if one gets slightly higher voltage than
+          the others, current automatically flows through the connection to equalise them. This
+          means you don't need to actively balance within a parallel group. But there's a risk:
+          if one parallel cell fails internally (a short circuit), it will pull charge from the
+          other cells in the group at potentially destructive current levels.
         </p>
         <p>
           <strong>Common configurations for home ESS:</strong>
@@ -3092,22 +3093,21 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
       <div class="subsection">
         <div class="subsection-title">Thermal Management — Why Cell-to-Cell Uniformity Matters</div>
         <p>
-          In a module of 16 cells, the cells are not all at the same temperature. Inner cells
-          in a stack can be 5–15°C hotter than outer cells, depending on cooling design. This
-          creates differential aging rates within the same module:
+          In a module of 16 cells, not every cell sits at the same temperature. Cells in the
+          middle of a stack can run 5–15°C hotter than the ones on the edges. That temperature
+          difference matters because warmer cells age faster:
         </p>
         <ul class="content-list cross">
-          <li>Inner cells age faster (higher temperature → faster SEI growth → faster capacity loss)</li>
-          <li>Inner cells develop higher impedance faster → carry less of the total current</li>
-          <li>This creates a current imbalance within parallel groups — outer cells work harder as
-          inner cells become higher impedance, further exacerbating the imbalance</li>
+          <li>Inner cells age faster — higher temperature accelerates SEI growth and capacity loss</li>
+          <li>Aged cells develop higher resistance and start carrying less of the current</li>
+          <li>The remaining cells pick up the slack, working harder and aging faster in turn —
+          a self-reinforcing cycle that slowly shifts load from the centre outward</li>
         </ul>
         <p>
-          <strong>BMS design implication:</strong> The BMS should monitor temperature at multiple
-          positions in the module (not just the outer surface), and include the temperature gradient
-          in calendar aging models. For high-accuracy SOH tracking, individual cell impedance
-          measurements allow identification of hot-spot-accelerated degradation before it becomes
-          a failure.
+          <strong>What the BMS should do:</strong> Monitor temperature at multiple points inside
+          the module, not just on the outer surface. For the most accurate SOH tracking, measuring
+          the internal resistance of each cell individually can reveal which cells are aging faster
+          before they become a reliability problem.
         </p>
       </div>
 
