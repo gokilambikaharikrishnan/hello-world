@@ -3016,10 +3016,10 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
       <div class="section-number">Advanced</div>
       <h2 class="section-title">Managing Multi-Cell Packs — Series, Parallel, and Topology</h2>
       <p class="section-intro">
-        Real LFP packs for UPS and home ESS are not single cells — they are assemblies of
-        dozens to hundreds of cells in series and parallel configurations. The BMS architecture
-        must account for the electrical and thermal interactions between cells, and the topology
-        dramatically affects protection requirements.
+        Real LFP packs for UPS and home ESS systems are not single cells — they are groups of
+        dozens to hundreds of cells connected together. How those cells are connected (series,
+        parallel, or both) changes how the BMS must protect them. This section explains why
+        those differences matter and what can go wrong if the topology is not handled correctly.
       </p>
 
       <div class="subsection">
@@ -3034,11 +3034,11 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <span class="formula-caption">A 16S LFP string (nominal): V = 16 × 3.2V = 51.2V. At full charge: V = 16 × 3.65V = 58.4V. At cutoff: V = 16 × 2.5V = 40V. This is the "48V nominal" system used in home ESS and telecom.</span>
         </div>
         <p>
-          <strong>The weakest cell dominates:</strong> Because all cells carry the same current,
-          the cell with the lowest capacity determines when the pack trips protection cutoffs.
-          If cell #7 has 250Ah and all others have 280Ah, the pack effectively has 250Ah capacity
-          even if 15 cells are not depleted. The BMS must monitor every cell individually and
-          cut off discharge when any single cell reaches the undervoltage threshold.
+          <strong>The weakest cell sets the limit:</strong> Because all cells carry the
+          same current, the cell that runs out first stops the whole pack. If cell #7 has
+          250 Ah while the other 15 have 280 Ah each, the pack's usable capacity is 250 Ah —
+          not 280 Ah — because the BMS must stop discharging the moment cell #7 hits its
+          lower voltage limit, even if the rest still have charge left.
         </p>
 
         <div class="callout callout-danger">
@@ -3046,15 +3046,14 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <div class="callout-body">
             <div class="callout-title">Why Per-Cell Voltage Monitoring Is Not Optional</div>
             <p>
-              A common shortcut in budget BMS designs is to monitor only the total string voltage
-              and divide by N to estimate average cell voltage. This fails because:
-              (1) If cell #7 is at 2.3V (below cutoff) while others are at 3.5V, the string
-              voltage = 16 × average ≈ 54.5V — appearing healthy. (2) Cell #7 is being driven
-              below its cutoff, dissolving copper and accumulating damage, while the BMS reports
-              "normal." (3) After a few such events, cell #7 fails catastrophically — typically
-              with an internal short that then discharges all other cells through the fault.
-              Per-cell monitoring with an analog front-end IC is not a premium feature — it is
-              the minimum viable protection architecture.
+              A common shortcut in cheap BMS designs is to measure only the total pack voltage
+              and divide by the number of cells to get an "average." This fails dangerously:
+              if cell #7 has dropped to 2.3 V while the other 15 are at 3.5 V, the total
+              string voltage still looks fine (~54.5 V). Meanwhile, cell #7 is being damaged —
+              its copper current collector is dissolving — and the BMS doesn't notice until
+              the cell fails with an internal short, which then dumps all the other cells'
+              energy through the fault. Per-cell monitoring using a proper analog front-end
+              chip is not a luxury — it is the minimum that keeps the pack safe.
             </p>
           </div>
         </div>
