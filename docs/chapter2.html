@@ -1587,20 +1587,19 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <span class="formula-caption">At k=1.05 for LFP 280Ah: at 1C (280A), Q_actual = 280 × (1/1)^0.05 = 280 Ah. At 2C (560A): Q_actual = 280 × (0.5)^0.05 = 280 × 0.966 = 270.5 Ah — 3.4% less.</span>
         </div>
         <p>
-          <strong>Physical mechanism:</strong> At high discharge rates, Li⁺ ions cannot diffuse
-          deeply into electrode particles fast enough. The outer surface regions deplete and reach
-          the voltage cutoff while the interior is still fully lithiated. The cell trips the
-          low-voltage protection at a higher residual charge than it would at low rates. From a
-          BMS perspective, the cell "ran out" of accessible capacity, even though some lithium
-          is still trapped inside the particles.
+          <strong>Why it happens:</strong> Think of each electrode particle like a sponge.
+          At low current, lithium has time to soak all the way through. At high current,
+          only the outer layer of each particle gets used — the inside is still full,
+          but the cell's voltage drops anyway because the surface is empty. The BMS sees
+          a low voltage and stops the discharge, even though charge is still locked inside.
         </p>
         <p>
-          <strong>BMS implication:</strong> SOC estimated from accumulated coulombs assumes a
-          constant capacity (Q_nominal). If the cell is discharged at 2C, the actual accessible
-          capacity is ~3–5% lower — the coulomb counter will think there is still 3–5% SoC
-          remaining when the low-voltage cutoff triggers. This creates an expected inconsistency
-          in SOC reports at end-of-discharge under high current. Advanced BMS algorithms apply
-          a C-rate correction factor to Q_nominal dynamically.
+          <strong>What this means for the BMS:</strong> The BMS tracks charge by counting
+          electrons (coulomb counting). It assumes the cell holds 280 Ah no matter what.
+          But at 2C (560 A), only about 261 Ah is actually reachable — roughly 7% less.
+          So the coulomb counter may still show "7% remaining" when the low-voltage alarm
+          fires. This is expected behaviour, not a bug. Advanced BMS algorithms adjust the
+          assumed capacity based on current to keep the reading accurate.
         </p>
 
         <div class="table-wrapper">
