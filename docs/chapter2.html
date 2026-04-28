@@ -3734,10 +3734,11 @@ T (°C)  | f_T   | Notes
       <div class="subsection">
         <div class="subsection-title">State-of-Power (SoP) — What Can the Pack Deliver Right Now?</div>
         <p>
-          SoC tells you <em>how much energy</em> is stored. SoP tells you <em>how much power</em>
-          the pack can deliver instantaneously without violating any safety constraints.
-          This is the critical signal for applications that need burst power — UPS during switchover,
-          motor start, or grid frequency response.
+          SOC tells you how much energy is stored. SoP answers a different question:
+          <em>how hard can you push the pack right now?</em> This matters for applications
+          that need sudden bursts of power — a UPS switching from grid to battery, a motor
+          starting up, or a grid stabilisation event. The answer changes with SOC, temperature,
+          age, and how long the burst lasts.
         </p>
         <div class="formula-block">
           <span class="formula-label">SoP — Peak Discharge Power</span>
