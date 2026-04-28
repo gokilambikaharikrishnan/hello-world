@@ -2473,31 +2473,33 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
       <div class="section-number">Deep Dive</div>
       <h2 class="section-title">ECM Parameter Identification — How to Characterise Your Cell</h2>
       <p class="section-intro">
-        The ECM and EKF algorithms in Section 2.6 require accurate model parameters (R₀, R₁, C₁)
-        to function correctly. These parameters are temperature-dependent, SoC-dependent, and
-        age-dependent. This section explains the standard test procedure for identifying them
-        and the BMS strategy for tracking their change over time.
+        The ECM and EKF algorithms in Section 2.6 need accurate values for R₀, R₁, and C₁
+        to work correctly. These values change with temperature, SoC, and age, so they must
+        be measured carefully before the BMS software can use them. This section explains
+        how that measurement is done and how the BMS keeps the values up to date over time.
       </p>
 
       <div class="subsection">
         <div class="subsection-title">Current Pulse Test (HPPC — Hybrid Pulse Power Characterization)</div>
         <p>
-          The standard method for characterizing battery ECM parameters is the <strong>Hybrid Pulse
-          Power Characterization (HPPC) test</strong>, adapted from the USABC (United States
-          Advanced Battery Consortium) protocol:
+          The standard measurement method is the <strong>HPPC test</strong> (Hybrid Pulse Power
+          Characterization), originally developed for electric vehicle research. The cell is
+          stepped through every 10% of SoC and at each step a burst of current is applied
+          and then removed while the voltage is closely watched:
         </p>
         <ol class="content-list num">
-          <li>Discharge cell to target SoC (e.g., 90%) at 0.2C, wait 30 min for OCV equilibration</li>
-          <li>Apply a discharge pulse at 1C for exactly 10 seconds, record V(t) at 100ms intervals</li>
-          <li>Remove pulse (current = 0), wait 40 seconds, record V(t) — relaxation transient</li>
-          <li>Apply charge pulse at 0.75C for 10 seconds</li>
-          <li>Remove charge pulse, wait 40 seconds</li>
-          <li>Discharge 10% SoC at 0.2C, wait 30 min, repeat at next SoC</li>
-          <li>Repeat across all SoC values (100%, 90%, 80% … 10%, 0%)</li>
-          <li>Repeat full test at multiple temperatures: 0°C, 10°C, 25°C, 35°C, 45°C</li>
+          <li>Discharge cell to target SoC (e.g. 90%) slowly, then wait 30 min for voltage to settle</li>
+          <li>Apply a discharge pulse at 1C for exactly 10 seconds, recording voltage every 100 ms</li>
+          <li>Stop current, wait 40 seconds, continue recording — this shows the slow voltage recovery</li>
+          <li>Apply a charge pulse at 0.75C for 10 seconds</li>
+          <li>Stop current, wait 40 seconds</li>
+          <li>Discharge 10% SoC slowly, wait 30 min, then repeat at the next SoC level</li>
+          <li>Repeat all the way from 100% to 0% SoC</li>
+          <li>Run the entire test again at different temperatures: 0°C, 10°C, 25°C, 35°C, 45°C</li>
         </ol>
         <p>
-          From the pulse response, extract parameters:
+          From the shape of the voltage response during each pulse, the three ECM values
+          can be calculated:
         </p>
         <div class="formula-block" style="text-align:left;">
           <span class="formula-label">ECM Parameter Extraction from HPPC Pulse</span>
