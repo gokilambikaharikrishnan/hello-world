@@ -3460,9 +3460,9 @@ T (°C)  | f_T   | Notes
       <div class="subsection">
         <div class="subsection-title">Example 2 — SoC Drift Budget Over 24 Hours</div>
         <p>
-          <strong>System:</strong> Same 16S1P pack. BMS uses coulomb counting with a 16-bit ADC current
-          sensor (±0.05% gain error, ±0.5mA offset error). Pack idles with 50mA self-discharge.
-          How much SoC error accumulates in 24 hours?
+          <strong>System:</strong> Same 16S1P pack. The BMS uses coulomb counting with a current
+          sensor that has ±0.05% gain error and ±0.5 mA offset error. The pack sits idle
+          with 50 mA of natural self-discharge. How much does the SOC reading drift in 24 hours?
         </p>
         <div class="formula-block">
           <span class="formula-label">Error Budget Breakdown</span>
@@ -3471,10 +3471,10 @@ T (°C)  | f_T   | Notes
           <span class="formula-line">3. Unmodelled self-discharge: 50mA × 24h = 1200 mAh → 1200/280000 × 100% = 0.43%</span>
           <span class="formula-line">4. Temperature drift (0°C → 25°C, 25 ppm/°C): ±25ppm × 25°C × 50mA × 24h = ±0.75 mAh ≈ 0.0003%</span>
           <span class="formula-caption">
-            Dominant error term: unmodelled self-discharge at 0.43%/day. If the BMS does not account for
-            self-discharge, SoC drifts by ~0.43% per day even with a perfect current sensor. Over 30 days
-            idle storage: ~13% cumulative error — rendering coulomb counting unreliable without periodic
-            OCV recalibration.
+            The dominant error is unmodelled self-discharge at 0.43%/day. A "perfect" current sensor
+            still drifts by this much if self-discharge isn't subtracted. Over 30 days of idle storage
+            that adds up to ~13% — the BMS must either model self-discharge or recalibrate from OCV
+            periodically to stay accurate.
           </span>
         </div>
         <div class="formula-block">
@@ -3482,9 +3482,9 @@ T (°C)  | f_T   | Notes
           <span class="formula-line">I_sd(T) = I_sd_ref × exp[k_sd × (T − T_ref)]</span>
           <span class="formula-line">For LFP: I_sd_ref ≈ 0.02–0.05% SoC/day at 25°C</span>
           <span class="formula-caption">
-            Modern BMS firmware adds a background self-discharge current term to the coulomb counter
-            even when no external current is flowing. This constant subtraction keeps SoC accurate
-            during long idle periods — critical for UPS systems that may sit on float charge for months.
+            Modern BMS firmware subtracts a small background self-discharge current from the coulomb
+            counter even when no external current is flowing. This keeps SOC accurate during long
+            idle periods — essential for UPS systems that may go months without a discharge event.
           </span>
         </div>
       </div>
