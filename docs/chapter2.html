@@ -4131,8 +4131,7 @@ T (°C)  | f_T   | Notes
           </table>
         </div>
         <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0.5rem; font-family:var(--font-mono);">
-          All values at 25°C, after 30-minute rest (relaxed OCV). dOCV/dSoC is the Kalman gain multiplier —
-          note how it approaches zero at 40–70% SoC, explaining EKF's reduced effectiveness in the LFP plateau.
+          All values at 25°C, after 30-minute rest. The dOCV/dSoC column shows how little the voltage changes per percent of SOC — near zero between 40–70% is why no algorithm can extract reliable SOC from voltage in the LFP plateau.
         </p>
       </div>
     </section>
@@ -4145,12 +4144,12 @@ T (°C)  | f_T   | Notes
       <div class="callout-body">
         <div class="callout-title">Chapter 2 Complete — You Now Understand the Cell</div>
         <p>
-          You have covered the complete physics of Li-ion cell operation: from first-principles
-          electrochemistry to the flat OCV problem, from the Thevenin ECM to EKF mathematics,
-          from SEI formation to SOH trending and SoP calculation. Every formula in a BMS datasheet
-          now has a derivation behind it that you understand.
-          Chapter 3 applies this foundation to hardware — AFE ICs, current sensors, FET topology,
-          and the firmware architecture that brings SoC estimation into production.
+          You have worked through the complete inner life of an LFP cell: how it stores charge
+          in a crystal lattice, why the voltage curve is almost flat, how the BMS estimates
+          SOC without being able to "read" it from voltage, how cells age, and how all of
+          this feeds into the firmware running on the microcontroller. Chapter 3 takes this
+          foundation to hardware — analog front-end chips, current sensors, protection FETs,
+          and the firmware structure that turns theory into a shipping product.
         </p>
       </div>
     </div>
