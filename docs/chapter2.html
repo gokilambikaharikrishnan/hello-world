@@ -2228,52 +2228,45 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="subsection-title">The SEI Layer — Battery Aging's Silent Protagonist</div>
         <p>
           The <strong>Solid Electrolyte Interphase (SEI)</strong> is the most important
-          phenomenon in lithium-ion battery aging. Understanding it in depth transforms the
-          BMS from a reactive protector to a proactive life-extender.
+          source of aging in lithium-ion cells. Understanding it lets the BMS shift from
+          simply protecting the battery to actively extending its life.
         </p>
 
         <div class="subsection-sub">What the SEI Is and Why It Forms</div>
         <p>
-          When a lithium-ion cell is first charged, the graphite anode is held at a potential
-          of ~0.1–0.2 V vs Li/Li⁺. At this low potential, the organic electrolyte solvents
-          (ethylene carbonate, dimethyl carbonate) are thermodynamically unstable — they react
-          with the electrode surface. This reaction is:
-        </p>
-        <div class="formula-block">
-          <span class="formula-label">SEI Formation Reaction (Ethylene Carbonate Example)</span>
-          <span class="formula-line">2EC + 2e⁻ + 2Li⁺  →  Li₂CO₃ + CH₂=CH₂</span>
-          <span class="formula-line">     or    →  (CH₂OCO₂Li)₂  (lithium ethylene dicarbonate)</span>
-          <span class="formula-caption">Multiple parallel reactions occur, producing a complex mixture of inorganic (Li₂CO₃, LiF, Li₂O) and organic (lithium alkyl carbonates) compounds. The exact composition depends on electrolyte formulation, temperature, and formation protocol.</span>
-        </div>
-        <p>
-          The SEI forms primarily during the <strong>first charge cycle</strong> (the
-          "formation" step in cell manufacturing). Once formed, it creates a passivation layer
-          that electronically insulates the graphite surface from the electrolyte — stopping
-          further electrolyte decomposition. Without SEI, the electrolyte would continuously
-          react until it was consumed.
+          When a lithium-ion cell is first charged, the liquid electrolyte inside comes
+          into contact with the graphite anode at a very low voltage. At that voltage,
+          the electrolyte is chemically unstable — it breaks down and leaves a thin
+          solid residue on the graphite surface. This layer of residue is the SEI.
         </p>
         <p>
-          The SEI is both essential and costly:
+          It forms mainly during the very first charge (called the "formation" step at
+          the battery factory). Once it's there, it acts as a shield — electrons from
+          the graphite can no longer reach the electrolyte, so the breakdown stops.
+          Without the SEI, the electrolyte would keep reacting until nothing was left.
+        </p>
+        <p>
+          The SEI is a double-edged sword:
         </p>
         <ul class="content-list check">
-          <li>Allows stable cell operation by passivating the anode</li>
-          <li>Provides a Li⁺ conducting pathway (only lithium ions can pass through)</li>
-          <li>Self-healing: if mechanically cracked, the fresh graphite surface exposed re-forms SEI</li>
+          <li>Protects the anode and makes stable long-term operation possible</li>
+          <li>Lets lithium ions through while blocking electrons — exactly what's needed</li>
+          <li>Self-heals: if it cracks, the exposed surface forms new SEI automatically</li>
         </ul>
         <ul class="content-list cross">
-          <li>Consumes lithium permanently — each Li consumed in SEI formation is "dead" (no longer cyclable)</li>
-          <li>Adds ionic resistance — thicker SEI = higher cell impedance = more heat generation</li>
-          <li>Continues to grow slowly throughout the cell's life</li>
+          <li>Permanently locks up lithium — every atom consumed in SEI formation is gone forever</li>
+          <li>Raises internal resistance as it thickens — more resistance means more heat</li>
+          <li>Never truly stops growing — it keeps building up slowly for the cell's entire life</li>
         </ul>
 
-        <div class="subsection-sub">Why SEI Continues Growing — The Aging Mechanism</div>
+        <div class="subsection-sub">Why SEI Keeps Growing — The Aging Mechanism</div>
         <p>
-          After the initial formation cycle, the SEI is never truly stable. It continues to grow
-          slowly throughout the cell's service life through two pathways:
+          Even after the first cycle, the SEI is not perfectly stable. It continues to grow
+          slowly through two main pathways:
         </p>
         <p>
-          <strong>1. Solvent diffusion through existing SEI:</strong> The SEI is not a perfect
-          barrier. Electrolyte solvent molecules slowly diffuse through the SEI layer and react
+          <strong>1. Electrolyte seeping through existing SEI:</strong> The SEI layer has
+          tiny gaps. Electrolyte molecules slowly work their way through and react
           with the underlying lithiated graphite. The reaction is slow — the SEI provides ~10⁴–10⁵×
           reduction in reaction rate compared to bare graphite — but it never stops. The rate
           follows an Arrhenius dependence on temperature.
