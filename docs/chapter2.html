@@ -1784,14 +1784,14 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           </ol>
           <div class="subsection-sub">The Rest Time Problem</div>
           <p>
-            "After a rest period" is not trivial for LFP. After current stops, the cell voltage
-            relaxes toward OCV — but the relaxation is slow and non-linear. The first 60 seconds:
-            fast IR-drop recovery. The next 5–30 minutes: diffusion relaxation within electrode
-            particles. The next 30 minutes to 4 hours: further slow equilibration of concentration
-            gradients.
+            "After a rest period" sounds simple, but LFP takes a long time to settle. When
+            current stops, the voltage climbs back toward its true resting value — but slowly
+            and in stages. The first minute is fast (the voltage spike from load removal).
+            Then 5–30 minutes of gradual settling as lithium redistributes inside the particles.
+            Then another hour or more of very slow levelling.
           </p>
           <p>
-            For an LFP cell at 50% SoC, measured at different rest times after a 1C discharge:
+            Here is how the voltage evolves for an LFP cell at 50% SoC after stopping a 1C discharge:
           </p>
           <div class="table-wrapper">
             <table class="data-table">
@@ -1807,10 +1807,10 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
             </table>
           </div>
           <p>
-            Even after 4 hours of rest, the irreducible SOC uncertainty for LFP in the 20–80%
-            range is approximately <strong>±5–15%</strong> due to the flat OCV curve. The
-            voltage measurement is accurate — the information is simply not there. This is why
-            OCV lookup alone is insufficient for LFP SOC estimation.
+            Even after 4 hours of rest, the SOC uncertainty for LFP in the 20–80% range is
+            still roughly <strong>±5–15%</strong>. The voltage measurement itself is accurate —
+            the problem is that the flat OCV curve carries almost no information in that range.
+            This is why the OCV lookup method alone is not enough for LFP.
           </p>
           <div class="technique-meta">
             <div class="technique-meta-item"><span class="technique-meta-label">Best Use</span><span class="technique-meta-value">Startup initialization, reset anchor</span></div>
