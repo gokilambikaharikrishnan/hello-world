@@ -2652,37 +2652,33 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
       <div class="subsection">
         <div class="subsection-title">NMC (LiNiₓMnᵧCoᵤO₂) — Layered Oxide Cathode</div>
         <p>
-          NMC uses a <strong>layered rock-salt structure</strong> (R-3m space group). Lithium,
-          nickel, manganese, and cobalt ions occupy alternate layers between oxygen layers.
-          During charging, Li⁺ is extracted from the Li layer, leaving vacancies that the
-          transition metal layers expand into slightly.
+          NMC uses a layered crystal structure where lithium, nickel, manganese, and cobalt
+          sit in alternating layers between oxygen atoms. When charging, lithium ions leave
+          these layers, and the metal layers shift slightly to fill the gaps.
         </p>
         <p>
-          The three transition metals serve distinct roles:
+          Each of the three metals plays a specific role:
         </p>
         <ul class="content-list">
-          <li><strong>Nickel (Ni):</strong> Primary electroactive species. Ni²⁺/Ni⁴⁺ redox couple
-          provides high capacity and high voltage (~3.7V). Higher nickel content → higher energy
-          density → worse thermal stability (onset of O₂ release moves lower).</li>
-          <li><strong>Manganese (Mn):</strong> Structural stabilizer. Mn⁴⁺ is electrochemically
-          inactive but supports the layered structure, reducing volume change. Prevents collapse
-          of layers during deep cycling.</li>
-          <li><strong>Cobalt (Co):</strong> Enables good rate capability and reduces cation mixing
-          (Ni²⁺ accidentally occupying Li sites — causes capacity loss). Also expensive and
-          ethically problematic (see Chapter 1).</li>
+          <li><strong>Nickel:</strong> The main working element. Nickel is what stores and
+          releases charge. More nickel = more energy density, but also lower thermal stability.</li>
+          <li><strong>Manganese:</strong> Acts as a structural support — it doesn't store
+          charge but holds the crystal together and reduces how much it swells with each cycle.</li>
+          <li><strong>Cobalt:</strong> Improves how fast the cell charges and keeps the
+          crystal orderly. Also expensive and raises ethical sourcing concerns (see Chapter 1).</li>
         </ul>
         <p>
-          The trend in NMC is toward higher nickel content: NMC111 (equal Ni:Mn:Co) → NMC532
-          → NMC622 → NMC811. Each step increases energy density but decreases thermal stability
-          and makes the cathode more sensitive to overcharge. NMC811 begins oxygen release at
-          just ~180°C — only 60°C above typical cell operating temperature in abuse scenarios.
+          The industry trend has been to increase nickel and reduce cobalt: NMC111 → NMC532
+          → NMC622 → NMC811. More nickel means more energy, but also more sensitivity to
+          overcharge. NMC811 starts releasing oxygen (a fire risk) at around 180°C — only
+          60°C above conditions possible during an abuse event.
         </p>
         <p>
-          <strong>BMS difference vs LFP:</strong> NMC has a more strongly sloped OCV curve
-          (~1.2V change from 0–100% SoC), making voltage-based SOC estimation more reliable.
-          But NMC requires more conservative protection thresholds: upper cutoff 4.2V (vs
-          LFP 3.65V), lower cutoff 2.8–3.0V. The higher upper voltage accelerates electrolyte
-          oxidation — NMC battery management is more sensitive to overcharge margin than LFP.
+          <strong>What this means for the BMS:</strong> NMC's voltage drops more noticeably
+          as it discharges (~1.2 V total across full range vs LFP's ~0.05 V), which makes
+          voltage-based SOC estimation actually useful. But NMC needs tighter protection:
+          it charges to 4.2 V per cell (vs LFP's 3.65 V), and that higher voltage speeds
+          up electrolyte breakdown. Overcharge is far more dangerous with NMC.
         </p>
       </div><!-- end NMC -->
 
