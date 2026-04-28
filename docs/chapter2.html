@@ -3691,12 +3691,16 @@ T (°C)  | f_T   | Notes
       <div class="subsection">
         <div class="subsection-title">SOH Trending — Tracking Capacity Fade Over Time</div>
         <p>
-          The BMS accumulates SOH data from every RPT cycle and from continuous online estimation.
-          The key insight is that capacity fade in LFP follows a predictable two-phase curve:
+          The BMS builds up SOH data from each RPT test and from ongoing online estimates.
+          LFP capacity fade follows a predictable two-phase pattern:
         </p>
         <ul style="color:var(--text-secondary); line-height:1.9; padding-left:1.5rem;">
-          <li><strong>Phase 1 (cycles 0–80% of EOL cycles):</strong> Linear fade. Rate ≈ 0.01–0.03% capacity loss per cycle at 25°C, 1C. Easy to model, easy to predict.</li>
-          <li><strong>Phase 2 (cycles 80%–EOL):</strong> Accelerating fade — the "knee." SEI growth transitions from √t to linear, lithium inventory is depleted, and resistance increase compounds. Remaining life prediction becomes uncertain.</li>
+          <li><strong>Phase 1 (most of the cell's life):</strong> Slow, steady, nearly linear
+          decline — about 0.01–0.03% capacity loss per cycle at 25°C. Easy to model and predict.</li>
+          <li><strong>Phase 2 (the last ~20% of life):</strong> The "knee" — fade accelerates
+          sharply. The SEI has grown thick, lithium inventory is running low, and resistance
+          has risen enough to compound the problem. Predicting exactly how much life is left
+          becomes much less reliable in this phase.</li>
         </ul>
         <div class="formula-block">
           <span class="formula-label">Linear Fade Model (Phase 1)</span>
@@ -3719,10 +3723,11 @@ T (°C)  | f_T   | Notes
           </span>
         </div>
         <p>
-          Production BMS firmware logs SOH at each RPT with a timestamp and cycle count.
-          This telemetry stream, uploaded to a cloud platform, allows fleet-level SOH analytics
-          that catch systematic degradation (bad batch of cells, overtemperature installation,
-          excessive cycling) before individual packs reach EOL unexpectedly.
+          Production BMS firmware logs the SOH value at each RPT, with a timestamp and cycle
+          count. When this data is uploaded to a cloud platform, it enables fleet-level analysis
+          across many packs — catching systematic problems like a bad batch of cells, an
+          installation that runs too hot, or an application that cycles too aggressively —
+          before individual packs fail unexpectedly.
         </p>
       </div>
 
