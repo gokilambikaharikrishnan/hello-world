@@ -1696,32 +1696,33 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         </div>
 
         <p>
-          <strong>Combined worst-case example:</strong> A BMS with 0.1% gain error, a 30°C
-          temperature swing, and no OCV correction can accumulate:
+          <strong>Putting it together — a realistic bad day:</strong> A BMS with a slightly
+          inaccurate current sensor (0.1% off), a 30°C temperature swing, and no OCV
+          correction can drift like this after 24 hours:
         </p>
         <div class="formula-block">
           <span class="formula-label">SOC Error After 24h — Realistic Worst Case</span>
-          <span class="formula-line">Gain error: 2.4% per day</span>
-          <span class="formula-line">Temperature drift: 0.36% per day</span>
-          <span class="formula-line">Initial OCV uncertainty: ±5%</span>
-          <span class="formula-line formula-highlight">Total: ±7.8% SOC error after 24 hours of continuous operation</span>
-          <span class="formula-caption">For a 14.3 kWh pack, 7.8% error = ±1.1 kWh of unknown energy. This is why coulomb counting alone is inadequate and must be paired with periodic OCV correction.</span>
+          <span class="formula-line">Current sensor gain error: 2.4% per day</span>
+          <span class="formula-line">Temperature drift of sensor: 0.36% per day</span>
+          <span class="formula-line">Bad starting guess from OCV: ±5%</span>
+          <span class="formula-line formula-highlight">Total: up to ±7.8% SOC error after 24 hours</span>
+          <span class="formula-caption">For a 14.3 kWh pack, that is ±1.1 kWh of unknown energy — enough to cause unexpected shutdowns. This is why coulomb counting must be combined with periodic correction from a more reliable reference.</span>
         </div>
 
         <div class="callout callout-success">
           <div class="callout-icon">✓</div>
           <div class="callout-body">
-            <div class="callout-title">Reset Strategy — When and How to Recalibrate</div>
+            <div class="callout-title">How to Fix It — The Reset Strategy</div>
             <p>
-              The standard strategy for managing coulomb counting drift is to reset the SOC
-              estimate against a more accurate method at opportunistic moments:
-              (1) <strong>End of charge reset:</strong> When the BMS detects charge cutoff
-              conditions (all cells at OVP threshold, current drops to C/20 tail),
-              set SOC = 100% with high confidence. (2) <strong>Rest OCV correction:</strong>
-              After the cell has rested for ≥30 minutes (detected by current &lt; 1A for LFP),
-              measure OCV, look up the table, and correct the coulomb count. (3) <strong>NVRAM
-              storage:</strong> Store the last-known SOC and timestamp to NVRAM before power-off.
-              On restart, use stored SOC + estimate drift during off-time as initial condition.
+              The BMS corrects drift by resetting to a known-good value whenever a reliable
+              opportunity arises: (1) <strong>Full charge reset:</strong> When charging is
+              complete (all cells at the upper voltage limit, current has dropped to a trickle),
+              the BMS sets SOC = 100% with confidence. (2) <strong>Rest correction:</strong>
+              After the pack has been idle for at least 30 minutes, the voltage settles to its
+              true OCV, which can be looked up in a table to correct the count.
+              (3) <strong>Power-off memory:</strong> The BMS saves the last known SOC to
+              non-volatile memory before shutting down and uses it as the starting point
+              next time, rather than guessing from scratch.
             </p>
           </div>
         </div>
