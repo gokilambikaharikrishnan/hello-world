@@ -534,19 +534,18 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
       <div class="section-number">Section 2.1</div>
       <h2 class="section-title">What Makes a Battery? First Principles</h2>
       <p class="section-intro">
-        Every engineer who works with batteries benefits from a clear mental model of what is
-        actually happening inside the cell. Not just "electrochemistry" as a black box, but the
-        specific physical processes — electron flow, ion migration, crystal lattice changes — that
-        determine every measurable parameter the BMS must track and protect.
+        Before you can understand what the BMS is protecting, you need a clear picture of what is
+        actually happening inside a battery cell. Not a vague sense of "electrochemistry," but a
+        concrete, step-by-step picture of what moves, where it goes, and why that matters for
+        every measurement the BMS makes.
       </p>
 
       <div class="subsection" id="electrochemical-cell">
         <div class="subsection-title">The Electrochemical Cell — Four Essential Components</div>
         <p>
-          Every rechargeable battery cell is an <strong>electrochemical cell</strong>: a device that
-          converts chemical potential energy into electrical energy through redox reactions at two
-          electrodes separated by an ion-conducting electrolyte. Four components are essential, and
-          each has a precise, non-negotiable role.
+          Every rechargeable battery cell is built from four parts. Each one has a specific job,
+          and removing or breaking any one of them stops the whole thing from working. Here is
+          what they are and what each one does.
         </p>
 
         <div class="anatomy-row">
@@ -575,22 +574,25 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="callout callout-key">
           <div class="callout-icon">🔑</div>
           <div class="callout-body">
-            <div class="callout-title">The Critical Distinction: Electrons vs. Ions</div>
+            <div class="callout-title">The Key Distinction: Electrons vs. Ions</div>
             <p>
-              The electrolyte conducts <strong>lithium ions (Li⁺)</strong> but blocks electrons.
-              This is the entire operating principle. Because electrons cannot flow through the
-              electrolyte, they are forced through the external circuit (your load). That forced
-              electron flow <em>is</em> the current you use. Remove the external circuit and the
-              cell has no way to equilibrate — it holds its charge indefinitely (ignoring
-              self-discharge). This is why "open-circuit voltage" is a stable, meaningful measurement.
+              The electrolyte lets <strong>lithium ions (Li⁺)</strong> pass through, but blocks
+              electrons. This is the entire trick. Because electrons cannot cross through the
+              electrolyte, they are forced to travel the long way around — through the wire and
+              through your device. That flow of electrons through the wire <em>is</em> the electrical
+              current you use. If you disconnect the wire, the cell just sits there holding its
+              charge — which is why a battery can store energy for months without losing much.
+              And it is why measuring the voltage when nothing is connected gives you a clean,
+              stable reading — called the open-circuit voltage.
             </p>
           </div>
         </div>
 
         <p>
-          <strong>Where voltage actually comes from:</strong> Cell voltage equals the electrochemical
-          potential difference between cathode and anode — the Gibbs free energy released per mole
-          of reaction, divided by the charge transferred. At standard conditions:
+          <strong>Where voltage actually comes from:</strong> The voltage of a cell is set by the
+          chemistry of the two electrode materials — specifically, how strongly each material
+          wants to hold or release lithium. The bigger the difference in that "holding strength"
+          between the two electrodes, the higher the cell voltage. For LFP:
         </p>
         <div class="formula-block">
           <span class="formula-label">Cell Voltage — Origin in Reduction Potentials</span>
