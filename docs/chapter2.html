@@ -1631,20 +1631,19 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         </div>
 
         <p>
-          <strong>What the BMS actually executes in code:</strong> Every Δt seconds (typically
-          100–250 ms), the microcontroller reads the current sensor, multiplies current by Δt
-          to get incremental charge (in ampere-seconds, converted to Ah by dividing by 3600),
-          applies the coulombic efficiency correction, and adds this increment to the accumulated
-          SOC. The result is updated to the SOC register and used for all reporting and protection
-          decisions.
+          <strong>What the BMS does in practice:</strong> Every 100–250 milliseconds, the
+          microcontroller reads the current sensor, works out how much charge flowed in that
+          tiny slice of time, and adds it to a running total. Over hours of use, millions
+          of these tiny additions build up the SOC estimate shown to the user.
         </p>
 
-        <div class="subsection-sub">Why Coulombs Drift Over Time — The Accumulation Problem</div>
+        <div class="subsection-sub">Why the SOC Reading Drifts Over Time</div>
         <p>
-          Coulomb counting <em>sounds</em> simple but has a fundamental weakness: every error in
-          current measurement accumulates. Unlike a voltage measurement that can be re-taken
-          independently at any time, a current integration error from 3 hours ago is still in
-          your SOC estimate right now. There is no self-correction.
+          Coulomb counting has one big weakness: <strong>every small measurement error adds
+          up</strong>. If the current sensor is off by even a tiny amount, that tiny error
+          gets added to the total every 100 ms, all day long. By the end of the day it can
+          be several percent off. There is no way for the BMS to self-correct — once an error
+          is counted, it stays in the total.
         </p>
         <p>
           Sources of drift, with quantitative estimates for a 280Ah cell running 24 hours/day:
