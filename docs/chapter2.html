@@ -3120,18 +3120,19 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
       <div class="section-number">Advanced</div>
       <h2 class="section-title">Cell Balancing — Algorithm Design and Implementation</h2>
       <p class="section-intro">
-        Chapter 1 introduced the concept of cell balancing. Chapter 2 has established the
-        electrochemical reasons why cells diverge. Now we go into the practical implementation
-        of balancing algorithms in the BMS firmware.
+        Chapter 1 introduced cell balancing as a concept. Chapter 2 has explained the
+        chemistry behind why cells drift apart over time. This section covers how balancing
+        is actually implemented in BMS firmware — when to trigger it, how much to do,
+        and what can go wrong.
       </p>
 
       <div class="subsection">
         <div class="subsection-title">When to Balance — Timing and Trigger Conditions</div>
         <p>
-          Balancing is not free. Passive balancing dissipates energy as heat in resistors —
-          typically 50–200 mW per cell, which adds 0.8–3.2W of heat into the module during
-          balancing. Active balancing costs charge efficiency (typically 90–95% efficient).
-          Both approaches reduce available charge time if done improperly.
+          Balancing has a cost. Passive balancing burns off charge as heat through resistors —
+          typically 50–200 mW per cell (0.8–3.2 W across a 16-cell module). Active balancing
+          is more efficient but still loses 5–10% of the energy it moves. If balancing runs
+          at the wrong time or for too long, it wastes energy and adds unnecessary heat.
         </p>
         <p>
           The optimal balancing strategy for LFP at top of charge:
