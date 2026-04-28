@@ -1076,17 +1076,17 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
       <div class="subsection">
         <div class="subsection-title">Prismatic Hard-Case Cells — The ESS Standard</div>
         <p>
-          Prismatic cells stack the electrode layers (rather than winding them) inside a rigid
-          aluminum rectangular enclosure. The layers are either stacked flat or wound flat
-          (a "flat wound" or "Z-fold" design). Typical prismatic LFP cells for ESS:
-          <strong>100Ah, 200Ah, 280Ah, 304Ah</strong> — sizes that have become de facto standards
-          driven by Chinese manufacturers (CATL, EVE, CALB, Lishen).
+          Prismatic cells stack the electrode layers flat inside a rigid rectangular aluminum box —
+          think of it like stacking sheets of paper rather than rolling them up. Common sizes for
+          home energy storage are <strong>100Ah, 200Ah, 280Ah, and 304Ah</strong> — these have
+          become the go-to standards, largely driven by large Chinese manufacturers.
         </p>
         <p>
-          The <strong>280Ah prismatic LFP cell</strong> (~173 × 72 × 205 mm, ~620g) has become
-          the dominant format for DIY and commercial home ESS globally. At 3.2V nominal, one cell
-          stores 896 Wh. A 16-cell series string (48V nominal) stores approximately 14.3 kWh —
-          enough for a typical home's evening energy consumption.
+          The <strong>280Ah prismatic LFP cell</strong> (roughly the size of a hardback book,
+          weighing about 620g) has become the most popular format for home storage worldwide.
+          At 3.2V per cell, one cell stores 896 watt-hours. Wire 16 of them together in series
+          and you get a 48V pack storing approximately 14.3 kilowatt-hours — enough to power a
+          typical home through the evening.
         </p>
         <ul class="content-list check">
           <li>Low internal resistance due to large electrode area and short current path to terminals</li>
@@ -1106,14 +1106,13 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
       <div class="subsection">
         <div class="subsection-title">Pouch Cells — Maximum Energy Density, Minimum Rigidity</div>
         <p>
-          Pouch cells stack or layer electrodes inside a flexible aluminum-laminate polymer bag
-          (the "pouch"). No metal can — the bag conforms to the cell contents. This eliminates
-          ~15–20% of the weight of a cylindrical or prismatic format, delivering the highest
-          gravimetric and volumetric energy density of the three formats.
+          Pouch cells use a flexible foil bag instead of a rigid metal can. Without the heavy
+          metal casing, they are lighter — saving around 15 to 20% of the weight of a prismatic
+          cell. That makes them the most energy-dense format by weight.
         </p>
         <p>
-          Pouch cells are dominant in consumer electronics (smartphones, tablets) and some EV
-          applications (GM Bolt, Nissan Leaf original). For ESS, they have significant disadvantages:
+          They are common in smartphones, tablets, and some electric vehicles. For home energy
+          storage, they have significant disadvantages:
         </p>
         <ul class="content-list cross">
           <li>No structural rigidity — requires external compression frames that add weight and cost</li>
@@ -1159,11 +1158,11 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
       <div class="section-number">Section 2.4</div>
       <h2 class="section-title">Vcell Behaviour — The Heart of BMS Design</h2>
       <p class="section-intro">
-        The voltage of a lithium-ion cell is not a simple linear function of its charge state.
-        It is a complex, temperature-dependent, rate-dependent, history-dependent signal that
-        encodes multiple overlapping phenomena simultaneously. Understanding this in depth is
-        not optional for BMS engineers — the entire architecture of SOC estimation, protection
-        logic, and health monitoring depends on it.
+        The voltage you measure at a battery cell's terminals is not a simple, single number that
+        cleanly tells you how charged it is. It is a signal shaped by multiple things happening
+        at once: the current charge level, the temperature, how fast current is flowing, and even
+        the history of recent charges and discharges. Understanding how to read this signal —
+        and how to separate one effect from another — is central to everything the BMS does.
       </p>
 
       <!-- Open Circuit Voltage -->
