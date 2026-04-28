@@ -2790,22 +2790,22 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
       <div class="subsection">
         <div class="subsection-title">Remaining Runtime Prediction — The BMS Calculation</div>
         <p>
-          Given current SOC, current discharge current I, temperature T, and cell age (SOH),
-          the BMS can calculate predicted remaining runtime:
+          The BMS combines SOC, health (SOH), current, and temperature into a single
+          "time to empty" estimate that updates every second:
         </p>
         <div class="formula-block green-theme">
           <span class="formula-label">Remaining Runtime Calculation</span>
-          <span class="formula-line">Q_remaining = SOC% × Q_nominal × SOH%     // Ah remaining at current health</span>
-          <span class="formula-line">Q_available = Q_remaining × (I_ref/I)^(k-1)  // Peukert correction for current rate</span>
-          <span class="formula-line">Q_temp_adj  = Q_available × f_temp(T)       // temperature derating factor</span>
-          <span class="formula-line formula-highlight">t_remaining = Q_temp_adj / I_current         // hours = Ah / A</span>
-          <span class="formula-caption">f_temp(T) ≈ 1.0 at 25°C, ~0.70 at −10°C, ~0.85 at 0°C, ~1.05 at 40°C. All factors combine multiplicatively. A 48V 280Ah pack at 60% SOC, 80% SOH, −10°C, 100A load: t = (0.60 × 280 × 0.80 × 0.70) / 100 = 0.94 hours.</span>
+          <span class="formula-line">Q_remaining = SOC% × Q_nominal × SOH%     // how many Ah are left at current health</span>
+          <span class="formula-line">Q_available = Q_remaining × (I_ref/I)^(k-1)  // adjust down for high-current loss (Peukert)</span>
+          <span class="formula-line">Q_temp_adj  = Q_available × f_temp(T)       // adjust down further if cold</span>
+          <span class="formula-line formula-highlight">t_remaining = Q_temp_adj / I_current         // divide by current to get hours</span>
+          <span class="formula-caption">Temperature factor f_temp: ≈1.0 at 25°C, ~0.85 at 0°C, ~0.70 at −10°C, ~1.05 at 40°C. Real example: 48V 280Ah pack at 60% SOC, 80% SOH, −10°C, drawing 100A: t = (0.60 × 280 × 0.80 × 0.70) / 100 = 0.94 hours.</span>
         </div>
         <p>
-          This calculation is updated every second in the BMS firmware, giving a continuously
-          updated "time to empty" display. The accuracy is limited by: SOC accuracy (±5–7% →
-          ±5–7% in Q_remaining), SOH accuracy (±2–5% typically), and load predictability
-          (if load changes, the runtime estimate changes immediately).
+          The accuracy of this estimate depends on how well the BMS knows SOC (±5–7%),
+          SOH (±2–5%), and the current load. If the load suddenly changes — for example,
+          a generator kicks in — the runtime estimate jumps immediately to reflect the
+          new draw rate.
         </p>
       </div>
 
