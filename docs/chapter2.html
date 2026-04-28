@@ -3582,9 +3582,9 @@ T (°C)  | f_T   | Notes
       <div class="subsection">
         <div class="subsection-title">Phase 3 — Protection Threshold Verification</div>
         <p>
-          Every protection threshold must be verified by deliberately triggering it under controlled
-          conditions. This cannot be done in simulation — the hardware path (AFE → MCU → FET gate
-          driver) must be exercised end-to-end.
+          Every protection limit must be tested by deliberately triggering it in a controlled way.
+          Simulation is not enough — the full hardware path from voltage/current detection through
+          to the FET actually switching off must be confirmed to work correctly.
         </p>
         <div class="comparison-table-wrap" style="margin:1.5rem 0;">
           <table class="comparison-table">
@@ -3641,11 +3641,11 @@ T (°C)  | f_T   | Notes
           <div class="callout-body">
             <div class="callout-title">SCP Test Safety Note</div>
             <p>
-              Short circuit protection testing involves intentionally creating a short circuit on
-              a live pack. This must be done in a fire-safe enclosure with PPE, using a relay-switched
-              known resistance (not a direct wire short). The test verifies that the BMS's hardware
-              SCP path responds before the cells' own internal resistance limits current to a
-              safe level — it does <em>not</em> verify that the cells survive an unlimited short.
+              Testing short-circuit protection means intentionally creating a short circuit on a
+              live pack. This must be done in a fire-safe enclosure with full personal protective
+              equipment, using a relay-switched resistor (not a bare wire short). The test checks
+              that the BMS hardware responds fast enough — it does <em>not</em> test whether the
+              cells themselves can survive an unprotected short, which they cannot.
             </p>
           </div>
         </div>
