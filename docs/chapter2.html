@@ -2363,33 +2363,34 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
       <div class="subsection">
         <div class="subsection-title">Lithium Plating — The Fast-Aging Failure Mode</div>
         <p>
-          Lithium plating occurs when Li⁺ ions arrive at the anode faster than they can
-          intercalate into the graphite. Instead of inserting between graphene layers, the
-          lithium deposits on the anode surface as metallic lithium (Li⁰). The plated lithium
-          can:
+          Lithium plating happens when lithium ions arrive at the anode faster than the
+          graphite can absorb them. Instead of sliding between the graphene layers, the
+          lithium is forced to deposit on the surface as solid metallic lithium. This causes
+          three types of damage:
         </p>
         <ul class="content-list cross">
-          <li>React with electrolyte, forming "dead lithium" that is electrochemically isolated —
-          permanent capacity loss and electrolyte consumption</li>
-          <li>Grow as <strong>dendrites</strong> — needle-like metallic structures that can
-          pierce the separator and cause an internal short circuit</li>
-          <li>Partially strip back (reintercalate) during rest, recovering some capacity but
-          leaving behind dead lithium and SEI debris</li>
+          <li>The deposited lithium reacts with the electrolyte and becomes permanently "dead" —
+          it can never carry charge again. Capacity drops and electrolyte is consumed.</li>
+          <li>The deposits can grow into sharp spikes called <strong>dendrites</strong> that
+          can punch through the separator inside the cell and cause a short circuit.</li>
+          <li>Some plated lithium dissolves back into the electrolyte during rest, recovering
+          a little capacity — but it leaves SEI residue and dead patches behind each time.</li>
         </ul>
 
         <p>
-          <strong>When lithium plating occurs:</strong> Any condition where the anode cannot
-          accept Li⁺ fast enough:
+          <strong>When does lithium plating happen?</strong> Any time the anode can't keep up
+          with incoming lithium:
         </p>
         <ul class="content-list">
-          <li><strong>Low temperature:</strong> Li⁺ diffusion coefficient drops dramatically below 10°C.
-          Even gentle charging (0.1C) can cause plating below −10°C for some LFP formulations.</li>
-          <li><strong>High charge rate:</strong> At 2C+, diffusion polarization builds faster than
-          intercalation can clear it.</li>
-          <li><strong>High SoC near cutoff:</strong> As the anode fills up, remaining empty sites
-          are deep inside particles — diffusion path lengthens, effective rate decreases.</li>
-          <li><strong>Aged anode:</strong> SEI-blocked particle surfaces reduce active area,
-          effectively increasing local current density even at moderate pack-level current.</li>
+          <li><strong>Cold temperature:</strong> Lithium moves more slowly through the graphite
+          at low temperatures. Even a gentle charge rate (0.1C) can cause plating below −10°C.</li>
+          <li><strong>Charging too fast:</strong> At 2C or more, lithium arrives at the anode
+          faster than it can be absorbed, forcing it to plate on the surface.</li>
+          <li><strong>Nearly full cell:</strong> As the anode fills up, the remaining empty
+          spots are deep inside the particles and hard to reach — the effective rate slows down
+          even if the current hasn't changed.</li>
+          <li><strong>Aged cell:</strong> Old SEI patches block parts of the anode surface,
+          funnelling the same current into a smaller area and effectively raising the local rate.</li>
         </ul>
 
         <div class="callout callout-danger">
