@@ -1967,15 +1967,16 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         </div>
         <div class="technique-body">
           <p>
-            The Extended Kalman Filter is the gold standard for SOC estimation in high-accuracy
-            BMS designs. It is an <strong>optimal state estimator</strong> that fuses the
-            prediction from a dynamic model (like the ECM) with the correction from measurements
-            (current and voltage), weighted by the relative uncertainty of each.
+            The Extended Kalman Filter (EKF) is the gold standard for SOC estimation in
+            high-accuracy BMS designs. The idea is to combine two imperfect sources of
+            information — current counting (which drifts) and voltage measurement (which
+            is almost flat for LFP) — and mathematically figure out the best estimate from both,
+            weighted by how reliable each source is at any given moment.
           </p>
           <p>
-            The name "Extended" Kalman Filter refers to the fact that it handles nonlinear systems
-            (like battery models, where OCV is a nonlinear function of SoC) by linearizing
-            around the current state estimate. A standard Kalman filter only handles linear systems.
+            The word "Extended" just means it handles non-linear systems (because OCV is a
+            curved function of SoC, not a straight line). A standard Kalman filter only
+            works for straight-line relationships.
           </p>
 
           <div class="subsection-sub">What the Kalman Filter Does — Plain Language</div>
