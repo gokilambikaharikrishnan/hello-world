@@ -1853,12 +1853,12 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
             <span class="formula-caption">Q_nominal_Ah is updated periodically from full-cycle capacity measurements. COULOMBIC_EFF = 0.999 for LFP. soc_Ah drifts if current sensor has offset or gain error.</span>
           </div>
           <p>
-            <strong>Critical design note:</strong> Current sensor auto-zero must be implemented.
-            When detected current falls below a noise threshold (e.g., |I| &lt; 0.5A for &gt;10s),
-            the BMS should sample the "zero current" offset and subtract it from all subsequent
-            readings until the next zero-current window. This eliminates the dominant steady-state
-            drift source. Without auto-zero, a 100mA offset on a 280Ah cell accumulates
-            <strong>2.4 Ah = 0.86% SOC</strong> error per hour of standby.
+            <strong>Important design detail — auto-zero:</strong> The BMS must periodically
+            recalibrate the "zero" reading of the current sensor. When current drops below
+            a small threshold (e.g. less than 0.5 A for 10 seconds or more), the BMS reads
+            the sensor output and records it as its new zero point. Without this, even a tiny
+            100 mA sensor offset silently adds 2.4 Ah of fake charge every hour — equal to
+            <strong>0.86% SOC drift per hour</strong> even when the pack is sitting idle.
           </p>
           <div class="technique-meta">
             <div class="technique-meta-item"><span class="technique-meta-label">Best Use</span><span class="technique-meta-value">Primary tracking during operation</span></div>
