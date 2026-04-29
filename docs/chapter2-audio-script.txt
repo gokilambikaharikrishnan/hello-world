@@ -461,3 +461,156 @@ verify in testing.
 
 It is the engineering sweet spot for home energy storage and UPS applications.
 
+
+============================================================
+SECTION 2.7 — SOH, AGING, AND DEGRADATION
+============================================================
+
+A new LFP cell rated at two-eighty amp-hours will not deliver two-eighty amp-hours
+forever. Slow chemical processes eat away at its capacity whether the cell is in use
+or sitting idle. Understanding these processes lets the BMS track the battery's
+health, predict when it will need replacing, and operate it in ways that slow the decline.
+
+STATE OF HEALTH — WHAT IT MEANS
+
+State of Health — SOH — is the ratio of the cell's current capacity to its original
+rated capacity, expressed as a percentage.
+
+A cell at one hundred percent SOH delivers exactly its rated capacity.
+A cell at eighty percent SOH delivers eighty percent — for our two-eighty amp-hour cell,
+that is two-hundred-and-twenty-four amp-hours.
+
+The industry standard end-of-life threshold is eighty percent SOH.
+Below eighty percent, the cell cannot reliably meet runtime guarantees.
+In practice, many ESS installations replace cells at seventy to seventy-five percent
+SOH to maintain comfortable safety margins.
+
+HOW THE BMS MEASURES SOH
+
+The most accurate method is a Reference Performance Test.
+Charge the pack fully to one hundred percent.
+Rest for thirty minutes.
+Discharge at a slow, steady rate — point two C — down to the cutoff voltage,
+while precisely counting every amp-hour delivered.
+The total amp-hours measured is the current actual capacity.
+Divide by the rated capacity. That is the SOH.
+
+In practice, the BMS runs this test automatically every thirty to one hundred cycles,
+typically overnight when the pack is not needed.
+
+Between tests, the BMS keeps a rolling average of the amp-hours delivered on each
+full cycle. This running average drifts slowly downward as the cell ages.
+
+THE SEI LAYER — THE MAIN AGING MECHANISM
+
+The most important aging process in lithium-ion cells is the formation and slow
+growth of the Solid Electrolyte Interphase — the SEI layer.
+
+Here is what it is.
+
+When a lithium-ion cell is first charged, the liquid electrolyte inside comes into
+contact with the graphite anode at a very low voltage. At that voltage, the electrolyte
+is chemically unstable — it breaks down and leaves a thin solid residue on the
+graphite surface. This layer of residue is the SEI.
+
+It forms mostly during the very first charge — this is called the formation step
+at the battery factory. Once it is there, it acts as a shield.
+
+The SEI is both essential and costly.
+
+On the positive side: it protects the anode from the electrolyte. It lets lithium
+ions through while blocking electrons. If it cracks, it self-heals.
+
+On the negative side: it permanently locks up lithium. Every atom consumed in
+SEI formation is gone forever — it cannot carry charge anymore. It adds resistance
+as it thickens. And it never truly stops growing — it keeps slowly building up
+throughout the cell's entire life.
+
+Every ten degrees Celsius of temperature increase roughly doubles the speed of
+SEI growth. That is why temperature is the most important factor in battery aging.
+A pack stored at forty degrees runs out of life two to three times faster than one
+stored at twenty-five degrees, even if they are cycled identically.
+
+CALENDAR AGING — DEGRADATION WITHOUT USE
+
+A cell stored at full charge is aging even when nothing is drawing from it.
+
+Three things cause calendar aging.
+
+First: ongoing SEI growth. This never stops, even at rest.
+
+Second: electrolyte breakdown at high charge levels. Keeping an LFP cell at full charge
+— three point six five volts per cell — speeds up chemical breakdown at the cathode surface.
+Storing at fifty percent charge is significantly better for longevity.
+
+Third: if the cell has previously suffered from lithium plating — which we will cover
+in a moment — the leftover metallic lithium keeps reacting with the electrolyte
+during storage, causing additional ongoing damage.
+
+The practical implication for UPS systems: a battery that sits fully charged for
+months waiting for a power outage suffers more from calendar aging than from
+the actual discharge cycles. The BMS should float at ninety to ninety-five percent
+state of charge — about three point four to three point four-five volts per cell —
+rather than at full charge. This one setting can extend calendar life by twenty to forty percent.
+
+LITHIUM PLATING — THE FAST-AGING FAILURE MODE
+
+Lithium plating happens when lithium ions arrive at the anode faster than the
+graphite can absorb them.
+
+Instead of sliding into the crystal lattice, the lithium is forced to deposit
+as solid metal on the surface.
+
+This causes three types of damage.
+
+First: the deposited lithium reacts with the electrolyte and becomes permanently dead.
+It can never carry charge again. Capacity drops immediately and irreversibly.
+
+Second: the deposits can grow into sharp spikes called dendrites. These can punch
+through the separator inside the cell and cause an internal short circuit.
+Internal short circuits are a root cause of real-world lithium battery fires.
+
+Third: some plated lithium dissolves back into the electrolyte during rest,
+recovering a little capacity — but it leaves SEI residue and dead patches behind
+each time. Each cycle of plating and partial recovery leaves the cell slightly worse.
+
+When does lithium plating happen?
+
+At cold temperatures: below zero degrees Celsius, lithium moves more slowly
+through the graphite. Even a gentle charge rate of point one C can cause plating
+below minus ten degrees for some cell formulations.
+
+Charging too fast: at two C or more, lithium arrives at the anode faster than it
+can be absorbed, forcing it to plate.
+
+Near a full cell: as the anode fills up, the remaining empty spots are deep inside
+the particles and hard to reach. The effective absorption rate slows even if the
+current has not changed.
+
+In aged cells: old SEI patches block parts of the anode surface, funnelling current
+into a smaller area — effectively raising the local current density.
+
+The BMS must prohibit charging at or below minus twenty degrees Celsius.
+Between zero and five degrees, the charge rate must be limited to point two C or less.
+These are hard rules, not guidelines. The BMS enforces them automatically.
+
+LFP VERSUS NMC — WHY LFP LASTS LONGER
+
+LFP cells typically reach eighty percent SOH at three thousand to five thousand cycles.
+NMC cells reach the same threshold at eight hundred to fifteen hundred cycles.
+That is three to four times fewer cycles.
+
+Three structural reasons explain the difference.
+
+LFP expands and contracts less with each cycle — about six point eight percent
+volume change versus ten to fifteen percent for NMC. Less mechanical stress means
+the SEI cracks less and particles crumble more slowly.
+
+LFP does not contain nickel or manganese. In NMC cells, those metals slowly dissolve
+into the electrolyte and migrate to the anode, where they speed up SEI growth.
+This contamination pathway does not exist in LFP.
+
+LFP charges to three point six five volts per cell versus NMC's four point two volts.
+SEI grows faster at higher voltages. Even that half-volt difference translates
+to substantially faster aging in NMC.
+
