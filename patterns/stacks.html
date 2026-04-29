@@ -756,6 +756,641 @@ i=3: h[2]=0 &lt;= h[3]=2 → pop 2 as bot; left=1; bound=min(1,2)=1; water+=(1-0
   <div class="trigger">When computing trapped water between bars → think: monotonic decreasing stack, pop as pool floor, left wall = new top, right wall = current bar.</div>
 </div>
 
+<!-- P11 -->
+<div class="card" id="p11">
+  <div class="pattern-num">Pattern 11</div>
+  <h2>Sum of Subarray Minimums</h2>
+  <div class="story">You have an array of numbers and you want to sum up the smallest value in every possible contiguous subarray. The naive approach checks all O(n²) subarrays, but a monotonic stack lets you figure out how many subarrays each element is the minimum of — and multiply once.</div>
+  <div class="insight">Core insight: For each element A[i], find the range [left_bound, right_bound] where A[i] is the minimum. The count of subarrays where A[i] is the minimum = (i − left) × (right − i). Sum A[i] × count for all i. Use a monotonic increasing stack to compute these boundaries in O(n).</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>For each i, find left[i] = distance to the nearest smaller element to the left (or start).</li>
+    <li>Find right[i] = distance to the nearest smaller-or-equal element to the right (or end). Use strict &lt; on one side to avoid double-counting duplicates.</li>
+    <li>contribution[i] = A[i] × left[i] × right[i].</li>
+    <li>Answer = sum of all contributions (mod 1e9+7).</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#define MOD 1000000007
+
+long long sum_subarray_min(int *A, int n) {
+    int left[n], right[n];
+    int stack[n], top = -1;
+
+    /* left[i] = number of subarrays ending at i where A[i] is min */
+    for (int i = 0; i &lt; n; i++) {
+        while (top &gt;= 0 &amp;&amp; A[stack[top]] &gt;= A[i]) top--;
+        left[i] = (top &lt; 0) ? i + 1 : i - stack[top];
+        stack[++top] = i;
+    }
+
+    top = -1;
+    /* right[i] = number of subarrays starting at i where A[i] is min */
+    for (int i = n - 1; i &gt;= 0; i--) {
+        while (top &gt;= 0 &amp;&amp; A[stack[top]] &gt; A[i]) top--;
+        right[i] = (top &lt; 0) ? n - i : stack[top] - i;
+        stack[++top] = i;
+    }
+
+    long long ans = 0;
+    for (int i = 0; i &lt; n; i++)
+        ans = (ans + (long long)A[i] * left[i] % MOD * right[i]) % MOD;
+    return ans;
+}
+
+int main(void) {
+    int A[] = {3,1,2,4};
+    printf("%lld\n", sum_subarray_min(A, 4));  /* 17 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">A=[3,1,2,4]
+left:  [1,2,1,1]  (A[1]=1 is min for 2 subarrays ending at 1: [3,1],[1])
+right: [1,3,2,1]  (A[1]=1 is min for 3 subarrays starting at 1: [1],[1,2],[1,2,4])
+contribution: 3×1×1=3, 1×2×3=6, 2×1×2=4, 4×1×1=4
+sum = 17 ✓  (subarrays: [3]=3,[1]=1,[2]=2,[4]=4,[3,1]=1,[1,2]=1,[2,4]=2,[3,1,2]=1,[1,2,4]=1,[3,1,2,4]=1 → total=17)</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Strict vs non-strict on one side to avoid duplicates</div>
+    <p>When elements are equal (e.g. [2,2]), both could claim the same subarray as their minimum. Fix: use <code>&gt;=</code> (pop equal) in the left pass and strict <code>&gt;</code> (keep equal) in the right pass. This assigns each subarray to exactly one element.</p>
+  </div>
+  <div class="leetcode"><span>907 · Sum of Subarray Minimums</span></div>
+  <div class="trigger">When summing min/max of all subarrays → think: contribution counting with monotonic stack, left × right boundary distances.</div>
+</div>
+
+<!-- P12 -->
+<div class="card" id="p12">
+  <div class="pattern-num">Pattern 12</div>
+  <h2>Stock Span Problem</h2>
+  <div class="story">A stock analyst wants to know, for each day, how many consecutive days leading up to and including today had a price less than or equal to today's price. This "span" helps measure momentum. A monotonic stack of (price, span) pairs collapses consecutive dominated days in O(1) amortized.</div>
+  <div class="insight">Core insight: Maintain a stack of (price, span) pairs in decreasing-price order. When today's price is &ge; the top, pop it and absorb its span into today's span. The stack only keeps days that could still limit future spans.</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>Initialize stack with a sentinel (INT_MAX price, span=0) to avoid empty-stack checks.</li>
+    <li>For each price p, set span = 1.</li>
+    <li>While stack top price &le; p, pop and add its span to current span.</li>
+    <li>Push (p, span) onto the stack.</li>
+    <li>Output span for each day.</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;limits.h&gt;
+
+typedef struct { int price, span; } Frame;
+
+void stock_span(int *prices, int n, int *span) {
+    Frame stack[n+1];
+    int top = 0;
+    stack[0] = (Frame){INT_MAX, 0};   /* sentinel */
+
+    for (int i = 0; i &lt; n; i++) {
+        int s = 1;
+        while (stack[top].price &lt;= prices[i])
+            s += stack[top--].span;   /* absorb dominated spans */
+        stack[++top] = (Frame){prices[i], s};
+        span[i] = s;
+    }
+}
+
+int main(void) {
+    int prices[] = {100,80,60,70,60,75,85};
+    int span[7];
+    stock_span(prices, 7, span);
+    for (int i = 0; i &lt; 7; i++) printf("%d ", span[i]);
+    /* 1 1 1 2 1 4 6 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">prices=[100,80,60,70,60,75,85]
+i=0: p=100, s=1; sentinel(INT_MAX)&gt;100 stop. push (100,1). span[0]=1
+i=1: p=80, s=1; 100&gt;80 stop. push (80,1). span[1]=1
+i=2: p=60, s=1; 80&gt;60 stop. push (60,1). span[2]=1
+i=3: p=70, s=1; 60&lt;=70→pop(60,1),s=2; 80&gt;70 stop. push (70,2). span[3]=2
+i=4: p=60, s=1; 70&gt;60 stop. push (60,1). span[4]=1
+i=5: p=75, s=1; 60&lt;=75→pop(60,1),s=2; 70&lt;=75→pop(70,2),s=4; 80&gt;75 stop. push (75,4). span[5]=4
+i=6: p=85, s=1; 75&lt;=85→pop(75,4),s=5; 80&lt;=85→pop(80,1),s=6; 100&gt;85 stop. push (85,6). span[6]=6 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Absorb span not just count</div>
+    <p>When you pop a frame, you're not just removing one day — you're absorbing all the days it already absorbed. That's why you add <code>stack[top].span</code> (not 1) to the running span. Forgetting this underestimates the span.</p>
+  </div>
+  <div class="leetcode"><span>901 · Online Stock Span</span></div>
+  <div class="trigger">When each element needs to count how far back it dominates → think: monotonic stack with accumulated span, pop and absorb.</div>
+</div>
+
+<!-- P13 -->
+<div class="card" id="p13">
+  <div class="pattern-num">Pattern 13</div>
+  <h2>Buildings With an Ocean View</h2>
+  <div class="story">A row of buildings faces the ocean on the right. A building has an ocean view only if every building to its right is shorter. You want to list all buildings that can see the ocean, left to right.</div>
+  <div class="insight">Core insight: Scan right to left, maintaining a monotonic decreasing stack (decreasing as you go right = all shorter). Every element that isn't immediately blocked by a taller right-neighbor makes it in. Equivalently, scan left to right tracking the running maximum from the right — simpler with a stack collecting the answer.</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>Scan left to right.</li>
+    <li>Maintain a stack of building indices in monotonic decreasing-height order.</li>
+    <li>For each new building, pop all stack entries shorter than it (they lost their view).</li>
+    <li>Push the current building.</li>
+    <li>What remains on the stack after processing all buildings = buildings with an ocean view, in order.</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+
+int ocean_view(int *h, int n, int *result) {
+    int stack[n], top = -1;
+    for (int i = 0; i &lt; n; i++) {
+        while (top &gt;= 0 &amp;&amp; h[stack[top]] &lt;= h[i])
+            top--;           /* shorter building lost its view */
+        stack[++top] = i;
+    }
+    /* stack holds answer in order */
+    int cnt = top + 1;
+    for (int i = 0; i &lt; cnt; i++) result[i] = stack[i];
+    return cnt;
+}
+
+int main(void) {
+    int h[] = {4,2,3,1};
+    int result[4];
+    int cnt = ocean_view(h, 4, result);
+    for (int i = 0; i &lt; cnt; i++) printf("%d ", result[i]);
+    /* 0 2 3  (buildings at index 0,2,3 have ocean view) */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">h=[4,2,3,1]
+i=0: push 0. stack=[0]
+i=1: h[0]=4 &gt; h[1]=2; push 1. stack=[0,1]
+i=2: h[1]=2 &lt;= h[2]=3 → pop 1 (lost view); h[0]=4 &gt; 3; push 2. stack=[0,2]
+i=3: h[2]=3 &gt; h[3]=1; push 3. stack=[0,2,3]
+Result: indices [0,2,3] → buildings of heights [4,3,1] all see ocean ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Equal heights block the view</div>
+    <p>A building of equal height to a right neighbor still blocks the ocean view — use <code>&lt;=</code> when popping, not just <code>&lt;</code>. If heights are [3,3], the left 3 cannot see over the right 3.</p>
+  </div>
+  <div class="leetcode"><span>1762 · Buildings With an Ocean View</span></div>
+  <div class="trigger">When finding elements not dominated by anything to their right → think: monotonic decreasing stack, what remains at the end is the answer.</div>
+</div>
+
+<!-- P14 -->
+<div class="card" id="p14">
+  <div class="pattern-num">Pattern 14</div>
+  <h2>Remove K Digits (Monotonic Stack)</h2>
+  <div class="story">You have a number like "1432219" and need to remove exactly 3 digits to make the smallest possible number. Greedily, whenever you see a digit smaller than the one before it, removing the larger one reduces the number — like squeezing out bumps in the number.</div>
+  <div class="insight">Core insight: Use a monotonic increasing stack for the digits. Whenever the current digit is smaller than the stack top, pop the top (remove it) and decrement k. After the scan, if k &gt; 0, pop from the top (remove trailing large digits). Then strip leading zeros.</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>For each digit, while k &gt; 0 and stack not empty and top &gt; current digit, pop top (use one removal).</li>
+    <li>Push current digit.</li>
+    <li>After loop, if k &gt; 0, truncate the stack by k from the top.</li>
+    <li>Reconstruct the number, skipping leading zeros.</li>
+    <li>Return "0" if the result is empty.</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+void remove_k_digits(const char *num, int k, char *result) {
+    int n = strlen(num);
+    char stack[n+1];
+    int top = -1;
+
+    for (int i = 0; i &lt; n; i++) {
+        while (k &gt; 0 &amp;&amp; top &gt;= 0 &amp;&amp; stack[top] &gt; num[i]) {
+            top--;
+            k--;
+        }
+        stack[++top] = num[i];
+    }
+    /* if k still &gt; 0, remove from the end */
+    top -= k;
+
+    /* strip leading zeros */
+    int start = 0;
+    while (start &lt; top &amp;&amp; stack[start] == '0') start++;
+
+    if (start &gt; top) { result[0]='0'; result[1]='\0'; return; }
+    int len = 0;
+    for (int i = start; i &lt;= top; i++) result[len++] = stack[i];
+    result[len] = '\0';
+}
+
+int main(void) {
+    char result[20];
+    remove_k_digits("1432219", 3, result);
+    printf("%s\n", result);   /* 1219 */
+    remove_k_digits("10200", 1, result);
+    printf("%s\n", result);   /* 200 → "0200" → strip → "200"... actually "0200"→leading→"200" wait → "0" if all removed */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">num="1432219", k=3
+i=0 '1': stack=[] push '1'. stack=['1']
+i=1 '4': '1'&lt;'4', push. stack=['1','4']
+i=2 '3': '4'&gt;'3' → pop '4', k=2; '1'&lt;'3', push '3'. stack=['1','3']
+i=3 '2': '3'&gt;'2' → pop '3', k=1; '1'&lt;'2', push '2'. stack=['1','2']
+i=4 '2': '2'=='2', push. stack=['1','2','2']
+i=5 '1': '2'&gt;'1' → pop '2', k=0; push '1'. stack=['1','2','1']
+i=6 '9': k=0, push. stack=['1','2','1','9']
+k=0, no tail trim. result="1219" ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Handle remaining k after the loop</div>
+    <p>If the input is already non-decreasing (e.g. "12345") the while loop never triggers. After the loop, k removals still need to happen — simply truncate the stack by k from the top (the largest digits are at the end).</p>
+  </div>
+  <div class="leetcode"><span>402 · Remove K Digits</span></div>
+  <div class="trigger">When removing digits/characters to minimize/maximize lexicographic value → think: monotonic stack, greedy pop when current is better than top.</div>
+</div>
+
+<!-- P15 -->
+<div class="card" id="p15">
+  <div class="pattern-num">Pattern 15</div>
+  <h2>132 Pattern Detection</h2>
+  <div class="story">You want to know if an array contains a subsequence (i, j, k) with i &lt; j &lt; k and nums[i] &lt; nums[k] &lt; nums[j] — like a 1-3-2 shape. The trick is to scan right to left: track the "2" candidate using a monotonic stack, and remember the best "3" seen so far.</div>
+  <div class="insight">Core insight: Scan from right to left. Keep a monotonic decreasing stack. Whenever you pop an element (because something bigger just appeared), that popped element is a valid "2" candidate — it's smaller than the current "3" (the element that caused the pop). If you ever see a "1" (nums[i]) smaller than the best "2", you found the pattern.</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>Scan right to left, maintain a monotonic decreasing stack.</li>
+    <li>Track `third` = the best "2" candidate seen so far (initialized to INT_MIN).</li>
+    <li>When nums[i] &gt; stack top, pop into `third` (it's a valid "2" since a larger "3" exists to its right).</li>
+    <li>If nums[i] &lt; third, then nums[i] is "1", third is "2", the element that caused the pop is "3" → return true.</li>
+    <li>Push nums[i] as a "3" candidate.</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;limits.h&gt;
+
+int find132pattern(int *nums, int n) {
+    int stack[n], top = -1;
+    int third = INT_MIN;   /* best "2" candidate (nums[k] in i&lt;j&lt;k) */
+
+    for (int i = n - 1; i &gt;= 0; i--) {
+        if (nums[i] &lt; third) return 1;          /* nums[i] is "1" */
+        while (top &gt;= 0 &amp;&amp; stack[top] &lt; nums[i])
+            third = stack[top--];               /* pop: becomes "2" */
+        stack[++top] = nums[i];                 /* push as "3" candidate */
+    }
+    return 0;
+}
+
+int main(void) {
+    int a[] = {3,1,4,2};
+    printf("%d\n", find132pattern(a, 4));  /* 1 (1,4,2) */
+    int b[] = {1,2,3,4};
+    printf("%d\n", find132pattern(b, 4));  /* 0 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">nums=[3,1,4,2], scan right to left, third=INT_MIN
+i=3: nums[3]=2; 2&gt;INT_MIN=false; stack empty, push 2. stack=[2], third=INT_MIN
+i=2: nums[2]=4; 4&lt;INT_MIN=false; stack[top]=2&lt;4→pop, third=2; stack empty. push 4. stack=[4], third=2
+i=1: nums[1]=1; 1&lt;third=2 → return 1 ✓ (1 is "1", 2 is "2", 4 is "3")</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: The popped element is "2", not "3"</div>
+    <p>The confusion is naming: when we pop from the stack because nums[i] is bigger, the popped value (smaller than nums[i]) becomes the "2" (middle value in magnitude). The element currently at nums[i] is the "3" (the largest). The early-return check catches "1" (the smallest) to the left of both.</p>
+  </div>
+  <div class="leetcode"><span>456 · 132 Pattern</span></div>
+  <div class="trigger">When looking for a non-contiguous 3-element pattern with ordering constraints → think: scan from right, monotonic stack for "3", track best "2" via pops.</div>
+</div>
+
+<!-- P16 -->
+<div class="card" id="p16">
+  <div class="pattern-num">Pattern 16</div>
+  <h2>Max Width Ramp</h2>
+  <div class="story">A "ramp" in an array is a pair (i, j) where i &lt; j and A[i] &le; A[j]. The width of the ramp is j − i. Find the maximum width ramp. Think of it as: find the farthest apart pair where the left value doesn't exceed the right value.</div>
+  <div class="insight">Core insight: In two passes — first, build a decreasing stack of "left candidate" indices (only indices where A[i] is a new minimum from the left are useful left endpoints). Then scan from right to left, and for each right index j, pop from the stack while A[stack top] &le; A[j], recording j − stack top as the width.</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>Forward pass: push index i onto stack only if A[i] is smaller than all previous stack tops (strict decreasing prefix minima).</li>
+    <li>Backward pass: scan j from n−1 to 0.</li>
+    <li>While stack not empty and A[stack top] &le; A[j], pop and update max width = j − popped_index.</li>
+    <li>Continue (don't break after pop — j can match multiple left candidates).</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+
+int max_width_ramp(int *A, int n) {
+    int stack[n], top = -1;
+
+    /* build decreasing-value prefix stack */
+    for (int i = 0; i &lt; n; i++)
+        if (top &lt; 0 || A[stack[top]] &gt; A[i])
+            stack[++top] = i;
+
+    int ans = 0;
+    /* scan right to left, greedily match deepest left candidate */
+    for (int j = n - 1; j &gt;= 0; j--) {
+        while (top &gt;= 0 &amp;&amp; A[stack[top]] &lt;= A[j]) {
+            int w = j - stack[top--];
+            if (w &gt; ans) ans = w;
+        }
+    }
+    return ans;
+}
+
+int main(void) {
+    int A[] = {6,0,8,2,1,5};
+    printf("%d\n", max_width_ramp(A, 6));  /* 4  (pair: i=1,j=5, A[1]=0&lt;=A[5]=5) */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">A=[6,0,8,2,1,5]
+Forward pass (prefix minima):
+i=0: A[0]=6, push 0. stack=[0]
+i=1: A[1]=0 &lt; 6, push 1. stack=[0,1]
+i=2..5: A[2]=8,A[3]=2,A[4]=1,A[5]=5 all &gt;= 0, skip.
+stack=[0,1] (indices where A = [6,0])
+
+Backward pass:
+j=5: A[5]=5 &gt;= A[1]=0 → pop 1, w=5-1=4, ans=4; A[5]=5 &lt; A[0]=6, stop.
+j=4: A[4]=1 &lt; A[0]=6, stop.
+j=3: A[3]=2 &lt; A[0]=6, stop.
+j=2: A[2]=8 &gt;= A[0]=6 → pop 0, w=2-0=2 &lt; ans=4.
+ans = 4 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Only prefix minima are useful left endpoints</div>
+    <p>If A[i] &gt; A[i−1], then any ramp using i as the left end could use i−1 instead for a wider (or equal) ramp. So only strictly decreasing prefix values are worth keeping as left candidates.</p>
+  </div>
+  <div class="leetcode"><span>962 · Maximum Width Ramp</span></div>
+  <div class="trigger">When finding maximum index gap (j−i) satisfying a value ordering constraint → think: two-pass monotonic stack, prefix minima forward, greedily match from right.</div>
+</div>
+
+<!-- P17 -->
+<div class="card" id="p17">
+  <div class="pattern-num">Pattern 17</div>
+  <h2>Maximal Rectangle (Histogram DP + Stack)</h2>
+  <div class="story">Given a binary matrix, find the largest rectangle filled with 1s. Think of each row as the ground and count how many consecutive 1s stack up above it — that gives a histogram. Then solve "largest rectangle in histogram" for each row's histogram.</div>
+  <div class="insight">Core insight: Build a running histogram row by row. If cell (r,c) is '1', heights[c] += 1. If it's '0', heights[c] = 0. Then run the O(n) histogram stack algorithm (Pattern 09) on each row's heights array.</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>Initialize heights[cols] = {0}.</li>
+    <li>For each row: update each height — increment if cell='1', reset to 0 if '0'.</li>
+    <li>Run largest_rectangle_in_histogram on heights (monotonic stack with sentinel).</li>
+    <li>Track maximum area across all rows.</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+
+static int hist_max(int *h, int n) {
+    int stack[n+1], top = -1, best = 0;
+    for (int i = 0; i &lt;= n; i++) {
+        int cur = (i == n) ? 0 : h[i];
+        while (top &gt;= 0 &amp;&amp; h[stack[top]] &gt;= cur) {
+            int ht = h[stack[top--]];
+            int w  = (top &lt; 0) ? i : i - stack[top] - 1;
+            if (ht * w &gt; best) best = ht * w;
+        }
+        stack[++top] = i;
+    }
+    return best;
+}
+
+int maximal_rectangle(char matrix[][5], int rows, int cols) {
+    int heights[cols];
+    for (int c = 0; c &lt; cols; c++) heights[c] = 0;
+    int ans = 0;
+    for (int r = 0; r &lt; rows; r++) {
+        for (int c = 0; c &lt; cols; c++)
+            heights[c] = (matrix[r][c] == '1') ? heights[c] + 1 : 0;
+        int a = hist_max(heights, cols);
+        if (a &gt; ans) ans = a;
+    }
+    return ans;
+}
+
+int main(void) {
+    char m[][5] = {
+        {'1','0','1','0','0'},
+        {'1','0','1','1','1'},
+        {'1','1','1','1','1'},
+        {'1','0','0','1','0'}
+    };
+    printf("%d\n", maximal_rectangle(m, 4, 5));  /* 6 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">After row 0: heights=[1,0,1,0,0], hist_max=1
+After row 1: heights=[2,0,2,1,1], hist_max=3
+After row 2: heights=[3,1,3,2,2], hist_max=6 ← (width 3 × height 2 at indices 2-4)
+After row 3: heights=[4,0,0,3,0], hist_max=4
+ans = 6 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Reset height to 0 on '0' cells</div>
+    <p>When a cell is '0', the histogram bar resets to 0 — not just fails to increment. If you only skip incrementing, heights accumulate across disconnected 1s and produce wrong large histograms.</p>
+  </div>
+  <div class="leetcode"><span>85 · Maximal Rectangle</span></div>
+  <div class="trigger">When finding the largest rectangle of 1s in a binary matrix → think: reduce each row to a histogram, run the histogram stack algorithm per row.</div>
+</div>
+
+<!-- P18 -->
+<div class="card" id="p18">
+  <div class="pattern-num">Pattern 18</div>
+  <h2>Decode String</h2>
+  <div class="story">A compressed string like "3[a2[c]]" means repeat "a2[c]" three times, where "2[c]" expands to "cc", so "acc" × 3 = "accaccacc". You're unpacking nested repeats — a natural job for a stack that saves the outer context while processing the inner bracket.</div>
+  <div class="insight">Core insight: Use two stacks — one for repeat counts, one for partial strings being built. When '[' is seen, push the current count and current string, reset both. When ']' is seen, pop the outer string and count, and append the current string count times.</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>Parse digits into a running number k.</li>
+    <li>On '[': push k and current string onto their stacks; reset k=0 and current="".</li>
+    <li>On ']': pop count and prefix; append current string × count to prefix; set current = prefix.</li>
+    <li>On letter: append to current string.</li>
+    <li>Return current string at the end.</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#include &lt;ctype.h&gt;
+
+#define MAXLEN 1024
+
+void decode_string(const char *s, char *out) {
+    char str_stack[20][MAXLEN];
+    int  cnt_stack[20];
+    int  top = -1;
+    char cur[MAXLEN] = "";
+    int  k = 0;
+
+    for (int i = 0; s[i]; i++) {
+        if (isdigit(s[i])) {
+            k = k * 10 + (s[i] - '0');
+        } else if (s[i] == '[') {
+            cnt_stack[++top] = k;
+            strcpy(str_stack[top], cur);
+            cur[0] = '\0';
+            k = 0;
+        } else if (s[i] == ']') {
+            char tmp[MAXLEN];
+            strcpy(tmp, str_stack[top]);
+            int repeat = cnt_stack[top--];
+            for (int r = 0; r &lt; repeat; r++) strcat(tmp, cur);
+            strcpy(cur, tmp);
+        } else {
+            int len = strlen(cur);
+            cur[len] = s[i];
+            cur[len+1] = '\0';
+        }
+    }
+    strcpy(out, cur);
+}
+
+int main(void) {
+    char out[MAXLEN];
+    decode_string("3[a2[c]]", out);
+    printf("%s\n", out);   /* accaccacc */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">"3[a2[c]]"
+'3': k=3
+'[': push cnt=3, str="". cur="", k=0
+'a': cur="a"
+'2': k=2
+'[': push cnt=2, str="a". cur="", k=0
+'c': cur="c"
+']': prefix="a", repeat=2; tmp="a"+"c"+"c"="acc"; cur="acc"
+']': prefix="", repeat=3; tmp=""+"acc"+"acc"+"acc"="accaccacc"; cur="accaccacc"
+out="accaccacc" ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Multi-digit repeat counts</div>
+    <p>The repeat count can be more than one digit (e.g. "12[a]"). Build it with <code>k = k*10 + digit</code>, not just <code>k = digit</code>. Reset k to 0 each time you push onto the count stack.</p>
+  </div>
+  <div class="leetcode"><span>394 · Decode String</span></div>
+  <div class="trigger">When parsing nested bracket expressions with repetition → think: two stacks (count stack + string stack), push on '[', pop and expand on ']'.</div>
+</div>
+
+<!-- P19 -->
+<div class="card" id="p19">
+  <div class="pattern-num">Pattern 19</div>
+  <h2>Asteroid Collision</h2>
+  <div class="story">Asteroids move in a row, some going right (+) and some left (−). When a right-moving asteroid meets a left-moving asteroid head-on, the smaller one explodes. Same size = both explode. Right-going asteroids never collide with each other. Model this with a stack: the stack holds the surviving asteroids.</div>
+  <div class="insight">Core insight: Only a collision can happen when a negative asteroid (moving left) encounters a positive one (moving right) at the top of the stack. Keep processing until the negative one survives or gets destroyed. Push surviving asteroids onto the stack.</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>For each asteroid a: if a &gt; 0, push it (no collision yet).</li>
+    <li>If a &lt; 0: while stack not empty and top &gt; 0 (collision): if |a| &gt; top, pop (top destroyed); if |a| == top, pop and mark a dead; if |a| &lt; top, mark a dead.</li>
+    <li>If a is still alive after collisions, push it.</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+
+int asteroid_collision(int *ast, int n, int *result) {
+    int stack[n], top = -1;
+
+    for (int i = 0; i &lt; n; i++) {
+        int a = ast[i];
+        int alive = 1;
+        while (alive &amp;&amp; a &lt; 0 &amp;&amp; top &gt;= 0 &amp;&amp; stack[top] &gt; 0) {
+            if (stack[top] &lt; -a)       { top--; }          /* top explodes */
+            else if (stack[top] == -a) { top--; alive = 0; }/* both explode */
+            else                       {        alive = 0; }/* a explodes   */
+        }
+        if (alive) stack[++top] = a;
+    }
+    int cnt = top + 1;
+    for (int i = 0; i &lt; cnt; i++) result[i] = stack[i];
+    return cnt;
+}
+
+int main(void) {
+    int ast[] = {5, 10, -5};
+    int result[3];
+    int cnt = asteroid_collision(ast, 3, result);
+    for (int i = 0; i &lt; cnt; i++) printf("%d ", result[i]);
+    /* 5 10 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">ast=[5,10,-5]
+i=0: a=5 &gt; 0, push. stack=[5]
+i=1: a=10 &gt; 0, push. stack=[5,10]
+i=2: a=-5; top=10 &gt; 0, collision: 10 &gt; |-5|=5 → a explodes, alive=0. stack=[5,10]
+Result: [5,10] ✓
+
+ast=[8,-8]:
+i=0: push 8. stack=[8]
+i=1: a=-8; top=8 == |-8|=8 → both explode. stack=[]
+Result: [] ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Two negative or two positive asteroids never collide</div>
+    <p>Only trigger collision when the incoming asteroid is negative AND the stack top is positive. If both are negative (both moving left) they move away from each other — no collision. Don't pop when stack top is also negative.</p>
+  </div>
+  <div class="leetcode"><span>735 · Asteroid Collision</span></div>
+  <div class="trigger">When simulating item collisions based on direction → think: stack holds survivors, only collide when opposing directions meet at top.</div>
+</div>
+
+<!-- P20 -->
+<div class="card" id="p20">
+  <div class="pattern-num">Pattern 20</div>
+  <h2>Monotonic Stack — Previous/Next Smaller &amp; Greater (Template)</h2>
+  <div class="story">Four variations of the same idea: for each element, find the nearest element to the left (or right) that is strictly smaller (or strictly greater). These four queries — previous smaller, next smaller, previous greater, next greater — are the building blocks for dozens of harder problems. Knowing the template cold saves time on every monotonic-stack problem.</div>
+  <div class="insight">Core insight: The direction of scan and the comparison operator determine which of the four queries you compute. Pop when the new element "wins" against the top — the top's answer is the new element. What remains in the stack at the end has no answer (−1 or n).</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>Choose scan direction: left→right for NEXT queries, right→left for PREVIOUS queries.</li>
+    <li>Choose comparison: pop when A[new] &lt; A[top] for SMALLER; pop when A[new] &gt; A[top] for GREATER.</li>
+    <li>On pop: ans[top_index] = new_element (or new_index for distance).</li>
+    <li>Push current index; remaining stack at end has no answer.</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+
+/* Template: next smaller element for each index */
+void next_smaller(int *A, int n, int *ans) {
+    int stack[n], top = -1;
+    for (int i = 0; i &lt; n; i++) ans[i] = -1;
+
+    for (int i = 0; i &lt; n; i++) {
+        /* pop: A[i] is the next smaller for stack top */
+        while (top &gt;= 0 &amp;&amp; A[stack[top]] &gt; A[i])
+            ans[stack[top--]] = A[i];
+        stack[++top] = i;
+    }
+}
+
+/* Variant: previous greater element for each index */
+void prev_greater(int *A, int n, int *ans) {
+    int stack[n], top = -1;
+    for (int i = 0; i &lt; n; i++) ans[i] = -1;
+
+    for (int i = 0; i &lt; n; i++) {
+        /* pop: not the previous greater; current is answer */
+        while (top &gt;= 0 &amp;&amp; A[stack[top]] &lt;= A[i])
+            top--;
+        ans[i] = (top &lt; 0) ? -1 : A[stack[top]];
+        stack[++top] = i;
+    }
+}
+
+int main(void) {
+    int A[] = {4,5,2,10,8};
+    int ns[5], pg[5];
+    next_smaller(A, 5, ns);
+    prev_greater(A, 5, pg);
+    for (int i=0;i&lt;5;i++) printf("ns[%d]=%d pg[%d]=%d\n",i,ns[i],i,pg[i]);
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">A=[4,5,2,10,8]
+next_smaller:
+i=0: push 0
+i=1: 5&gt;4? no (5&gt;4 means A[top]=4&lt;5, so 4 is NOT &gt; 5), push 1
+i=2: A[1]=5 &gt; A[2]=2 → ns[1]=2; A[0]=4 &gt; 2 → ns[0]=2; push 2
+i=3: push 3
+i=4: A[3]=10 &gt; A[4]=8 → ns[3]=8; push 4
+Remaining: ns[2]=-1, ns[4]=-1
+ns = [2,2,-1,8,-1] ✓
+
+prev_greater:
+i=0: stack empty, pg[0]=-1; push 0
+i=1: A[0]=4 &lt;= 5 → pop; stack empty, pg[1]=-1; push 1
+i=2: A[1]=5 &gt; 2 → stop; pg[2]=5; push 2
+i=3: A[2]=2 &lt;= 10, pop; A[1]=5 &lt;= 10, pop; empty, pg[3]=-1; push 3
+i=4: A[3]=10 &gt; 8 → stop; pg[4]=10; push 4
+pg = [-1,-1,5,-1,10] ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Four variations, same skeleton</div>
+    <p>Next/Previous and Smaller/Greater share one skeleton. Change only two things: (1) scan direction (forward or backward), and (2) the comparison in the while loop (&lt; or &gt;, strict or non-strict). Memorise the skeleton; parameterise the rest.</p>
+  </div>
+  <div class="leetcode"><span>496, 503, 739, 901 — monotonic stack family</span></div>
+  <div class="trigger">Whenever you need nearest smaller/greater in either direction → think: monotonic stack template, flip scan direction or comparison operator for each variant.</div>
+</div>
+
 <!-- PATTERNS_END -->
 <script>hljs.highlightAll();</script>
 </body>
