@@ -5,12 +5,12 @@
 | File | Patterns | Status | Last Updated |
 |------|----------|--------|--------------|
 | index.html | nav | ✅ Done | 2026-04-24 |
-| arrays.html | 54 | 🔄 In Progress | — |
+| arrays.html | 54 | ✅ Done | 2026-04-24 |
 | pointers.html | 30 | ✅ Done | 2026-04-24 |
 | strings.html | 40 | ✅ Done | 2026-04-29 |
 | linkedlist.html | 35 | ✅ Done | 2026-04-29 |
-| stacks.html | 32 | ⏳ Pending | — |
-| queues.html | 22 | ⏳ Pending | — |
+| stacks.html | 32 | ✅ Done | 2026-04-29 |
+| queues.html | 22 | ✅ Done | 2026-04-29 |
 
 ## Commit Log
 
@@ -32,13 +32,18 @@
 | ✅ 14 | linkedlist.html | 01-10 | feat(linkedlist): patterns 01-10 — node/traversal, insert, delete, reverse, k-group, middle |
 | ✅ 15 | linkedlist.html | 11-20 | feat(linkedlist): patterns 11-20 — Floyd cycle, intersection, palindrome, merge, sort, partition |
 | ✅ 16 | linkedlist.html | 21-35 | feat(linkedlist): patterns 21-35 — rotate, odd-even, flatten, copy-random, add numbers, LRU, DLL, circular, XOR, skip list, Josephus |
+| ✅ 17 | stacks.html | 01-10 | feat(stacks): patterns 01-10 — array stack, linked stack, valid parens, min stack, RPN, daily temps, next greater element, histogram, rain water |
+| ✅ 18 | stacks.html | 11-20 | feat(stacks): patterns 11-20 — subarray min sum, stock span, ocean view, remove-k digits, 132 pattern, max width ramp, maximal rectangle, decode string, asteroid collision, monotonic template |
+| ✅ 19 | stacks.html | 21-32 | feat(stacks): patterns 21-32 — calculator I/II, infix-to-postfix, simplify path, score of parens, iterative DFS, tree traversals, flatten nested list, queue-from-stacks, max stack, histogram two-pass |
+| ✅ 20 | queues.html | 01-10 | feat(queues): patterns 01-10 — circular queue, linked queue, BFS level-order, shortest path, 0-1 matrix, rotten oranges, word ladder, islands, zigzag, topological sort |
+| ✅ 21 | queues.html | 11-22 | feat(queues): patterns 11-22 — min-heap, K largest, merge K lists, top-K freq, sliding window deque, hit counter, circular deque, stack-from-queues, task scheduler, median stream, binary matrix path |
 
 ## arrays.html Progress
 - [x] Patterns 01–10 (Prefix Sum + Two Pointer basics)
-- [ ] Patterns 11–20 (Sliding Window + Binary Search) ← NEXT
-- [ ] Patterns 21–30 (Kadane's + In-Place + Sorting)
-- [ ] Patterns 31–40 (Greedy + Matrix + Hashmap)
-- [ ] Patterns 41–54 (Hashmap cont. + Hard Classics + Bit Manip)
+- [x] Patterns 11–20 (Sliding Window + Binary Search)
+- [x] Patterns 21–30 (Kadane's + In-Place + Sorting)
+- [x] Patterns 31–40 (Greedy + Matrix + Hashmap)
+- [x] Patterns 41–54 (Hashmap cont. + Hard Classics + Bit Manip)
 
 ## pointers.html Progress
 - [x] Patterns 01–10 (Basics, Arithmetic, Functions)
@@ -57,15 +62,15 @@
 - [x] Patterns 21–35 (Structural, Intersection, Math, Design)
 
 ## stacks.html Progress
-- [ ] Patterns 01–10 (Basics, Valid Parens, Min Stack, RPN)
-- [ ] Patterns 11–20 (Monotonic Stack)
-- [ ] Patterns 21–32 (Expression Eval, Design, DFS)
+- [x] Patterns 01–10 (Basics, Valid Parens, Min Stack, RPN)
+- [x] Patterns 11–20 (Monotonic Stack)
+- [x] Patterns 21–32 (Expression Eval, Design, DFS)
 
 ## queues.html Progress
-- [ ] Patterns 01–10 (Basics, BFS variants)
-- [ ] Patterns 11–22 (Priority Queue, Design, Scheduling)
+- [x] Patterns 01–10 (Basics, BFS variants)
+- [x] Patterns 11–22 (Priority Queue, Design, Scheduling)
 
 ## Pattern Counts
 - **Total Planned:** 213
-- **Total Complete:** 0
-- **Progress:** 0%
+- **Total Complete:** 213
+- **Progress:** 100% ✅
