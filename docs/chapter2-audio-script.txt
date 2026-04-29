@@ -864,3 +864,73 @@ This test should be repeated every six months during normal operation
 as a scheduled health check. When the measured capacity drops below eighty percent
 of the original rated capacity, the pack has reached end of life.
 
+
+============================================================
+SECTION 2.11 — SOH TRENDING AND STATE OF POWER
+============================================================
+
+State of Health is not a yes-or-no value — it is a number that slowly decreases
+over years of use. The BMS needs to track this decline, predict when replacement
+is needed, and communicate to the host system exactly how hard the pack can
+be pushed right now.
+
+SOH TRENDING — TWO PHASES OF AGING
+
+LFP capacity fade follows a predictable two-phase pattern.
+
+Phase one covers most of the cell's life — roughly from new to about eighty percent
+of its total cycle count. In this phase, capacity declines at a nearly constant rate:
+about point zero one to point zero three percent per cycle at twenty-five degrees
+and one C. This is predictable. The BMS can project when the pack will reach
+eighty percent SOH simply by extending the trend line.
+
+Phase two is the knee — the last portion of the pack's life. The rate of decay
+accelerates. The SEI has grown thick. Lithium inventory is running low. Resistance
+has risen enough to compound the problem. Once a pack enters phase two, remaining
+life prediction becomes less reliable, and a maintenance alert should be triggered.
+
+In practice, the BMS logs the measured capacity after each Reference Performance Test,
+alongside a timestamp and cycle count. When this data is uploaded to a cloud platform,
+fleet-level analytics can catch problems that affect many packs simultaneously —
+a bad batch of cells, an installation that runs too hot, or an application that
+cycles the packs too aggressively.
+
+STATE OF POWER — WHAT CAN THE PACK DELIVER RIGHT NOW?
+
+SOC tells you how much energy is stored.
+State of Power — SoP — answers a different question: how hard can you push the pack
+right now, without violating any safety limit?
+
+This matters enormously for UPS applications. When mains power fails, the inverter
+switches to battery in less than ten milliseconds and immediately demands full power.
+If the BMS's State of Power figure is one second old — from when the temperature or
+SOC was slightly different — the inverter may ask for more than the pack can currently
+deliver. The result: a voltage collapse that takes the UPS offline at exactly the
+wrong moment.
+
+State of Power is calculated from three things: the current cell voltage, the internal
+resistance, and the minimum safe cell voltage. The maximum current is the voltage
+headroom divided by the resistance. The maximum power is that current times the
+pack voltage.
+
+For a ten-second burst — a common UPS requirement — the calculation uses
+a slightly lower effective resistance than the steady-state value, because the
+slow diffusion component of the resistance has not had time to fully build up.
+
+The key point: the BMS must recalculate State of Power every one hundred milliseconds
+and broadcast it on the communication bus as a high-priority message.
+It cannot be updated only once per second like less time-critical values.
+
+RESISTANCE GROWTH — HOW AGING AFFECTS PEAK POWER
+
+As cells age, not only does capacity decrease — internal resistance increases.
+
+After two thousand cycles, the internal resistance of an LFP cell is typically
+forty percent higher than when new. That forty percent increase reduces peak
+current capability by about thirty percent — even though capacity has only
+dropped by roughly twenty percent.
+
+This means a pack at eighty percent SOH can deliver only about seventy percent
+of its original peak power. This must be accounted for when sizing a UPS:
+always derate peak power for aged cells, not just energy capacity.
+
