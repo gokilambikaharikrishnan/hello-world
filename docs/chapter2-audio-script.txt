@@ -934,3 +934,90 @@ This means a pack at eighty percent SOH can deliver only about seventy percent
 of its original peak power. This must be accounted for when sizing a UPS:
 always derate peak power for aged cells, not just energy capacity.
 
+
+============================================================
+SECTION 2.12 — SERIES AND PARALLEL PACKS
+============================================================
+
+Real LFP packs are not single cells. They are groups of cells connected together.
+How those cells are connected changes everything about how the BMS must manage them.
+
+SERIES STRINGS — VOLTAGE ADDS UP
+
+When cells are connected in series — one after another — their voltages add up
+while they all carry the same current.
+
+Sixteen cells in series: sixteen times three-point-two volts equals fifty-one-point-two volts.
+At full charge: sixteen times three-point-six-five equals fifty-eight-point-four volts.
+At the cutoff: sixteen times two-point-five equals forty volts.
+
+This is the "forty-eight volt nominal" system used in home energy storage.
+
+The most important consequence of series connection: the weakest cell sets the limit.
+All cells carry the same current. When the cell with the lowest capacity runs empty,
+its voltage hits the cutoff — and the BMS must stop the entire discharge,
+even though fifteen other cells still have charge left.
+
+This is why the BMS must measure every cell's voltage individually, all the time.
+
+A common shortcut in cheap BMS designs: measure only the total pack voltage
+and divide by the number of cells to estimate the average. This is dangerous.
+If cell seven is at two-point-three volts while the others are at three-point-five,
+the total pack voltage looks completely normal — about fifty-four-point-five volts.
+Meanwhile, cell seven is being driven below its safe limit. Its copper current
+collector is dissolving. After a few such events, cell seven fails with an internal
+short circuit — which then dumps all the other cells' energy through the fault.
+Per-cell voltage monitoring is not a premium feature. It is the minimum safe architecture.
+
+PARALLEL GROUPS — CAPACITY ADDS UP
+
+When cells are connected in parallel — all positive terminals together,
+all negative terminals together — their capacities add while the voltage stays the same.
+
+Two two-eighty amp-hour cells in parallel: five-hundred-and-sixty amp-hours total.
+Parallel cells naturally balance themselves — if one gets slightly higher voltage,
+current flows automatically to equalise them. No active balancing is needed
+within a parallel group.
+
+The risk: if one parallel cell fails internally — a short circuit — it pulls charge
+from all the other cells in the group at potentially destructive current levels.
+
+THERMAL GRADIENTS WITHIN A MODULE
+
+In a sixteen-cell module, not every cell runs at the same temperature.
+Cells in the middle of a stack can be five to fifteen degrees hotter than
+the ones on the edges.
+
+That temperature difference causes uneven aging. Inner cells develop higher resistance
+faster, carry less current, and force the outer cells to work harder.
+Over years of cycling, this imbalance compounds.
+
+The BMS should monitor temperature at multiple points inside the module —
+not just on the outer surface — and include the temperature gradient in its
+health tracking models.
+
+CELL BALANCING — KEEPING CELLS IN STEP
+
+Over time, cells in a series string drift apart. Differences in manufacturing,
+slight differences in temperature, and tiny differences in self-discharge rate
+all cause one cell to have slightly more or less charge than its neighbours
+after each cycle.
+
+If left uncorrected, the weakest cell hits the lower cutoff before the others
+are empty, and the strongest cell hits the upper cutoff before the others
+are fully charged. The usable capacity of the pack shrinks — not because the
+cells have aged, but because they are out of step.
+
+Passive balancing is the most common solution. A small resistor is switched
+across each cell that is too full, burning off a little charge as heat
+until all cells are at the same level.
+
+The best time to balance is at the end of a charge cycle — when all cells are
+approaching their upper voltage limit. The cell that is slightly more full
+hits the limit first, and the balancing resistor bleeds off the excess.
+The other cells continue charging and eventually catch up.
+
+Fifty-six hours to correct a thirty-millivolt imbalance using a ten-ohm resistor —
+as we calculated earlier — shows why balancing must happen over many charging cycles,
+not in a single session.
+
