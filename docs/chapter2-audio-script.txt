@@ -121,3 +121,54 @@ Upper limit: three point six five volts per cell. Above this, the chemistry brea
 Lower limit: two point five volts per cell. Below this, copper dissolution begins.
 These are absolute limits. The BMS must never allow any cell to cross them.
 
+
+============================================================
+SECTION 2.3 — CELL FORMATS: CYLINDRICAL, PRISMATIC, POUCH
+============================================================
+
+Before we go deeper into the chemistry, let's briefly cover cell formats —
+because the format affects how the BMS interacts with the cells physically.
+
+There are three main formats for lithium-ion cells.
+
+CYLINDRICAL CELLS
+
+The cylindrical cell wraps the anode, cathode, and separator into a tight spiral
+— like a jellyroll — and seals it inside a metal can. The most famous sizes are
+the eighteen-six-fifty, which is eighteen millimetres wide and sixty-five millimetres
+tall, and the newer forty-six-eighty, which is forty-six millimetres wide and
+eighty millimetres tall.
+
+Cylindrical cells are mechanically robust. The round shape resists deformation under
+internal pressure. Their weakness: they pack together with air gaps between them,
+which wastes volume. And they generate heat in the centre of the spiral, which is
+hard to conduct away.
+
+For LFP home energy storage, cylindrical cells are less common than prismatic.
+
+PRISMATIC CELLS
+
+Prismatic cells stack flat sheets of anode, cathode, and separator inside a rigid
+aluminium or steel case. No wasted space between cells. Flat surfaces press together
+efficiently. Easy to stack into a module.
+
+The two-eighty amp-hour prismatic LFP cell — the one used in our reference design —
+is the dominant format for home energy storage. It is roughly one hundred and
+seventy-five millimetres tall, seventy-one millimetres wide, and twenty-seven
+millimetres thick. One cell weighs about five and a half kilograms.
+
+The thermal concern with prismatic cells: heat is generated uniformly across the
+flat surfaces, but the centre of a large cell stack is still harder to cool
+than the edges. The BMS must monitor temperature in multiple locations,
+not just at the surface.
+
+POUCH CELLS
+
+Pouch cells are flat, flexible cells sealed in a laminated aluminium-plastic bag.
+No rigid case. Maximum energy density — nothing wasted on a heavy metal housing.
+
+The downside: they swell as they age and cycle. The BMS enclosure must allow for
+this swelling, and the BMS must monitor swelling-induced pressure as a health
+indicator. Pouch cells are common in electric vehicles but less common in
+stationary energy storage.
+
