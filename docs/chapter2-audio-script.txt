@@ -33,3 +33,49 @@ running at forty-eight volts nominal, storing about fourteen point three kilowat
 
 Let's start at the very beginning — inside the cell.
 
+
+============================================================
+SECTION 2.1 — HOW A BATTERY CELL ACTUALLY WORKS
+============================================================
+
+Before we look at lithium iron phosphate specifically, we need to understand
+what every rechargeable battery has in common.
+
+A cell is a device that converts chemical energy into electrical energy —
+and back again. That "and back again" part is what makes it rechargeable.
+
+Every cell has three parts.
+
+The first part is the negative electrode — called the anode during discharge.
+In our LFP cell, this is graphite — the same material found in pencils.
+
+The second part is the positive electrode — called the cathode during discharge.
+In our LFP cell, this is lithium iron phosphate — a compound of lithium, iron,
+phosphorus, and oxygen.
+
+The third part is the electrolyte — a liquid that sits between the two electrodes.
+It is not a conductor of electrons, but it is a conductor of lithium ions
+— charged lithium atoms.
+
+Here is what happens when the cell discharges — when it is powering a load.
+
+Lithium atoms inside the graphite anode give up an electron each. Those electrons
+travel through the external circuit — through your inverter, your load, your wires.
+Meanwhile, the lithium ions — now positively charged because they lost an electron —
+travel through the electrolyte to the cathode.
+
+At the cathode, the iron atoms in the lithium iron phosphate absorb those electrons
+coming from the external circuit. The lithium ions arriving from the electrolyte
+slot into the cathode crystal structure. Energy has been converted from chemical form
+to electrical form.
+
+Charging reverses every step. External voltage pushes electrons back through the
+circuit in the opposite direction. Lithium ions migrate back to the anode.
+The chemical state is restored. Energy is stored again.
+
+This back-and-forth migration of lithium ions is called intercalation.
+The lithium is not reacting in a destructive sense — it is not being consumed.
+It is sliding into and out of crystal structures, like poker chips being picked up
+from one stack and placed on another. That is why lithium-ion cells can be recharged
+thousands of times without the fundamental chemistry breaking down.
+
