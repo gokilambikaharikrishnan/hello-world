@@ -79,3 +79,45 @@ It is sliding into and out of crystal structures, like poker chips being picked 
 from one stack and placed on another. That is why lithium-ion cells can be recharged
 thousands of times without the fundamental chemistry breaking down.
 
+
+============================================================
+SECTION 2.2 — THE LFP CATHODE REACTION
+============================================================
+
+Now let's look specifically at what happens inside the lithium iron phosphate cathode.
+
+The LFP cathode is made of tiny particles — each one a crystal of iron phosphate.
+When the cell is fully charged, those crystals hold lithium atoms in their structure.
+The technical name for the fully lithiated form is lithium iron phosphate — LiFePO4.
+
+When the cell discharges, lithium leaves the cathode crystal. The crystal that remains
+— after the lithium is gone — is simply iron phosphate. Written as FePO4.
+Same crystal structure. No lithium inside.
+
+Here is the most important thing about this reaction.
+
+There is no in-between state. A given crystal particle is either in the lithiated form
+— full of lithium — or in the unlithiated form — empty of lithium. There is no state
+where a particle is, say, half full of lithium.
+
+Think of it like a light switch. It is either on or off. Not dimmed.
+
+This "either full or empty" behaviour is called a two-phase reaction. And it has a
+profound consequence for everything the BMS has to do.
+
+When a two-phase reaction is happening — when some particles are full and others are
+empty and the conversion is in progress — the voltage of the cell stays almost perfectly
+flat. It barely moves. The voltage only changes noticeably when almost all particles
+have converted, either to the full state or the empty state.
+
+This flat voltage region is called the plateau. For LFP, it sits at roughly
+three point three to three point four volts per cell. And it covers most of the
+cell's useful charge range — from about twenty percent full to about ninety percent full.
+
+That flat plateau is both a gift and a curse, as we will see in a moment.
+
+The voltage windows the BMS must enforce are:
+Upper limit: three point six five volts per cell. Above this, the chemistry breaks down.
+Lower limit: two point five volts per cell. Below this, copper dissolution begins.
+These are absolute limits. The BMS must never allow any cell to cross them.
+
