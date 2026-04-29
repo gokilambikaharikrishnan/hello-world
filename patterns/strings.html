@@ -1548,6 +1548,732 @@ int main(void) {
   <div class="trigger">When finding max of something in every window of fixed size k → think: init window, then slide add-right subtract-left in O(n).</div>
 </div>
 
+
+<div class="card" id="p21">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 21</span>
+    <span class="pattern-name">Valid Palindrome — Two Pointer</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">A word reads the same forwards and backwards. To check, place one finger on the first letter and one on the last. If they match, move both fingers inward. If they ever don't match, it's not a palindrome. If the fingers meet or cross without a mismatch, it is.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Two pointers from both ends, converging inward. For the "valid palindrome" variant (ignoring non-alphanumeric), skip non-alphanumeric characters before comparing. Compare case-insensitively using <code>tolower</code>.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Set <code>lo = 0</code>, <code>hi = strlen(s) - 1</code>.</li>
+    <li>While lo &lt; hi: skip non-alphanumeric chars from both ends.</li>
+    <li>If <code>tolower(s[lo]) != tolower(s[hi])</code>: return false.</li>
+    <li>Advance lo++, hi--. If loop completes: return true.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">"A man, a plan, a canal: Panama"
+  strip non-alpha → "amanaplanacanalpanama"
+  lo=0:'a' hi=19:'a' match → lo=1,hi=18
+  lo=1:'m' hi=18:'m' match → ...
+  all match → palindrome ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#include &lt;ctype.h&gt;
+
+int is_palindrome(const char *s) {
+    int lo = 0, hi = (int)strlen(s) - 1;
+    while (lo &lt; hi) {
+        while (lo &lt; hi &amp;&amp; !isalnum(s[lo])) lo++;   /* skip non-alnum */
+        while (lo &lt; hi &amp;&amp; !isalnum(s[hi])) hi--;
+        if (tolower(s[lo]) != tolower(s[hi])) return 0;
+        lo++; hi--;
+    }
+    return 1;
+}
+
+int main(void) {
+    printf("%d\n", is_palindrome("A man, a plan, a canal: Panama")); /* 1 */
+    printf("%d\n", is_palindrome("race a car"));                     /* 0 */
+    printf("%d\n", is_palindrome(" "));                              /* 1 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">"racecar":
+  lo=0:'r', hi=6:'r' → match, lo=1,hi=5
+  lo=1:'a', hi=5:'a' → match, lo=2,hi=4
+  lo=2:'c', hi=4:'c' → match, lo=3,hi=3
+  lo >= hi → return 1 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Inner while loops need the lo &lt; hi guard</div>
+    <p>The inner <code>while (!isalnum(s[lo])) lo++</code> must also check <code>lo &lt; hi</code>. Without it, on an all-punctuation string, lo would overshoot hi and you'd compare garbage indices.</p>
+  </div>
+  <div class="leetcode"><span>125 · Valid Palindrome</span><span>680 · Valid Palindrome II</span></div>
+  <div class="trigger">When checking palindrome → think: two pointers from both ends, skip non-alnum, compare tolower.</div>
+</div>
+
+<div class="card" id="p22">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 22</span>
+    <span class="pattern-name">Expand Around Center</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">Drop a stone in a pond — ripples expand outward from the center. To find palindromes, do the same: stand at each character (or between two characters), and expand outward as long as the characters on both sides match. The longest expansion you find anywhere is the longest palindromic substring.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">A palindrome expands from a center. There are <code>2n-1</code> possible centers: n odd-length centers (each character) and n-1 even-length centers (between each pair of adjacent characters). Expand from each center, record the longest.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>For each center <code>i</code> from 0 to n-1: expand odd (lo=hi=i) and even (lo=i, hi=i+1).</li>
+    <li>Expand while <code>lo &ge; 0 &amp;&amp; hi &lt; n &amp;&amp; s[lo] == s[hi]</code>: lo--, hi++.</li>
+    <li>After expansion: palindrome was <code>s[lo+1..hi-1]</code>, length = hi-lo-1.</li>
+    <li>Track best start and length across all centers.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">"babad":
+  center i=0 'b': expand odd → just 'b', len=1
+  center i=1 'a': expand odd → 'bab', lo=0,hi=2, len=3
+  center i=2 'b': expand odd → 'aba', lo=1,hi=3, len=3
+  center i=3 'a': expand odd → just 'a', len=1
+  max = "bab" or "aba" (both len=3) ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+/* Returns length of palindrome centered at (lo, hi) */
+static int expand(const char *s, int lo, int hi, int n) {
+    while (lo &gt;= 0 &amp;&amp; hi &lt; n &amp;&amp; s[lo] == s[hi]) {
+        lo--; hi++;
+    }
+    return hi - lo - 1;   /* length after over-expansion */
+}
+
+void longest_palindrome(const char *s, char *out) {
+    int n = (int)strlen(s), best_start = 0, best_len = 1;
+    for (int i = 0; i &lt; n; i++) {
+        int odd  = expand(s, i, i,   n);   /* odd-length center */
+        int even = expand(s, i, i+1, n);   /* even-length center */
+        int best = odd &gt; even ? odd : even;
+        if (best &gt; best_len) {
+            best_len = best;
+            best_start = i - (best - 1) / 2;   /* back-calculate start */
+        }
+    }
+    strncpy(out, s + best_start, best_len);
+    out[best_len] = '\0';
+}
+
+int main(void) {
+    char out[100];
+    longest_palindrome("babad", out);   printf("%s\n", out); /* bab */
+    longest_palindrome("cbbd",  out);   printf("%s\n", out); /* bb */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">expand("cbbd", 1, 2, 4):  center between 'b','b'
+  s[1]='b'==s[2]='b' → lo=0,hi=3
+  s[0]='c'≠s[3]='d' → stop
+  len = 3-0-1 = 2 → "bb" ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Even-length center starts at (i, i+1)</div>
+    <p>Don't forget to check even-length palindromes. "abba" has its center between two 'b's — an odd-center expansion starting at a single character will never find it. Always check both <code>expand(i,i)</code> and <code>expand(i, i+1)</code> at each position.</p>
+  </div>
+  <div class="leetcode"><span>5 · Longest Palindromic Substring</span><span>647 · Palindromic Substrings</span></div>
+  <div class="trigger">When finding palindromic substrings → think: expand around each center (both odd and even), O(n²) total.</div>
+</div>
+
+
+<div class="card" id="p23">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 23</span>
+    <span class="pattern-name">Longest Palindromic Substring — DP Table</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">Instead of re-discovering palindromes from scratch at every center, remember past results. If you know "aba" is a palindrome, then "xabax" is a palindrome if the outer characters match — no need to re-check the inner string. A 2D boolean table records which substrings are palindromes.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight"><code>dp[i][j] = 1</code> if <code>s[i..j]</code> is a palindrome. Base cases: single chars (all true), adjacent equal chars (true). Recurrence: <code>dp[i][j] = (s[i]==s[j]) &amp;&amp; dp[i+1][j-1]</code>. Fill in order of increasing substring length.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Initialize: all <code>dp[i][i]=1</code> (length-1 palindromes).</li>
+    <li>For length 2: <code>dp[i][i+1] = (s[i]==s[i+1])</code>.</li>
+    <li>For length 3 to n: <code>dp[i][j] = (s[i]==s[j]) &amp;&amp; dp[i+1][j-1]</code>.</li>
+    <li>Track best (i,j) where dp[i][j]==1 and j-i is maximum.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">"babad" (n=5), dp table (1=palindrome):
+       b  a  b  a  d
+  b [[ 1  0  1  0  0 ]
+  a [  0  1  0  1  0 ]
+  b [  0  0  1  0  0 ]
+  a [  0  0  0  1  0 ]
+  d [  0  0  0  0  1 ]]
+  longest: dp[0][2]=1 → "bab", len=3 ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+#define MAXN 1001
+
+void longest_palindrome_dp(const char *s, char *out) {
+    int n = (int)strlen(s);
+    int dp[MAXN][MAXN] = {0};
+    int best_start = 0, best_len = 1;
+
+    /* Base: every single character is a palindrome */
+    for (int i = 0; i &lt; n; i++) dp[i][i] = 1;
+
+    /* Base: length-2 substrings */
+    for (int i = 0; i &lt; n-1; i++) {
+        if (s[i] == s[i+1]) {
+            dp[i][i+1] = 1;
+            if (best_len &lt; 2) { best_start = i; best_len = 2; }
+        }
+    }
+
+    /* Fill for length 3 to n */
+    for (int len = 3; len &lt;= n; len++) {
+        for (int i = 0; i &lt;= n - len; i++) {
+            int j = i + len - 1;
+            if (s[i] == s[j] &amp;&amp; dp[i+1][j-1]) {
+                dp[i][j] = 1;
+                if (len &gt; best_len) { best_start = i; best_len = len; }
+            }
+        }
+    }
+
+    strncpy(out, s + best_start, best_len);
+    out[best_len] = '\0';
+}
+
+int main(void) {
+    char out[100];
+    longest_palindrome_dp("babad", out); printf("%s\n", out); /* bab */
+    longest_palindrome_dp("cbbd",  out); printf("%s\n", out); /* bb */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">"cbbd":
+  dp[0][0]=dp[1][1]=dp[2][2]=dp[3][3]=1
+  len=2: dp[1][2]: s[1]='b'==s[2]='b' → dp[1][2]=1, best=2,"bb"
+  len=3: dp[0][2]: s[0]='c'≠s[2]='b' → skip
+         dp[1][3]: s[1]='b'≠s[3]='d' → skip
+  len=4: dp[0][3]: s[0]='c'≠s[3]='d' → skip
+  result: "bb" ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: O(n²) space — use expand-around-center for O(1) space</div>
+    <p>The DP table is O(n²) time AND space. For large strings (n=1000+), this is 1M entries. The expand-around-center approach (Pattern 22) gives the same O(n²) time with O(1) space. Use DP when you need to reuse the palindrome membership table for other subproblems.</p>
+  </div>
+  <div class="leetcode"><span>5 · Longest Palindromic Substring</span><span>516 · Longest Palindromic Subsequence</span></div>
+  <div class="trigger">When you need a reusable palindrome table (for other DP) → think: dp[i][j] = (s[i]==s[j]) &amp;&amp; dp[i+1][j-1].</div>
+</div>
+
+<div class="card" id="p24">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 24</span>
+    <span class="pattern-name">Palindrome Partitioning Check</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">You want to cut a string into pieces so that every piece is a palindrome. The minimum number of cuts needed is what you're after. This builds on knowing which substrings are palindromes (from the DP table) and then doing a second DP pass for the minimum cuts.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Two-phase DP. Phase 1: build <code>is_pal[i][j]</code> table. Phase 2: <code>cuts[i]</code> = min cuts for <code>s[0..i]</code>. If <code>s[0..i]</code> is already a palindrome, cuts[i]=0. Otherwise, try all last palindrome pieces: <code>cuts[i] = min(cuts[j-1] + 1)</code> for all j where <code>is_pal[j][i]</code> is true.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Build is_pal[n][n] as in Pattern 23.</li>
+    <li>cuts[i] = 0 if is_pal[0][i]. Otherwise cuts[i] = i (worst case: cut every char).</li>
+    <li>For j from 1 to i: if is_pal[j][i], cuts[i] = min(cuts[i], cuts[j-1]+1).</li>
+    <li>Return cuts[n-1].</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">"aab":
+  is_pal: [0][0]=1,'a'; [1][1]=1,'a'; [2][2]=1,'b'; [0][1]=1,"aa"
+  cuts[0]=0 (is_pal[0][0]="a")
+  cuts[1]=0 (is_pal[0][1]="aa")
+  cuts[2]: is_pal[0][2]? "aab"→0. Try j=1: is_pal[1][2]? "ab"→0. j=2: is_pal[2][2]=1→cuts[1]+1=1
+  cuts[2]=1 → one cut → "aa|b" ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+#define MAXN 201
+
+int min_cut(const char *s) {
+    int n = (int)strlen(s);
+    int is_pal[MAXN][MAXN] = {0};
+
+    /* Phase 1: build palindrome table */
+    for (int i = 0; i &lt; n; i++) is_pal[i][i] = 1;
+    for (int i = 0; i &lt; n-1; i++) is_pal[i][i+1] = (s[i]==s[i+1]);
+    for (int len = 3; len &lt;= n; len++)
+        for (int i = 0; i &lt;= n-len; i++) {
+            int j = i+len-1;
+            is_pal[i][j] = (s[i]==s[j]) &amp;&amp; is_pal[i+1][j-1];
+        }
+
+    /* Phase 2: min cuts DP */
+    int cuts[MAXN];
+    for (int i = 0; i &lt; n; i++) {
+        if (is_pal[0][i]) { cuts[i] = 0; continue; }
+        cuts[i] = i;   /* max = i cuts (one per char) */
+        for (int j = 1; j &lt;= i; j++)
+            if (is_pal[j][i] &amp;&amp; cuts[j-1]+1 &lt; cuts[i])
+                cuts[i] = cuts[j-1] + 1;
+    }
+    return cuts[n-1];
+}
+
+int main(void) {
+    printf("%d\n", min_cut("aab"));      /* 1 ("aa|b") */
+    printf("%d\n", min_cut("a"));        /* 0 */
+    printf("%d\n", min_cut("ab"));       /* 1 */
+    printf("%d\n", min_cut("aaabaa"));   /* 1 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">min_cut("ab"):
+  is_pal[0][0]=1, is_pal[1][1]=1, is_pal[0][1]=(a==b)=0
+  cuts[0]=0 (is_pal[0][0])
+  cuts[1]: is_pal[0][1]=0, not free. j=1: is_pal[1][1]=1→cuts[0]+1=1
+  cuts[1]=1 → return 1 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Phase ordering matters</div>
+    <p>The palindrome table must be fully built before starting the cuts DP. Interleaving the two phases causes the cuts DP to read uninitialized palindrome values and produce wrong answers.</p>
+  </div>
+  <div class="leetcode"><span>132 · Palindrome Partitioning II</span><span>131 · Palindrome Partitioning</span></div>
+  <div class="trigger">When finding min cuts for palindrome partition → think: build is_pal table first, then cuts[i] = min(cuts[j-1]+1) over valid palindrome endings.</div>
+</div>
+
+
+<div class="card" id="p25">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 25</span>
+    <span class="pattern-name">Two-Pointer Reverse Words in a String</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">"the sky is blue" → "blue is sky the". The trick: reverse the whole string first, then reverse each individual word. Two reversal passes, both in-place, both using the same two-pointer swap technique.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Reverse-all then reverse-each-word is a classic in-place trick that avoids extra memory. After reversing the full string, each word is in the right position but spelled backwards — reversing each word individually restores the correct spelling.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Reverse the entire string in-place.</li>
+    <li>Find each word (space-delimited); reverse it in-place.</li>
+    <li>Handle multiple spaces: optionally compact spaces first.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">"the sky is blue"
+Step 1: reverse all → "eulb si yks eht"
+Step 2: reverse each word:
+  "eulb" → "blue"
+  "si"   → "is"
+  "yks"  → "sky"
+  "eht"  → "the"
+Result: "blue is sky the" ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+static void rev_range(char *s, int lo, int hi) {
+    while (lo &lt; hi) {
+        char tmp = s[lo]; s[lo] = s[hi]; s[hi] = tmp;
+        lo++; hi--;
+    }
+}
+
+void reverse_words(char *s) {
+    int n = (int)strlen(s);
+    rev_range(s, 0, n-1);   /* step 1: reverse entire string */
+
+    int start = 0;
+    for (int i = 0; i &lt;= n; i++) {
+        if (s[i] == ' ' || s[i] == '\0') {   /* word boundary */
+            rev_range(s, start, i-1);          /* step 2: reverse word */
+            start = i + 1;
+        }
+    }
+}
+
+int main(void) {
+    char s[] = "the sky is blue";
+    reverse_words(s);
+    printf("%s\n", s);   /* "blue is sky the" */
+
+    char t[] = "hello world";
+    reverse_words(t);
+    printf("%s\n", t);   /* "world hello" */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">"hello world" (n=11):
+  rev_range(0,10): "dlrow olleh"
+  i=5: s[5]=' ' → rev_range(0,4): "dlrow"→"world", start=6
+  i=11: s[11]='\0' → rev_range(6,10): "olleh"→"hello"
+  result: "world hello" ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Leading/trailing spaces and multiple spaces</div>
+    <p>LeetCode 151 requires stripping leading/trailing spaces and collapsing multiple spaces between words. The simple in-place approach above doesn't handle these — you'd need a separate compaction pass first, or a write-pointer approach that copies words directly to their correct positions.</p>
+  </div>
+  <div class="leetcode"><span>151 · Reverse Words in a String</span><span>186 · Reverse Words in a String II</span></div>
+  <div class="trigger">When reversing word order → think: reverse-all then reverse-each-word (two-pass in-place).</div>
+</div>
+
+<div class="card" id="p26">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 26</span>
+    <span class="pattern-name">Valid Parentheses with String</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">A ticket checker at a concert: every time someone enters (open bracket), they stamp a ticket. Every time someone exits (close bracket), they tear off a stamp. At any moment, if there are no stamps left when someone tries to exit, or if stamps remain when the concert ends, something went wrong.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">For single bracket type: a simple counter suffices — increment on '(', decrement on ')'. Invalid if counter ever goes negative, or if non-zero at end. For mixed bracket types (()[]{}) use a stack: push open brackets, pop and verify matching close bracket.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Walk the string character by character.</li>
+    <li>Open bracket → push onto stack.</li>
+    <li>Close bracket → if stack empty or top doesn't match: invalid.</li>
+    <li>Pop the matching open bracket. After loop: valid iff stack is empty.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">"({[]})":
+  '(' → stack: ['(']
+  '{' → stack: ['(', '{']
+  '[' → stack: ['(', '{', '[']
+  ']' → pop '[', matches → stack: ['(', '{']
+  '}' → pop '{', matches → stack: ['(']
+  ')' → pop '(', matches → stack: []
+  empty → VALID ✓
+
+"([)]":
+  '(' push, '[' push, ')' → top='[' ≠ '(' → INVALID ✗</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+int is_valid_parens(const char *s) {
+    char stack[10001];
+    int top = 0;   /* stack pointer (empty when top==0) */
+
+    for (; *s; s++) {
+        if (*s == '(' || *s == '[' || *s == '{') {
+            stack[top++] = *s;   /* push open bracket */
+        } else {
+            if (top == 0) return 0;   /* close with empty stack */
+            char open = stack[--top]; /* pop */
+            if (*s == ')' &amp;&amp; open != '(') return 0;
+            if (*s == ']' &amp;&amp; open != '[') return 0;
+            if (*s == '}' &amp;&amp; open != '{') return 0;
+        }
+    }
+    return top == 0;   /* valid only if stack is empty at end */
+}
+
+int main(void) {
+    printf("%d\n", is_valid_parens("()[]{}"));   /* 1 */
+    printf("%d\n", is_valid_parens("([)]"));     /* 0 */
+    printf("%d\n", is_valid_parens("{[]}"));     /* 1 */
+    printf("%d\n", is_valid_parens("]"));        /* 0 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">"([)]":
+  '(' → push, top=1, stack=['(']
+  '[' → push, top=2, stack=['(','[']
+  ')' → pop '[', check ')' needs '(' but got '[' → return 0 ✗ ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Must check both empty stack on close AND non-empty stack at end</div>
+    <p>Two failure modes: (1) more closing brackets than opening ones — caught by empty-stack check during traversal. (2) Unclosed opening brackets — caught by <code>top != 0</code> at the end. Missing either check gives wrong results on inputs like "(" (returns 1 incorrectly if you only check during traversal).</p>
+  </div>
+  <div class="leetcode"><span>20 · Valid Parentheses</span><span>22 · Generate Parentheses</span></div>
+  <div class="trigger">When checking bracket validity → think: stack — push on open, pop-and-match on close, empty at end = valid.</div>
+</div>
+
+
+<div class="card" id="p27">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 27</span>
+    <span class="pattern-name">Remove K Digits — Monotonic Stack</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">You're building the smallest possible number by removing exactly k digits from a sequence. Greedy rule: whenever a digit is larger than the next one, remove it — because keeping a smaller leading digit always makes the number smaller. A monotonic stack tracks the kept digits in increasing order.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Maintain a stack of kept digits in non-decreasing order. For each digit, pop larger digits from the top while k > 0. After processing all digits, if k > 0, pop the last k digits (they're largest). Strip leading zeros, return the result.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Iterate through digits; for each digit d while stack top &gt; d and k &gt; 0: pop, k--.</li>
+    <li>Push d. After loop: if k &gt; 0, truncate stack by k from the top.</li>
+    <li>Strip leading zeros. If empty, return "0".</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">"1432219", k=3:
+  push '1' → [1]
+  push '4' → [1,4]
+  '3'&lt;'4': pop 4 (k=2) → [1], push 3 → [1,3]
+  '2'&lt;'3': pop 3 (k=1) → [1], push 2 → [1,2]
+  '2'==top: push → [1,2,2]
+  '1'&lt;'2': pop 2 (k=0) → [1,2], push 1 → [1,2,1]
+  '9': push → [1,2,1,9]
+  k=0, done → "1219" ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+void remove_k_digits(const char *num, int k, char *out) {
+    int n = (int)strlen(num);
+    char stack[n + 1];
+    int top = 0;
+
+    for (int i = 0; i &lt; n; i++) {
+        /* Pop larger digits while we still have removals left */
+        while (top &gt; 0 &amp;&amp; k &gt; 0 &amp;&amp; stack[top-1] &gt; num[i]) {
+            top--; k--;
+        }
+        stack[top++] = num[i];
+    }
+    top -= k;   /* if k removals remain, remove from the end (largest left) */
+
+    /* Strip leading zeros */
+    int start = 0;
+    while (start &lt; top - 1 &amp;&amp; stack[start] == '0') start++;
+    if (top == 0) { out[0]='0'; out[1]='\0'; return; }
+    strncpy(out, stack + start, top - start);
+    out[top - start] = '\0';
+}
+
+int main(void) {
+    char out[50];
+    remove_k_digits("1432219", 3, out); printf("%s\n", out); /* "1219" */
+    remove_k_digits("10200",   1, out); printf("%s\n", out); /* "200"  */
+    remove_k_digits("10",      2, out); printf("%s\n", out); /* "0"    */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">"10200", k=1:
+  '1': stack=[1]
+  '0': top>0, stack[0]='1'>'0', k=1>0 → pop,k=0; push '0' → [0]
+  '2': push → [0,2]
+  '0': push → [0,2,0]
+  '0': push → [0,2,0,0]
+  k=0 done. strip leading zero: start=1 (skip first '0')
+  result: "200" ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Trailing removal vs leading zero stripping are separate steps</div>
+    <p>After the main loop, if k &gt; 0, the stack is already in non-decreasing order — the last k digits are the largest and should be dropped (<code>top -= k</code>). Then separately strip leading zeros. Both steps are needed and must happen in that order.</p>
+  </div>
+  <div class="leetcode"><span>402 · Remove K Digits</span></div>
+  <div class="trigger">When removing k digits to make smallest number → think: monotonic stack, pop larger digit when smaller arrives, k tracks removals left.</div>
+</div>
+
+<div class="card" id="p28">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 28</span>
+    <span class="pattern-name">String Compression — Run-Length Encoding</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">Instead of writing "aaaabbbcc", write "a4b3c2" — group consecutive identical characters and write the character followed by its count. If any group has count 1, just write the character. The compressed form is shorter only when there are long runs.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Walk the string with a read pointer, counting consecutive identical characters. When the character changes (or end is reached), write the character and count to the output. For in-place compression, use a separate write index that only moves forward.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Start with read=0, write=0.</li>
+    <li>While read &lt; n: record current char, count its consecutive run.</li>
+    <li>Write char to s[write++]. If count &gt; 1, write each digit of count.</li>
+    <li>Return write (new length).</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">"aaabbc":
+  run 'a', count=3 → write 'a','3'
+  run 'b', count=2 → write 'b','2'
+  run 'c', count=1 → write 'c' (no count for 1)
+  result: "a3b2c" (len=5, was 6)</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+
+/* In-place compression; returns new length */
+int compress(char *s, int n) {
+    int read = 0, write = 0;
+    while (read &lt; n) {
+        char cur = s[read];
+        int count = 0;
+        /* Count the run */
+        while (read &lt; n &amp;&amp; s[read] == cur) { read++; count++; }
+        s[write++] = cur;   /* write the character */
+        if (count &gt; 1) {
+            /* Write count as digits (multi-digit counts possible) */
+            char tmp[12];
+            int d = 0;
+            int c = count;
+            while (c &gt; 0) { tmp[d++] = '0' + (c % 10); c /= 10; }
+            /* tmp holds digits in reverse; write forward */
+            for (int i = d-1; i &gt;= 0; i--) s[write++] = tmp[i];
+        }
+    }
+    s[write] = '\0';
+    return write;
+}
+
+int main(void) {
+    char s[] = "aaabbc";
+    int len = compress(s, 6);
+    printf("%s (len=%d)\n", s, len);   /* "a3b2c" len=5 */
+
+    char t[] = "aabbccc";
+    len = compress(t, 7);
+    printf("%s (len=%d)\n", t, len);   /* "a2b2c3" len=6 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">"aabbccc", n=7:
+  read=0: cur='a', count=2 (read→2), write 'a','2' → write=2
+  read=2: cur='b', count=2 (read→4), write 'b','2' → write=4
+  read=4: cur='c', count=3 (read→7), write 'c','3' → write=6
+  s="a2b2c3\0", len=6 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Multi-digit counts need digit-by-digit writing</div>
+    <p>If a run is 100+ characters long, the count "100" is three digits. You can't write it as a single char. Extract digits via repeated modulo (as above) or use <code>snprintf</code> to a temporary buffer then copy. The LeetCode 443 problem guarantees count fits in a few digits, but be aware.</p>
+  </div>
+  <div class="leetcode"><span>443 · String Compression</span><span>38 · Count and Say</span></div>
+  <div class="trigger">When compressing consecutive runs → think: count run, write char + count (if &gt;1), advance read past the whole run.</div>
+</div>
+
+
+<div class="card" id="p29">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 29</span>
+    <span class="pattern-name">Zigzag Conversion</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">Write "PAYPALISHIRING" in a zigzag across 3 rows, then read row by row. The characters bounce down and then back up like a sine wave. Instead of actually allocating a 2D grid, you figure out which row each character belongs to, group them, and concatenate.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Simulate the zigzag direction: a row counter starts at 0, goes down to numRows-1, then reverses back up. Each character goes into its current row's bucket. At the end, concatenate all row buckets.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Create numRows string buffers. Track current row and direction (+1 down, -1 up).</li>
+    <li>Append each character to <code>rows[cur_row]</code>.</li>
+    <li>Flip direction when cur_row == 0 or cur_row == numRows-1.</li>
+    <li>Concatenate all rows into output.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">"PAYPALISHIRING", numRows=3:
+Row 0: P   A   H   N      → "PAHN"
+Row 1: A P L S I I G      → "APLSIIG"
+Row 2: Y   I   R          → "YIR"
+Output: "PAHNAPLSIIGYIR" ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+void zigzag(const char *s, int num_rows, char *out) {
+    if (num_rows == 1) { strcpy(out, s); return; }
+
+    int n = (int)strlen(s);
+    char rows[num_rows][n+1];
+    int lens[num_rows];
+    for (int i = 0; i &lt; num_rows; i++) { rows[i][0]='\0'; lens[i]=0; }
+
+    int cur = 0, dir = 1;   /* start at row 0, going down */
+    for (int i = 0; i &lt; n; i++) {
+        rows[cur][lens[cur]++] = s[i];   /* append to current row */
+        if (cur == 0)            dir = 1;   /* hit top, go down */
+        if (cur == num_rows-1)   dir = -1;  /* hit bottom, go up */
+        cur += dir;
+    }
+
+    int pos = 0;
+    for (int r = 0; r &lt; num_rows; r++) {
+        memcpy(out + pos, rows[r], lens[r]);
+        pos += lens[r];
+    }
+    out[pos] = '\0';
+}
+
+int main(void) {
+    char out[100];
+    zigzag("PAYPALISHIRING", 3, out);
+    printf("%s\n", out);   /* "PAHNAPLSIIGYIR" */
+
+    zigzag("PAYPALISHIRING", 4, out);
+    printf("%s\n", out);   /* "PINALSIGYAHRPI" */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">"AB", num_rows=2:
+  i=0:'A', cur=0, dir=1 → rows[0]="A"; cur==0→dir=1, cur+=1=1
+  i=1:'B', cur=1, dir=-1 → rows[1]="B"; cur==1(num_rows-1)→dir=-1, cur+=(-1)=0
+  concat: "A"+"B" = "AB" ✓ (no change for 2-row, 2-char input)</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Direction flip at boundary, not after</div>
+    <p>Flip direction when you <em>arrive</em> at row 0 or numRows-1 (before the next move), not when you leave it. Otherwise the character at the boundary row goes to the correct row but the next character goes in the wrong direction for one step.</p>
+  </div>
+  <div class="leetcode"><span>6 · Zigzag Conversion</span></div>
+  <div class="trigger">When doing zigzag → think: row buckets + direction toggle at boundaries, then concatenate rows.</div>
+</div>
+
+<div class="card" id="p30">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 30</span>
+    <span class="pattern-name">String Parsing — Roman to Integer</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">Roman numerals mostly add from left to right: III = 3, VIII = 8. The exception: when a smaller numeral appears before a larger one, it subtracts — IV = 4 (5-1), IX = 9 (10-1). Walk right to left: if current value &lt; previous value, subtract it; otherwise add it.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Walking right-to-left simplifies the subtraction rule: at each position, compare current value to the maximum seen so far (from the right). If current is less, subtract it; otherwise add it and update the max. This avoids looking ahead.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Map each roman character to its value.</li>
+    <li>Walk right to left; track <code>prev</code> value.</li>
+    <li>If <code>val[s[i]] &lt; prev</code>: subtract; else add and update prev.</li>
+    <li>Return accumulated result.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">"MCMXCIV" → 1994
+  Right to left: V=5, I=1, C=100, X=10, M=1000, C=100, M=1000
+  V: add 5, prev=5
+  I: 1&lt;5 → subtract 1, result=4, prev=5
+  C: 100&gt;5 → add 100, prev=100
+  X: 10&lt;100 → subtract 10, prev=100
+  M: 1000&gt;100 → add 1000, prev=1000
+  C: 100&lt;1000 → subtract 100, prev=1000
+  M: 1000==1000 → add 1000, result=1994 ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+static int roman_val(char c) {
+    switch (c) {
+        case 'I': return 1;   case 'V': return 5;
+        case 'X': return 10;  case 'L': return 50;
+        case 'C': return 100; case 'D': return 500;
+        case 'M': return 1000;
+    }
+    return 0;
+}
+
+int roman_to_int(const char *s) {
+    int result = 0, prev = 0;
+    for (int i = (int)strlen(s)-1; i &gt;= 0; i--) {
+        int val = roman_val(s[i]);
+        if (val &lt; prev)
+            result -= val;   /* subtraction rule: smaller before larger */
+        else {
+            result += val;
+            prev = val;
+        }
+    }
+    return result;
+}
+
+int main(void) {
+    printf("%d\n", roman_to_int("III"));    /* 3 */
+    printf("%d\n", roman_to_int("IV"));     /* 4 */
+    printf("%d\n", roman_to_int("MCMXCIV"));/* 1994 */
+    printf("%d\n", roman_to_int("LVIII"));  /* 58 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">roman_to_int("IX"):
+  i=1: val('X')=10, prev=0, 10>=0 → result=10, prev=10
+  i=0: val('I')=1, 1&lt;10 → result=10-1=9
+  return 9 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Left-to-right approach needs lookahead</div>
+    <p>The alternative left-to-right approach requires checking <code>s[i+1]</code> to detect subtraction cases. Right-to-left eliminates lookahead by comparing against the running max — simpler and cleaner. Both are O(n) but right-to-left has no edge case for the last character.</p>
+  </div>
+  <div class="leetcode"><span>13 · Roman to Integer</span><span>12 · Integer to Roman</span></div>
+  <div class="trigger">When parsing Roman numerals → think: walk right-to-left, subtract if current &lt; previous-seen-max, else add.</div>
+</div>
+
 <!-- PATTERNS_END -->
 <script>hljs.highlightAll();</script>
 </body>
