@@ -30,6 +30,7 @@
 | ✅ 12 | strings.html | 21-30 | feat(strings): patterns 21-30 — palindromes, two-pointer, stack, zigzag, Roman numerals |
 | ✅ 13 | strings.html | 31-40 | feat(strings): patterns 31-40 — KMP, Rabin-Karp, edit distance, LCS, word break, regex DP |
 | ✅ 14 | linkedlist.html | 01-10 | feat(linkedlist): patterns 01-10 — node/traversal, insert, delete, reverse, k-group, middle |
+| ✅ 15 | linkedlist.html | 11-20 | feat(linkedlist): patterns 11-20 — Floyd cycle, intersection, palindrome, merge, sort, partition |
 
 ## arrays.html Progress
 - [x] Patterns 01–10 (Prefix Sum + Two Pointer basics)
@@ -51,7 +52,7 @@
 
 ## linkedlist.html Progress
 - [x] Patterns 01–10 (Basics, Insert, Delete, Reverse)
-- [ ] Patterns 11–20 (Fast/Slow Pointer, Merge, Sort)
+- [x] Patterns 11–20 (Fast/Slow Pointer, Merge, Sort)
 - [ ] Patterns 21–35 (Structural, Intersection, Math, Design)
 
 ## stacks.html Progress
