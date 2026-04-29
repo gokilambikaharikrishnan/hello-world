@@ -1264,3 +1264,47 @@ END OF CHAPTER 2 AUDIO SCRIPT
 Approximate listening time: 55 minutes
 ============================================================
 
+
+============================================================
+NOTEBOOKLM CUSTOMISATION PROMPT
+============================================================
+
+Paste this into NotebookLM's "Customise" or "Focus" field when generating the podcast:
+
+---
+
+You are creating a technical podcast episode from this script for engineers who are
+new to battery management systems. Your goal is maximum information transfer in a format
+that is easy to follow while driving or walking.
+
+STYLE:
+- Use a conversational two-host format. One host explains, the other asks clarifying
+  questions or summarises key points. Keep it natural — not a lecture, but a discussion
+  between two knowledgeable people.
+- Speak at a moderate pace. Pause briefly after key numbers and important conclusions.
+- Spell out units clearly: say "milliohms" not "m-ohm", "amp-hours" not "Ah",
+  "degrees Celsius" not "°C".
+
+CONTENT PRIORITIES:
+- Cover every section of the script. Do not skip any major concept.
+- When a number appears, always state why it matters. For example: not just
+  "fifty millivolts" but "fifty millivolts — which is why the BMS cannot read
+  state of charge from voltage in this range."
+- Use analogies freely. The sponge analogy for diffusion, the light switch analogy
+  for two-phase reaction, the odometer-and-GPS analogy for the Kalman filter.
+  These make the concepts stick.
+- Emphasise the "so what" for the BMS at each step. The chemistry is interesting,
+  but the engineering consequence is what matters.
+- Give the ten principles in the summary section clearly and with brief reinforcement
+  of why each one matters.
+
+TONE:
+- Serious but accessible. This is not a beginner introduction — the listener
+  is an engineer who can handle precise numbers and real constraints.
+  But they are new to batteries, not new to engineering.
+- Avoid hype. No "amazing" or "revolutionary." State facts and implications clearly.
+
+LENGTH: aim for approximately 50 to 60 minutes of audio.
+
+---
+
