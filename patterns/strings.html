@@ -2274,6 +2274,746 @@ int main(void) {
   <div class="trigger">When parsing Roman numerals → think: walk right-to-left, subtract if current &lt; previous-seen-max, else add.</div>
 </div>
 
+
+<div class="card" id="p31">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 31</span>
+    <span class="pattern-name">KMP — Failure Function (LPS Array)</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">You're searching for "abcabc" in a long text. After a mismatch at position 5, the naive approach restarts from scratch. But "abcabc" has a prefix "abc" that also appears as a suffix inside itself — so you already know those first 3 characters matched, and can restart from position 3, not 0. The failure function tells you exactly how far to jump back.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">The LPS (Longest Proper Prefix which is also Suffix) array for the pattern tells us: at position i, if a mismatch occurs, we can skip back to lps[i-1] instead of 0. This avoids re-comparing characters we already know matched. Building this array is O(m).</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>lps[0] = 0 always. Set len=0, i=1.</li>
+    <li>If pattern[i] == pattern[len]: lps[i] = ++len; i++.</li>
+    <li>Else if len &gt; 0: len = lps[len-1] (fall back, don't increment i).</li>
+    <li>Else: lps[i] = 0; i++.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">pattern = "abcabc"
+  i:    0  1  2  3  4  5
+  pat:  a  b  c  a  b  c
+  lps:  0  0  0  1  2  3
+
+lps[3]=1: "a" is longest proper prefix-suffix of "abca"
+lps[5]=3: "abc" is longest proper prefix-suffix of "abcabc"</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+void build_lps(const char *pat, int m, int *lps) {
+    lps[0] = 0;           /* always 0 for first character */
+    int len = 0, i = 1;
+    while (i &lt; m) {
+        if (pat[i] == pat[len]) {
+            lps[i++] = ++len;          /* extend current prefix-suffix */
+        } else if (len &gt; 0) {
+            len = lps[len-1];          /* fall back (don't advance i!) */
+        } else {
+            lps[i++] = 0;             /* no prefix-suffix, reset */
+        }
+    }
+}
+
+int main(void) {
+    const char *p = "abcabc";
+    int m = (int)strlen(p);
+    int lps[m];
+    build_lps(p, m, lps);
+    for (int i = 0; i &lt; m; i++) printf("%d ", lps[i]);
+    printf("\n");   /* 0 0 0 1 2 3 */
+
+    const char *p2 = "aabaabaaa";
+    int m2 = (int)strlen(p2);
+    int lps2[m2];
+    build_lps(p2, m2, lps2);
+    for (int i = 0; i &lt; m2; i++) printf("%d ", lps2[i]);
+    printf("\n");   /* 0 1 0 1 2 3 4 5 2 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">build_lps("aab", lps):
+  lps[0]=0, len=0, i=1
+  i=1: pat[1]='a'==pat[0]='a' → lps[1]=1, len=1, i=2
+  i=2: pat[2]='b'≠pat[1]='a', len=1>0 → len=lps[0]=0
+  i=2: pat[2]='b'≠pat[0]='a', len=0 → lps[2]=0, i=3
+  lps = [0,1,0] ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Don't increment i on the fallback step</div>
+    <p>When <code>len &gt; 0</code> and there's a mismatch, you set <code>len = lps[len-1]</code> but do NOT increment <code>i</code>. You're retrying position <code>i</code> with a shorter prefix. Incrementing <code>i</code> here skips a position and produces wrong lps values.</p>
+  </div>
+  <div class="leetcode"><span>28 · Find Index of First Occurrence (uses KMP)</span></div>
+  <div class="trigger">When preprocessing a pattern for KMP → think: lps[i] = length of longest proper prefix-suffix of pattern[0..i].</div>
+</div>
+
+<div class="card" id="p32">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 32</span>
+    <span class="pattern-name">KMP — Pattern Search</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">Armed with the failure function (Pattern 31), the search itself is elegant: walk the text with pointer j; walk the pattern with pointer k. On match, advance both. On mismatch, fall back using lps — but never retreat j. Each character of the text is visited at most once.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">KMP is O(n+m) because j (text pointer) never goes backwards. When a mismatch occurs at pattern position k, you reset k = lps[k-1] — effectively sliding the pattern right so the already-matched prefix aligns again. Text pointer j stays put.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Build lps[] for pattern. Set j=0 (text), k=0 (pattern).</li>
+    <li>While j &lt; n: if text[j]==pat[k]: j++, k++.</li>
+    <li>If k == m: match at j-k! Record; k = lps[k-1] (find next match).</li>
+    <li>Else if k &gt; 0: k = lps[k-1] (fall back pattern, keep j).</li>
+    <li>Else: j++ (no prefix to fall back to).</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">text="AABABAABAB", pat="ABAB"
+lps=[0,0,1,2]
+j=0,k=0: A==A→j=1,k=1
+j=1,k=1: A≠B→k=lps[0]=0
+j=1,k=0: A==A→j=2,k=1
+j=2,k=1: B==B→j=3,k=2
+j=3,k=2: A==A→j=4,k=3
+j=4,k=3: B==B→j=5,k=4==m → MATCH at 5-4=1
+k=lps[3]=2 (continue from prefix)
+j=5,k=2: A==A→j=6,k=3
+j=6,k=3: B==B→j=7,k=4==m → MATCH at 7-4=3 ... etc.</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+void build_lps(const char *pat, int m, int *lps) {
+    lps[0] = 0; int len = 0, i = 1;
+    while (i &lt; m) {
+        if (pat[i] == pat[len]) lps[i++] = ++len;
+        else if (len &gt; 0) len = lps[len-1];
+        else lps[i++] = 0;
+    }
+}
+
+void kmp_search(const char *text, const char *pat) {
+    int n = (int)strlen(text), m = (int)strlen(pat);
+    int lps[m];
+    build_lps(pat, m, lps);
+
+    int j = 0, k = 0;   /* j=text, k=pattern */
+    while (j &lt; n) {
+        if (text[j] == pat[k]) { j++; k++; }
+        if (k == m) {
+            printf("Found at index %d\n", j - k);
+            k = lps[k-1];   /* slide pattern for next match */
+        } else if (j &lt; n &amp;&amp; text[j] != pat[k]) {
+            if (k &gt; 0) k = lps[k-1];   /* fall back pattern */
+            else j++;                    /* advance text */
+        }
+    }
+}
+
+int main(void) {
+    kmp_search("AABABAABAB", "ABAB");   /* Found at 1, Found at 6 */
+    kmp_search("AAAA",       "AA");     /* 0, 1, 2 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">kmp_search("AAAA","AA"), lps=[0,1]:
+  j=0,k=0: A==A→j=1,k=1
+  k==2? no. j=1,k=1: A==A→j=2,k=2
+  k==2: match at 0! k=lps[1]=1
+  j=2,k=1: A==A→j=3,k=2
+  k==2: match at 1! k=lps[1]=1
+  j=3,k=1: A==A→j=4,k=2
+  k==2: match at 2! ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: After a match, don't reset k to 0</div>
+    <p>After finding a match, set <code>k = lps[k-1]</code>, not <code>k = 0</code>. This allows overlapping matches to be found. "AAAA" contains "AA" at positions 0, 1, and 2 — resetting to 0 would miss positions 1 and 2.</p>
+  </div>
+  <div class="leetcode"><span>28 · Find the Index of the First Occurrence</span><span>686 · Repeated String Match</span></div>
+  <div class="trigger">When searching for a pattern in O(n+m) → think: KMP — build lps[], then dual-pointer with fallback on mismatch.</div>
+</div>
+
+
+<div class="card" id="p33">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 33</span>
+    <span class="pattern-name">Rabin-Karp Rolling Hash</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">Instead of comparing characters one by one, compute a "fingerprint" (hash) of the pattern and each same-length window of the text. Only when hashes match do you verify character-by-character. The clever part: updating the hash when the window slides is O(1) — just remove the leftmost character and add the new rightmost one.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Rolling hash: <code>h = (h * base + s[i]) % mod</code> going right; remove a character: <code>h = (h - s[left] * base^(m-1)) % mod</code>. With a good base and mod, hash collisions are rare — most mismatches are caught by the O(1) hash compare, making average-case O(n+m).</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Compute pattern hash and initial window hash of length m.</li>
+    <li>Slide: new_hash = (old_hash - s[left]*h_pow) * base + s[right], mod prime.</li>
+    <li>On hash match: verify character-by-character (handles collisions).</li>
+    <li>Repeat until end of text.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">base=31, mod=1e9+7, pat="abc" (m=3)
+pat_hash = 'a'*31² + 'b'*31 + 'c'
+
+window "abc" in text → hash matches → verify → MATCH
+slide right: remove 'a'*31², add 'd' → new hash in O(1)
+window "bcd" → hash differs → skip verification</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+#define BASE 31L
+#define MOD  1000000007L
+
+void rabin_karp(const char *text, const char *pat) {
+    int n = (int)strlen(text), m = (int)strlen(pat);
+    if (m &gt; n) return;
+
+    /* Precompute BASE^(m-1) % MOD */
+    long h_pow = 1;
+    for (int i = 0; i &lt; m-1; i++) h_pow = h_pow * BASE % MOD;
+
+    /* Compute pattern hash and first window hash */
+    long pat_h = 0, win_h = 0;
+    for (int i = 0; i &lt; m; i++) {
+        pat_h = (pat_h * BASE + pat[i])  % MOD;
+        win_h = (win_h * BASE + text[i]) % MOD;
+    }
+
+    for (int i = 0; i &lt;= n - m; i++) {
+        if (win_h == pat_h) {
+            /* Hash match — verify to rule out collision */
+            if (strncmp(text + i, pat, m) == 0)
+                printf("Found at %d\n", i);
+        }
+        if (i &lt; n - m) {
+            /* Roll hash: remove leftmost char, add next char */
+            win_h = (win_h - (long)text[i] * h_pow % MOD + MOD) % MOD;
+            win_h = (win_h * BASE + text[i+m]) % MOD;
+        }
+    }
+}
+
+int main(void) {
+    rabin_karp("GEEKS FOR GEEKS", "GEEKS");   /* 0, 10 */
+    rabin_karp("hello world", "world");        /* 6 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">text="abcabc", pat="abc" (m=3, base=31):
+pat_h = ('a'*31+'b')*31+'c' = some value P
+win_h(0..2) = P → hash match → strncmp → MATCH at 0
+roll: win_h = (P - 'a'*31²)*31 + 'a' (new window "bca")
+roll again: window "cab" → different hash → skip
+roll: window "abc" → hash=P → match → MATCH at 3 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Add MOD before taking modulo to avoid negative values</div>
+    <p>When subtracting the leftmost character's contribution: <code>(win_h - text[i]*h_pow % MOD + MOD) % MOD</code>. Without <code>+ MOD</code>, the subtraction can make win_h negative, and C's <code>%</code> operator returns a negative result for negative dividends — producing a wrong hash.</p>
+  </div>
+  <div class="leetcode"><span>28 · First Occurrence (alternative to KMP)</span><span>187 · Repeated DNA Sequences</span></div>
+  <div class="trigger">When hashing substrings for fast comparison → think: rolling hash, remove-left add-right in O(1), verify on hash match.</div>
+</div>
+
+<div class="card" id="p34">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 34</span>
+    <span class="pattern-name">Edit Distance — Levenshtein</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">"kitten" → "sitting": how many single-character operations (insert, delete, replace) does it take? Think of building the answer for smaller subproblems first: if you know the edit distance for "kitt" → "sitt", you can extend to "kitten" → "sitting" by looking at the last characters and picking the cheapest operation.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight"><code>dp[i][j]</code> = edit distance between <code>s1[0..i-1]</code> and <code>s2[0..j-1]</code>. If last chars match: <code>dp[i][j] = dp[i-1][j-1]</code>. Else: <code>dp[i][j] = 1 + min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1])</code> — delete, insert, replace.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>dp[0][j] = j (insert j chars), dp[i][0] = i (delete i chars).</li>
+    <li>For each (i,j): if s1[i-1]==s2[j-1]: dp[i][j] = dp[i-1][j-1].</li>
+    <li>Else: dp[i][j] = 1 + min(dp[i-1][j-1], dp[i-1][j], dp[i][j-1]).</li>
+    <li>Return dp[m][n].</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">"horse" → "ros" (edit dist=3):
+    ""  r  o  s
+""  0   1  2  3
+h   1   1  2  3
+o   2   2  1  2
+r   3   2  2  2
+s   4   3  3  2
+e   5   4  4  3   ← dp[5][3] = 3 ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+#define MIN3(a,b,c) ((a)&lt;(b)?((a)&lt;(c)?(a):(c)):((b)&lt;(c)?(b):(c)))
+
+int edit_distance(const char *s1, const char *s2) {
+    int m = (int)strlen(s1), n = (int)strlen(s2);
+    int dp[m+1][n+1];
+
+    for (int i = 0; i &lt;= m; i++) dp[i][0] = i;   /* delete all of s1 */
+    for (int j = 0; j &lt;= n; j++) dp[0][j] = j;   /* insert all of s2 */
+
+    for (int i = 1; i &lt;= m; i++) {
+        for (int j = 1; j &lt;= n; j++) {
+            if (s1[i-1] == s2[j-1]) {
+                dp[i][j] = dp[i-1][j-1];   /* last chars match — free */
+            } else {
+                dp[i][j] = 1 + MIN3(
+                    dp[i-1][j-1],  /* replace */
+                    dp[i-1][j],    /* delete from s1 */
+                    dp[i][j-1]     /* insert into s1 */
+                );
+            }
+        }
+    }
+    return dp[m][n];
+}
+
+int main(void) {
+    printf("%d\n", edit_distance("horse",  "ros"));      /* 3 */
+    printf("%d\n", edit_distance("intention", "execution")); /* 5 */
+    printf("%d\n", edit_distance("",       "abc"));      /* 3 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">edit_distance("ab", "a"):
+  dp[0][0]=0, dp[0][1]=1, dp[1][0]=1, dp[2][0]=2
+  i=1,j=1: s1[0]='a'==s2[0]='a' → dp[1][1]=dp[0][0]=0
+  i=2,j=1: s1[1]='b'≠s2[0]='a' → 1+min(dp[1][0]=1, dp[1][1]=0, dp[2][0]=2) = 1+0=1
+  return 1 ✓ (delete 'b')</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Indices are 1-based in the DP but 0-based in the string</div>
+    <p><code>dp[i][j]</code> represents the first <code>i</code> characters of s1 and first <code>j</code> of s2. So <code>s1[i-1]</code> and <code>s2[j-1]</code> are the current characters. Off-by-one here is the most common bug in this DP.</p>
+  </div>
+  <div class="leetcode"><span>72 · Edit Distance</span><span>583 · Delete Operation for Two Strings</span></div>
+  <div class="trigger">When finding min insert/delete/replace to transform one string → think: dp[i][j] = match→dp[i-1][j-1], else 1+min(replace,delete,insert).</div>
+</div>
+
+
+<div class="card" id="p35">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 35</span>
+    <span class="pattern-name">Longest Common Subsequence</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">"ABCBDAB" and "BDCAB" share a common subsequence "BCAB" of length 4. A subsequence doesn't need to be contiguous — you just pick characters in order from both strings. The longest such sequence is the LCS.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight"><code>dp[i][j]</code> = LCS length of <code>s1[0..i-1]</code> and <code>s2[0..j-1]</code>. If last chars match: <code>dp[i][j] = dp[i-1][j-1] + 1</code>. Else: <code>dp[i][j] = max(dp[i-1][j], dp[i][j-1])</code> — take the better of skipping one char from either string.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>dp[0][j] = dp[i][0] = 0 (empty string has LCS 0 with anything).</li>
+    <li>For each (i,j): if s1[i-1]==s2[j-1]: dp[i][j] = dp[i-1][j-1]+1.</li>
+    <li>Else: dp[i][j] = max(dp[i-1][j], dp[i][j-1]).</li>
+    <li>Return dp[m][n].</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">"ABCD" vs "ACBD":
+       ""  A  C  B  D
+""  [  0  0  0  0  0 ]
+A   [  0  1  1  1  1 ]
+B   [  0  1  1  2  2 ]
+C   [  0  1  2  2  2 ]
+D   [  0  1  2  2  3 ]
+LCS = 3 ("ABD" or "ACD") ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+int lcs(const char *s1, const char *s2) {
+    int m = (int)strlen(s1), n = (int)strlen(s2);
+    int dp[m+1][n+1];
+    for (int i = 0; i &lt;= m; i++) dp[i][0] = 0;
+    for (int j = 0; j &lt;= n; j++) dp[0][j] = 0;
+
+    for (int i = 1; i &lt;= m; i++) {
+        for (int j = 1; j &lt;= n; j++) {
+            if (s1[i-1] == s2[j-1])
+                dp[i][j] = dp[i-1][j-1] + 1;   /* chars match — extend */
+            else
+                dp[i][j] = dp[i-1][j] &gt; dp[i][j-1]
+                            ? dp[i-1][j] : dp[i][j-1];  /* take best skip */
+        }
+    }
+    return dp[m][n];
+}
+
+int main(void) {
+    printf("%d\n", lcs("ABCBDAB", "BDCAB"));  /* 4 */
+    printf("%d\n", lcs("AGGTAB",  "GXTXAYB")); /* 4 */
+    printf("%d\n", lcs("",        "abc"));     /* 0 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">lcs("AC","CA"):
+  dp[1][1]: s1[0]='A' vs s2[0]='C' → no match → max(dp[0][1]=0, dp[1][0]=0) = 0
+  dp[1][2]: s1[0]='A' vs s2[1]='A' → match → dp[0][1]+1 = 1
+  dp[2][1]: s1[1]='C' vs s2[0]='C' → match → dp[1][0]+1 = 1
+  dp[2][2]: s1[1]='C' vs s2[1]='A' → no match → max(dp[1][2]=1, dp[2][1]=1) = 1
+  return 1 ✓ ("A" or "C")</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: LCS ≠ LCS substring</div>
+    <p>LCS (subsequence) allows gaps — characters don't need to be contiguous. The Longest Common Substring requires contiguity: <code>dp[i][j] = dp[i-1][j-1]+1</code> only when chars match, else <code>dp[i][j]=0</code> (reset). Different recurrence, same table shape. See Pattern 36.</p>
+  </div>
+  <div class="leetcode"><span>1143 · Longest Common Subsequence</span><span>583 · Delete Operation for Two Strings</span></div>
+  <div class="trigger">When finding longest common subsequence → think: dp[i][j] = match→+1, no match→max(skip-left, skip-up).</div>
+</div>
+
+<div class="card" id="p36">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 36</span>
+    <span class="pattern-name">Longest Common Substring</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">Unlike a subsequence (which can have gaps), a substring must be contiguous. "ABCDEF" and "XBCDEY" share the substring "BCDE" of length 4. The moment a character doesn't match, the current run is broken — reset to zero. Track the maximum run seen at any point.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight"><code>dp[i][j]</code> = length of longest common substring ending at s1[i-1] and s2[j-1]. Match: <code>dp[i][j] = dp[i-1][j-1]+1</code>. No match: <code>dp[i][j] = 0</code>. Track max over all (i,j).</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>dp all zeros (both borders and mismatch positions).</li>
+    <li>For each (i,j): if s1[i-1]==s2[j-1]: dp[i][j] = dp[i-1][j-1]+1; update max.</li>
+    <li>Else: dp[i][j] = 0 (contiguous run broken).</li>
+    <li>Return max.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">"ABCDEF" vs "XBCDEY":
+       X  B  C  D  E  Y
+  A [  0  0  0  0  0  0 ]
+  B [  0  1  0  0  0  0 ]
+  C [  0  0  2  0  0  0 ]
+  D [  0  0  0  3  0  0 ]
+  E [  0  0  0  0  4  0 ]
+  F [  0  0  0  0  0  0 ]
+  max = 4 → "BCDE" ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+int longest_common_substring(const char *s1, const char *s2) {
+    int m = (int)strlen(s1), n = (int)strlen(s2);
+    int dp[m+1][n+1];
+    int max_len = 0;
+
+    for (int i = 0; i &lt;= m; i++)
+        for (int j = 0; j &lt;= n; j++)
+            dp[i][j] = 0;
+
+    for (int i = 1; i &lt;= m; i++) {
+        for (int j = 1; j &lt;= n; j++) {
+            if (s1[i-1] == s2[j-1]) {
+                dp[i][j] = dp[i-1][j-1] + 1;    /* extend matching run */
+                if (dp[i][j] &gt; max_len) max_len = dp[i][j];
+            }
+            /* else dp[i][j] stays 0 — run is broken */
+        }
+    }
+    return max_len;
+}
+
+int main(void) {
+    printf("%d\n", longest_common_substring("ABCDEF", "XBCDEY"));  /* 4 */
+    printf("%d\n", longest_common_substring("ABAB",   "BABA"));    /* 3 */
+    printf("%d\n", longest_common_substring("abc",    "xyz"));     /* 0 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">longest_common_substring("abc","abc"):
+  i=1,j=1: 'a'=='a' → dp[1][1]=1, max=1
+  i=2,j=2: 'b'=='b' → dp[2][2]=dp[1][1]+1=2, max=2
+  i=3,j=3: 'c'=='c' → dp[3][3]=dp[2][2]+1=3, max=3
+  return 3 ✓ ("abc" is common substring)</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Reset to 0 on mismatch — not max(left, up)</div>
+    <p>The key difference from LCS: on mismatch, <code>dp[i][j] = 0</code>, not <code>max(dp[i-1][j], dp[i][j-1])</code>. The substring must be contiguous — a mismatch breaks the chain completely. Using max(left,up) gives LCS, not the longest common substring.</p>
+  </div>
+  <div class="leetcode"><span>718 · Maximum Length of Repeated Subarray</span></div>
+  <div class="trigger">When finding longest contiguous common string → think: dp[i][j]=dp[i-1][j-1]+1 on match, 0 on mismatch, track global max.</div>
+</div>
+
+
+<div class="card" id="p37">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 37</span>
+    <span class="pattern-name">Word Break — DP</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">"leetcode" can be split into "leet" + "code" — both in the dictionary. Can a given string be segmented into dictionary words? Think of it as placing "cuts" in the string: if position i is reachable (some prefix up to i is all valid words) and s[i..j] is a word, then j is also reachable.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight"><code>dp[i]</code> = true if <code>s[0..i-1]</code> can be segmented into dictionary words. Base: <code>dp[0]=true</code>. For each i: check all j &lt; i where <code>dp[j]=true</code> and <code>s[j..i-1]</code> is in the dictionary.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>dp[0] = true (empty string). dp[1..n] = false initially.</li>
+    <li>For i from 1 to n: for j from 0 to i-1: if dp[j] and s[j..i-1] in dict: dp[i]=true.</li>
+    <li>Return dp[n].</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">"leetcode", dict={"leet","code"}
+dp[0]=T
+dp[4]: j=0,dp[0]=T,"leet"∈dict → dp[4]=T
+dp[8]: j=4,dp[4]=T,"code"∈dict → dp[8]=T
+return dp[8]=T ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+/* Simple dict lookup: check if word matches any entry */
+static int in_dict(const char *s, int start, int end,
+                   const char **dict, int dict_size) {
+    int len = end - start;
+    for (int i = 0; i &lt; dict_size; i++) {
+        if ((int)strlen(dict[i]) == len &amp;&amp;
+            strncmp(s + start, dict[i], len) == 0)
+            return 1;
+    }
+    return 0;
+}
+
+int word_break(const char *s, const char **dict, int dict_size) {
+    int n = (int)strlen(s);
+    int dp[n+1];
+    for (int i = 0; i &lt;= n; i++) dp[i] = 0;
+    dp[0] = 1;   /* empty prefix is always "breakable" */
+
+    for (int i = 1; i &lt;= n; i++) {
+        for (int j = 0; j &lt; i; j++) {
+            if (dp[j] &amp;&amp; in_dict(s, j, i, dict, dict_size)) {
+                dp[i] = 1;
+                break;   /* found one valid split — no need to check more */
+            }
+        }
+    }
+    return dp[n];
+}
+
+int main(void) {
+    const char *d1[] = {"leet", "code"};
+    printf("%d\n", word_break("leetcode", d1, 2));    /* 1 */
+
+    const char *d2[] = {"apple", "pen"};
+    printf("%d\n", word_break("applepenapple", d2, 2)); /* 1 */
+
+    const char *d3[] = {"cats", "dog", "sand", "and", "cat"};
+    printf("%d\n", word_break("catsandog", d3, 5));   /* 0 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">word_break("applepenapple", {"apple","pen"}):
+  dp[0]=1
+  dp[5]: j=0,dp[0]=1,"apple"∈dict → dp[5]=1
+  dp[8]: j=5,dp[5]=1,"pen"∈dict → dp[8]=1
+  dp[13]: j=8,dp[8]=1,"apple"∈dict → dp[13]=1
+  return 1 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: O(n²×m) time — use a trie for large dictionaries</div>
+    <p>The inner loop checks every substring starting from each reachable position, and each check scans the whole dictionary. For large inputs, store the dictionary in a hash set (O(1) lookup) or trie (O(L) for L=word length) to speed up the word check.</p>
+  </div>
+  <div class="leetcode"><span>139 · Word Break</span><span>140 · Word Break II</span></div>
+  <div class="trigger">When checking if string can be split into dictionary words → think: dp[i] = any dp[j] where s[j..i-1] is in dict.</div>
+</div>
+
+<div class="card" id="p38">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 38</span>
+    <span class="pattern-name">Distinct Subsequences</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">How many ways can you choose characters from "rabbbit" to spell "rabbit"? Each time you pick a character that matches the next letter of the target, you're making a choice. Choices multiply: if there are three 'b's in the source and two in the target, there are multiple picking orders. DP counts all of them.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight"><code>dp[i][j]</code> = number of ways s[0..i-1] contains t[0..j-1] as a subsequence. If s[i-1]==t[j-1]: take the char OR skip it — <code>dp[i][j] = dp[i-1][j-1] + dp[i-1][j]</code>. If not equal: only skip — <code>dp[i][j] = dp[i-1][j]</code>.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>dp[i][0] = 1 (empty t is always a subsequence of any prefix of s).</li>
+    <li>dp[0][j] = 0 for j&gt;0 (non-empty t cannot come from empty s).</li>
+    <li>Fill: match → dp[i-1][j-1]+dp[i-1][j]; no match → dp[i-1][j].</li>
+    <li>Return dp[m][n].</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">"rabbbit" → "rabbit" (3 b's vs 2 b's):
+  At the three 'b' positions: each one can be skipped or used.
+  dp counts all valid picking orders → 3 ways ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+long num_distinct(const char *s, const char *t) {
+    int m = (int)strlen(s), n = (int)strlen(t);
+    long dp[m+1][n+1];
+
+    for (int i = 0; i &lt;= m; i++) dp[i][0] = 1;   /* empty t: 1 way */
+    for (int j = 1; j &lt;= n; j++) dp[0][j] = 0;   /* empty s, non-empty t: 0 ways */
+
+    for (int i = 1; i &lt;= m; i++) {
+        for (int j = 1; j &lt;= n; j++) {
+            dp[i][j] = dp[i-1][j];              /* always: skip s[i-1] */
+            if (s[i-1] == t[j-1])
+                dp[i][j] += dp[i-1][j-1];       /* also: use s[i-1] to match t[j-1] */
+        }
+    }
+    return dp[m][n];
+}
+
+int main(void) {
+    printf("%ld\n", num_distinct("rabbbit", "rabbit"));  /* 3 */
+    printf("%ld\n", num_distinct("babgbag", "bag"));     /* 5 */
+    printf("%ld\n", num_distinct("abc",     "abc"));     /* 1 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">num_distinct("ba","b"):
+  dp[0][0]=1, dp[1][0]=1, dp[2][0]=1
+  dp[0][1]=0
+  i=1: s[0]='b'==t[0]='b' → dp[1][1]=dp[0][1]+dp[0][0]=0+1=1
+  i=2: s[1]='a'≠t[0]='b' → dp[2][1]=dp[1][1]=1
+  return 1 ✓ (only one 'b' in "ba")</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Always add the "skip" option</div>
+    <p>Even when characters match, you must add <code>dp[i-1][j]</code> (skip s[i-1]) to <code>dp[i-1][j-1]</code> (use it). Forgetting the skip case undercounts — it misses the ways to form the subsequence using later occurrences of the same character.</p>
+  </div>
+  <div class="leetcode"><span>115 · Distinct Subsequences</span></div>
+  <div class="trigger">When counting ways to form t as subsequence of s → think: dp[i][j] = skip always + use-if-match, dp[i][0]=1.</div>
+</div>
+
+
+<div class="card" id="p39">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 39</span>
+    <span class="pattern-name">Wildcard Matching — ? and *</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">A shell glob pattern like "a*b?c" matches strings that start with 'a', end with any char then 'c', with anything in between. '?' matches exactly one character; '*' matches any sequence (including empty). The DP tracks which positions of both the string and pattern are simultaneously reachable.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight"><code>dp[i][j]</code> = true if pattern[0..j-1] matches string[0..i-1]. '?' acts like a concrete char — <code>dp[i][j] = dp[i-1][j-1]</code>. '*' can match empty (<code>dp[i][j] = dp[i][j-1]</code>) or one more char (<code>dp[i][j] = dp[i-1][j]</code>).</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>dp[0][0]=true; dp[0][j]=true only if pattern[0..j-1] is all '*'.</li>
+    <li>For each (i,j): if p[j-1]=='*': dp[i][j] = dp[i][j-1] || dp[i-1][j].</li>
+    <li>Elif p[j-1]=='?' or p[j-1]==s[i-1]: dp[i][j] = dp[i-1][j-1].</li>
+    <li>Else: dp[i][j] = false.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">s="adceb", p="*a*b":
+dp[0][0]=T, dp[0][1]='*'→T, dp[0][2]='a'→F, dp[0][3]='*' but dp[0][2]=F→F, dp[0][4]=F
+
+Filling shows dp[5][4]=T (the full match) ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+int wildcard_match(const char *s, const char *p) {
+    int m = (int)strlen(s), n = (int)strlen(p);
+    int dp[m+1][n+1];
+    for (int i = 0; i &lt;= m; i++)
+        for (int j = 0; j &lt;= n; j++) dp[i][j] = 0;
+
+    dp[0][0] = 1;
+    /* Pattern of all '*' matches empty string */
+    for (int j = 1; j &lt;= n; j++)
+        dp[0][j] = dp[0][j-1] &amp;&amp; p[j-1] == '*';
+
+    for (int i = 1; i &lt;= m; i++) {
+        for (int j = 1; j &lt;= n; j++) {
+            if (p[j-1] == '*') {
+                /* match empty (dp[i][j-1]) OR match one more char (dp[i-1][j]) */
+                dp[i][j] = dp[i][j-1] || dp[i-1][j];
+            } else if (p[j-1] == '?' || p[j-1] == s[i-1]) {
+                dp[i][j] = dp[i-1][j-1];  /* '?' or exact char match */
+            }
+        }
+    }
+    return dp[m][n];
+}
+
+int main(void) {
+    printf("%d\n", wildcard_match("aa",    "a"));     /* 0 */
+    printf("%d\n", wildcard_match("aa",    "*"));     /* 1 */
+    printf("%d\n", wildcard_match("cb",    "?a"));    /* 0 */
+    printf("%d\n", wildcard_match("adceb", "*a*b"));  /* 1 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">wildcard_match("aa","*"):
+  dp[0][0]=1, dp[0][1]=dp[0][0]&&'*'→1
+  i=1: p[0]='*' → dp[1][1]=dp[1][0]||dp[0][1]=0||1=1
+  i=2: p[0]='*' → dp[2][1]=dp[2][0]||dp[1][1]=0||1=1
+  return dp[2][1]=1 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: '*' has two transitions — both must be checked</div>
+    <p><code>dp[i][j-1]</code>: '*' matches zero characters (skip '*' in pattern, stay at same s position). <code>dp[i-1][j]</code>: '*' consumes one more character from s (stay at '*' in pattern, advance s). Forgetting either transition causes mismatches for empty matches or multi-char matches.</p>
+  </div>
+  <div class="leetcode"><span>44 · Wildcard Matching</span></div>
+  <div class="trigger">When matching with ? and * wildcards → think: '*' → OR(skip-star, consume-one-char); '?' or exact → diagonal.</div>
+</div>
+
+<div class="card" id="p40">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 40</span>
+    <span class="pattern-name">Regular Expression Matching — . and *</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">Unlike shell wildcards, regex '*' means "zero or more of the preceding element". "a*" matches "", "a", "aa", etc. ".*" matches anything. "c*a*b" matches "aab" because c* matches empty and a* matches "aa". The '*' always refers back to the character before it — making this trickier than wildcard matching.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">When <code>p[j-1]=='*'</code>, it pairs with <code>p[j-2]</code>. Two cases: (1) use zero occurrences — <code>dp[i][j] = dp[i][j-2]</code>; (2) use one more — <code>dp[i][j] = dp[i-1][j]</code> if <code>p[j-2]</code> matches <code>s[i-1]</code> (either same char or '.').</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>dp[0][0]=true; dp[0][j]=true if p[0..j-1] can match empty string (pairs like "a*b*").</li>
+    <li>For each (i,j): if p[j-1]='*': zero-use → dp[i][j-2]; or one-more if p[j-2] matches s[i-1].</li>
+    <li>Elif p[j-1]='.' or p[j-1]==s[i-1]: dp[i][j] = dp[i-1][j-1].</li>
+    <li>Return dp[m][n].</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">s="aab", p="c*a*b":
+dp[0][0]=T
+dp[0][2]: p[1]='*'→zero 'c' → dp[0][0]=T
+dp[0][4]: p[3]='*'→zero 'a' → dp[0][2]=T
+dp[3][5]: p[4]='b'==s[2]='b' → dp[2][4]=? ... eventually T ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+static int matches(char sc, char pc) {
+    return pc == '.' || pc == sc;   /* '.' matches any char */
+}
+
+int regex_match(const char *s, const char *p) {
+    int m = (int)strlen(s), n = (int)strlen(p);
+    int dp[m+1][n+1];
+    for (int i = 0; i &lt;= m; i++)
+        for (int j = 0; j &lt;= n; j++) dp[i][j] = 0;
+
+    dp[0][0] = 1;
+    /* "a*b*c*" can match empty string */
+    for (int j = 2; j &lt;= n; j++)
+        if (p[j-1] == '*') dp[0][j] = dp[0][j-2];
+
+    for (int i = 1; i &lt;= m; i++) {
+        for (int j = 1; j &lt;= n; j++) {
+            if (p[j-1] == '*') {
+                dp[i][j] = dp[i][j-2];    /* zero occurrences of p[j-2] */
+                if (matches(s[i-1], p[j-2]))
+                    dp[i][j] |= dp[i-1][j]; /* one more occurrence */
+            } else if (matches(s[i-1], p[j-1])) {
+                dp[i][j] = dp[i-1][j-1];
+            }
+        }
+    }
+    return dp[m][n];
+}
+
+int main(void) {
+    printf("%d\n", regex_match("aa",  "a"));      /* 0 */
+    printf("%d\n", regex_match("aa",  "a*"));     /* 1 */
+    printf("%d\n", regex_match("ab",  ".*"));     /* 1 */
+    printf("%d\n", regex_match("aab", "c*a*b"));  /* 1 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">regex_match("aa","a*"):
+  dp[0][0]=1; dp[0][2]: p[1]='*'→dp[0][0]=1
+  i=1,j=2: p[1]='*', zero→dp[1][0]=0; match s[0]='a' vs p[0]='a'→dp[0][2]=1 → dp[1][2]=1
+  i=2,j=2: p[1]='*', zero→dp[2][0]=0; match s[1]='a' vs p[0]='a'→dp[1][2]=1 → dp[2][2]=1
+  return 1 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Regex * is not the same as wildcard *</div>
+    <p>In wildcard matching (P39), '*' stands alone and matches any sequence. In regex, '*' modifies the preceding char — "a*" is one unit meaning "zero or more a's". The DP structure is different: regex '*' always looks back two positions in the pattern (p[j-2]), wildcard '*' looks at only the current pattern position.</p>
+  </div>
+  <div class="leetcode"><span>10 · Regular Expression Matching</span></div>
+  <div class="trigger">When matching regex with . and * → think: '*' → zero (skip two) or one-more (if preceding char matches); '.' → matches any single char.</div>
+</div>
+
 <!-- PATTERNS_END -->
 <script>hljs.highlightAll();</script>
 </body>

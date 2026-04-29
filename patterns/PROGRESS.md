@@ -7,7 +7,7 @@
 | index.html | nav | ✅ Done | 2026-04-24 |
 | arrays.html | 54 | 🔄 In Progress | — |
 | pointers.html | 30 | ✅ Done | 2026-04-24 |
-| strings.html | 40 | 🔄 In Progress | — |
+| strings.html | 40 | ✅ Done | 2026-04-29 |
 | linkedlist.html | 35 | ⏳ Pending | — |
 | stacks.html | 32 | ⏳ Pending | — |
 | queues.html | 22 | ⏳ Pending | — |
@@ -28,6 +28,7 @@
 | ✅ 10 | strings.html | 01-10 | feat(strings): patterns 01-10 — null terminator, strcpy, strcmp, reversal, search, frequency, atoi, itoa |
 | ✅ 11 | strings.html | 11-20 | feat(strings): patterns 11-20 — sliding window, anagram search, permutation, char replacement, exactly-k |
 | ✅ 12 | strings.html | 21-30 | feat(strings): patterns 21-30 — palindromes, two-pointer, stack, zigzag, Roman numerals |
+| ✅ 13 | strings.html | 31-40 | feat(strings): patterns 31-40 — KMP, Rabin-Karp, edit distance, LCS, word break, regex DP |
 
 ## arrays.html Progress
 - [x] Patterns 01–10 (Prefix Sum + Two Pointer basics)
@@ -45,7 +46,7 @@
 - [x] Patterns 01–10 (Basics, Copy, Search, Frequency)
 - [x] Patterns 11–20 (Sliding Window, Palindrome)
 - [x] Patterns 21–30 (Two Pointer, Parsing)
-- [ ] Patterns 31–40 (Pattern Matching, DP, Manipulation)
+- [x] Patterns 31–40 (Pattern Matching, DP, Manipulation)
 
 ## linkedlist.html Progress
 - [ ] Patterns 01–10 (Basics, Insert, Delete, Reverse)
