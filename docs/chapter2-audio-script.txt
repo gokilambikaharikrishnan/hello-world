@@ -614,3 +614,95 @@ LFP charges to three point six five volts per cell versus NMC's four point two v
 SEI grows faster at higher voltages. Even that half-volt difference translates
 to substantially faster aging in NMC.
 
+
+============================================================
+SECTION 2.8 — TEMPERATURE EFFECTS ON CELL PERFORMANCE
+============================================================
+
+Temperature is the single biggest outside factor affecting how an LFP cell behaves.
+It changes how much capacity the cell can deliver, how fast it charges safely,
+how long it lasts, and how much the voltage sags under load — all at the same time.
+
+WHY TEMPERATURE MATTERS SO MUCH
+
+The chemical reactions inside a battery all go faster as temperature rises.
+This is a universal law of chemistry. The practical rule: every ten degrees Celsius
+increase roughly doubles the speed of chemical reactions.
+
+That applies equally to useful reactions — faster ion movement, better charge kinetics —
+and to harmful ones — faster SEI growth, faster electrolyte breakdown.
+You cannot have the benefit without accepting the cost.
+Managing temperature is always a trade-off.
+
+LOW TEMPERATURE — THE LITHIUM PLATING CLIFF
+
+Below zero degrees Celsius, the graphite anode struggles to absorb lithium ions
+during charging. The ions arrive faster than the graphite can take them in.
+The result is lithium plating, which we covered in the previous section.
+
+The hard limits the BMS must enforce:
+
+No charging at all at minus twenty degrees Celsius or colder.
+Maximum charge rate of point two C between zero and five degrees Celsius.
+These limits override any external charging command.
+
+Cold temperature also raises internal resistance dramatically. At minus twenty degrees,
+the resistance is three to four times higher than at twenty-five degrees.
+At one hundred amps, this raises the voltage drop by one hundred and fifty millivolts.
+Enough to falsely trigger the undervoltage alarm before the cell is actually empty.
+
+The BMS must compensate: when temperature is low, the BMS widens the effective
+voltage window slightly — or, equivalently, does not trigger the low-voltage alarm
+as aggressively — to avoid shutting down a cold pack that still has useful charge.
+
+HIGH TEMPERATURE — ACCELERATED AGING AND SAFETY LIMITS
+
+At the other extreme:
+
+Every ten degrees above twenty-five doubles the SEI growth rate. A pack running
+at forty-five degrees Celsius reaches eighty percent SOH in roughly one thousand cycles
+instead of three thousand or more. That is three times shorter life from a
+twenty-degree temperature difference.
+
+Above sixty degrees Celsius, the electrolyte begins to break down, producing gas.
+Prismatic cells have pressure relief vents for this. The BMS should treat a sudden
+drop in internal resistance as an early warning of thermal stress — gas forming
+between the electrodes reduces their contact — often before the temperature sensor
+even responds.
+
+The BMS's hard cutoff for high temperature is typically sixty degrees Celsius for
+the cell surface. Above this, both charge and discharge are prohibited until the
+pack cools down.
+
+CAPACITY CHANGES WITH TEMPERATURE
+
+The rated capacity — two-eighty amp-hours — is measured at twenty-five degrees.
+In the real world, the cell can deliver more or less depending on temperature.
+
+At minus twenty degrees: only about sixty percent of rated capacity is accessible.
+At minus ten degrees: about seventy-eight percent.
+At zero degrees: about eighty-eight percent.
+At twenty-five degrees: one hundred percent — the reference.
+At forty-five degrees: about ninety-seven percent — barely different.
+
+The BMS must adjust its SOC calculation for temperature. If it does not,
+a cold pack at zero degrees might show eighty-eight percent on the display,
+but the usable energy relative to the original rating is actually eighty-eight
+times eighty-eight — which is about seventy-seven percent. That eleven-percent gap
+is why loads shut down earlier than expected on cold mornings.
+
+WHERE TO PUT THE TEMPERATURE SENSORS
+
+A single temperature sensor on the BMS circuit board is not enough.
+The circuit board can be ten to fifteen degrees cooler than the inside of the
+cell core during a high-current discharge.
+
+Best practice is four sensor positions:
+At the middle of the cell surface — catches the main heat buildup.
+At the terminal tabs — catches heating at the connection points.
+At the pack air inlet and outlet — shows whether cooling is working.
+On the BMS board itself — reference for the BMS chip's own temperature limits.
+
+The BMS uses the highest reading across all sensors for safety cutoffs,
+and the average reading for SOC correction.
+
