@@ -353,3 +353,111 @@ at two C. But it means that at high current, the coulomb counter will show a few
 percent remaining when the alarm fires. This is expected behaviour, not a bug.
 Advanced BMS firmware adjusts the assumed capacity based on current.
 
+
+============================================================
+SECTION 2.6 — SOC ESTIMATION: FIVE TECHNIQUES
+============================================================
+
+State of charge estimation is the hardest job the BMS has to do.
+Let's go through the five main techniques — what each one does, how accurate it is,
+and when you would use it.
+
+TECHNIQUE ONE — OCV LOOKUP TABLE
+
+The simplest approach: wait for the cell to rest, measure its voltage, look it up
+in a pre-built table, and read off the corresponding charge level.
+
+For LFP, this works at the extremes. Above three point six volts, the cell is
+definitely more than ninety percent full. Below three point two volts, it is
+definitely less than fifteen percent full. At the extremes the voltage slope is steep
+enough to give a meaningful reading.
+
+In the middle — the entire plateau from twenty to eighty percent — this method gives
+roughly plus or minus fifteen to twenty-five percent accuracy. That is not useful
+for anything except a rough starting guess.
+
+It also requires at least thirty minutes of rest time. You cannot do it under load.
+
+Best use: getting an initial estimate at startup, before the coulomb counter takes over.
+
+TECHNIQUE TWO — COULOMB COUNTING
+
+Already covered in the previous section. This is the primary tracking method
+during active operation.
+
+Accuracy when freshly reset: plus or minus one to two percent.
+Accuracy after twenty-four hours without a reset: can drift to plus or minus five to ten percent.
+Solution: reset against a known reference whenever the opportunity arises.
+
+Best use: the main workhorse algorithm. Runs constantly.
+
+TECHNIQUE THREE — EQUIVALENT CIRCUIT MODEL
+
+The ECM approach replaces the cell with a simple electrical model.
+The model has three parts.
+
+First, an OCV source — a voltage that depends on state of charge.
+Second, a resistor called R-zero — representing the instant voltage drop when current flows.
+Third, a resistor and capacitor in parallel — representing the slow voltage recovery
+that happens after current changes. This slow recovery takes thirty to three hundred seconds
+for LFP.
+
+Every sample, the model predicts what the terminal voltage should be given the current SOC
+estimate. If the measured voltage differs from the prediction, the BMS nudges the SOC
+estimate to reduce the gap.
+
+This is better than pure coulomb counting because voltage is used as a reality check.
+But for LFP, the flat plateau means the voltage carries almost no information in the
+middle range — so the correction is weak there, and the model still leans heavily on
+current counting.
+
+Best use: mid-tier BMS designs where some improvement over pure coulomb counting is wanted
+without the complexity of the next method.
+
+TECHNIQUE FOUR — EXTENDED KALMAN FILTER
+
+The Extended Kalman Filter — EKF — is the gold standard. It combines coulomb counting
+and ECM-based voltage prediction using a mathematical framework that automatically
+weights each source by how trustworthy it is at any given moment.
+
+The analogy: imagine tracking the position of a car using two methods simultaneously.
+One method uses an odometer — it measures distance but accumulates errors over time.
+The other uses GPS — it gives absolute position but with noise.
+The Kalman filter is the mathematically optimal way to combine both signals.
+
+In the battery context, the odometer is coulomb counting. The GPS is the measured
+voltage compared to what the ECM model predicts.
+
+For LFP in the plateau, the GPS signal is almost silent — the voltage barely changes
+and carries almost no corrective information. So the EKF falls back to mostly
+counting current, just like a simple coulomb counter, in that range.
+
+At the edges — below twenty percent and above ninety percent — where the OCV curve
+steepens, the voltage becomes more informative and the EKF's advantage becomes clear.
+It pulls the estimate back toward reality faster.
+
+Despite the sophisticated mathematics, the EKF is very cheap to run on a modern
+microcontroller. For our sixteen-cell pack, it uses less than one percent of processor
+time on a standard STM32 chip.
+
+Best use: high-accuracy BMS designs, safety-critical energy storage systems.
+
+TECHNIQUE FIVE — HYBRID LOOKUP TABLE
+
+This is what most real commercial products actually use.
+
+Coulomb counting runs continuously as the main tracking method.
+Whenever the pack has been at rest for long enough, the OCV is measured and used
+to correct the coulomb count.
+When charging finishes — when the current has tapered to a trickle and all cells
+have reached the upper voltage limit — the BMS sets the state of charge to one hundred
+percent with high confidence.
+The assumed capacity is updated periodically from full discharge measurements
+to track the slow capacity loss of aging cells.
+
+This combination gives plus or minus three to seven percent accuracy.
+It uses very little processor time. It is reliable, predictable, and easy to
+verify in testing.
+
+It is the engineering sweet spot for home energy storage and UPS applications.
+
