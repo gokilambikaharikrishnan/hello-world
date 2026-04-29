@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C Pattern Library — Linked Lists</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', system-ui, sans-serif; line-height: 1.7; padding: 2rem; max-width: 960px; margin: 0 auto; }
+h1 { color: #58a6ff; font-size: 2rem; margin-bottom: 0.5rem; }
+.subtitle { color: #8b949e; margin-bottom: 2rem; }
+nav a { color: #58a6ff; text-decoration: none; margin-right: 1.5rem; }
+nav a:hover { text-decoration: underline; }
+.card { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; }
+.pattern-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+.pattern-num { background: #388bfd; color: white; border-radius: 4px; padding: 0.2rem 0.6rem; font-size: 0.8rem; font-weight: bold; }
+.pattern-name { color: #e6edf3; font-size: 1.2rem; font-weight: bold; }
+.section-label { color: #8b949e; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 1rem; margin-bottom: 0.4rem; font-weight: bold; }
+.story { color: #c9d1d9; background: #0d1117; border-left: 3px solid #58a6ff; padding: 0.8rem 1rem; border-radius: 0 4px 4px 0; }
+.insight { color: #e6edf3; background: #0d1117; border-left: 3px solid #3fb950; padding: 0.8rem 1rem; border-radius: 0 4px 4px 0; }
+.steps { background: #0d1117; border-radius: 4px; padding: 1rem; }
+.steps ol { padding-left: 1.5rem; }
+.steps li { margin-bottom: 0.4rem; }
+.diagram { background: #0d1117; border: 1px solid #21262d; border-radius: 4px; padding: 1rem; font-family: monospace; font-size: 0.85rem; color: #79c0ff; white-space: pre; overflow-x: auto; }
+.dry-run { background: #0d1117; border: 1px dashed #30363d; border-radius: 4px; padding: 1rem; font-family: monospace; font-size: 0.85rem; color: #a5d6ff; white-space: pre; overflow-x: auto; }
+.gotcha { background: #2d1717; border: 1px solid #f85149; border-radius: 4px; padding: 1rem; margin-top: 1rem; }
+.gotcha-title { color: #f85149; font-weight: bold; margin-bottom: 0.4rem; }
+.gotcha p { color: #ffa198; font-size: 0.9rem; }
+.leetcode { margin-top: 0.8rem; }
+.leetcode span { background: #1f6feb22; border: 1px solid #1f6feb44; color: #79c0ff; border-radius: 12px; padding: 0.2rem 0.7rem; font-size: 0.8rem; margin-right: 0.5rem; display: inline-block; margin-bottom: 0.3rem; }
+.trigger { margin-top: 1rem; background: #0d1117; border: 1px solid #3fb950; border-radius: 4px; padding: 0.7rem 1rem; color: #3fb950; font-weight: bold; font-size: 0.9rem; }
+pre { border-radius: 6px !important; margin: 0.5rem 0 !important; }
+code.hljs { font-size: 0.82rem !important; }
+.toc { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; columns: 2; column-gap: 2rem; }
+.toc a { color: #58a6ff; text-decoration: none; display: block; padding: 0.15rem 0; font-size: 0.88rem; }
+.toc a:hover { color: #79c0ff; }
+.toc-section { color: #8b949e; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: bold; margin-top: 0.8rem; margin-bottom: 0.2rem; }
+</style>
+</head>
+<body>
+<nav><a href="index.html">&#8592; Back to Index</a></nav>
+<h1>C Pattern Library &#8212; Linked Lists</h1>
+<p class="subtitle">35 patterns &mdash; node mechanics &middot; insert &amp; delete &middot; reversal &middot; fast/slow pointer &middot; merge &middot; sort &middot; structural &middot; design</p>
+
+<div class="toc">
+<div class="toc-section">Basics, Insert, Delete, Reversal</div>
+<a href="#p01">01 &middot; Node Structure and Traversal</a>
+<a href="#p02">02 &middot; Insert at Head</a>
+<a href="#p03">03 &middot; Insert at Tail</a>
+<a href="#p04">04 &middot; Insert at Position</a>
+<a href="#p05">05 &middot; Delete by Value</a>
+<a href="#p06">06 &middot; Delete Nth from End</a>
+<a href="#p07">07 &middot; Reverse a Linked List (Iterative)</a>
+<a href="#p08">08 &middot; Reverse a Linked List (Recursive)</a>
+<a href="#p09">09 &middot; Reverse K-Group</a>
+<a href="#p10">10 &middot; Find Middle of Linked List</a>
+<div class="toc-section">Fast/Slow Pointer, Merge, Sort</div>
+<a href="#p11">11 &middot; Detect Cycle (Floyd's Algorithm)</a>
+<a href="#p12">12 &middot; Find Cycle Start</a>
+<a href="#p13">13 &middot; Find Intersection of Two Lists</a>
+<a href="#p14">14 &middot; Palindrome Linked List</a>
+<a href="#p15">15 &middot; Merge Two Sorted Lists</a>
+<a href="#p16">16 &middot; Merge K Sorted Lists</a>
+<a href="#p17">17 &middot; Sort List (Merge Sort)</a>
+<a href="#p18">18 &middot; Remove Duplicates from Sorted List</a>
+<a href="#p19">19 &middot; Remove Duplicates from Unsorted List</a>
+<a href="#p20">20 &middot; Partition List Around Value</a>
+<div class="toc-section">Structural, Intersection, Math, Design</div>
+<a href="#p21">21 &middot; Rotate List</a>
+<a href="#p22">22 &middot; Odd-Even Linked List</a>
+<a href="#p23">23 &middot; Flatten Multilevel Doubly Linked List</a>
+<a href="#p24">24 &middot; Copy List with Random Pointer</a>
+<a href="#p25">25 &middot; Add Two Numbers (LL Representation)</a>
+<a href="#p26">26 &middot; Add Two Numbers II (Reverse-Free)</a>
+<a href="#p27">27 &middot; Swap Nodes in Pairs</a>
+<a href="#p28">28 &middot; Reorder List</a>
+<a href="#p29">29 &middot; LRU Cache (Doubly Linked List + HashMap)</a>
+<a href="#p30">30 &middot; LFU Cache</a>
+<a href="#p31">31 &middot; Doubly Linked List Implementation</a>
+<a href="#p32">32 &middot; Circular Linked List</a>
+<a href="#p33">33 &middot; Skip List (Concept)</a>
+<a href="#p34">34 &middot; XOR Linked List</a>
+<a href="#p35">35 &middot; Josephus Problem</a>
+</div>
+
+<div class="card" id="p01">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 01</span>
+    <span class="pattern-name">Node Structure and Traversal</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">A treasure hunt where each clue tells you the location of the next clue. You start at the first clue (head), follow the arrow to the next, and keep going until there are no more arrows (NULL). That's a linked list: each node holds data and a pointer to the next node.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">A linked list node is a struct with a value and a next pointer. Traversal is just following next pointers until NULL. Unlike arrays, there's no random access — reaching node k costs O(k). But insertion and deletion at a known point cost O(1).</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Define <code>struct Node { int val; struct Node *next; }</code>.</li>
+    <li>Head pointer points to first node; last node's next == NULL.</li>
+    <li>Traversal: <code>Node *cur = head; while (cur) { use cur-&gt;val; cur = cur-&gt;next; }</code>.</li>
+    <li>Always check cur != NULL before dereferencing.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">head → [1|•] → [2|•] → [3|•] → [4|NULL]
+         val next    val next
+
+Traversal: cur=head(1) → cur=2 → cur=3 → cur=4 → cur=NULL → stop</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+typedef struct Node {
+    int val;
+    struct Node *next;   /* pointer to next node (NULL if last) */
+} Node;
+
+/* Allocate and initialize a new node */
+Node *new_node(int val) {
+    Node *n = malloc(sizeof(Node));
+    n-&gt;val = val;
+    n-&gt;next = NULL;
+    return n;
+}
+
+/* Print all values in list */
+void print_list(Node *head) {
+    for (Node *cur = head; cur; cur = cur-&gt;next)
+        printf("%d ", cur-&gt;val);
+    printf("\n");
+}
+
+/* Free all nodes */
+void free_list(Node *head) {
+    while (head) {
+        Node *tmp = head-&gt;next;   /* save next before freeing */
+        free(head);
+        head = tmp;
+    }
+}
+
+int main(void) {
+    Node *head = new_node(1);
+    head-&gt;next = new_node(2);
+    head-&gt;next-&gt;next = new_node(3);
+    print_list(head);   /* 1 2 3 */
+    free_list(head);
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">print_list(head):
+  cur=&Node(1): print 1, cur=cur->next=&Node(2)
+  cur=&Node(2): print 2, cur=cur->next=&Node(3)
+  cur=&Node(3): print 3, cur=cur->next=NULL
+  cur=NULL: stop
+output: 1 2 3 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Save next pointer before freeing</div>
+    <p>In <code>free_list</code>: always save <code>head-&gt;next</code> in a temp variable BEFORE calling <code>free(head)</code>. After free, the memory is returned to the allocator and <code>head-&gt;next</code> is undefined behavior to read.</p>
+  </div>
+  <div class="leetcode"><span>N/A (fundamental structure)</span></div>
+  <div class="trigger">When working with linked lists → think: node = {val, *next}; traverse with cur=cur->next until NULL.</div>
+</div>
+
+<div class="card" id="p02">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 02</span>
+    <span class="pattern-name">Insert at Head</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">Inserting at the front of a line: the new person becomes the first in line and points to whoever was first before. Two pointer updates, O(1) time — no matter how long the list is.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Head insertion is the cheapest list operation. New node's next = old head; head = new node. The key pattern: always set the new node's pointer first, then update head — doing it in the other order loses the rest of the list.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Allocate new node, set val.</li>
+    <li>new_node-&gt;next = head (new node points to old first).</li>
+    <li>head = new_node (head now points to new first).</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">Before: head → [2] → [3] → NULL
+Insert 1 at head:
+  new-&gt;next = head   → new → [2] → [3] → NULL
+  head = new         → head → [1] → [2] → [3] → NULL</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+typedef struct Node { int val; struct Node *next; } Node;
+
+/* Returns new head — caller must update their head pointer */
+Node *insert_head(Node *head, int val) {
+    Node *n = malloc(sizeof(Node));
+    n-&gt;val = val;
+    n-&gt;next = head;   /* step 1: point new node to old head */
+    return n;          /* step 2: new node IS the new head */
+}
+
+int main(void) {
+    Node *head = NULL;
+    head = insert_head(head, 3);
+    head = insert_head(head, 2);
+    head = insert_head(head, 1);
+    for (Node *c = head; c; c = c-&gt;next) printf("%d ", c-&gt;val);
+    /* 1 2 3 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">head=NULL
+insert_head(NULL, 3): new->{3,NULL}, return new → head=[3]→NULL
+insert_head([3], 2): new->{2,[3]}, return new → head=[2]→[3]→NULL
+insert_head([2..],1): new->{1,[2]}, return new → head=[1]→[2]→[3]→NULL ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Return the new head — don't modify through double pointer unless designed that way</div>
+    <p>A common pattern is <code>void push(Node **head, int val)</code> which modifies head through a pointer-to-pointer. Both styles work, but mixing them causes bugs. Pick one convention and stick with it throughout your codebase.</p>
+  </div>
+  <div class="leetcode"><span>206 · Reverse Linked List (uses head insert)</span><span>21 · Merge Two Sorted Lists</span></div>
+  <div class="trigger">When prepending to a linked list → think: new->next = head; head = new. Set next FIRST.</div>
+</div>
+
+
+<div class="card" id="p03">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 03</span>
+    <span class="pattern-name">Insert at Tail</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">Joining the back of a queue. You walk to the end (following all the next pointers until you find the last person with no one behind them), then you link in. If you maintain a tail pointer, you skip the walk and get O(1) append.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Naïve tail insert is O(n) — you must traverse to find the last node. With a tail pointer maintained alongside head, append becomes O(1). The tail pointer always points to the node whose next == NULL.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>If list is empty: head = tail = new_node.</li>
+    <li>Else: tail-&gt;next = new_node; tail = new_node.</li>
+    <li>new_node-&gt;next = NULL (already set in new_node()).</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">Before: head→[1]→[2]→NULL, tail→[2]
+Append 3:
+  tail->next = new    → [2]→[3]→NULL
+  tail = new          → tail→[3]
+After: head→[1]→[2]→[3]→NULL, tail→[3]</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+typedef struct Node { int val; struct Node *next; } Node;
+
+typedef struct { Node *head; Node *tail; } List;
+
+void append(List *L, int val) {
+    Node *n = malloc(sizeof(Node));
+    n-&gt;val = val; n-&gt;next = NULL;
+    if (!L-&gt;head) {
+        L-&gt;head = L-&gt;tail = n;   /* first node: both head and tail */
+    } else {
+        L-&gt;tail-&gt;next = n;       /* link old tail to new node */
+        L-&gt;tail = n;              /* advance tail pointer */
+    }
+}
+
+int main(void) {
+    List L = {NULL, NULL};
+    append(&amp;L, 1); append(&amp;L, 2); append(&amp;L, 3);
+    for (Node *c = L.head; c; c = c-&gt;next) printf("%d ", c-&gt;val);
+    /* 1 2 3 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">append(1): head=tail=[1]→NULL
+append(2): tail->next=[2], tail=[2] → head=[1]→[2]→NULL
+append(3): tail->next=[3], tail=[3] → head=[1]→[2]→[3]→NULL ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Update tail when the first node is inserted</div>
+    <p>When the list is empty, both head AND tail must be set to the new node. If you only set head, tail remains NULL and the next append will null-pointer-dereference on <code>L-&gt;tail-&gt;next = n</code>.</p>
+  </div>
+  <div class="leetcode"><span>N/A (fundamental)</span><span>Used in queue implementations</span></div>
+  <div class="trigger">When appending to a list → think: keep a tail pointer; tail->next=new; tail=new. O(1) vs O(n) traversal.</div>
+</div>
+
+<div class="card" id="p04">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 04</span>
+    <span class="pattern-name">Insert at Position</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">You want to cut into a queue at position k. Walk to person k-1 (the one just before the gap), make them point to you, and make yourself point to whoever they were pointing to. Two pointer reassignments while standing in the right place.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">To insert before position k (0-indexed), walk to node k-1 (the predecessor). Then: new-&gt;next = prev-&gt;next; prev-&gt;next = new. Order matters: set new-&gt;next first, then update prev-&gt;next — otherwise you lose the rest of the list.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Special case: pos==0 → insert at head.</li>
+    <li>Walk to node at position pos-1 (the predecessor).</li>
+    <li>new-&gt;next = prev-&gt;next (point new to what was after prev).</li>
+    <li>prev-&gt;next = new (link prev to new).</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">List: [1]→[2]→[4]→NULL, insert 3 at pos=2
+Walk to pos=1: prev→[2]
+  new-&gt;next = prev-&gt;next = [4]    → new→[3]→[4]→NULL
+  prev-&gt;next = new                 → [2]→[3]→[4]→NULL
+Result: [1]→[2]→[3]→[4]→NULL ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+typedef struct Node { int val; struct Node *next; } Node;
+Node *new_node(int v) { Node *n=malloc(sizeof(Node)); n-&gt;val=v; n-&gt;next=NULL; return n; }
+
+Node *insert_at(Node *head, int pos, int val) {
+    Node *n = new_node(val);
+    if (pos == 0) { n-&gt;next = head; return n; }   /* head insert */
+
+    Node *prev = head;
+    for (int i = 0; i &lt; pos-1 &amp;&amp; prev-&gt;next; i++)
+        prev = prev-&gt;next;          /* walk to predecessor */
+
+    n-&gt;next = prev-&gt;next;           /* new points to what was after prev */
+    prev-&gt;next = n;                  /* prev now points to new */
+    return head;
+}
+
+int main(void) {
+    Node *h = new_node(1);
+    h-&gt;next = new_node(2);
+    h-&gt;next-&gt;next = new_node(4);
+    h = insert_at(h, 2, 3);        /* insert 3 between 2 and 4 */
+    for (Node *c=h; c; c=c-&gt;next) printf("%d ",c-&gt;val); /* 1 2 3 4 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">insert_at(h, 2, 3):
+  pos=2, walk: prev=h[1]→prev=h->next=[2] (i=0,pos-1=1)
+  n->{3,NULL}
+  n->next = prev->next = [4]  → n->{3,[4]}
+  prev->next = n              → [2]->[3]->[4]
+  return h → [1]->[2]->[3]->[4]->NULL ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Set new->next BEFORE updating prev->next</div>
+    <p>If you do <code>prev-&gt;next = new</code> first, you lose the pointer to the rest of the list (the old prev-&gt;next value). Always wire the new node's next pointer before redirecting the predecessor.</p>
+  </div>
+  <div class="leetcode"><span>707 · Design Linked List</span></div>
+  <div class="trigger">When inserting into a linked list → think: walk to predecessor; new->next = prev->next; prev->next = new. Set new->next FIRST.</div>
+</div>
+
+
+<div class="card" id="p05">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 05</span>
+    <span class="pattern-name">Delete by Value</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">Someone leaves the queue. The person behind them needs to bridge the gap — pointing directly to the person in front. Walk along until you find the person to remove, remember who's behind them, and relink.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">To delete a node, you need its predecessor (the node before it). Walk keeping a <code>prev</code> pointer one step behind <code>cur</code>. When cur-&gt;val matches: <code>prev-&gt;next = cur-&gt;next</code>, then free cur. Head deletion is a special case.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>If head-&gt;val == target: head = head-&gt;next; free old head.</li>
+    <li>Walk with prev=head, cur=head-&gt;next until cur-&gt;val==target or cur==NULL.</li>
+    <li>Found: prev-&gt;next = cur-&gt;next; free(cur).</li>
+    <li>Handle "not found" (cur reached NULL without match).</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">Delete 2: [1]→[2]→[3]→NULL
+  prev=[1], cur=[2]: cur->val==2
+  prev->next = cur->next = [3]   → [1]→[3]→NULL
+  free(cur=[2])
+Result: [1]→[3]→NULL ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+typedef struct Node { int val; struct Node *next; } Node;
+
+Node *delete_val(Node *head, int val) {
+    if (!head) return NULL;
+    if (head-&gt;val == val) {         /* head deletion */
+        Node *tmp = head-&gt;next;
+        free(head);
+        return tmp;
+    }
+    Node *prev = head, *cur = head-&gt;next;
+    while (cur &amp;&amp; cur-&gt;val != val) {
+        prev = cur;
+        cur = cur-&gt;next;
+    }
+    if (cur) {                       /* found */
+        prev-&gt;next = cur-&gt;next;
+        free(cur);
+    }
+    return head;
+}
+
+int main(void) {
+    /* build 1→2→3 */
+    Node *h = malloc(sizeof(Node)); h-&gt;val=1;
+    h-&gt;next = malloc(sizeof(Node)); h-&gt;next-&gt;val=2;
+    h-&gt;next-&gt;next = malloc(sizeof(Node)); h-&gt;next-&gt;next-&gt;val=3;
+    h-&gt;next-&gt;next-&gt;next = NULL;
+    h = delete_val(h, 2);
+    for (Node *c=h; c; c=c-&gt;next) printf("%d ", c-&gt;val); /* 1 3 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">delete_val([1]→[2]→[3], 2):
+  head->val=1 ≠ 2
+  prev=[1], cur=[2]: cur->val==2 → found
+  prev->next = cur->next = [3]
+  free([2])
+  return head=[1]→[3]→NULL ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Deleting the head needs special handling</div>
+    <p>You can't use the prev/cur approach for the head node because there's no predecessor. Always check head first as a special case, or use a sentinel (dummy) node before head to unify all deletions.</p>
+  </div>
+  <div class="leetcode"><span>203 · Remove Linked List Elements</span><span>237 · Delete Node in a Linked List</span></div>
+  <div class="trigger">When deleting from a linked list → think: prev/cur pair; found: prev->next = cur->next; free cur. Special-case head.</div>
+</div>
+
+<div class="card" id="p06">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 06</span>
+    <span class="pattern-name">Delete Nth Node from End</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">You don't know the list length, and you want to remove the 3rd node from the end. Send a scout n steps ahead. Then walk both the scout and a follower together. When the scout hits the end, the follower is exactly at the node to delete. One pass, O(n).</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Two-pointer gap technique: advance fast pointer n+1 steps (n+1 so slow lands on the predecessor, not the node itself). Then advance both until fast == NULL. Slow is now at the predecessor of the target. Use a dummy head to handle deleting the actual head.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Create dummy node pointing to head. fast = slow = dummy.</li>
+    <li>Advance fast n+1 steps.</li>
+    <li>Advance both fast and slow until fast == NULL.</li>
+    <li>slow-&gt;next = slow-&gt;next-&gt;next (skip the target node).</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">List: D→[1]→[2]→[3]→[4]→[5]→NULL, remove 2nd from end
+  fast advances 3 steps: fast→[3]
+  both advance until fast=NULL:
+    fast=[4],slow=[1] → fast=[5],slow=[2] → fast=NULL,slow=[3]
+  slow->next=[4]=slow->next->next → [1]→[2]→[3]→[5]→NULL ✓
+  (node [4] deleted, was 2nd from end)</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+typedef struct Node { int val; struct Node *next; } Node;
+
+Node *remove_nth_from_end(Node *head, int n) {
+    Node dummy = {0, head};        /* dummy node before head */
+    Node *fast = &amp;dummy, *slow = &amp;dummy;
+
+    for (int i = 0; i &lt;= n; i++) fast = fast-&gt;next;  /* n+1 steps */
+
+    while (fast) { fast = fast-&gt;next; slow = slow-&gt;next; }
+
+    Node *del = slow-&gt;next;
+    slow-&gt;next = slow-&gt;next-&gt;next;   /* skip deleted node */
+    free(del);
+    return dummy.next;
+}
+
+int main(void) {
+    /* build 1→2→3→4→5 */
+    Node *h=NULL, *t=NULL;
+    for (int i=1; i&lt;=5; i++) {
+        Node *n=malloc(sizeof(Node)); n-&gt;val=i; n-&gt;next=NULL;
+        if(!h) h=t=n; else { t-&gt;next=n; t=n; }
+    }
+    h = remove_nth_from_end(h, 2);
+    for (Node *c=h; c; c=c-&gt;next) printf("%d ",c-&gt;val); /* 1 2 3 5 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">remove_nth_from_end([1..5], n=2):
+dummy→[1]→[2]→[3]→[4]→[5]→NULL
+fast advances 3 steps: fast→[3]
+both advance:
+  fast=[4],slow=[1]
+  fast=[5],slow=[2]
+  fast=NULL,slow=[3]
+del=[4]; slow->next=[5]
+list: [1]→[2]→[3]→[5]→NULL ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Advance fast n+1 times, not n</div>
+    <p>Advancing n times would land slow ON the node to delete, not its predecessor — and you can't relink without the predecessor. The extra step (+1) ensures slow lands one node before the target. The dummy node makes this work even when deleting the head (n == length).</p>
+  </div>
+  <div class="leetcode"><span>19 · Remove Nth Node From End of List</span></div>
+  <div class="trigger">When deleting Nth from end → think: two pointers, n+1 gap, dummy head, advance together until fast=NULL.</div>
+</div>
+
+
+<div class="card" id="p07">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 07</span>
+    <span class="pattern-name">Reverse a Linked List — Iterative</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">Reversing a line of people: each person turns around and grabs the shoulder of the person who was behind them. You need three pointers — who you were holding (prev), who you are (cur), and who you'll hold next (next_tmp) — because once you reverse your grip, you've lost the forward chain.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Three-pointer iterative reversal: at each step, save next, flip the arrow (cur-&gt;next = prev), advance prev and cur. After the loop, prev points to the new head. This is the most important linked list pattern — it appears as a subroutine in dozens of problems.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>prev=NULL, cur=head.</li>
+    <li>While cur: save next=cur-&gt;next; cur-&gt;next=prev; prev=cur; cur=next.</li>
+    <li>Return prev (new head).</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">Before:  NULL ← ? [1]→[2]→[3]→NULL
+Step 1: prev=NULL, cur=[1], next=[2]
+  cur->next=NULL → [1]→NULL
+  prev=[1], cur=[2], next=[3]
+Step 2: cur->next=[1] → [2]→[1]→NULL
+  prev=[2], cur=[3], next=NULL
+Step 3: cur->next=[2] → [3]→[2]→[1]→NULL
+  prev=[3], cur=NULL → stop
+Return prev=[3] (new head) ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+typedef struct Node { int val; struct Node *next; } Node;
+
+Node *reverse(Node *head) {
+    Node *prev = NULL, *cur = head;
+    while (cur) {
+        Node *next = cur-&gt;next;   /* save forward link before breaking it */
+        cur-&gt;next = prev;          /* reverse the arrow */
+        prev = cur;                /* prev advances to cur */
+        cur = next;                /* cur advances to saved next */
+    }
+    return prev;   /* prev is now the last node = new head */
+}
+
+int main(void) {
+    /* build 1→2→3→4→5 */
+    Node *h = NULL;
+    for (int i=5; i&gt;=1; i--) {
+        Node *n=malloc(sizeof(Node)); n-&gt;val=i; n-&gt;next=h; h=n;
+    }
+    h = reverse(h);
+    for (Node *c=h; c; c=c-&gt;next) printf("%d ",c-&gt;val); /* 5 4 3 2 1 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">reverse([1]→[2]→[3]):
+  prev=NULL, cur=[1]
+  iter1: next=[2], [1]->NULL, prev=[1], cur=[2]
+  iter2: next=[3], [2]->[1], prev=[2], cur=[3]
+  iter3: next=NULL, [3]->[2], prev=[3], cur=NULL
+  return [3]→[2]→[1]→NULL ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Save next BEFORE overwriting cur->next</div>
+    <p>The moment you write <code>cur-&gt;next = prev</code>, the forward pointer is gone. If you forgot to save <code>next = cur-&gt;next</code> first, you've lost the rest of the list forever. The save-then-flip order is non-negotiable.</p>
+  </div>
+  <div class="leetcode"><span>206 · Reverse Linked List</span><span>92 · Reverse Linked List II</span></div>
+  <div class="trigger">When reversing a linked list → think: prev=NULL, cur=head; save next; flip cur->next=prev; advance both.</div>
+</div>
+
+<div class="card" id="p08">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 08</span>
+    <span class="pattern-name">Reverse a Linked List — Recursive</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">Trust the recursion: "reverse everything after head, then make head the tail." When the recursion unwinds, head-&gt;next (which is now the last node of the reversed sublist) gets its next pointer updated to point back to head, making head the new tail.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Recursive reverse: the base case is a single node or empty list. Otherwise: reverse(head-&gt;next) returns the new head of the reversed tail. Then: <code>head-&gt;next-&gt;next = head</code> (make the old second node point back to head); <code>head-&gt;next = NULL</code> (head is now the tail). Return new_head.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Base: if head==NULL or head-&gt;next==NULL: return head.</li>
+    <li>new_head = reverse(head-&gt;next) — recursively reverse the rest.</li>
+    <li>head-&gt;next-&gt;next = head — make old second node point back to head.</li>
+    <li>head-&gt;next = NULL — head is now the last node.</li>
+    <li>Return new_head.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">reverse([1]→[2]→[3]):
+  recurse: reverse([2]→[3]) → returns [3] as new_head
+    head=[1], head->next=[2]
+    head->next->next = head → [2]->[1]
+    head->next = NULL → [1]->NULL
+  Full list: [3]→[2]→[1]→NULL, new_head=[3] ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+typedef struct Node { int val; struct Node *next; } Node;
+
+Node *reverse_rec(Node *head) {
+    if (!head || !head-&gt;next) return head;  /* base case */
+
+    Node *new_head = reverse_rec(head-&gt;next); /* reverse rest */
+    head-&gt;next-&gt;next = head;   /* old second node points back to head */
+    head-&gt;next = NULL;          /* head is now the new tail */
+    return new_head;            /* new head is unchanged from recursion */
+}
+
+int main(void) {
+    /* build 1→2→3 */
+    Node a={1,NULL}, b={2,NULL}, c={3,NULL};
+    a.next=&amp;b; b.next=&amp;c;
+    Node *h = reverse_rec(&amp;a);
+    for (Node *cur=h; cur; cur=cur-&gt;next) printf("%d ",cur-&gt;val); /* 3 2 1 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">reverse_rec([1]→[2]→[3]):
+  call reverse_rec([2]→[3]):
+    call reverse_rec([3]): base → return [3]
+    new_head=[3]; [2]->next=[3]; [3]->next=[2]; [2]->next=NULL
+    return [3] (new head)
+  back in first call: new_head=[3]
+  head=[1], head->next=[2]; [2]->next=[1]; [1]->next=NULL
+  return [3] → [3]→[2]→[1]→NULL ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: O(n) stack depth — use iterative for long lists</div>
+    <p>Recursive reversal uses O(n) call stack frames. For a list of 100,000 nodes, this overflows the stack. In production, use the iterative version (Pattern 07). The recursive version is elegant for understanding and interviews on small inputs.</p>
+  </div>
+  <div class="leetcode"><span>206 · Reverse Linked List</span></div>
+  <div class="trigger">When reversing recursively → think: reverse(rest); head->next->next=head; head->next=NULL; return new_head.</div>
+</div>
+
+
+<div class="card" id="p09">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 09</span>
+    <span class="pattern-name">Reverse K-Group</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">Instead of reversing the whole list, reverse every k consecutive nodes as a group. If fewer than k nodes remain at the end, leave them as-is. This requires finding each group, reversing it, and then stitching the groups together.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Walk k steps to check if a full group exists. If yes, reverse those k nodes (reusing the three-pointer technique), then recursively (or iteratively) handle the rest. Connect the tail of the reversed group to the result of processing the remainder.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Check if k nodes remain (walk k steps; if not, return head as-is).</li>
+    <li>Reverse k nodes using three-pointer technique; group_tail is original head.</li>
+    <li>group_tail-&gt;next = reverse_k(remaining, k) — attach reversed tail.</li>
+    <li>Return new_head (old k-th node).</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">[1]→[2]→[3]→[4]→[5], k=2:
+  Group 1: reverse [1,2] → [2]→[1], tail=[1]
+  Group 2: reverse [3,4] → [4]→[3], tail=[3]
+  Remainder: [5] (less than k, keep as-is)
+  Connect: [2]→[1]→[4]→[3]→[5] ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+typedef struct Node { int val; struct Node *next; } Node;
+
+Node *reverse_k_group(Node *head, int k) {
+    /* Check if k nodes remain */
+    Node *check = head;
+    for (int i = 0; i &lt; k; i++) {
+        if (!check) return head;   /* fewer than k nodes: don't reverse */
+        check = check-&gt;next;
+    }
+
+    /* Reverse k nodes */
+    Node *prev = NULL, *cur = head;
+    for (int i = 0; i &lt; k; i++) {
+        Node *next = cur-&gt;next;
+        cur-&gt;next = prev;
+        prev = cur;
+        cur = next;
+    }
+    /* head is now the tail of the reversed group */
+    head-&gt;next = reverse_k_group(cur, k);  /* attach reversed remainder */
+    return prev;   /* prev is the new head of this group */
+}
+
+int main(void) {
+    /* build 1→2→3→4→5 */
+    Node *h=NULL, *t=NULL;
+    for (int i=1; i&lt;=5; i++) {
+        Node *n=malloc(sizeof(Node)); n-&gt;val=i; n-&gt;next=NULL;
+        if(!h) h=t=n; else{t-&gt;next=n;t=n;}
+    }
+    h = reverse_k_group(h, 2);
+    for (Node *c=h;c;c=c-&gt;next) printf("%d ",c-&gt;val); /* 2 1 4 3 5 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">reverse_k_group([1..5], k=2):
+  check: 2 nodes exist (check=[3] after 2 steps)
+  reverse [1],[2]: prev=[2]→[1]→NULL, cur=[3], head=[1]
+  head->next = reverse_k_group([3..5], 2)
+    check: 2 exist (check=[5])
+    reverse [3],[4]: prev=[4]→[3]→NULL, cur=[5], head=[3]
+    head->next = reverse_k_group([5],2)
+      check: only 1 node, return [5]
+    head=[3]->next=[5] → [4]→[3]→[5]
+    return [4]
+  head=[1]->next=[4]→[3]→[5] → [2]→[1]→[4]→[3]→[5] ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Check BEFORE reversing, not after</div>
+    <p>Check k nodes are available before doing any reversals. If you reverse first and then find fewer than k nodes, you've already mutated the list and can't put it back. The check pass is read-only; the reversal pass is destructive.</p>
+  </div>
+  <div class="leetcode"><span>25 · Reverse Nodes in k-Group</span></div>
+  <div class="trigger">When reversing in groups of k → think: check k nodes exist; reverse k; head->next = recurse(remainder); return prev.</div>
+</div>
+
+<div class="card" id="p10">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 10</span>
+    <span class="pattern-name">Find Middle of Linked List</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">A hare and tortoise race. The hare runs twice as fast. When the hare reaches the finish line (end of list), the tortoise is at the halfway point. That's Floyd's middle-finding trick — one pointer moves one step, the other moves two steps.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Fast pointer moves 2 steps per iteration, slow moves 1. When fast reaches the end (fast==NULL or fast-&gt;next==NULL), slow is at the middle. For even-length lists, slow lands on the second middle — adjust by checking fast-&gt;next to get the first middle if needed.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>slow = head, fast = head.</li>
+    <li>While fast != NULL and fast-&gt;next != NULL: slow = slow-&gt;next; fast = fast-&gt;next-&gt;next.</li>
+    <li>When loop ends: slow points to the middle.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">Odd length [1]→[2]→[3]→[4]→[5]:
+  slow=1,fast=1 → slow=2,fast=3 → slow=3,fast=5
+  fast->next=NULL → stop, slow=[3] (middle) ✓
+
+Even length [1]→[2]→[3]→[4]:
+  slow=1,fast=1 → slow=2,fast=3 → slow=3,fast=NULL
+  fast=NULL → stop, slow=[3] (second middle)
+  For first middle: check fast->next before advancing</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+typedef struct Node { int val; struct Node *next; } Node;
+
+Node *find_middle(Node *head) {
+    Node *slow = head, *fast = head;
+    while (fast &amp;&amp; fast-&gt;next) {
+        slow = slow-&gt;next;
+        fast = fast-&gt;next-&gt;next;
+    }
+    return slow;   /* middle node */
+}
+
+/* First middle for even-length lists */
+Node *find_first_middle(Node *head) {
+    Node *slow = head, *fast = head;
+    while (fast-&gt;next &amp;&amp; fast-&gt;next-&gt;next) {
+        slow = slow-&gt;next;
+        fast = fast-&gt;next-&gt;next;
+    }
+    return slow;
+}
+
+int main(void) {
+    /* build 1→2→3→4→5 */
+    Node a={1},b={2},c={3},d={4},e={5};
+    a.next=&amp;b;b.next=&amp;c;c.next=&amp;d;d.next=&amp;e;e.next=NULL;
+    printf("mid=%d\n", find_middle(&amp;a)-&gt;val);   /* 3 */
+
+    /* even: 1→2→3→4 */
+    d.next=NULL;
+    printf("mid=%d\n", find_middle(&amp;a)-&gt;val);   /* 3 (second middle) */
+    printf("1st_mid=%d\n", find_first_middle(&amp;a)-&gt;val); /* 2 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">find_middle([1]→[2]→[3]→[4]→[5]):
+  slow=1,fast=1: fast&&fast->next → slow=2,fast=3
+  slow=2,fast=3: fast&&fast->next → slow=3,fast=5
+  slow=3,fast=5: fast->next=NULL → stop
+  return slow=[3] ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Check fast AND fast->next in the while condition</div>
+    <p>The condition must be <code>fast &amp;&amp; fast-&gt;next</code>. If you only check <code>fast</code>, then <code>fast-&gt;next-&gt;next</code> will null-pointer-dereference when fast is the last node (<code>fast-&gt;next == NULL</code>). Both checks are needed.</p>
+  </div>
+  <div class="leetcode"><span>876 · Middle of the Linked List</span><span>Used in: merge sort, palindrome check</span></div>
+  <div class="trigger">When finding the middle → think: slow/fast pointers; fast moves 2x; when fast hits end, slow is at middle.</div>
+</div>
+
+<!-- PATTERNS_END -->
+<script>hljs.highlightAll();</script>
+</body>
+</html>

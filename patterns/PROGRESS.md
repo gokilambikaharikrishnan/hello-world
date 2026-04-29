@@ -8,7 +8,7 @@
 | arrays.html | 54 | 🔄 In Progress | — |
 | pointers.html | 30 | ✅ Done | 2026-04-24 |
 | strings.html | 40 | ✅ Done | 2026-04-29 |
-| linkedlist.html | 35 | ⏳ Pending | — |
+| linkedlist.html | 35 | 🔄 In Progress | — |
 | stacks.html | 32 | ⏳ Pending | — |
 | queues.html | 22 | ⏳ Pending | — |
 
@@ -29,6 +29,7 @@
 | ✅ 11 | strings.html | 11-20 | feat(strings): patterns 11-20 — sliding window, anagram search, permutation, char replacement, exactly-k |
 | ✅ 12 | strings.html | 21-30 | feat(strings): patterns 21-30 — palindromes, two-pointer, stack, zigzag, Roman numerals |
 | ✅ 13 | strings.html | 31-40 | feat(strings): patterns 31-40 — KMP, Rabin-Karp, edit distance, LCS, word break, regex DP |
+| ✅ 14 | linkedlist.html | 01-10 | feat(linkedlist): patterns 01-10 — node/traversal, insert, delete, reverse, k-group, middle |
 
 ## arrays.html Progress
 - [x] Patterns 01–10 (Prefix Sum + Two Pointer basics)
@@ -49,7 +50,7 @@
 - [x] Patterns 31–40 (Pattern Matching, DP, Manipulation)
 
 ## linkedlist.html Progress
-- [ ] Patterns 01–10 (Basics, Insert, Delete, Reverse)
+- [x] Patterns 01–10 (Basics, Insert, Delete, Reverse)
 - [ ] Patterns 11–20 (Fast/Slow Pointer, Merge, Sort)
 - [ ] Patterns 21–35 (Structural, Intersection, Math, Design)
 
