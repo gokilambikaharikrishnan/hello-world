@@ -1021,3 +1021,68 @@ Fifty-six hours to correct a thirty-millivolt imbalance using a ten-ohm resistor
 as we calculated earlier — shows why balancing must happen over many charging cycles,
 not in a single session.
 
+
+============================================================
+SECTION 2.13 — NMC AND NCA: THE ALTERNATIVES
+============================================================
+
+Even if you only work with LFP, you need to understand the two main alternatives:
+NMC and NCA. Customers compare them. System integrators may specify them.
+And understanding the differences explains why LFP BMS settings cannot simply
+be copied to an NMC system.
+
+NMC — NICKEL MANGANESE COBALT
+
+NMC uses a layered crystal structure with three active metals: nickel, manganese,
+and cobalt. Each metal plays a different role.
+
+Nickel is the main energy carrier — more nickel means higher energy density.
+Manganese is a structural support that holds the crystal together and reduces swelling.
+Cobalt improves charge rate capability but is expensive and raises ethical
+sourcing concerns.
+
+The industry trend has been to maximise nickel: from equal thirds of each metal
+to sixty percent nickel, to eighty percent nickel. Each step increases energy density
+but reduces thermal stability. At eighty percent nickel, NMC starts releasing oxygen
+at around one hundred and eighty degrees Celsius — only sixty degrees above conditions
+possible in an abuse scenario.
+
+What this means for the BMS:
+
+NMC has a much more useful voltage curve. It spans about one-point-two volts
+from fully charged to fully discharged, compared to LFP's fifty millivolts in
+the plateau. Voltage-based SOC estimation actually works for NMC. This is a
+significant BMS simplification.
+
+But NMC requires tighter protection: charge cutoff at four-point-two volts per cell
+versus LFP's three-point-six-five. That higher voltage speeds up electrolyte breakdown.
+Overcharging NMC even slightly is far more dangerous than with LFP.
+
+NCA — NICKEL COBALT ALUMINIUM
+
+NCA replaces manganese with aluminium. Aluminium is a smaller, more stable atom
+that lets the cell push nickel content even higher — up to eighty percent —
+without the crystal structure collapsing. The result is the highest energy density
+of any major cathode chemistry in production: two hundred to two-eighty watt-hours
+per kilogram at cell level. Tesla's original cells and modern large-format cells
+use NCA-based formulations.
+
+The trade-offs are severe.
+
+NCA starts releasing oxygen at around one-hundred-and-sixty degrees Celsius —
+the lowest onset temperature of any major chemistry. It is very sensitive to moisture.
+It has higher self-discharge at warm temperatures. Every protection limit must be
+tighter, every temperature threshold lower, every SOC uncertainty smaller.
+
+This is why large NCA packs in electric vehicles use the most sophisticated
+SOC algorithms — Extended Kalman Filter at minimum, sometimes more advanced physics-based
+models. The consequences of getting SOC wrong with NCA are more serious.
+
+THE COMPARISON IN ONE SENTENCE:
+
+LFP: safest, longest life, lowest energy density, hardest SOC estimation.
+NMC: good balance of energy and safety, easier SOC estimation, shorter cycle life.
+NCA: highest energy density, highest risk, requires the most sophisticated BMS.
+
+For home energy storage and UPS: LFP is the right choice. Every time.
+
