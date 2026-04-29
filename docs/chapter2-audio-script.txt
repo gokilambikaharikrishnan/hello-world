@@ -172,3 +172,90 @@ this swelling, and the BMS must monitor swelling-induced pressure as a health
 indicator. Pouch cells are common in electric vehicles but less common in
 stationary energy storage.
 
+
+============================================================
+SECTION 2.4 — THE OCV CURVE AND THE BMS'S HARDEST PROBLEM
+============================================================
+
+Now we arrive at the single most important concept in this entire chapter.
+The open-circuit voltage curve. And why it is the root cause of most of the
+complexity in BMS software.
+
+WHAT IS OPEN-CIRCUIT VOLTAGE?
+
+Open-circuit voltage — OCV for short — is the voltage you measure when no current
+is flowing and the cell has been resting long enough for everything inside to
+reach equilibrium. It is the "true" resting voltage of the cell.
+
+For lead-acid batteries, OCV is very useful. At twelve point six volts, the battery
+is fully charged. At twelve point zero volts, it is roughly half full. At eleven
+point eight volts, it is nearly empty. You can look at the voltage and know where
+you are.
+
+For LFP, this does not work. At all.
+
+Here is why. Remember the two-phase reaction we just described — where crystals are
+either full or empty, with nothing in between? During that conversion — which covers
+the twenty to ninety percent range of charge — the voltage of the cell barely moves.
+The entire plateau spans about fifty millivolts.
+
+Fifty millivolts. Across seventy percent of the charge range.
+
+A typical voltage measurement has noise of one to two millivolts. The OCV change
+across ten percent of the charge range in the plateau is roughly five millivolts.
+That is barely above the noise floor. You are trying to distinguish five millivolts
+of signal buried in two millivolts of noise — and draw conclusions about whether
+the pack has enough energy to run for eight more hours or two more hours.
+
+It cannot be done reliably.
+
+This is not a measurement problem. It is not a hardware problem. It is a
+fundamental information problem. The information is not in the voltage.
+No amount of better sensors or smarter software can extract what is not there.
+
+THE IR DROP MAKES IT EVEN HARDER
+
+Even if the cell is at rest and you measure carefully — there is another complication
+when current is flowing.
+
+The measured terminal voltage is not the same as OCV.
+It is OCV minus the voltage drop caused by current flowing through the cell's
+internal resistance.
+
+At one hundred amps discharge from our two-eighty amp-hour cell, with an internal
+resistance of about zero point five milliohms, that voltage drop is fifty millivolts.
+That is the same magnitude as the entire useful OCV variation across the plateau.
+
+The voltage you read during discharge tells you almost nothing about how full the
+cell is. It tells you mostly about how much current is flowing and what the
+cell's resistance is.
+
+HYSTERESIS — THE CHARGE AND DISCHARGE CURVES ARE NOT THE SAME
+
+One more complication. The OCV curve for LFP is not a single line.
+It is actually two slightly different curves — one for when the cell was last
+charging, and one for when it was last discharging.
+
+In the plateau region, these two curves are separated by about ten to fifteen
+millivolts. This hysteresis happens because the crystal transition is slightly
+asymmetric — it takes a tiny bit more energy to push lithium in one direction
+than the other.
+
+For the BMS, this means you need to know the last current direction before
+you can look up the OCV table. If you use the wrong table, you add another
+ten to fifteen millivolts of error to your already very uncertain SOC estimate.
+
+TEMPERATURE MAKES IT WORSE STILL
+
+At cold temperatures, the OCV is slightly lower and the internal resistance is
+much higher. At minus twenty degrees Celsius, the resistance of an LFP cell is
+three to four times higher than at twenty-five degrees. At one hundred amps,
+that means the terminal voltage during discharge is one hundred and fifty millivolts
+lower than at room temperature. Enough to falsely trigger the low-voltage alarm
+before the cell is actually empty.
+
+The BMS must compensate for all of these effects simultaneously.
+
+This is why simple voltage-based battery monitoring — which works fine for lead-acid —
+completely fails for LFP. And this is why the BMS needs algorithms.
+
