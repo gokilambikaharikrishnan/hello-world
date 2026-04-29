@@ -259,3 +259,97 @@ The BMS must compensate for all of these effects simultaneously.
 This is why simple voltage-based battery monitoring — which works fine for lead-acid —
 completely fails for LFP. And this is why the BMS needs algorithms.
 
+
+============================================================
+SECTION 2.5 — CAPACITY, C-RATE, AND COULOMB COUNTING
+============================================================
+
+Now that we understand the problem — voltage tells us almost nothing about LFP
+charge level — let's look at the first and most important solution: counting the
+charge that flows in and out of the pack.
+
+CAPACITY — WHAT IT MEANS
+
+Capacity is measured in ampere-hours. Our reference cell is rated at two-eighty
+ampere-hours. That means it can deliver one ampere for two-hundred-and-eighty hours,
+or two-hundred-and-eighty amperes for one hour, or anything in between where the
+current multiplied by the time equals two-eighty.
+
+Physically, that two-eighty amp-hour figure represents the total amount of lithium
+that can shuttle between anode and cathode. The exact number works out to about
+ten and a half moles of lithium atoms — roughly seventy-two and a half grams.
+Every charge cycle, those seventy-two and a half grams of lithium travel from one
+electrode to the other and back. Over five thousand cycles, each lithium atom
+makes that journey five thousand times.
+
+ENERGY — CAPACITY TIMES VOLTAGE
+
+Energy, measured in watt-hours, is capacity multiplied by the average voltage.
+Our cell at two-eighty amp-hours and three point two volts average: that is
+eight-hundred-and-ninety-six watt-hours per cell. Multiply by sixteen cells in
+our pack: fourteen-point-three kilowatt-hours total.
+
+C-RATE — NORMALISING CURRENT
+
+The C-rate is a way to describe current relative to the cell's capacity, so that
+comparisons between cells of different sizes make sense.
+
+One C for our cell means two-eighty amps — the current that would fully discharge
+it in exactly one hour. Half C means one-hundred-and-forty amps. Two C means
+five-hundred-and-sixty amps. Point two C means fifty-six amps.
+
+Higher C-rate means more current, more heat, and faster aging. The BMS uses
+C-rate specifications from the cell datasheet to set current protection limits.
+
+COULOMB COUNTING — THE CORE ALGORITHM
+
+Coulomb counting — also called current integration — is the primary method the BMS
+uses to track state of charge.
+
+The idea is simple. You know how full the pack was at some starting point.
+You measure how much current flows in and out over time. You add charge received
+and subtract charge delivered. The running total tells you how full the pack is now.
+
+The BMS does this calculation every two-hundred-and-fifty milliseconds or so.
+Every sample, it reads the current sensor, works out how many amp-hours flowed in
+that slice of time, and adds it to a running total. Over hours of use, millions of
+these tiny additions build up the state-of-charge estimate shown on the display.
+
+THE DRIFT PROBLEM
+
+Here is the fundamental weakness of coulomb counting.
+
+Every tiny measurement error accumulates. If the current sensor reads even a
+tenth of a percent high — all day, every day — that error gets added to the total
+every two-hundred-and-fifty milliseconds. By the end of the day, the accumulated
+error can be two to five percent of the pack's capacity.
+
+For a fourteen-point-three kilowatt-hour pack, five percent error is seven hundred
+watt-hours of unknown energy. That is the difference between a comfortable margin
+and an unexpected shutdown.
+
+The BMS cannot correct this drift by itself. It needs external reference points.
+And there are two main ones. First: when charging is complete, the BMS knows the
+pack is at one hundred percent, and it resets the counter. Second: when the pack
+has been idle for at least thirty minutes, the voltage settles to a meaningful
+resting level that can be used — imperfectly — to correct the count.
+
+This combination of coulomb counting plus periodic correction is the foundation
+of all real-world LFP battery management.
+
+THE PEUKERT EFFECT — CAPACITY DROPS AT HIGH CURRENT
+
+One more subtlety. When a cell discharges at a high rate, the apparent capacity
+is slightly less than at a slow rate.
+
+Here is the reason. Think of each electrode particle as a sponge. At low current,
+lithium has time to soak all the way through. At high current, only the outer
+layer gets used. The inside is still full, but the surface voltage drops and the
+BMS sees a low-voltage alarm — cutting off discharge before the interior lithium
+is accessible.
+
+For LFP, this effect is small — about three percent at one C and seven percent
+at two C. But it means that at high current, the coulomb counter will show a few
+percent remaining when the alarm fires. This is expected behaviour, not a bug.
+Advanced BMS firmware adjusts the assumed capacity based on current.
+
