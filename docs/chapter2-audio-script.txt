@@ -786,3 +786,81 @@ millivolts, it could take several days to correct with a ten-ohm resistor.
 This is why high-power applications sometimes use active balancing — which transfers
 charge from full cells to empty ones rather than just burning it off as heat.
 
+
+============================================================
+SECTION 2.10 — BMS COMMISSIONING: FIRST POWER ON A REAL PACK
+============================================================
+
+At some point the design leaves the computer and becomes real hardware on a bench.
+Let's walk through what a production engineer actually does when powering up
+a new BMS design for the first time.
+
+PHASE ONE — CHECKS BEFORE CONNECTING THE BATTERY
+
+A sixteen-cell LFP pack at full charge presents fifty-eight-point-four volts.
+That is a live energy source capable of destroying circuit board traces
+and starting fires if there is a wiring error.
+
+Before connecting the battery, the engineer checks:
+
+All cell-sense wire connections match the schematic.
+Thermistor resistance at room temperature matches the datasheet.
+Current sensor is oriented correctly — positive current reads positive.
+Balancing resistor values are correct.
+Protection FET leakage is within specification.
+The logic power rails — five volts and three-point-three volts — regulate correctly
+from a bench supply before any battery is connected.
+
+PHASE TWO — INITIAL SOC ESTIMATE
+
+With cells connected and no current flowing for at least thirty minutes,
+the BMS reads each cell's resting voltage and looks it up in the OCV table.
+
+The BMS checks that the spread between the highest and lowest cell voltage
+is less than fifty millivolts. A larger spread suggests cells were not matched
+or one cell has a problem.
+
+The starting SOC is set to the average across all cells.
+Any cell more than five percent away from the average is flagged for investigation.
+
+Why thirty minutes? After any recent charge or discharge, the voltage includes a
+temporary component from diffusion inside the particles. Thirty minutes is enough
+for that to decay and the voltage to settle to its true resting level.
+
+PHASE THREE — PROTECTION THRESHOLD TESTING
+
+Every protection limit must be tested by deliberately triggering it.
+
+Overvoltage: charge slowly until one cell reaches the overvoltage threshold.
+Confirm the charge FET opens and the alarm fires within one hundred milliseconds.
+
+Undervoltage: discharge slowly until the lowest cell reaches the cutoff.
+Confirm the discharge FET opens within one hundred milliseconds.
+
+Overcurrent: ramp the load current to one-point-two times the overcurrent threshold.
+Confirm both FETs open within five milliseconds.
+
+Short circuit: apply a low-resistance load through a relay and confirm the BMS
+responds within five hundred microseconds. This test requires a fire-safe enclosure
+and full protective equipment — it involves deliberately creating a short circuit
+on a live pack.
+
+Overtemperature: use a heat source on the thermistor and confirm the BMS
+reduces the charge rate at forty-five degrees and cuts off completely at sixty degrees.
+
+Undertemperature: cool the thermistor and confirm charging is blocked at zero degrees
+and cut off completely at minus twenty degrees.
+
+PHASE FOUR — SOC ACCURACY VERIFICATION
+
+After protection testing, run a full Reference Performance Test.
+Charge to one hundred percent, rest thirty minutes, discharge at point-two C
+to the cutoff voltage while counting every amp-hour with a calibrated reference meter.
+
+Compare the measured capacity to what the BMS reports.
+If the error exceeds two percent, update the nominal capacity figure in firmware.
+
+This test should be repeated every six months during normal operation
+as a scheduled health check. When the measured capacity drops below eighty percent
+of the original rated capacity, the pack has reached end of life.
+
