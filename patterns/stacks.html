@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C Pattern Library — Stacks</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', system-ui, sans-serif; line-height: 1.7; padding: 2rem; max-width: 960px; margin: 0 auto; }
+h1 { color: #58a6ff; font-size: 2rem; margin-bottom: 0.5rem; }
+.subtitle { color: #8b949e; margin-bottom: 2rem; }
+nav a { color: #58a6ff; text-decoration: none; margin-right: 1.5rem; }
+nav a:hover { text-decoration: underline; }
+.card { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; }
+.pattern-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+.pattern-num { background: #388bfd; color: white; border-radius: 4px; padding: 0.2rem 0.6rem; font-size: 0.8rem; font-weight: bold; }
+.pattern-name { color: #e6edf3; font-size: 1.2rem; font-weight: bold; }
+.section-label { color: #8b949e; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 1rem; margin-bottom: 0.4rem; font-weight: bold; }
+.story { color: #c9d1d9; background: #0d1117; border-left: 3px solid #58a6ff; padding: 0.8rem 1rem; border-radius: 0 4px 4px 0; }
+.insight { color: #e6edf3; background: #0d1117; border-left: 3px solid #3fb950; padding: 0.8rem 1rem; border-radius: 0 4px 4px 0; }
+.steps { background: #0d1117; border-radius: 4px; padding: 1rem; }
+.steps ol { padding-left: 1.5rem; }
+.steps li { margin-bottom: 0.4rem; }
+.diagram { background: #0d1117; border: 1px solid #21262d; border-radius: 4px; padding: 1rem; font-family: monospace; font-size: 0.85rem; color: #79c0ff; white-space: pre; overflow-x: auto; }
+.dry-run { background: #0d1117; border: 1px dashed #30363d; border-radius: 4px; padding: 1rem; font-family: monospace; font-size: 0.85rem; color: #a5d6ff; white-space: pre; overflow-x: auto; }
+.gotcha { background: #2d1717; border: 1px solid #f85149; border-radius: 4px; padding: 1rem; margin-top: 1rem; }
+.gotcha-title { color: #f85149; font-weight: bold; margin-bottom: 0.4rem; }
+.gotcha p { color: #ffa198; font-size: 0.9rem; }
+.leetcode { margin-top: 0.8rem; }
+.leetcode span { background: #1f6feb22; border: 1px solid #1f6feb44; color: #79c0ff; border-radius: 12px; padding: 0.2rem 0.7rem; font-size: 0.8rem; margin-right: 0.5rem; display: inline-block; margin-bottom: 0.3rem; }
+.trigger { margin-top: 1rem; background: #0d1117; border: 1px solid #3fb950; border-radius: 4px; padding: 0.7rem 1rem; color: #3fb950; font-weight: bold; font-size: 0.9rem; }
+pre { border-radius: 6px !important; margin: 0.5rem 0 !important; }
+code.hljs { font-size: 0.82rem !important; }
+.toc { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; columns: 2; column-gap: 2rem; }
+.toc a { color: #58a6ff; text-decoration: none; display: block; padding: 0.15rem 0; font-size: 0.88rem; }
+.toc a:hover { color: #79c0ff; }
+.toc-section { color: #8b949e; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: bold; margin-top: 0.8rem; margin-bottom: 0.2rem; }
+</style>
+</head>
+<body>
+<nav><a href="index.html">&#8592; Back to Index</a></nav>
+<h1>C Pattern Library &#8212; Stacks</h1>
+<p class="subtitle">32 patterns &mdash; array stack &middot; linked stack &middot; monotonic &middot; expression evaluation &middot; DFS simulation &middot; design</p>
+
+<div class="toc">
+<div class="toc-section">Basics, Valid Parens, Min Stack, RPN</div>
+<a href="#p01">01 &middot; Array-Based Stack Implementation</a>
+<a href="#p02">02 &middot; Linked List Stack</a>
+<a href="#p03">03 &middot; Valid Parentheses</a>
+<a href="#p04">04 &middot; Min Stack — O(1) getMin</a>
+<a href="#p05">05 &middot; Reverse Polish Notation (RPN)</a>
+<a href="#p06">06 &middot; Daily Temperatures</a>
+<a href="#p07">07 &middot; Next Greater Element I</a>
+<a href="#p08">08 &middot; Next Greater Element II (Circular)</a>
+<a href="#p09">09 &middot; Largest Rectangle in Histogram</a>
+<a href="#p10">10 &middot; Trapping Rain Water — Stack</a>
+<div class="toc-section">Monotonic Stack</div>
+<a href="#p11">11 &middot; Monotonic Decreasing Stack</a>
+<a href="#p12">12 &middot; Sum of Subarray Minimums</a>
+<a href="#p13">13 &middot; Maximum Width Ramp</a>
+<a href="#p14">14 &middot; Remove K Digits (Stack)</a>
+<a href="#p15">15 &middot; 132 Pattern Detection</a>
+<a href="#p16">16 &middot; Stock Span Problem</a>
+<a href="#p17">17 &middot; Buildings with Ocean View</a>
+<a href="#p18">18 &middot; Maximal Rectangle (Histogram DP)</a>
+<a href="#p19">19 &middot; Decode String (Nested)</a>
+<a href="#p20">20 &middot; Asteroid Collision</a>
+<div class="toc-section">Expression Eval, Design, DFS</div>
+<a href="#p21">21 &middot; Basic Calculator I (+ - and parens)</a>
+<a href="#p22">22 &middot; Basic Calculator II (+ - * /)</a>
+<a href="#p23">23 &middot; Expression — Infix to Postfix</a>
+<a href="#p24">24 &middot; Flatten Nested List Iterator</a>
+<a href="#p25">25 &middot; Simplify Path (Unix path)</a>
+<a href="#p26">26 &middot; Score of Parentheses</a>
+<a href="#p27">27 &middot; DFS Iterative with Stack</a>
+<a href="#p28">28 &middot; Binary Tree Inorder (Stack)</a>
+<a href="#p29">29 &middot; Binary Tree Preorder (Stack)</a>
+<a href="#p30">30 &middot; Binary Tree Postorder (Stack)</a>
+<a href="#p31">31 &middot; Maximal Stack Design</a>
+<a href="#p32">32 &middot; Queue Using Two Stacks</a>
+</div>
+
+<div class="card" id="p01">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 01</span>
+    <span class="pattern-name">Array-Based Stack Implementation</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">A stack of plates: you can only put a new plate on top (push) or take the top plate off (pop). You cannot access plates in the middle. Last in, first out. An array stack uses an integer index (top) pointing at the topmost element — increment on push, decrement on pop.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Array stack is the simplest and fastest stack: O(1) push, pop, and peek with no heap allocation. The top index starts at -1 (empty). Push: data[++top] = val. Pop: return data[top--]. The only failure mode is overflow (top == capacity-1) and underflow (top == -1).</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>struct Stack { int data[MAX]; int top; }. Initialize top = -1.</li>
+    <li>push(val): if top == MAX-1, overflow. Else data[++top] = val.</li>
+    <li>pop(): if top == -1, underflow. Else return data[top--].</li>
+    <li>peek(): return data[top] without modifying top.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">Empty: top=-1  []
+push(1): top=0  [1]
+push(2): top=1  [1,2]
+push(3): top=2  [1,2,3]
+pop()→3: top=1  [1,2]
+peek()→2: top=1 [1,2]  (unchanged)</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;assert.h&gt;
+
+#define MAX 1024
+
+typedef struct { int data[MAX]; int top; } Stack;
+
+void stack_init(Stack *s) { s-&gt;top = -1; }
+int  stack_empty(Stack *s) { return s-&gt;top == -1; }
+int  stack_full(Stack *s)  { return s-&gt;top == MAX-1; }
+
+void stack_push(Stack *s, int val) {
+    assert(!stack_full(s));    /* catch overflow in debug builds */
+    s-&gt;data[++s-&gt;top] = val;
+}
+int stack_pop(Stack *s) {
+    assert(!stack_empty(s));   /* catch underflow */
+    return s-&gt;data[s-&gt;top--];
+}
+int stack_peek(Stack *s) {
+    assert(!stack_empty(s));
+    return s-&gt;data[s-&gt;top];
+}
+
+int main(void) {
+    Stack s; stack_init(&s);
+    stack_push(&s, 10);
+    stack_push(&s, 20);
+    stack_push(&s, 30);
+    printf("peek=%d\n", stack_peek(&s));  /* 30 */
+    printf("pop=%d\n",  stack_pop(&s));   /* 30 */
+    printf("pop=%d\n",  stack_pop(&s));   /* 20 */
+    printf("empty=%d\n",stack_empty(&s)); /* 0 (10 still there) */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">init: top=-1
+push(10): data[0]=10, top=0
+push(20): data[1]=20, top=1
+push(30): data[2]=30, top=2
+peek: data[2]=30 ✓
+pop: return data[2]=30, top=1 ✓
+pop: return data[1]=20, top=0 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: top starts at -1, not 0</div>
+    <p>If top starts at 0, the first push writes to data[1] (skipping data[0]) or you need a special case for the first push. Starting at -1 means the pre-increment <code>data[++top]</code> writes to data[0] on the first push, which is natural and correct.</p>
+  </div>
+  <div class="leetcode"><span>N/A (fundamental data structure)</span></div>
+  <div class="trigger">When you need LIFO access → think: array stack, top=-1, push: data[++top]=val, pop: return data[top--].</div>
+</div>
+
+<div class="card" id="p02">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 02</span>
+    <span class="pattern-name">Linked List Stack</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">A stack where each item knows what's below it. No fixed capacity — the stack grows as you push and shrinks as you pop. Each push allocates a new node at the top; each pop frees it. The head of the linked list IS the top of the stack.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Linked stack: head = top of stack. Push = insert at head. Pop = remove head. O(1) for both, unlimited capacity (until heap exhausted). Overhead: one malloc/free per push/pop — slower than array stack in practice due to memory allocation cost.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Push: allocate node, node-&gt;next = head, head = node.</li>
+    <li>Pop: save head-&gt;val, temp = head, head = head-&gt;next, free(temp), return val.</li>
+    <li>Peek: return head-&gt;val.</li>
+    <li>Empty: head == NULL.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">push(1): head→[1]→NULL
+push(2): head→[2]→[1]→NULL
+push(3): head→[3]→[2]→[1]→NULL
+pop()→3: head→[2]→[1]→NULL, free [3]</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;assert.h&gt;
+
+typedef struct SNode { int val; struct SNode *next; } SNode;
+typedef struct { SNode *head; int size; } LStack;
+
+void ls_init(LStack *s) { s-&gt;head=NULL; s-&gt;size=0; }
+int  ls_empty(LStack *s) { return s-&gt;head==NULL; }
+
+void ls_push(LStack *s, int val) {
+    SNode *n = malloc(sizeof(SNode));
+    n-&gt;val = val; n-&gt;next = s-&gt;head;
+    s-&gt;head = n; s-&gt;size++;
+}
+int ls_pop(LStack *s) {
+    assert(!ls_empty(s));
+    SNode *tmp = s-&gt;head;
+    int val = tmp-&gt;val;
+    s-&gt;head = tmp-&gt;next;
+    free(tmp); s-&gt;size--;
+    return val;
+}
+int ls_peek(LStack *s) { assert(!ls_empty(s)); return s-&gt;head-&gt;val; }
+
+int main(void) {
+    LStack s; ls_init(&s);
+    ls_push(&s,1); ls_push(&s,2); ls_push(&s,3);
+    printf("%d %d %d\n", ls_pop(&s), ls_pop(&s), ls_pop(&s)); /* 3 2 1 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">push(1): head=[1]→NULL, size=1
+push(2): head=[2]→[1]→NULL, size=2
+push(3): head=[3]→[2]→[1]→NULL, size=3
+pop: val=3, head=[2]→[1], free [3], size=2
+pop: val=2, head=[1], free [2], size=1
+pop: val=1, head=NULL, free [1], size=0 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Save val BEFORE freeing the node</div>
+    <p>In pop: save <code>val = tmp-&gt;val</code> before calling <code>free(tmp)</code>. After free, reading <code>tmp-&gt;val</code> is undefined behavior. This is the same pattern as linked list traversal — always save what you need before releasing memory.</p>
+  </div>
+  <div class="leetcode"><span>N/A (used in DFS, expression eval)</span></div>
+  <div class="trigger">When you need a stack without fixed capacity → think: linked stack, head = top, push = insert at head, pop = remove head.</div>
+</div>
+
+
+<div class="card" id="p03">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 03</span>
+    <span class="pattern-name">Valid Parentheses</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">Every opening bracket needs a matching closing bracket in the right order. A stack tracks unmatched openers. On an opener, push. On a closer, pop — if the popped opener doesn't match, it's invalid. If the stack is empty when closing, invalid. If non-empty at end, unclosed openers remain — invalid.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Stack is perfect here because brackets must close in reverse order of opening (LIFO). The top of the stack is always the most recently opened, unmatched bracket — exactly what needs to match the next closer.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>For each char: if opener, push. If closer and stack empty, return false.</li>
+    <li>If closer: pop top. If top doesn't match the closer type, return false.</li>
+    <li>After loop: return stack is empty (all openers matched).</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">"({[]})"
+  '(' → push: ['(']
+  '{' → push: ['(', '{']
+  '[' → push: ['(', '{', '[']
+  ']' → pop '[', matches ']' ✓: ['(', '{']
+  '}' → pop '{', matches '}' ✓: ['(']
+  ')' → pop '(', matches ')' ✓: []
+  empty → VALID ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+int is_valid(const char *s) {
+    char stack[10001];
+    int top = -1;
+    for (; *s; s++) {
+        if (*s=='(' || *s=='[' || *s=='{') {
+            stack[++top] = *s;             /* push opener */
+        } else {
+            if (top == -1) return 0;       /* nothing to match */
+            char open = stack[top--];      /* pop */
+            if (*s==')' &amp;&amp; open!='(') return 0;
+            if (*s==']' &amp;&amp; open!='[') return 0;
+            if (*s=='}' &amp;&amp; open!='{') return 0;
+        }
+    }
+    return top == -1;   /* all matched iff stack empty */
+}
+
+int main(void) {
+    printf("%d\n", is_valid("()[]{}"));  /* 1 */
+    printf("%d\n", is_valid("([)]"));    /* 0 */
+    printf("%d\n", is_valid("{[]}"));    /* 1 */
+    printf("%d\n", is_valid("]"));       /* 0 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">is_valid("([)]"):
+  '(' push, top=0: ['(']
+  '[' push, top=1: ['(','[']
+  ')' → pop '[': open='[', ')' needs '(' but got '[' → return 0 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Check top==-1 before popping on a closer</div>
+    <p>If the string starts with a closer (e.g., "]abc"), top is -1 and there's nothing to pop. Without the empty-stack check, <code>stack[top--]</code> with top=-1 reads stack[-1] — undefined behavior. Always check before popping.</p>
+  </div>
+  <div class="leetcode"><span>20 · Valid Parentheses</span><span>32 · Longest Valid Parentheses</span></div>
+  <div class="trigger">When matching brackets → think: push openers, pop on closers and verify match, valid iff stack empty at end.</div>
+</div>
+
+<div class="card" id="p04">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 04</span>
+    <span class="pattern-name">Min Stack — O(1) getMin</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">A stack where you can ask "what's the current minimum?" in O(1) at any time. The trick: maintain a second parallel stack that tracks the minimum at each level. When you push a new value, push min(new_val, current_min) onto the min stack too. When you pop, pop both stacks.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Two stacks — one for data, one for minimums. The min stack's top always reflects the minimum of all values currently in the data stack. When the minimum value is popped from the data stack, the min stack also pops, revealing the previous minimum automatically.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>push(val): push val to data stack. Push min(val, min_stack.top) to min stack.</li>
+    <li>pop(): pop both data stack and min stack.</li>
+    <li>getMin(): return min stack top. O(1).</li>
+    <li>top(): return data stack top.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">push(5): data=[5], min=[5]
+push(3): data=[5,3], min=[5,3]
+push(7): data=[5,3,7], min=[5,3,3]  ← min stays 3
+getMin()→3 ✓
+pop():   data=[5,3], min=[5,3]
+pop():   data=[5], min=[5]
+getMin()→5 ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;assert.h&gt;
+
+#define MAX 10001
+
+typedef struct {
+    int data[MAX], min_s[MAX];
+    int dtop, mtop;
+} MinStack;
+
+void ms_init(MinStack *s) { s-&gt;dtop = s-&gt;mtop = -1; }
+
+void ms_push(MinStack *s, int val) {
+    s-&gt;data[++s-&gt;dtop] = val;
+    int cur_min = (s-&gt;mtop == -1) ? val : (val &lt; s-&gt;min_s[s-&gt;mtop] ? val : s-&gt;min_s[s-&gt;mtop]);
+    s-&gt;min_s[++s-&gt;mtop] = cur_min;   /* push current minimum */
+}
+int ms_pop(MinStack *s) {
+    assert(s-&gt;dtop &gt;= 0);
+    s-&gt;mtop--;                        /* pop min stack in sync */
+    return s-&gt;data[s-&gt;dtop--];
+}
+int ms_top(MinStack *s)    { return s-&gt;data[s-&gt;dtop]; }
+int ms_get_min(MinStack *s){ return s-&gt;min_s[s-&gt;mtop]; }  /* O(1) */
+
+int main(void) {
+    MinStack s; ms_init(&s);
+    ms_push(&s,5); ms_push(&s,3); ms_push(&s,7);
+    printf("min=%d\n", ms_get_min(&s));  /* 3 */
+    ms_pop(&s);
+    printf("min=%d\n", ms_get_min(&s));  /* 3 */
+    ms_pop(&s);
+    printf("min=%d\n", ms_get_min(&s));  /* 5 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">push(5): data=[5], min=[5]
+push(3): cur_min=min(3,5)=3 → data=[5,3], min=[5,3]
+push(7): cur_min=min(7,3)=3 → data=[5,3,7], min=[5,3,3]
+get_min → min[2]=3 ✓
+pop: data=[5,3], min=[5,3]; get_min=3 ✓
+pop: data=[5], min=[5]; get_min=5 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Pop BOTH stacks together — they must stay in sync</div>
+    <p>If you only pop the data stack (forgetting the min stack), they go out of sync and getMin returns the wrong value. The min stack always has exactly as many elements as the data stack — they grow and shrink together.</p>
+  </div>
+  <div class="leetcode"><span>155 · Min Stack</span></div>
+  <div class="trigger">When you need O(1) minimum with push/pop → think: parallel min stack tracking running minimum at each level.</div>
+</div>
+
+
+<div class="card" id="p05">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 05</span>
+    <span class="pattern-name">Evaluate Reverse Polish Notation (RPN)</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">"3 4 + 2 *" means (3+4)*2. No parentheses needed — the order of operands and operators already encodes the precedence. Walk left to right: push numbers; on an operator, pop two numbers, apply the operation, push the result back.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">RPN evaluation is the canonical stack use case. A number means "save for later" (push). An operator means "use the last two saved values" (pop two, operate, push result). When you reach the end of a valid RPN expression, exactly one value remains on the stack — the answer.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>For each token: if number, push it.</li>
+    <li>If operator: pop b (top), pop a (second). Result = a op b. Push result.</li>
+    <li>After all tokens: answer is stack[0].</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">Tokens: ["2","1","+","3","*"]
+  "2" → push: [2]
+  "1" → push: [2,1]
+  "+" → pop 1, pop 2, push 2+1=3: [3]
+  "3" → push: [3,3]
+  "*" → pop 3, pop 3, push 3*3=9: [9]
+  Result: 9 ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#include &lt;stdlib.h&gt;
+
+int eval_rpn(char **tokens, int n) {
+    long stack[n];
+    int top = -1;
+
+    for (int i = 0; i &lt; n; i++) {
+        char *t = tokens[i];
+        if (strcmp(t,"+")==0 || strcmp(t,"-")==0 ||
+            strcmp(t,"*")==0 || strcmp(t,"/")==0) {
+            long b = stack[top--];   /* second operand (top) */
+            long a = stack[top--];   /* first operand */
+            if      (*t=='+') stack[++top] = a + b;
+            else if (*t=='-') stack[++top] = a - b;
+            else if (*t=='*') stack[++top] = a * b;
+            else              stack[++top] = a / b;  /* truncates toward zero */
+        } else {
+            stack[++top] = atol(t);   /* convert token to number and push */
+        }
+    }
+    return (int)stack[0];
+}
+
+int main(void) {
+    char *t1[] = {"2","1","+","3","*"};
+    printf("%d\n", eval_rpn(t1, 5));   /* 9 */
+
+    char *t2[] = {"4","13","5","/","+"};
+    printf("%d\n", eval_rpn(t2, 5));   /* 6 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">["4","13","5","/","+"]:
+  "4"  → push 4: [4]
+  "13" → push 13: [4,13]
+  "5"  → push 5: [4,13,5]
+  "/"  → b=5, a=13; 13/5=2; push 2: [4,2]
+  "+"  → b=2, a=4; 4+2=6; push 6: [6]
+  result=6 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Pop order matters for non-commutative ops</div>
+    <p>For subtraction and division, order matters: the first pop gives b (the second operand), the second pop gives a (the first operand). The expression is <code>a op b</code>. Reversing the pop order gives wrong results for "5 3 -" (should be 5-3=2, not 3-5=-2).</p>
+  </div>
+  <div class="leetcode"><span>150 · Evaluate Reverse Polish Notation</span></div>
+  <div class="trigger">When evaluating RPN → think: push numbers, pop two on operator (b=top, a=second), push result.</div>
+</div>
+
+<div class="card" id="p06">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 06</span>
+    <span class="pattern-name">Daily Temperatures — Next Warmer Day</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">For each day, how many days until a warmer temperature? "73 74 75 71 69 72 76 73" → "1 1 4 2 1 1 0 0". Walk left to right. If today is warmer than some previous days, those days now have their answer. A stack of unresolved days (indices) waits for their warmer future.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Monotonic decreasing stack of indices. For each day i: while the stack top's temperature &lt; today's temperature, pop it — that day's answer is i - popped_index. Then push i. Days still on the stack at the end have no warmer future (answer = 0).</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>ans[] = {0}, stack of indices, initially empty.</li>
+    <li>For each i: while stack not empty and temps[stack.top] &lt; temps[i]: pop j; ans[j] = i - j.</li>
+    <li>Push i.</li>
+    <li>Remaining indices on stack have ans = 0 (already initialized).</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">temps=[73,74,75,71,69,72,76,73]
+i=0: push 0. stack=[0]
+i=1: 74>73 → pop 0, ans[0]=1-0=1. push 1. stack=[1]
+i=2: 75>74 → pop 1, ans[1]=2-1=1. push 2. stack=[2]
+i=3: 71&lt;75. push 3. stack=[2,3]
+i=4: 69&lt;71. push 4. stack=[2,3,4]
+i=5: 72>69→pop 4,ans[4]=1; 72>71→pop 3,ans[3]=2; 72&lt;75. push 5. stack=[2,5]
+i=6: 76>72→pop 5,ans[5]=1; 76>75→pop 2,ans[2]=4. push 6. stack=[6]
+i=7: 73&lt;76. push 7. stack=[6,7]
+ans: [1,1,4,2,1,1,0,0] ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+void daily_temperatures(int *temps, int n, int *ans) {
+    int stack[n];   /* stack of unresolved indices */
+    int top = -1;
+    memset(ans, 0, n * sizeof(int));
+
+    for (int i = 0; i &lt; n; i++) {
+        /* Pop days that are colder than today */
+        while (top &gt;= 0 &amp;&amp; temps[stack[top]] &lt; temps[i]) {
+            int j = stack[top--];
+            ans[j] = i - j;   /* days waited = today - that day */
+        }
+        stack[++top] = i;     /* push today's index (unresolved) */
+    }
+}
+
+int main(void) {
+    int temps[] = {73,74,75,71,69,72,76,73};
+    int ans[8];
+    daily_temperatures(temps, 8, ans);
+    for (int i=0; i&lt;8; i++) printf("%d ", ans[i]);
+    /* 1 1 4 2 1 1 0 0 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">See diagram above — full trace matches expected output ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Stack stores INDICES, not temperatures</div>
+    <p>The stack holds indices (positions) so you can compute the distance <code>i - j</code>. If you stored temperatures, you couldn't recover the original day's position. This index-stack pattern appears in most monotonic stack problems.</p>
+  </div>
+  <div class="leetcode"><span>739 · Daily Temperatures</span></div>
+  <div class="trigger">When finding next greater element's distance → think: monotonic stack of indices; pop when current > stack top's value; ans[j] = i - j.</div>
+</div>
+
+
+<div class="card" id="p07">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 07</span>
+    <span class="pattern-name">Next Greater Element I</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">Given two arrays, for each element in the first array, find the next greater element in the second array (looking rightward from where that element appears). Precompute "next greater" for all elements in the second array using a monotonic stack, then look up answers for the first array in a hash map.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Build a "next greater" map for all elements of nums2 using a monotonic stack in one pass. Then for each element in nums1, look up its next greater value in the map. O(n+m) total. The stack processes each element of nums2 at most twice (once pushed, once popped).</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>Process nums2 left to right with a decreasing stack.</li>
+    <li>When nums2[i] &gt; stack top: that top's "next greater" is nums2[i]. Record in map. Pop.</li>
+    <li>Push nums2[i]. Elements still on stack have no next greater (-1).</li>
+    <li>For each element in nums1: look up in map.</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">nums2=[1,3,4,2], build next-greater map:
+  push 1: stack=[1]
+  3>1: pop 1, map[1]=3; push 3: stack=[3]
+  4>3: pop 3, map[3]=4; push 4: stack=[4]
+  2&lt;4: push 2: stack=[4,2]
+  end: map[4]=-1, map[2]=-1
+
+nums1=[4,1,2]: lookup → [-1, 3, -1] ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+#define MAXVAL 10001
+
+void next_greater_element(int *nums1, int n1, int *nums2, int n2, int *res) {
+    int nge[MAXVAL];              /* nge[v] = next greater of value v in nums2 */
+    memset(nge, -1, sizeof(nge));
+
+    int stack[n2], top = -1;
+    for (int i = 0; i &lt; n2; i++) {
+        while (top &gt;= 0 &amp;&amp; stack[top] &lt; nums2[i])
+            nge[stack[top--]] = nums2[i];   /* nums2[i] is next greater for popped */
+        stack[++top] = nums2[i];
+    }
+    /* remaining on stack: no next greater → already -1 */
+
+    for (int i = 0; i &lt; n1; i++)
+        res[i] = nge[nums1[i]];
+}
+
+int main(void) {
+    int nums1[] = {4,1,2}, nums2[] = {1,3,4,2};
+    int res[3];
+    next_greater_element(nums1, 3, nums2, 4, res);
+    for(int i=0;i&lt;3;i++) printf("%d ",res[i]); /* -1 3 -1 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">nums2=[1,3,4,2]:
+i=0: push 1. stack=[1]
+i=1: 3>1→nge[1]=3, pop; push 3. stack=[3]
+i=2: 4>3→nge[3]=4, pop; push 4. stack=[4]
+i=3: 2<4; push 2. stack=[4,2]
+nge[4]=-1, nge[2]=-1 (still in stack)
+lookup nums1=[4,1,2]: [-1, 3, -1] ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: This only works when all values are unique</div>
+    <p>Mapping by value (<code>nge[val]</code>) requires all values in nums2 to be distinct. If duplicates exist, the map would be overwritten. For duplicate values, map by index instead and use the index to look up the original value's position in nums2.</p>
+  </div>
+  <div class="leetcode"><span>496 · Next Greater Element I</span><span>556 · Next Greater Element III</span></div>
+  <div class="trigger">When finding next greater for each element → think: monotonic stack on nums2, build nge map, then lookup for nums1.</div>
+</div>
+
+<div class="card" id="p08">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 08</span>
+    <span class="pattern-name">Next Greater Element II — Circular Array</span>
+  </div>
+  <div class="section-label">① Story First</div>
+  <div class="story">Same problem but the array wraps around — after the last element, you continue from the first. "3 1 2 3" circularly: for the first 3, the next greater wrapping around... doesn't exist. For 1, it's 2. For 2, it's 3. Simulate two passes by doubling the indices.</div>
+  <div class="section-label">② The Insight</div>
+  <div class="insight">Simulate circular traversal by iterating indices 0 to 2n-1, using <code>i % n</code> to get the actual array index. Only push indices (not values) for the first n elements (second pass only resolves, doesn't add new candidates). Run the same monotonic stack logic.</div>
+  <div class="section-label">③ Step-by-Step Logic</div>
+  <div class="steps"><ol>
+    <li>ans[] = {-1}. Stack of indices, initially empty.</li>
+    <li>Loop i from 0 to 2n-1: idx = i % n.</li>
+    <li>While stack not empty and nums[stack.top] &lt; nums[idx]: pop j; ans[j] = nums[idx].</li>
+    <li>If i &lt; n: push idx (only push actual positions in first pass).</li>
+  </ol></div>
+  <div class="section-label">Diagram</div>
+  <div class="diagram">nums=[5,4,3,2,1], n=5, circular:
+First pass (i=0..4): push indices 0,1,2,3,4. No pops (decreasing sequence).
+Second pass (i=5..9, idx=0..4):
+  i=5,idx=0: nums[0]=5 > nums[4]=1 → pop 4, ans[4]=5
+             5 > nums[3]=2 → pop 3, ans[3]=5
+             5 > nums[2]=3 → pop 2, ans[2]=5
+             5 > nums[1]=4 → pop 1, ans[1]=5
+             5 == nums[0]=5 → stop
+  i=6,idx=1: nums[1]=4 not > nums[0]=5 → stop
+  ...no more pops
+  ans[0]=-1 (5 never found a larger in circle) ✓</div>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+void next_greater_circular(int *nums, int n, int *ans) {
+    memset(ans, -1, n * sizeof(int));
+    int stack[n], top = -1;
+
+    for (int i = 0; i &lt; 2 * n; i++) {
+        int idx = i % n;
+        while (top &gt;= 0 &amp;&amp; nums[stack[top]] &lt; nums[idx])
+            ans[stack[top--]] = nums[idx];
+        if (i &lt; n) stack[++top] = idx;   /* only push in first pass */
+    }
+}
+
+int main(void) {
+    int nums[] = {1,2,1};
+    int ans[3];
+    next_greater_circular(nums, 3, ans);
+    for(int i=0;i&lt;3;i++) printf("%d ",ans[i]); /* 2 -1 2 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">nums=[1,2,1], n=3:
+i=0,idx=0: push 0. stack=[0]
+i=1,idx=1: 2>1→pop 0, ans[0]=2; push 1. stack=[1]
+i=2,idx=2: 1<2; push 2. stack=[1,2]
+i=3,idx=0: 1<2; no push (i>=n)
+i=4,idx=1: 2>1→pop 2, ans[2]=2; 2==2 stop; no push
+i=5,idx=2: 1<2; no push
+ans=[2,-1,2] ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Only push in the first pass (i &lt; n)</div>
+    <p>In the second pass (i ≥ n), you only resolve existing stack entries — you don't push new indices. If you push in the second pass too, you'd get duplicate index entries and the <code>ans[j] = nums[idx]</code> assignments would corrupt already-resolved answers.</p>
+  </div>
+  <div class="leetcode"><span>503 · Next Greater Element II</span></div>
+  <div class="trigger">When next greater wraps around → think: loop 2n times, i%n for index, only push when i &lt; n.</div>
+</div>
+
+<!-- P09 -->
+<div class="card" id="p09">
+  <div class="pattern-num">Pattern 09</div>
+  <h2>Largest Rectangle in Histogram</h2>
+  <div class="story">Imagine a city skyline of buildings side by side, each with different heights. You want to find the largest billboard you can paste on a contiguous section of that skyline — it must fit under every building in the section. The billboard's height equals the shortest building it spans.</div>
+  <div class="insight">Core insight: For each bar, the largest rectangle it can be the <em>minimum</em> of extends left until a shorter bar appears and right until a shorter bar appears. A monotonic increasing stack tracks exactly those left-boundary bars — when you pop a bar, the current bar is its right boundary and the new top is its left boundary.</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>Maintain a stack of indices in increasing-height order.</li>
+    <li>For each bar i: while stack top has height &ge; heights[i], pop it as the height of a candidate rectangle.</li>
+    <li>Width = i &minus; stack[top] &minus; 1 (or i if stack empty after pop).</li>
+    <li>Area = popped_height &times; width; track max.</li>
+    <li>After the loop, pop remaining indices with width extending to the end (n &minus; stack[top] &minus; 1).</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+
+int largest_rectangle(int *h, int n) {
+    int stack[n+1], top = -1, max_area = 0;
+    for (int i = 0; i &lt;= n; i++) {
+        int cur = (i == n) ? 0 : h[i];   /* sentinel 0 flushes the stack */
+        while (top &gt;= 0 &amp;&amp; h[stack[top]] &gt;= cur) {
+            int height = h[stack[top--]];
+            int width  = (top &lt; 0) ? i : i - stack[top] - 1;
+            int area   = height * width;
+            if (area &gt; max_area) max_area = area;
+        }
+        stack[++top] = i;
+    }
+    return max_area;
+}
+
+int main(void) {
+    int h[] = {2,1,5,6,2,3};
+    printf("%d\n", largest_rectangle(h, 6));  /* 10 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">h=[2,1,5,6,2,3]
+i=0: stack empty, push 0. stack=[0]
+i=1: h[0]=2 &gt;= h[1]=1 → pop 0, height=2, width=i=1, area=2; push 1. stack=[1]
+i=2: h[1]=1 &lt; 5, push 2. stack=[1,2]
+i=3: h[2]=5 &lt; 6, push 3. stack=[1,2,3]
+i=4: h[3]=6 &gt;= 2 → pop 3, height=6, width=4-2-1=1, area=6
+      h[2]=5 &gt;= 2 → pop 2, height=5, width=4-1-1=2, area=10 ← max
+      h[1]=1 &lt; 2, stop. push 4. stack=[1,4]
+i=5: h[4]=2 &lt; 3, push 5. stack=[1,4,5]
+i=6(sentinel=0): pop 5: height=3, width=6-4-1=1, area=3
+               pop 4: height=2, width=6-1-1=4, area=8
+               pop 1: height=1, width=6(stack empty), area=6
+max_area = 10 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Sentinel bar of height 0</div>
+    <p>Appending a virtual bar of height 0 at index n ensures all remaining bars in the stack get flushed cleanly. Without the sentinel you need a second loop — the sentinel trick eliminates duplicate code.</p>
+  </div>
+  <div class="leetcode"><span>84 · Largest Rectangle in Histogram</span></div>
+  <div class="trigger">When finding max area constrained by the minimum in a range → think: monotonic increasing stack, pop on shorter bar, width from stack boundaries.</div>
+</div>
+
+<!-- P10 -->
+<div class="card" id="p10">
+  <div class="pattern-num">Pattern 10</div>
+  <h2>Trapping Rain Water (Stack)</h2>
+  <div class="story">Think of the histogram as a valley profile. Rain fills between the walls. For each lower bar, the water it can hold depends on the shorter of the two walls flanking it — like a bathtub filling up to the rim of the lower wall.</div>
+  <div class="insight">Core insight: A monotonic decreasing stack of bar indices lets you compute water layer by layer horizontally. When a taller bar appears, the popped bar is the bottom of a pool. The water height is min(left wall, right wall) &minus; bottom, and width is the gap between the walls.</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>Maintain a stack of bar indices in decreasing-height order.</li>
+    <li>For each bar i: while stack top has height &le; current bar's height, pop it as the pool bottom.</li>
+    <li>If stack is non-empty after pop, left wall = stack top, right wall = i.</li>
+    <li>Water height = min(h[left], h[i]) &minus; h[bottom]; width = i &minus; left &minus; 1.</li>
+    <li>Add width &times; water height to the total.</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+
+int trap(int *h, int n) {
+    int stack[n], top = -1, water = 0;
+    for (int i = 0; i &lt; n; i++) {
+        while (top &gt;= 0 &amp;&amp; h[stack[top]] &lt;= h[i]) {
+            int bot = stack[top--];           /* pool floor */
+            if (top &lt; 0) break;              /* no left wall */
+            int left  = stack[top];
+            int bound = h[left] &lt; h[i] ? h[left] : h[i];
+            water += (bound - h[bot]) * (i - left - 1);
+        }
+        stack[++top] = i;
+    }
+    return water;
+}
+
+int main(void) {
+    int h[] = {0,1,0,2,1,0,1,3,2,1,2,1};
+    printf("%d\n", trap(h, 12));  /* 6 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">h=[0,1,0,2,...] (abbreviated)
+i=0: push 0. stack=[0]
+i=1: h[0]=0 &lt;= h[1]=1 → pop 0 as bot; top&lt;0 → break. push 1. stack=[1]
+i=2: h[1]=1 &gt; 0; push 2. stack=[1,2]
+i=3: h[2]=0 &lt;= h[3]=2 → pop 2 as bot; left=1; bound=min(1,2)=1; water+=(1-0)*(3-1-1)=1
+      h[1]=1 &lt;= 2 → pop 1 as bot; top&lt;0 → break. push 3. stack=[3]
+...continuing: total water = 6 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Break when stack empty after pop</div>
+    <p>After popping the pool floor, check if the stack is now empty before accessing <code>stack[top]</code> as the left wall. An empty stack means there's no left wall, so no water can be trapped — skip the water calculation entirely.</p>
+  </div>
+  <div class="leetcode"><span>42 · Trapping Rain Water</span></div>
+  <div class="trigger">When computing trapped water between bars → think: monotonic decreasing stack, pop as pool floor, left wall = new top, right wall = current bar.</div>
+</div>
+
+<!-- PATTERNS_END -->
+<script>hljs.highlightAll();</script>
+</body>
+</html>
