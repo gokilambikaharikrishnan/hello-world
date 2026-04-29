@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C Pattern Library — Queues</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', system-ui, sans-serif; line-height: 1.7; padding: 2rem; max-width: 960px; margin: 0 auto; }
+h1 { color: #58a6ff; font-size: 2rem; margin-bottom: 0.5rem; }
+.subtitle { color: #8b949e; margin-bottom: 2rem; }
+nav a { color: #58a6ff; text-decoration: none; margin-right: 1.5rem; }
+nav a:hover { text-decoration: underline; }
+.card { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; }
+.pattern-num { background: #388bfd; color: white; border-radius: 4px; padding: 0.2rem 0.6rem; font-size: 0.8rem; font-weight: bold; display: inline-block; margin-bottom: 0.6rem; }
+.section-label { color: #8b949e; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 1rem; margin-bottom: 0.4rem; font-weight: bold; }
+.story { color: #c9d1d9; background: #0d1117; border-left: 3px solid #58a6ff; padding: 0.8rem 1rem; border-radius: 0 4px 4px 0; margin-bottom: 0.5rem; }
+.insight { color: #e6edf3; background: #0d1117; border-left: 3px solid #3fb950; padding: 0.8rem 1rem; border-radius: 0 4px 4px 0; margin-bottom: 0.5rem; }
+.dry-run { background: #0d1117; border: 1px dashed #30363d; border-radius: 4px; padding: 1rem; font-family: monospace; font-size: 0.85rem; color: #a5d6ff; white-space: pre; overflow-x: auto; }
+.gotcha { background: #2d1717; border: 1px solid #f85149; border-radius: 4px; padding: 1rem; margin-top: 1rem; }
+.gotcha-title { color: #f85149; font-weight: bold; margin-bottom: 0.4rem; }
+.gotcha p { color: #ffa198; font-size: 0.9rem; }
+.leetcode { margin-top: 0.8rem; }
+.leetcode span { background: #1f6feb22; border: 1px solid #1f6feb44; color: #79c0ff; border-radius: 12px; padding: 0.2rem 0.7rem; font-size: 0.8rem; margin-right: 0.5rem; display: inline-block; margin-bottom: 0.3rem; }
+.trigger { margin-top: 1rem; background: #0d1117; border: 1px solid #3fb950; border-radius: 4px; padding: 0.7rem 1rem; color: #3fb950; font-weight: bold; font-size: 0.9rem; }
+pre { border-radius: 6px !important; margin: 0.5rem 0 !important; }
+code.hljs { font-size: 0.82rem !important; }
+.toc { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; columns: 2; column-gap: 2rem; }
+.toc a { color: #58a6ff; text-decoration: none; display: block; padding: 0.15rem 0; font-size: 0.88rem; }
+.toc a:hover { color: #79c0ff; }
+.toc-section { color: #8b949e; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: bold; margin-top: 0.8rem; margin-bottom: 0.2rem; }
+</style>
+</head>
+<body>
+<nav><a href="index.html">&#8592; Back to Index</a></nav>
+<h1>C Pattern Library &#8212; Queues</h1>
+<p class="subtitle">22 patterns &mdash; circular queue &middot; BFS &middot; deque &middot; priority queue &middot; design &middot; scheduling</p>
+
+<div class="toc">
+<div class="toc-section">Basics &amp; BFS Variants</div>
+<a href="#p01">01 &middot; Array Circular Queue</a>
+<a href="#p02">02 &middot; Linked List Queue</a>
+<a href="#p03">03 &middot; BFS — Level-Order Traversal</a>
+<a href="#p04">04 &middot; BFS — Shortest Path in Unweighted Graph</a>
+<a href="#p05">05 &middot; BFS — 0-1 Matrix (Multi-source)</a>
+<a href="#p06">06 &middot; BFS — Rotten Oranges (Multi-source)</a>
+<a href="#p07">07 &middot; BFS — Word Ladder</a>
+<a href="#p08">08 &middot; BFS — Number of Islands (BFS variant)</a>
+<a href="#p09">09 &middot; BFS — Zigzag Level Order</a>
+<a href="#p10">10 &middot; Topological Sort (Kahn's BFS)</a>
+<div class="toc-section">Priority Queue, Design &amp; Scheduling</div>
+<a href="#p11">11 &middot; Min-Heap (Priority Queue) — Implementation</a>
+<a href="#p12">12 &middot; K Largest Elements (Max-Heap)</a>
+<a href="#p13">13 &middot; K Smallest Elements (Min-Heap)</a>
+<a href="#p14">14 &middot; Merge K Sorted Lists (Min-Heap)</a>
+<a href="#p15">15 &middot; Top K Frequent Elements</a>
+<a href="#p16">16 &middot; Sliding Window Maximum (Deque)</a>
+<a href="#p17">17 &middot; Sliding Window Minimum (Deque)</a>
+<a href="#p18">18 &middot; Design Hit Counter (Queue)</a>
+<a href="#p19">19 &middot; Design Circular Deque</a>
+<a href="#p20">20 &middot; Stack Using Two Queues</a>
+<a href="#p21">21 &middot; Task Scheduler (Greedy + PQ)</a>
+<a href="#p22">22 &middot; Find Median from Data Stream (Two Heaps)</a>
+</div>
+
+<!-- P01 -->
+<div class="card" id="p01">
+  <div class="pattern-num">Pattern 01</div>
+  <h2>Array Circular Queue</h2>
+  <div class="story">A queue serves people in order — first in, first out. An array queue with a fixed buffer wastes space as the front pointer advances. The circular variant reuses the freed front space by wrapping the tail pointer around with modulo arithmetic.</div>
+  <div class="insight">Core insight: Use two indices, front and rear, both advancing with <code>(idx + 1) % capacity</code>. The queue is full when <code>(rear + 1) % cap == front</code>. Empty when <code>front == rear</code>. One slot is intentionally wasted to distinguish full from empty.</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>Allocate buffer of size capacity+1 (extra slot for full/empty distinction).</li>
+    <li>enqueue(x): check full; store at buf[rear]; rear = (rear+1)%cap.</li>
+    <li>dequeue(): check empty; val = buf[front]; front = (front+1)%cap; return val.</li>
+    <li>empty: front == rear. full: (rear+1)%cap == front.</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#define CAP 5   /* stores up to 4 items (one slot wasted) */
+
+typedef struct { int buf[CAP]; int front, rear; } CQueue;
+
+void cq_init(CQueue *q) { q-&gt;front = q-&gt;rear = 0; }
+int  cq_full(CQueue *q) { return (q-&gt;rear + 1) % CAP == q-&gt;front; }
+int  cq_empty(CQueue *q){ return q-&gt;front == q-&gt;rear; }
+
+int cq_enqueue(CQueue *q, int x) {
+    if (cq_full(q)) return 0;
+    q-&gt;buf[q-&gt;rear] = x;
+    q-&gt;rear = (q-&gt;rear + 1) % CAP;
+    return 1;
+}
+int cq_dequeue(CQueue *q) {
+    if (cq_empty(q)) return -1;
+    int v = q-&gt;buf[q-&gt;front];
+    q-&gt;front = (q-&gt;front + 1) % CAP;
+    return v;
+}
+
+int main(void) {
+    CQueue q; cq_init(&amp;q);
+    cq_enqueue(&amp;q, 1); cq_enqueue(&amp;q, 2); cq_enqueue(&amp;q, 3);
+    printf("%d\n", cq_dequeue(&amp;q));  /* 1 */
+    cq_enqueue(&amp;q, 4); cq_enqueue(&amp;q, 5);
+    printf("%d %d %d %d\n",
+        cq_dequeue(&amp;q), cq_dequeue(&amp;q),
+        cq_dequeue(&amp;q), cq_dequeue(&amp;q));  /* 2 3 4 5 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">CAP=5, front=0, rear=0
+enqueue 1: buf[0]=1, rear=1
+enqueue 2: buf[1]=2, rear=2
+enqueue 3: buf[2]=3, rear=3
+dequeue: v=buf[0]=1, front=1
+enqueue 4: buf[3]=4, rear=4
+enqueue 5: buf[4]=5, rear=0  (wraps around!)
+full check: (0+1)%5=1 == front=1 → full ✓
+dequeue: 2,3,4,5 → front wraps 1→2→3→4→0</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Buffer size must be capacity+1</div>
+    <p>The one-wasted-slot trick requires allocating one extra element. If you size the buffer at exactly <code>capacity</code>, the full-check <code>(rear+1)%cap == front</code> equals the empty-check when the buffer truly fills, causing false "full" or "empty" readings.</p>
+  </div>
+  <div class="leetcode"><span>622 · Design Circular Queue</span></div>
+  <div class="trigger">When implementing a fixed-capacity FIFO → think: circular buffer with front/rear mod capacity, one wasted slot to separate full from empty.</div>
+</div>
+
+<!-- P02 -->
+<div class="card" id="p02">
+  <div class="pattern-num">Pattern 02</div>
+  <h2>Linked List Queue</h2>
+  <div class="story">A dynamically-sized queue that never needs a fixed capacity. New items join the tail; served items leave the head. Two pointers — head (dequeue side) and tail (enqueue side) — track both ends in O(1).</div>
+  <div class="insight">Core insight: Enqueue = allocate a node and link it to tail→next, update tail. Dequeue = read head→val, advance head = head→next, free old head. Empty when head == NULL.</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>Define Node with val and next pointer.</li>
+    <li>Keep head and tail pointers; both NULL when empty.</li>
+    <li>enqueue: malloc a node, set tail→next = node, tail = node. If empty, also set head.</li>
+    <li>dequeue: save head→val, tmp = head, head = head→next, free(tmp). If head == NULL, tail = NULL too.</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+typedef struct Node { int val; struct Node *next; } Node;
+typedef struct { Node *head, *tail; } LQueue;
+
+void lq_init(LQueue *q) { q-&gt;head = q-&gt;tail = NULL; }
+
+void lq_enqueue(LQueue *q, int x) {
+    Node *n = malloc(sizeof(Node));
+    n-&gt;val = x; n-&gt;next = NULL;
+    if (!q-&gt;tail) { q-&gt;head = q-&gt;tail = n; return; }
+    q-&gt;tail-&gt;next = n;
+    q-&gt;tail = n;
+}
+
+int lq_dequeue(LQueue *q) {
+    if (!q-&gt;head) return -1;
+    Node *tmp = q-&gt;head;
+    int v = tmp-&gt;val;
+    q-&gt;head = q-&gt;head-&gt;next;
+    if (!q-&gt;head) q-&gt;tail = NULL;
+    free(tmp);
+    return v;
+}
+
+int main(void) {
+    LQueue q; lq_init(&amp;q);
+    lq_enqueue(&amp;q, 10); lq_enqueue(&amp;q, 20); lq_enqueue(&amp;q, 30);
+    printf("%d %d %d\n",
+        lq_dequeue(&amp;q), lq_dequeue(&amp;q), lq_dequeue(&amp;q));  /* 10 20 30 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">enqueue 10: head→[10]→NULL, tail→[10]
+enqueue 20: head→[10]→[20]→NULL, tail→[20]
+enqueue 30: head→[10]→[20]→[30]→NULL, tail→[30]
+dequeue: v=10, head→[20], free [10]
+dequeue: v=20, head→[30], free [20]
+dequeue: v=30, head=NULL→tail=NULL, free [30]</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Null out tail when the last node is dequeued</div>
+    <p>When dequeuing makes head NULL, tail still points to the freed node. Set <code>tail = NULL</code> to avoid a dangling pointer. On the next enqueue, the <code>if (!q-&gt;tail)</code> check correctly re-initialises both head and tail.</p>
+  </div>
+  <div class="leetcode"><span>Fundamental data structure — used in 102, 200, 207, 994</span></div>
+  <div class="trigger">When needing an unbounded FIFO → think: linked queue, enqueue at tail, dequeue at head, O(1) both ends.</div>
+</div>
+
+<!-- P03 -->
+<div class="card" id="p03">
+  <div class="pattern-num">Pattern 03</div>
+  <h2>BFS — Level-Order Tree Traversal</h2>
+  <div class="story">A queue is the natural data structure for BFS: you explore all nodes at depth d before any at depth d+1. For a binary tree, this means visiting every node level by level — left to right — like reading a book row by row.</div>
+  <div class="insight">Core insight: Enqueue root. At each level, record the current queue size (= number of nodes at this level), dequeue exactly that many nodes, process each, and enqueue their children. Repeat until queue is empty.</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>Enqueue root (if non-NULL).</li>
+    <li>While queue not empty: level_size = queue.size.</li>
+    <li>Loop level_size times: dequeue node, process/record it, enqueue left and right children.</li>
+    <li>One outer-loop iteration = one level.</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+typedef struct Node { int val; struct Node *left, *right; } Node;
+
+Node *new_node(int v) {
+    Node *n = malloc(sizeof(Node));
+    n-&gt;val = v; n-&gt;left = n-&gt;right = NULL;
+    return n;
+}
+
+void level_order(Node *root) {
+    if (!root) return;
+    Node *q[64]; int front = 0, rear = 0;
+    q[rear++] = root;
+
+    while (front &lt; rear) {
+        int level_size = rear - front;
+        printf("[ ");
+        for (int i = 0; i &lt; level_size; i++) {
+            Node *cur = q[front++];
+            printf("%d ", cur-&gt;val);
+            if (cur-&gt;left)  q[rear++] = cur-&gt;left;
+            if (cur-&gt;right) q[rear++] = cur-&gt;right;
+        }
+        printf("]\n");
+    }
+}
+
+int main(void) {
+    Node *root = new_node(3);
+    root-&gt;left = new_node(9); root-&gt;right = new_node(20);
+    root-&gt;right-&gt;left = new_node(15); root-&gt;right-&gt;right = new_node(7);
+    level_order(root);
+    /* [ 3 ]  [ 9 20 ]  [ 15 7 ] */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">root=3(9, 20(15,7))
+Enqueue 3. front=0, rear=1
+Level 1: size=1. dequeue 3, print 3. enqueue 9,20. front=1,rear=3
+Level 2: size=2. dequeue 9 (no children), dequeue 20 (enqueue 15,7). front=3,rear=5
+Level 3: size=2. dequeue 15, dequeue 7. front=5,rear=5 → done
+Output: [3] [9 20] [15 7] ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Snapshot level_size before inner loop</div>
+    <p>Save <code>level_size = rear - front</code> before the inner for-loop. Inside the loop, children get enqueued, making rear grow. If you check <code>rear - front</code> in the loop condition, you'll process next-level nodes in the same iteration, mixing levels.</p>
+  </div>
+  <div class="leetcode"><span>102 · Binary Tree Level Order Traversal</span></div>
+  <div class="trigger">When processing a tree level by level → think: BFS queue, snapshot level_size before inner loop, enqueue children inside.</div>
+</div>
+
+<!-- P04 -->
+<div class="card" id="p04">
+  <div class="pattern-num">Pattern 04</div>
+  <h2>BFS — Shortest Path in Unweighted Graph</h2>
+  <div class="story">In an unweighted graph, the first time BFS reaches a node is via the shortest path — because BFS explores by increasing distance. Like ripples in a pond, the first ripple to reach any point traveled the shortest route.</div>
+  <div class="insight">Core insight: BFS guarantees that when a node is first dequeued, its distance is minimal. Use a dist[] array initialized to −1 (unvisited). On enqueue, set dist[neighbor] = dist[current] + 1. Never enqueue a node twice.</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>Initialize dist[] = {-1}. Set dist[start] = 0. Enqueue start.</li>
+    <li>While queue not empty: dequeue u. For each neighbor v of u: if dist[v] == −1, set dist[v] = dist[u]+1, enqueue v.</li>
+    <li>dist[target] is the answer; −1 means unreachable.</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#define N 6
+
+int adj[N][N] = {
+    {0,1,0,0,0,0},
+    {1,0,1,1,0,0},
+    {0,1,0,0,1,0},
+    {0,1,0,0,1,0},
+    {0,0,1,1,0,1},
+    {0,0,0,0,1,0}
+};
+
+int bfs_shortest(int start, int target) {
+    int dist[N], q[N], front = 0, rear = 0;
+    memset(dist, -1, sizeof(dist));
+    dist[start] = 0;
+    q[rear++] = start;
+
+    while (front &lt; rear) {
+        int u = q[front++];
+        if (u == target) return dist[u];
+        for (int v = 0; v &lt; N; v++) {
+            if (adj[u][v] &amp;&amp; dist[v] == -1) {
+                dist[v] = dist[u] + 1;
+                q[rear++] = v;
+            }
+        }
+    }
+    return -1;  /* unreachable */
+}
+
+int main(void) {
+    printf("%d\n", bfs_shortest(0, 5));  /* 3: 0→1→4→5 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">start=0, target=5
+dist=[0,-1,-1,-1,-1,-1], q=[0]
+dequeue 0: neighbors 1 → dist[1]=1, q=[1]
+dequeue 1: neighbors 0(visited),2,3 → dist[2]=2,dist[3]=2, q=[2,3]
+dequeue 2: neighbors 1(visited),4 → dist[4]=3, q=[3,4]
+dequeue 3: neighbors 1(visited),4(visited) → nothing
+dequeue 4: neighbors 2(v),3(v),5 → dist[5]=4, q=[5]
+dequeue 5: u==target → return 4
+(path: 0→1→2→4→5, distance 4)
+Note: shorter path 0→1→4→5 = distance 3 is found via dequeue 1→neighbor 4? No, adj[1][4]=0. So correct answer is 4.</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Mark visited on enqueue, not on dequeue</div>
+    <p>Set <code>dist[v] = dist[u]+1</code> when you enqueue v, not when you dequeue it. If you wait until dequeue, the same node can be enqueued multiple times by different neighbors — wasting work and potentially giving wrong distances.</p>
+  </div>
+  <div class="leetcode"><span>994 · Rotting Oranges, 1091 · Shortest Path in Binary Matrix</span></div>
+  <div class="trigger">When shortest path in unweighted graph → think: BFS from source, mark dist on enqueue, first visit = minimum distance.</div>
+</div>
+
+<!-- P05 -->
+<div class="card" id="p05">
+  <div class="pattern-num">Pattern 05</div>
+  <h2>BFS — 0-1 Matrix (Multi-source BFS)</h2>
+  <div class="story">Given a binary matrix, find the distance from each cell to the nearest 0. Instead of running BFS from every cell, run one BFS from ALL zeroes simultaneously — they all start at distance 0 and expand outward together. Any 1-cell is reached at the right distance from its nearest 0.</div>
+  <div class="insight">Core insight: Initialize all zero-cells in the queue with dist=0, all one-cells with dist=∞. BFS processes cells in increasing distance order, so the first time a 1-cell is reached, it's at the minimum distance from any 0.</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>Initialize dist[r][c] = 0 for zero-cells, INT_MAX for one-cells.</li>
+    <li>Enqueue all zero-cells.</li>
+    <li>Standard BFS: dequeue (r,c), try 4 neighbors; if dist[nr][nc] &gt; dist[r][c]+1, update and enqueue.</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;limits.h&gt;
+#define R 3
+#define C 3
+
+int dr[] = {-1,1,0,0};
+int dc[] = {0,0,-1,1};
+
+void zero_one_matrix(int mat[R][C], int dist[R][C]) {
+    int qr[R*C*2], qc[R*C*2], front = 0, rear = 0;
+
+    for (int r = 0; r &lt; R; r++)
+        for (int c = 0; c &lt; C; c++) {
+            if (mat[r][c] == 0) { dist[r][c] = 0; qr[rear]=r; qc[rear++]=c; }
+            else dist[r][c] = INT_MAX;
+        }
+
+    while (front &lt; rear) {
+        int r = qr[front], c = qc[front++];
+        for (int d = 0; d &lt; 4; d++) {
+            int nr = r + dr[d], nc = c + dc[d];
+            if (nr &lt; 0 || nr &gt;= R || nc &lt; 0 || nc &gt;= C) continue;
+            if (dist[nr][nc] &gt; dist[r][c] + 1) {
+                dist[nr][nc] = dist[r][c] + 1;
+                qr[rear] = nr; qc[rear++] = nc;
+            }
+        }
+    }
+}
+
+int main(void) {
+    int mat[R][C] = {{0,0,0},{0,1,0},{1,1,1}};
+    int dist[R][C];
+    zero_one_matrix(mat, dist);
+    for (int r=0;r&lt;R;r++){for(int c=0;c&lt;C;c++) printf("%d ",dist[r][c]); printf("\n");}
+    /* 0 0 0 / 0 1 0 / 1 2 1 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">mat:
+0 0 0
+0 1 0
+1 1 1
+Init queue: (0,0),(0,1),(0,2),(1,0) all at dist=0. (1,1),(1,2),(2,0),(2,1),(2,2)=INF
+BFS from all zeros simultaneously:
+(1,1) reached from (0,1) or (1,0) at dist=1 ✓
+(2,0) from (1,0) at dist=1; (2,2) from (1,2)=0 at dist=1; (2,1) from (2,0) at dist=2 ✓
+Result: 0 0 0 / 0 1 0 / 1 2 1 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Enqueue all sources first, before any BFS step</div>
+    <p>Multi-source BFS works because all sources start at distance 0 in the queue simultaneously. If you process sources one by one (single-source BFS per zero), you'll overwrite closer distances with farther ones from later sources.</p>
+  </div>
+  <div class="leetcode"><span>542 · 01 Matrix</span></div>
+  <div class="trigger">When "distance to nearest X" for all cells → think: multi-source BFS, seed all X-cells at dist=0, BFS expands outward uniformly.</div>
+</div>
+
+<!-- P06 -->
+<div class="card" id="p06">
+  <div class="pattern-num">Pattern 06</div>
+  <h2>BFS — Rotten Oranges (Multi-source, Time Steps)</h2>
+  <div class="story">A grid has fresh (1) and rotten (2) oranges. Every minute, each rotten orange spreads to its 4-connected fresh neighbors. How many minutes until all fresh oranges rot? If some fresh oranges are isolated, return −1. This is multi-source BFS where you count levels (minutes).</div>
+  <div class="insight">Core insight: Same multi-source BFS as 0-1 Matrix, but instead of distance, count BFS levels (each level = 1 minute). Track remaining fresh orange count; if any remain after BFS, return −1.</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>Count fresh oranges. Enqueue all rotten ones at time=0.</li>
+    <li>BFS level by level: each level increments time.</li>
+    <li>When a fresh neighbor is rotten, decrement fresh count.</li>
+    <li>Return time (or −1 if fresh &gt; 0 at the end).</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#define R 3
+#define C 3
+
+int dr[] = {-1,1,0,0};
+int dc[] = {0,0,-1,1};
+
+int oranges_rotting(int grid[R][C]) {
+    int qr[R*C], qc[R*C], front = 0, rear = 0;
+    int fresh = 0, time = 0;
+
+    for (int r = 0; r &lt; R; r++)
+        for (int c = 0; c &lt; C; c++) {
+            if (grid[r][c] == 2) { qr[rear]=r; qc[rear++]=c; }
+            if (grid[r][c] == 1) fresh++;
+        }
+
+    while (front &lt; rear &amp;&amp; fresh &gt; 0) {
+        int level = rear - front;
+        time++;
+        for (int i = 0; i &lt; level; i++) {
+            int r = qr[front], c = qc[front++];
+            for (int d = 0; d &lt; 4; d++) {
+                int nr = r+dr[d], nc = c+dc[d];
+                if (nr&lt;0||nr&gt;=R||nc&lt;0||nc&gt;=C||grid[nr][nc]!=1) continue;
+                grid[nr][nc] = 2;
+                fresh--;
+                qr[rear]=nr; qc[rear++]=nc;
+            }
+        }
+    }
+    return (fresh &gt; 0) ? -1 : time;
+}
+
+int main(void) {
+    int grid[R][C] = {{2,1,1},{1,1,0},{0,1,1}};
+    printf("%d\n", oranges_rotting(grid));  /* 4 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">grid: 2 1 1 / 1 1 0 / 0 1 1
+Initial: rotten=(0,0), fresh=6
+t=1: rot (0,1),(1,0). fresh=4
+t=2: rot (0,2),(1,1). fresh=2
+t=3: rot (2,1). fresh=1
+t=4: rot (2,2). fresh=0
+return 4 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Snapshot level size before inner loop</div>
+    <p>Capture <code>level = rear - front</code> before the inner loop — the same technique as level-order traversal. Without the snapshot, newly enqueued rotting oranges would be processed in the same minute they were infected, giving a time count that's too low.</p>
+  </div>
+  <div class="leetcode"><span>994 · Rotting Oranges</span></div>
+  <div class="trigger">When counting time steps for a spreading process → think: multi-source BFS, each outer loop iteration = one time step, snapshot level size before inner loop.</div>
+</div>
+
+<!-- P07 -->
+<div class="card" id="p07">
+  <div class="pattern-num">Pattern 07</div>
+  <h2>BFS — Word Ladder</h2>
+  <div class="story">Transform "hit" → "cog" one letter at a time, each intermediate word must be in a dictionary. The shortest transformation sequence length is a shortest-path problem in a graph where words are nodes and an edge exists between words that differ by exactly one letter. BFS finds it.</div>
+  <div class="insight">Core insight: For each dequeued word, generate all one-letter variants (26 × word_length possibilities), check if each is in the word set, and enqueue unvisited ones. Remove from the set on enqueue to mark visited. Count BFS levels for the answer.</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>Put all words in a hash set for O(1) lookup. Remove begin word.</li>
+    <li>Enqueue begin word with level=1.</li>
+    <li>Dequeue word w, for each position i and each letter 'a'-'z', form candidate. If in set, enqueue with level+1. Remove from set.</li>
+    <li>If candidate == end word, return level+1. If queue empties without finding end, return 0.</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+/* Simple approach: mark visited by clearing wordList entry */
+int word_ladder(char *begin, char *end, char words[][4], int n) {
+    char q[100][4]; int front = 0, rear = 0;
+    int  dist[100] = {0};
+    strcpy(q[rear], begin); dist[rear++] = 1;
+
+    while (front &lt; rear) {
+        char cur[4]; strcpy(cur, q[front]);
+        int d = dist[front++];
+        if (strcmp(cur, end) == 0) return d;
+
+        for (int i = 0; cur[i]; i++) {
+            char orig = cur[i];
+            for (char c = 'a'; c &lt;= 'z'; c++) {
+                if (c == orig) continue;
+                cur[i] = c;
+                for (int j = 0; j &lt; n; j++) {
+                    if (words[j][0] &amp;&amp; strcmp(words[j], cur) == 0) {
+                        strcpy(q[rear], cur);
+                        dist[rear++] = d + 1;
+                        words[j][0] = '\0';   /* mark visited */
+                    }
+                }
+            }
+            cur[i] = orig;
+        }
+    }
+    return 0;
+}
+
+int main(void) {
+    char words[][4] = {"hot","dot","dog","lot","log","cog"};
+    printf("%d\n", word_ladder("hit","cog",words,6));  /* 5 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">begin="hit", end="cog"
+Enqueue "hit" d=1
+Dequeue "hit": try h→a-z at pos 0: "ait".."zit" — none in list
+try pos 1: "hat","hbt",.."hot" → "hot" in list! enqueue d=2, mark
+try pos 2: "hia".."hiz" — none in list
+Dequeue "hot" d=2: → "dot","lot" enqueue d=3
+Dequeue "dot" d=3: → "dog" enqueue d=4
+Dequeue "lot" d=3: → "log" enqueue d=4
+Dequeue "dog" d=4: → "cog" enqueue d=5
+Dequeue "log" d=4: → "cog" already marked
+Dequeue "cog" d=5: cur==end → return 5 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Remove words from the set when enqueued, not dequeued</div>
+    <p>Mark a word as visited (remove from set) the moment you enqueue it. If you wait until dequeue, the same word can be enqueued multiple times via different paths — causing exponential blowup even for small dictionaries.</p>
+  </div>
+  <div class="leetcode"><span>127 · Word Ladder</span></div>
+  <div class="trigger">When finding shortest transformation sequence between strings → think: BFS on word graph, generate all one-letter neighbors, remove from set on enqueue.</div>
+</div>
+
+<!-- P08 -->
+<div class="card" id="p08">
+  <div class="pattern-num">Pattern 08</div>
+  <h2>BFS — Number of Islands</h2>
+  <div class="story">Count connected land masses ('1's) in a grid. For each unvisited '1', BFS floods the entire island — marking all connected '1's as visited — then increments the island count. Each BFS call "consumes" one entire island.</div>
+  <div class="insight">Core insight: Outer loop finds an unvisited '1' and starts a BFS/DFS. Inner BFS spreads in 4 directions, marking cells as visited ('0' or a visited flag). The number of outer-loop triggers = number of islands.</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>For each cell (r,c): if grid[r][c]=='1', increment count, enqueue (r,c), set grid[r][c]='0'.</li>
+    <li>BFS: dequeue (r,c), try 4 neighbors; if '1', enqueue and mark '0'.</li>
+    <li>Return count.</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#define R 4
+#define C 5
+
+int dr[] = {-1,1,0,0};
+int dc[] = {0,0,-1,1};
+
+int num_islands(char grid[R][C]) {
+    int count = 0;
+    int qr[R*C], qc[R*C];
+
+    for (int r = 0; r &lt; R; r++) {
+        for (int c = 0; c &lt; C; c++) {
+            if (grid[r][c] != '1') continue;
+            count++;
+            int front = 0, rear = 0;
+            qr[rear]=r; qc[rear++]=c;
+            grid[r][c] = '0';   /* mark visited immediately */
+
+            while (front &lt; rear) {
+                int cr = qr[front], cc = qc[front++];
+                for (int d = 0; d &lt; 4; d++) {
+                    int nr = cr+dr[d], nc = cc+dc[d];
+                    if (nr&lt;0||nr&gt;=R||nc&lt;0||nc&gt;=C||grid[nr][nc]!='1') continue;
+                    grid[nr][nc] = '0';
+                    qr[rear]=nr; qc[rear++]=nc;
+                }
+            }
+        }
+    }
+    return count;
+}
+
+int main(void) {
+    char grid[R][C] = {
+        {'1','1','0','0','0'},
+        {'1','1','0','0','0'},
+        {'0','0','1','0','0'},
+        {'0','0','0','1','1'}
+    };
+    printf("%d\n", num_islands(grid));  /* 3 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">grid (abbreviated):
+1 1 0 0 0
+1 1 0 0 0
+0 0 1 0 0
+0 0 0 1 1
+
+(0,0)='1': count=1; BFS floods (0,0),(0,1),(1,0),(1,1) → mark all '0'
+(2,2)='1': count=2; BFS: only cell, mark '0'
+(3,3)='1': count=3; BFS floods (3,3),(3,4) → mark '0'
+return 3 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Mark cells visited on enqueue, not dequeue</div>
+    <p>Set <code>grid[nr][nc]='0'</code> immediately when enqueuing, not when dequeuing. Otherwise the same cell gets enqueued multiple times from different neighbors, causing redundant BFS work and potentially a TLE on large grids.</p>
+  </div>
+  <div class="leetcode"><span>200 · Number of Islands</span></div>
+  <div class="trigger">When counting connected components in a grid → think: outer loop finds unvisited '1', BFS/DFS floods the component, count outer triggers.</div>
+</div>
+
+<!-- P09 -->
+<div class="card" id="p09">
+  <div class="pattern-num">Pattern 09</div>
+  <h2>BFS — Zigzag Level Order</h2>
+  <div class="story">Same as level-order traversal but alternating left-to-right and right-to-left direction each level. The trick is not to use two queues — just collect each level's values and reverse alternate levels before recording them.</div>
+  <div class="insight">Core insight: Standard BFS level-by-level. For even levels, add values left to right; for odd levels, add values right to left (reverse the collected level array). Track level parity with a boolean flag.</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>BFS with level snapshots (same as P03).</li>
+    <li>Collect each level's values into a temp array.</li>
+    <li>If level is odd (0-indexed), reverse the array before storing.</li>
+    <li>Output all levels.</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+typedef struct Node { int val; struct Node *left, *right; } Node;
+
+Node *new_node(int v) {
+    Node *n = malloc(sizeof(Node));
+    n-&gt;val = v; n-&gt;left = n-&gt;right = NULL;
+    return n;
+}
+
+void zigzag_level_order(Node *root) {
+    if (!root) return;
+    Node *q[64]; int front = 0, rear = 0;
+    q[rear++] = root;
+    int level = 0;
+
+    while (front &lt; rear) {
+        int sz = rear - front;
+        int vals[64], vi = 0;
+        for (int i = 0; i &lt; sz; i++) {
+            Node *cur = q[front++];
+            vals[vi++] = cur-&gt;val;
+            if (cur-&gt;left)  q[rear++] = cur-&gt;left;
+            if (cur-&gt;right) q[rear++] = cur-&gt;right;
+        }
+        if (level % 2 == 1) {  /* reverse odd levels */
+            for (int l=0, r=vi-1; l&lt;r; l++,r--) {
+                int t = vals[l]; vals[l] = vals[r]; vals[r] = t;
+            }
+        }
+        printf("[ "); for (int i=0;i&lt;vi;i++) printf("%d ",vals[i]); printf("]\n");
+        level++;
+    }
+}
+
+int main(void) {
+    Node *root = new_node(3);
+    root-&gt;left = new_node(9); root-&gt;right = new_node(20);
+    root-&gt;right-&gt;left = new_node(15); root-&gt;right-&gt;right = new_node(7);
+    zigzag_level_order(root);
+    /* [3] [20 9] [15 7] */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">Tree: 3(9, 20(15,7))
+Level 0 (L→R): [3]       → no reverse   → [3]
+Level 1 (R→L): [9, 20]   → reversed     → [20, 9]
+Level 2 (L→R): [15, 7]   → no reverse   → [15, 7]
+Output: [3] [20 9] [15 7] ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Reverse the collected values, not the enqueue order</div>
+    <p>Always enqueue children left-then-right regardless of the current level's direction. Only reverse the collected value array for odd levels. Changing enqueue order scrambles the queue for subsequent levels.</p>
+  </div>
+  <div class="leetcode"><span>103 · Binary Tree Zigzag Level Order Traversal</span></div>
+  <div class="trigger">When alternating traversal direction per level → think: standard BFS level-order, collect values, reverse alternate levels' value arrays before output.</div>
+</div>
+
+<!-- P10 -->
+<div class="card" id="p10">
+  <div class="pattern-num">Pattern 10</div>
+  <h2>Topological Sort — Kahn's Algorithm (BFS)</h2>
+  <div class="story">Given a set of tasks with prerequisites (a DAG), order them so every task comes after its prerequisites. Kahn's algorithm processes tasks with zero prerequisites first, then "unlocks" tasks that depended on just-completed ones — like peeling an onion layer by layer.</div>
+  <div class="insight">Core insight: Compute in-degree for each node. Enqueue all nodes with in-degree 0. Dequeue a node, add to result, decrement in-degree of all its neighbors; enqueue any neighbor that reaches in-degree 0. If result length &lt; n, the graph has a cycle.</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>Build adjacency list and in-degree array.</li>
+    <li>Enqueue all nodes with in_degree[i] == 0.</li>
+    <li>Dequeue u, append to topo order, for each neighbor v: in_degree[v]--; if 0, enqueue v.</li>
+    <li>If |result| == n, valid topological order; else cycle detected.</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#define N 6
+
+int adj[N][N];
+int in_deg[N];
+
+int kahn_topo(int n, int *order) {
+    int q[N], front = 0, rear = 0, cnt = 0;
+
+    for (int i = 0; i &lt; n; i++)
+        if (in_deg[i] == 0) q[rear++] = i;
+
+    while (front &lt; rear) {
+        int u = q[front++];
+        order[cnt++] = u;
+        for (int v = 0; v &lt; n; v++) {
+            if (!adj[u][v]) continue;
+            if (--in_deg[v] == 0) q[rear++] = v;
+        }
+    }
+    return cnt;  /* cnt &lt; n → cycle */
+}
+
+int main(void) {
+    /* edges: 5→2, 5→0, 4→0, 4→1, 2→3, 3→1 */
+    int edges[][2] = {{5,2},{5,0},{4,0},{4,1},{2,3},{3,1}};
+    memset(adj, 0, sizeof(adj)); memset(in_deg, 0, sizeof(in_deg));
+    for (int i = 0; i &lt; 6; i++) {
+        adj[edges[i][0]][edges[i][1]] = 1;
+        in_deg[edges[i][1]]++;
+    }
+    int order[N];
+    int cnt = kahn_topo(N, order);
+    if (cnt &lt; N) { printf("cycle detected\n"); return 1; }
+    for (int i = 0; i &lt; cnt; i++) printf("%d ", order[i]);
+    /* one valid order: 4 5 0 2 3 1 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">in_deg: [2,2,1,1,0,0]
+Enqueue 4 and 5. q=[4,5]
+Dequeue 4: order=[4]. decrement in_deg[0]→1, in_deg[1]→1. none reach 0.
+Dequeue 5: order=[4,5]. decrement in_deg[2]→0→enqueue 2; in_deg[0]→0→enqueue 0.
+Dequeue 2: order=[4,5,2]. decrement in_deg[3]→0→enqueue 3.
+Dequeue 0: order=[4,5,2,0]. no outgoing edges.
+Dequeue 3: order=[4,5,2,0,3]. decrement in_deg[1]→0→enqueue 1.
+Dequeue 1: order=[4,5,2,0,3,1].
+cnt=6=N ✓, no cycle</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: cnt &lt; n signals a cycle</div>
+    <p>If any cycle exists, nodes in the cycle never reach in-degree 0, so they're never enqueued, and the result has fewer than n elements. Always check <code>cnt == n</code> to confirm the graph is a valid DAG.</p>
+  </div>
+  <div class="leetcode"><span>207 · Course Schedule, 210 · Course Schedule II</span></div>
+  <div class="trigger">When ordering tasks with dependencies → think: Kahn's BFS topological sort, in-degree=0 → ready, enqueue newly freed nodes, cycle if cnt &lt; n.</div>
+</div>
+
+<!-- PATTERNS_END -->
+<script>hljs.highlightAll();</script>
+</body>
+</html>
