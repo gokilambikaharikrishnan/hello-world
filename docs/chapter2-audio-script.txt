@@ -1086,3 +1086,76 @@ NCA: highest energy density, highest risk, requires the most sophisticated BMS.
 
 For home energy storage and UPS: LFP is the right choice. Every time.
 
+
+============================================================
+SECTION 2.14 — SECOND-LIFE BATTERIES
+============================================================
+
+When an LFP pack from an electric vehicle reaches eighty percent SOH,
+it is retired from the vehicle — but it is not dead. It still has roughly
+sixty to seventy percent of its original useful life remaining for a less
+demanding role like stationary energy storage.
+
+Understanding what changes in the BMS when managing aged cells is increasingly
+relevant as second-life deployments grow.
+
+WHAT CHANGES WHEN CELLS AGE
+
+An aged cell at eighty percent SOH behaves differently from a fresh cell.
+The BMS must be updated — not just recalibrated — with new values.
+
+The nominal capacity must be reduced to the actual measured capacity.
+If the cell used to be two-eighty amp-hours and now measures two-hundred-and-twenty-four,
+the BMS must use two-twenty-four as its denominator for all SOC calculations.
+Using the original two-eighty figure would cause the BMS to systematically under-report
+the true state of charge.
+
+The internal resistance values used in the ECM model must be updated.
+After ageing, resistance is typically thirty to sixty percent higher.
+If the old values are used, the BMS will underestimate voltage sag under load,
+set incorrect current limits, and generate inaccurate State of Power estimates.
+
+The OCV table may need to be remeasured. Lithium loss during aging shifts the
+resting voltage curve slightly lower — by ten to thirty millivolts in the plateau.
+If the old table is used for SOC lookup, the initial estimate at power-on will
+be a few percent off.
+
+CELL GRADING FOR SECOND-LIFE PACKS
+
+The most important step in assembling a second-life pack is cell grading.
+
+All cells in a series string will be subject to the same cycling — so any cell
+with significantly less capacity will limit the whole string. If one cell has
+two-hundred amp-hours and the others have two-twenty, the effective pack capacity
+is two-hundred, and the stronger cells will always have charge left over at cutoff.
+
+Before assembly, measure every cell's actual capacity with a slow discharge.
+Sort cells into groups within three percent of each other by capacity.
+Only put cells from the same group into the same series string.
+
+This grading step is the single highest-value activity in second-life manufacturing.
+Skipping it leads to packs that appear to function but have significantly reduced
+usable capacity and faster apparent aging.
+
+HOW EIS CAN SPEED UP CELL SORTING
+
+A full capacity discharge takes hours. For sorting hundreds of cells, that is too slow.
+
+Electrochemical Impedance Spectroscopy — EIS — offers a faster alternative.
+It sends a tiny alternating current through the cell at many different frequencies
+and reads how the cell responds. Different parts of the cell's aging signature show
+up at different frequencies.
+
+High-frequency response reveals the ohmic resistance — how much the SEI and
+electrolyte have degraded.
+Mid-frequency response shows the charge transfer resistance — a proxy for SEI thickness.
+Low-frequency response shows diffusion characteristics inside the electrode particles.
+
+Together, these give a fingerprint of the cell's degradation state in under five minutes —
+far faster than a full discharge test.
+
+Dedicated EIS instruments cost ten thousand to fifty thousand dollars.
+But EIS capability is now appearing in next-generation BMS analog front-end chips,
+allowing continuous in-service impedance measurement without removing the cells.
+This will make real-time SOH tracking increasingly practical for second-life deployments.
+
