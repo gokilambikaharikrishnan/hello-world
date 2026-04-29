@@ -1,0 +1,35 @@
+CHAPTER 2: CELL ELECTROCHEMISTRY & BMS ALGORITHMS
+LFP BMS Knowledge Base — Audio Narration Script
+Estimated listening time: approximately 55 minutes
+============================================================
+
+[INTRO]
+
+Welcome to Chapter 2 of the LFP Battery Management System Knowledge Base.
+
+This chapter is called: Cell Electrochemistry and BMS Algorithms.
+
+Chapter 1 told you which battery chemistry to use and why. Chapter 2 goes inside
+the cell and answers the harder question: what is actually happening in there,
+and how does the Battery Management System track it, protect against it,
+and keep the pack healthy for years?
+
+By the end of this chapter, you will understand four things clearly.
+
+First: the exact chemical process that stores and releases energy inside an LFP cell
+— and why that process creates a voltage curve unlike any other battery chemistry.
+
+Second: why the BMS cannot simply read the battery's voltage to know how full it is
+— and what it does instead.
+
+Third: how cells age, what kills them, and what the BMS can do to slow that down.
+
+And fourth: how all of this connects to real hardware — real protection limits,
+real SOC algorithms, real commissioning steps on a real bench.
+
+Everything in this chapter uses real numbers from our reference design:
+a sixteen-cell, two-eighty amp-hour lithium iron phosphate pack,
+running at forty-eight volts nominal, storing about fourteen point three kilowatt-hours.
+
+Let's start at the very beginning — inside the cell.
+
