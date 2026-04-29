@@ -1159,3 +1159,108 @@ But EIS capability is now appearing in next-generation BMS analog front-end chip
 allowing continuous in-service impedance measurement without removing the cells.
 This will make real-time SOH tracking increasingly practical for second-life deployments.
 
+
+============================================================
+CHAPTER SUMMARY — THE TEN PRINCIPLES
+============================================================
+
+Let's close Chapter 2 with the ten principles that drive every BMS design decision.
+These are the ideas that everything else in this series builds on.
+
+PRINCIPLE ONE: THE TWO-PHASE REACTION IS NOT A PROBLEM TO SOLVE.
+
+LFP's voltage plateau is a direct consequence of the olivine crystal chemistry.
+It is not a manufacturing defect. It is not something a better sensor can fix.
+The BMS is designed around this reality.
+
+PRINCIPLE TWO: TERMINAL VOLTAGE IS NOT OCV UNDER LOAD.
+
+When current is flowing, the measured voltage includes a drop from internal resistance
+that can be as large as the entire useful OCV variation across the plateau.
+Never use terminal voltage as OCV without at least thirty minutes of rest.
+
+PRINCIPLE THREE: COULOMB COUNTING DRIFTS. ALWAYS.
+
+Integration of current accumulates sensor error. Without periodic correction,
+SOC error can reach fifteen percent within weeks. Every production BMS resets
+against a known reference when the opportunity arises.
+
+PRINCIPLE FOUR: TEMPERATURE CHANGES EVERYTHING.
+
+Every protection threshold, every SOC correction, every charging rate limit depends on
+temperature. A BMS that ignores temperature will fail in both hot summers and cold winters.
+
+PRINCIPLE FIVE: NEVER CHARGE A COLD CELL FAST.
+
+Charging below zero degrees Celsius at any significant rate causes lithium plating.
+Lithium plating causes permanent capacity loss, possible dendrites, possible fire.
+The BMS enforces cold charging limits as a hardware-level override.
+
+PRINCIPLE SIX: FLOAT AT NINETY TO NINETY-FIVE PERCENT, NOT ONE HUNDRED.
+
+For cells that sit charged for long periods — UPS systems in particular — storing
+at full charge accelerates both electrolyte oxidation and SEI growth. Floating at
+three-point-four to three-point-four-five volts per cell extends calendar life
+by twenty to forty percent at almost no cost.
+
+PRINCIPLE SEVEN: PER-CELL MONITORING IS NOT OPTIONAL.
+
+In a series string, the weakest cell determines when the pack shuts down.
+Monitoring only the total pack voltage misses a cell that is failing.
+Missing a failing cell leads to over-discharge events that cause irreversible damage.
+
+PRINCIPLE EIGHT: SEI IS BOTH FRIEND AND ENEMY.
+
+Without the SEI layer, the electrolyte would continuously react with the anode
+until the cell destroyed itself. But every bit of SEI that forms locks up lithium
+permanently and adds resistance. Managing SEI growth is the central challenge
+of battery longevity.
+
+PRINCIPLE NINE: SOH IS A MEASURED NUMBER, NOT AN ESTIMATE.
+
+SOH should be measured periodically with a Reference Performance Test.
+Logged with timestamps and cycle counts. Trended over time. Used to predict
+when the pack will need replacement — before the knee, not after.
+
+PRINCIPLE TEN: STATE OF POWER IS NOT STATE OF CHARGE.
+
+SOC tells you how much energy is stored. State of Power tells you how hard
+the pack can be pushed right now. For UPS applications, State of Power must
+be updated every hundred milliseconds and broadcast continuously.
+A stale SoP figure causes voltage collapse under sudden load — exactly when
+the UPS is most needed.
+
+============================================================
+WHAT CHAPTER 3 COVERS
+============================================================
+
+Chapter 2 has established everything you need to understand why the BMS is complex
+and what problems it is solving.
+
+Chapter 3 moves to hardware. We will look at the actual chips and circuits
+that implement these algorithms.
+
+The analog front-end integrated circuit — ICs from Texas Instruments and Analog Devices
+— that measure every cell voltage to better than one millivolt accuracy simultaneously.
+
+The current sensing topology — shunt resistors versus Hall-effect sensors —
+and why the choice directly affects coulomb counting accuracy.
+
+The protection FET architecture — back-to-back MOSFETs for bidirectional
+current blocking — and what happens to the body diode in each direction.
+
+The communication interfaces — CAN bus, SMBus, RS-485 — and how SOC, SoP,
+temperature, and fault data are delivered to the host system in real time.
+
+And the firmware architecture that ties it all together on a real STM32 microcontroller.
+
+Everything in Chapter 2 has a direct hardware counterpart in Chapter 3.
+That is where the algorithms become real.
+
+Thank you for listening to Chapter 2 of the LFP BMS Knowledge Base.
+
+============================================================
+END OF CHAPTER 2 AUDIO SCRIPT
+Approximate listening time: 55 minutes
+============================================================
+
