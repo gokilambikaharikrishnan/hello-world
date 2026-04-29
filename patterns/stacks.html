@@ -1391,6 +1391,815 @@ pg = [-1,-1,5,-1,10] ✓</div>
   <div class="trigger">Whenever you need nearest smaller/greater in either direction → think: monotonic stack template, flip scan direction or comparison operator for each variant.</div>
 </div>
 
+<!-- P21 -->
+<div class="card" id="p21">
+  <div class="pattern-num">Pattern 21</div>
+  <h2>Basic Calculator I (Parentheses + +/−)</h2>
+  <div class="story">Evaluate a math expression with only '+', '−', spaces, and parentheses — no '*' or '/'. The challenge is parentheses: a '−' before '(' flips the sign of everything inside. A stack saves the running total and the current sign before each '('.</div>
+  <div class="insight">Core insight: Track a running result and a current sign (+1 or −1). On '(', push the current result and sign onto the stack, then reset both. On ')', pop the saved sign and result and combine: result = saved_result + saved_sign × current_result.</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>Maintain `result` (running total), `num` (current number being parsed), `sign` (+1 or −1).</li>
+    <li>On digit: build num = num×10 + digit.</li>
+    <li>On '+'/'-': flush num into result (result += sign × num); update sign; reset num=0.</li>
+    <li>On '(': push result and sign; reset result=0, sign=+1.</li>
+    <li>On ')': flush num; result = stack_result + stack_sign × result; pop.</li>
+    <li>Final: flush any remaining num.</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;ctype.h&gt;
+
+int calculate(const char *s) {
+    int result = 0, num = 0, sign = 1;
+    int res_stack[100], sign_stack[100], top = -1;
+
+    for (int i = 0; s[i]; i++) {
+        char c = s[i];
+        if (isdigit(c)) {
+            num = num * 10 + (c - '0');
+        } else if (c == '+' || c == '-') {
+            result += sign * num;
+            num = 0;
+            sign = (c == '+') ? 1 : -1;
+        } else if (c == '(') {
+            res_stack[++top]  = result;
+            sign_stack[top]   = sign;
+            result = 0; sign = 1;
+        } else if (c == ')') {
+            result += sign * num;
+            num = 0;
+            result = res_stack[top] + sign_stack[top] * result;
+            top--;
+        }
+    }
+    return result + sign * num;
+}
+
+int main(void) {
+    printf("%d\n", calculate("1 + (2 - (3 + 1))"));  /* -1 */
+    printf("%d\n", calculate("(1+(4+5+2)-3)+(6+8)")); /* 23 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">"1+(2-3)"
+'1': num=1
+'+': result=0+1×1=1, sign=+1, num=0
+'(': push(result=1,sign=1); result=0,sign=1
+'2': num=2
+'-': result=0+1×2=2, sign=-1, num=0
+'3': num=3
+')': result=2+(-1)×3=-1; result=1+1×(-1)=0; pop
+Final: result+sign×num=0+1×0=0 ✓ (1+(2-3)=0)</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Flush num before acting on operators and ')'</div>
+    <p><code>num</code> is a digit buffer. You must flush it into <code>result</code> before changing <code>sign</code> or processing ')'. Forgetting the flush on ')' is the most common bug — the last number inside the parentheses gets lost.</p>
+  </div>
+  <div class="leetcode"><span>224 · Basic Calculator</span></div>
+  <div class="trigger">When evaluating +/− expressions with nested parentheses → think: stack saves (result, sign) on '(', restores and combines on ')'.</div>
+</div>
+
+<!-- P22 -->
+<div class="card" id="p22">
+  <div class="pattern-num">Pattern 22</div>
+  <h2>Basic Calculator II (+/−/×/÷, no parentheses)</h2>
+  <div class="story">Now the expression has all four operations but no parentheses. The trick: you can't just process left to right because × and ÷ bind tighter than + and −. Instead, defer additions and subtractions, but apply multiplications and divisions immediately to the most recent term on a stack.</div>
+  <div class="insight">Core insight: Push numbers onto a stack. For '+'/'-', push +num or −num. For '×'/'÷', pop the last number, apply the operation, push back the result. Final answer = sum of everything on the stack (all additions and subtractions were already baked in as signs).</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>Track last_op (starts as '+'), num (current parsed number).</li>
+    <li>On operator or end-of-string: apply last_op to num and the stack.</li>
+    <li>For '+': push num. For '−': push −num.</li>
+    <li>For '×': pop top, push top × num. For '÷': pop top, push top / num.</li>
+    <li>Sum the stack for the result.</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;ctype.h&gt;
+
+int calculate2(const char *s) {
+    int stack[200], top = -1, num = 0;
+    char last_op = '+';
+
+    for (int i = 0; s[i] || i == 0; i++) {
+        char c = s[i];
+        if (isdigit(c)) {
+            num = num * 10 + (c - '0');
+        }
+        if ((!isdigit(c) &amp;&amp; c != ' ') || s[i+1] == '\0') {
+            /* flush: apply last_op with num */
+            if (last_op == '+')      stack[++top] =  num;
+            else if (last_op == '-') stack[++top] = -num;
+            else if (last_op == '*') stack[top]  *= num;
+            else if (last_op == '/') stack[top]  /= num;
+            last_op = c;
+            num = 0;
+        }
+    }
+    int result = 0;
+    while (top &gt;= 0) result += stack[top--];
+    return result;
+}
+
+int main(void) {
+    printf("%d\n", calculate2("3+2*2"));       /* 7 */
+    printf("%d\n", calculate2(" 3/2 "));       /* 1 */
+    printf("%d\n", calculate2(" 3+5 / 2 "));   /* 5 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">"3+2*2"
+c='3': num=3
+c='+': last_op='+', flush: push 3. stack=[3]. last_op='+'. num=0
+c='2': num=2
+c='*': last_op='+', flush: push 2. stack=[3,2]. last_op='*'. num=0
+c='2': num=2
+end: last_op='*', flush: stack[top]=2*2=4. stack=[3,4]
+sum=7 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Trigger flush at end-of-string too</div>
+    <p>The last number never gets followed by an operator, so the flush logic must also trigger when <code>s[i+1]=='\0'</code> (or equivalently loop to i==n). Missing this loses the final number entirely.</p>
+  </div>
+  <div class="leetcode"><span>227 · Basic Calculator II</span></div>
+  <div class="trigger">When evaluating expressions with mixed precedence (no parens) → think: stack holds deferred additions; apply ×/÷ immediately to the top.</div>
+</div>
+
+<!-- P23 -->
+<div class="card" id="p23">
+  <div class="pattern-num">Pattern 23</div>
+  <h2>Infix to Postfix (Shunting-Yard)</h2>
+  <div class="story">Compilers convert human-readable infix expressions (3 + 4 × 2) into postfix (3 4 2 × +) where operands always precede their operator — no parentheses needed. Dijkstra's shunting-yard algorithm uses a stack to hold operators waiting for a lower-precedence operator or ')' to flush them.</div>
+  <div class="insight">Core insight: Numbers go directly to output. Operators wait on a stack; pop and output any stack operator with equal-or-higher precedence before pushing the new one. '(' pushes unconditionally; ')' pops until '('.</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>For each token: if number, append to output.</li>
+    <li>If '(', push onto operator stack.</li>
+    <li>If ')', pop and output until '(' is found; discard '('.</li>
+    <li>If operator op, while stack top is an operator with prec ≥ prec(op), pop and output; then push op.</li>
+    <li>At end, pop all remaining operators to output.</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;ctype.h&gt;
+#include &lt;string.h&gt;
+
+static int prec(char op) {
+    if (op == '+' || op == '-') return 1;
+    if (op == '*' || op == '/') return 2;
+    return 0;
+}
+
+void infix_to_postfix(const char *in, char *out) {
+    char op_stack[100]; int top = -1;
+    int oi = 0;
+
+    for (int i = 0; in[i]; i++) {
+        char c = in[i];
+        if (isdigit(c)) {
+            out[oi++] = c; out[oi++] = ' ';
+        } else if (c == '(') {
+            op_stack[++top] = c;
+        } else if (c == ')') {
+            while (top &gt;= 0 &amp;&amp; op_stack[top] != '(')
+                { out[oi++] = op_stack[top--]; out[oi++] = ' '; }
+            top--;  /* discard '(' */
+        } else if (prec(c)) {
+            while (top &gt;= 0 &amp;&amp; prec(op_stack[top]) &gt;= prec(c))
+                { out[oi++] = op_stack[top--]; out[oi++] = ' '; }
+            op_stack[++top] = c;
+        }
+    }
+    while (top &gt;= 0) { out[oi++] = op_stack[top--]; out[oi++] = ' '; }
+    out[oi] = '\0';
+}
+
+int main(void) {
+    char out[100];
+    infix_to_postfix("3+4*2", out);
+    printf("%s\n", out);  /* 3 4 2 * + */
+    infix_to_postfix("(3+4)*2", out);
+    printf("%s\n", out);  /* 3 4 + 2 * */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">"3+4*2"
+'3': out="3 "
+'+': stack empty, push '+'. op_stack=[+]
+'4': out="3 4 "
+'*': prec('*')=2 &gt; prec('+')=1, stop popping; push '*'. op_stack=[+,*]
+'2': out="3 4 2 "
+end: pop '*' → out="3 4 2 * "; pop '+' → out="3 4 2 * + " ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Left-associative operators pop equal precedence</div>
+    <p>For left-associative operators (+, −, ×, ÷), pop stack operators with <em>equal</em> precedence before pushing the new one. If you only pop strictly higher precedence, "3−2−1" becomes "3 2 1 − −" = 3−(2−1) = 2 instead of the correct (3−2)−1 = 0.</p>
+  </div>
+  <div class="leetcode"><span>Classic compiler algorithm — see 150 · Evaluate RPN for postfix evaluation</span></div>
+  <div class="trigger">When converting infix to postfix → think: shunting-yard, operator stack, pop equal-or-higher precedence before pushing, flush on ')' and at end.</div>
+</div>
+
+<!-- P24 -->
+<div class="card" id="p24">
+  <div class="pattern-num">Pattern 24</div>
+  <h2>Simplify Unix Path</h2>
+  <div class="story">A Unix path like "/home/../usr//local/./bin" resolves to "/usr/local/bin". Split on '/', process each component: push real directory names, pop on '..', ignore '.' and empty tokens.</div>
+  <div class="insight">Core insight: Split the path by '/' and use a stack of directory names. Push on a real name, pop on '..', do nothing on '.' or empty string. Then join the stack with '/' separators.</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>Tokenize path by '/' using strtok or a manual scanner.</li>
+    <li>For each token: if empty or ".", skip. If "..", pop (if non-empty stack). Otherwise push the token.</li>
+    <li>Reconstruct: join stack elements with "/" prefix for each.</li>
+    <li>If stack empty, return "/".</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+void simplify_path(const char *path, char *result) {
+    char buf[300], *parts[100];
+    int top = -1;
+    strncpy(buf, path, 299);
+
+    char *tok = strtok(buf, "/");
+    while (tok) {
+        if (strcmp(tok, "..") == 0) {
+            if (top &gt;= 0) top--;
+        } else if (strcmp(tok, ".") != 0 &amp;&amp; tok[0] != '\0') {
+            parts[++top] = tok;
+        }
+        tok = strtok(NULL, "/");
+    }
+
+    if (top &lt; 0) { strcpy(result, "/"); return; }
+    int ri = 0;
+    for (int i = 0; i &lt;= top; i++) {
+        result[ri++] = '/';
+        for (int j = 0; parts[i][j]; j++) result[ri++] = parts[i][j];
+    }
+    result[ri] = '\0';
+}
+
+int main(void) {
+    char out[300];
+    simplify_path("/home/../usr//local/./bin", out);
+    printf("%s\n", out);  /* /usr/local/bin */
+    simplify_path("/../", out);
+    printf("%s\n", out);  /* / */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">"/home/../usr//local/./bin"
+tokens: "home", "..", "usr", "", "local", ".", "bin"
+"home"  → push. stack=["home"]
+".."    → pop.  stack=[]
+"usr"   → push. stack=["usr"]
+""      → skip
+"local" → push. stack=["usr","local"]
+"."     → skip
+"bin"   → push. stack=["usr","local","bin"]
+result="/usr/local/bin" ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: '..' at the root does nothing</div>
+    <p>If the stack is already empty and you encounter '..', there's nothing to pop — you stay at root. Always guard <code>top &ge; 0</code> before popping. Similarly, leading '//' produces empty tokens from strtok — ignore them.</p>
+  </div>
+  <div class="leetcode"><span>71 · Simplify Path</span></div>
+  <div class="trigger">When canonicalizing a filesystem path with '..' and '.' → think: split by '/', stack of real directories, pop on '..', ignore '.' and empty.</div>
+</div>
+
+<!-- P25 -->
+<div class="card" id="p25">
+  <div class="pattern-num">Pattern 25</div>
+  <h2>Score of Parentheses</h2>
+  <div class="story">A balanced parentheses string has a score: "()" = 1, and nesting doubles — "(())" = 2. Concatenation adds — "()()" = 2. You want to compute the score without recursion, using a stack that tracks the running score at each depth level.</div>
+  <div class="insight">Core insight: The stack holds the accumulated score at each nesting depth. On '(', push 0 (start a new level). On ')', pop the inner score v: if v == 0 the pair is "()" so contribute 1; otherwise contribute 2×v. Add that to the new top.</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>Initialize stack with 0 (the base level score).</li>
+    <li>On '(': push 0.</li>
+    <li>On ')': pop v. Add max(2×v, 1) to the new top (1 if inner was empty "()", 2×v otherwise).</li>
+    <li>Return stack[0] at the end.</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+
+int score_of_parens(const char *s) {
+    int stack[50], top = 0;
+    stack[0] = 0;   /* base level */
+
+    for (int i = 0; s[i]; i++) {
+        if (s[i] == '(') {
+            stack[++top] = 0;
+        } else {
+            int v = stack[top--];
+            stack[top] += (v == 0) ? 1 : 2 * v;
+        }
+    }
+    return stack[0];
+}
+
+int main(void) {
+    printf("%d\n", score_of_parens("()"));      /* 1 */
+    printf("%d\n", score_of_parens("(())"));    /* 2 */
+    printf("%d\n", score_of_parens("()()"));    /* 2 */
+    printf("%d\n", score_of_parens("(()(()))"));/* 6 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">"(()(()))"
+'(': push 0. stack=[0,0]
+'(': push 0. stack=[0,0,0]
+')': v=0, add max(1)=1 to top. stack=[0,0+1]=[0,1]
+'(': push 0. stack=[0,1,0]
+'(': push 0. stack=[0,1,0,0]
+')': v=0, add 1. stack=[0,1,0+1]=[0,1,1]
+')': v=1, add 2×1=2. stack=[0,1+2]=[0,3]
+')': v=3, add 2×3=6. stack=[0+6]=[6]
+result=6 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: "()" scores 1, not 0</div>
+    <p>When you pop an inner score of 0, the pair contributed nothing internally — it's a raw "()" worth 1. Use <code>(v == 0) ? 1 : 2*v</code> not just <code>2*v</code>, otherwise "()" = 0 and everything is wrong.</p>
+  </div>
+  <div class="leetcode"><span>856 · Score of Parentheses</span></div>
+  <div class="trigger">When computing a recursive score of nested structures → think: stack holds per-depth running total, combine on closing bracket.</div>
+</div>
+
+<!-- P26 -->
+<div class="card" id="p26">
+  <div class="pattern-num">Pattern 26</div>
+  <h2>Iterative DFS (Graph / Tree)</h2>
+  <div class="story">Recursive DFS uses the call stack implicitly. Converting it to an iterative version uses an explicit stack — useful when the graph is huge (stack overflow risk) or when you need fine-grained control over the traversal (e.g. detecting back edges).</div>
+  <div class="insight">Core insight: Push the start node. While stack not empty: pop a node, process it, push its unvisited neighbors. The order of neighbor pushing determines traversal order (push in reverse to match recursive DFS order).</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>Mark visited[], initialize all false.</li>
+    <li>Push start node onto the stack.</li>
+    <li>While stack not empty: pop node u; if already visited, skip. Mark visited. Process u. Push all unvisited neighbors of u.</li>
+    <li>Pushing in reverse order of adjacency list matches recursive DFS traversal order.</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+#define N 6
+
+int adj[N][N] = {
+    {0,1,1,0,0,0},
+    {1,0,0,1,1,0},
+    {1,0,0,0,0,1},
+    {0,1,0,0,0,0},
+    {0,1,0,0,0,0},
+    {0,0,1,0,0,0}
+};
+
+void dfs_iterative(int start) {
+    int visited[N]; memset(visited, 0, sizeof(visited));
+    int stack[N], top = -1;
+    stack[++top] = start;
+
+    while (top &gt;= 0) {
+        int u = stack[top--];
+        if (visited[u]) continue;
+        visited[u] = 1;
+        printf("%d ", u);
+        /* push neighbors in reverse order */
+        for (int v = N-1; v &gt;= 0; v--)
+            if (adj[u][v] &amp;&amp; !visited[v])
+                stack[++top] = v;
+    }
+}
+
+int main(void) {
+    dfs_iterative(0);   /* 0 1 3 4 2 5 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">start=0, stack=[0]
+pop 0: visit 0. push neighbors 1,2 (reverse→push 2 then 1? no, reverse: v=5..0, adj[0]=[0,1,1,0,0,0]→push 2, push 1). stack=[2,1]
+pop 1: visit 1. push unvisited neighbors of 1: adj[1]=[1,0,0,1,1,0]→v=4→push 4,v=3→push 3. stack=[2,4,3]
+pop 3: visit 3. no unvisited neighbors. stack=[2,4]
+pop 4: visit 4. no unvisited neighbors. stack=[2]
+pop 2: visit 2. adj[2]=[1,0,0,0,0,1]→0 visited, push 5. stack=[5]
+pop 5: visit 5. no unvisited.
+Order: 0 1 3 4 2 5 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Check visited on pop, not on push</div>
+    <p>A node can be pushed multiple times before it's popped (via different neighbors). Check <code>if (visited[u]) continue;</code> at the top of the loop, not when pushing. Marking on push and checking on pop both work but checking on pop is simpler to reason about.</p>
+  </div>
+  <div class="leetcode"><span>200 · Number of Islands, 547 · Number of Provinces (iterative DFS variant)</span></div>
+  <div class="trigger">When DFS must be iterative → think: explicit stack, push neighbors in reverse, skip-if-visited at pop time.</div>
+</div>
+
+<!-- P27 -->
+<div class="card" id="p27">
+  <div class="pattern-num">Pattern 27</div>
+  <h2>Binary Tree Inorder Traversal (Iterative)</h2>
+  <div class="story">Inorder traversal (left, root, right) of a BST produces sorted output. Recursive inorder uses the call stack; the iterative version mimics it: dive left as far as possible, visit when you can't go further left, then step right.</div>
+  <div class="insight">Core insight: Use a stack and a current pointer. Push nodes while going left. When current is NULL, pop a node (visit it), then set current to its right child. This perfectly mirrors the recursive call stack.</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>current = root, stack empty.</li>
+    <li>While current != NULL or stack not empty:</li>
+    <li>  Push current and go left until NULL.</li>
+    <li>  Pop node, visit (print) it.</li>
+    <li>  Set current = node→right.</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+typedef struct Node { int val; struct Node *left, *right; } Node;
+
+Node *new_node(int v) {
+    Node *n = malloc(sizeof(Node));
+    n-&gt;val = v; n-&gt;left = n-&gt;right = NULL;
+    return n;
+}
+
+void inorder_iterative(Node *root) {
+    Node *stack[50], *cur = root;
+    int top = -1;
+
+    while (cur || top &gt;= 0) {
+        while (cur) { stack[++top] = cur; cur = cur-&gt;left; }
+        cur = stack[top--];
+        printf("%d ", cur-&gt;val);
+        cur = cur-&gt;right;
+    }
+}
+
+int main(void) {
+    /*       4
+            / \
+           2   6
+          / \ / \
+         1  3 5  7   */
+    Node *root = new_node(4);
+    root-&gt;left = new_node(2); root-&gt;right = new_node(6);
+    root-&gt;left-&gt;left = new_node(1); root-&gt;left-&gt;right = new_node(3);
+    root-&gt;right-&gt;left = new_node(5); root-&gt;right-&gt;right = new_node(7);
+    inorder_iterative(root);   /* 1 2 3 4 5 6 7 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">root=4
+cur=4→push 4, cur=2→push 2, cur=1→push 1, cur=NULL
+pop 1, visit 1. cur=1-&gt;right=NULL
+pop 2, visit 2. cur=2-&gt;right=3
+push 3, cur=NULL
+pop 3, visit 3. cur=NULL
+pop 4, visit 4. cur=4-&gt;right=6
+push 6, cur=5→push 5, cur=NULL
+pop 5, visit 5. cur=NULL
+pop 6, visit 6. cur=7→push 7, cur=NULL
+pop 7, visit 7.
+Output: 1 2 3 4 5 6 7 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Loop condition includes both cur and stack</div>
+    <p>The while loop must continue as long as <em>either</em> cur != NULL <em>or</em> the stack is non-empty. Using only one condition exits early — <code>cur</code> becomes NULL before the stack is drained when visiting a node with no right child.</p>
+  </div>
+  <div class="leetcode"><span>94 · Binary Tree Inorder Traversal</span></div>
+  <div class="trigger">When inorder traversal must be iterative → think: push-left-until-null, pop-visit, move-right.</div>
+</div>
+
+<!-- P28 -->
+<div class="card" id="p28">
+  <div class="pattern-num">Pattern 28</div>
+  <h2>Binary Tree Preorder &amp; Postorder (Iterative)</h2>
+  <div class="story">Preorder (root, left, right) and postorder (left, right, root) can also be done iteratively. Preorder is natural with a stack — visit on push. Postorder is trickier but has a neat trick: reverse preorder with right-before-left gives postorder.</div>
+  <div class="insight">Core insight for preorder: push root, loop: pop, visit, push right then left (so left is processed first). For postorder: same as preorder but push left then right (reverse), and reverse the output at the end — or use a two-stack method.</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>Preorder: push root. While not empty: pop u, visit, push u→right, push u→left.</li>
+    <li>Postorder (reverse trick): push root. While not empty: pop u, prepend to output, push u→left, push u→right. Output is reversed preorder = postorder.</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+typedef struct Node { int val; struct Node *left, *right; } Node;
+
+void preorder(Node *root) {
+    Node *stack[50]; int top = -1;
+    if (!root) return;
+    stack[++top] = root;
+    while (top &gt;= 0) {
+        Node *u = stack[top--];
+        printf("%d ", u-&gt;val);                    /* visit on pop */
+        if (u-&gt;right) stack[++top] = u-&gt;right;   /* right pushed first */
+        if (u-&gt;left)  stack[++top] = u-&gt;left;    /* left popped first  */
+    }
+}
+
+void postorder(Node *root) {
+    Node *stack[50]; int top = -1;
+    int out[50]; int oi = 0;
+    if (!root) return;
+    stack[++top] = root;
+    while (top &gt;= 0) {
+        Node *u = stack[top--];
+        out[oi++] = u-&gt;val;                       /* collect (reversed) */
+        if (u-&gt;left)  stack[++top] = u-&gt;left;    /* push left first    */
+        if (u-&gt;right) stack[++top] = u-&gt;right;   /* right popped first */
+    }
+    for (int i = oi-1; i &gt;= 0; i--) printf("%d ", out[i]);
+}
+
+/* tree: 1-&gt;(2-&gt;(4,5), 3) */</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">Tree: 1(2(4,5), 3)
+Preorder:
+stack=[1]; pop 1 visit. push right=3, push left=2. stack=[3,2]
+pop 2 visit. push right=5, push left=4. stack=[3,5,4]
+pop 4 visit. no children. stack=[3,5]
+pop 5 visit. no children. stack=[3]
+pop 3 visit. no children.
+Output: 1 2 4 5 3 ✓
+
+Postorder (reverse trick):
+Collect reversed: 1,3,5,4,2 → reversed = 2 4 5 3 1 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Push order is reversed from desired visit order</div>
+    <p>For preorder (root, left, right): push right before left so left is popped (processed) first. It feels backwards — remember that the stack reverses order. Push what you want processed <em>last</em> first.</p>
+  </div>
+  <div class="leetcode"><span>144 · Binary Tree Preorder, 145 · Postorder Traversal</span></div>
+  <div class="trigger">When preorder/postorder must be iterative → think: preorder = pop-visit-push-right-push-left; postorder = reverse of (pop-collect-push-left-push-right).</div>
+</div>
+
+<!-- P29 -->
+<div class="card" id="p29">
+  <div class="pattern-num">Pattern 29</div>
+  <h2>Flatten Nested List Iterator (Stack)</h2>
+  <div class="story">A nested list like [[1,2],[3,[4,5]]] needs to be flattened to 1,2,3,4,5. A stack-based iterator does this lazily — it only unpacks the next level when asked for the next integer, perfect for streaming large nested structures.</div>
+  <div class="insight">Core insight: Initialize the stack with the outermost list (in reverse). When peeking at the top: if it's an integer, ready; if it's a list, pop it and push its elements in reverse. This ensures the leftmost element is always at the top when ready.</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>Define a tagged union for NestedInteger (int or list).</li>
+    <li>Initialize stack by pushing root list elements in reverse.</li>
+    <li>hasNext(): while top is a list, pop it and push its elements in reverse.</li>
+    <li>next(): call hasNext(), then pop and return the top integer.</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+typedef struct NestedInt {
+    int is_int;
+    int val;
+    struct NestedInt **list;
+    int list_len;
+} NI;
+
+NI *make_int(int v) {
+    NI *n = malloc(sizeof(NI)); n-&gt;is_int = 1; n-&gt;val = v; return n;
+}
+NI *make_list(NI **arr, int len) {
+    NI *n = malloc(sizeof(NI)); n-&gt;is_int = 0; n-&gt;list = arr; n-&gt;list_len = len; return n;
+}
+
+NI *stack[200]; int top = -1;
+
+void push_list(NI *lst) {
+    for (int i = lst-&gt;list_len - 1; i &gt;= 0; i--)
+        stack[++top] = lst-&gt;list[i];
+}
+
+int has_next(void) {
+    while (top &gt;= 0 &amp;&amp; !stack[top]-&gt;is_int)
+        push_list(stack[top--]);
+    return top &gt;= 0;
+}
+
+int next_val(void) {
+    has_next();
+    return stack[top--]-&gt;val;
+}
+
+int main(void) {
+    /* [[1,2],[3,[4,5]]] */
+    NI *inner[] = {make_int(4), make_int(5)};
+    NI *mid[]   = {make_int(3), make_list(inner, 2)};
+    NI *outer[] = {make_list((NI*[]){make_int(1),make_int(2)}, 2),
+                   make_list(mid, 2)};
+    NI root = {0, 0, outer, 2};
+    push_list(&amp;root);
+    while (has_next()) printf("%d ", next_val());  /* 1 2 3 4 5 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">[[1,2],[3,[4,5]]]
+init: push [3,[4,5]] then [1,2]. stack=[[1,2],[3,[4,5]]]
+has_next: top=[3,[4,5]] is list → pop, push [4,5] then 3. stack=[[1,2],3,[4,5]]
+... actually: push root list in reverse: push [3,[4,5]], then [1,2]. stack=[[3,[4,5]],[1,2]]
+has_next: [1,2] is list → pop, push 2,1. stack=[[3,[4,5]],2,1]
+next: pop 1 → 1
+next: pop 2 → 2
+has_next: [3,[4,5]] is list → pop, push [4,5],3. stack=[[4,5],3]
+next: pop 3 → 3
+has_next: [4,5] is list → pop, push 5,4. stack=[5,4]
+next: 4, then 5. Output: 1 2 3 4 5 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Push list elements in reverse</div>
+    <p>To preserve left-to-right order, push elements from right to left so the leftmost element ends up on top of the stack. If you push left-to-right, elements come out reversed.</p>
+  </div>
+  <div class="leetcode"><span>341 · Flatten Nested List Iterator</span></div>
+  <div class="trigger">When lazily iterating over a nested list → think: stack initialized with reversed elements, unpack-list-to-stack on demand in hasNext().</div>
+</div>
+
+<!-- P30 -->
+<div class="card" id="p30">
+  <div class="pattern-num">Pattern 30</div>
+  <h2>Queue Using Two Stacks</h2>
+  <div class="story">You only have a stack (LIFO) but need a queue (FIFO). Use two stacks: push everything into the "inbox" stack; when dequeuing, if the "outbox" is empty, pour all inbox items into outbox (reversing order). The outbox then dispenses them in FIFO order.</div>
+  <div class="insight">Core insight: Items are transferred from inbox to outbox lazily — only when outbox is empty. Each item is transferred at most once total, giving O(1) amortized dequeue despite the occasional O(n) transfer.</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>enqueue(x): push x onto inbox.</li>
+    <li>dequeue(): if outbox empty, pop all from inbox onto outbox. Pop from outbox.</li>
+    <li>peek(): same transfer logic, then peek outbox top without popping.</li>
+    <li>empty(): both stacks empty.</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+
+typedef struct {
+    int inbox[100],  in_top;
+    int outbox[100], out_top;
+} MyQueue;
+
+void q_init(MyQueue *q) { q-&gt;in_top = q-&gt;out_top = -1; }
+
+void q_push(MyQueue *q, int x) { q-&gt;inbox[++q-&gt;in_top] = x; }
+
+static void transfer(MyQueue *q) {
+    if (q-&gt;out_top &lt; 0)
+        while (q-&gt;in_top &gt;= 0)
+            q-&gt;outbox[++q-&gt;out_top] = q-&gt;inbox[q-&gt;in_top--];
+}
+
+int q_pop(MyQueue *q)  { transfer(q); return q-&gt;outbox[q-&gt;out_top--]; }
+int q_peek(MyQueue *q) { transfer(q); return q-&gt;outbox[q-&gt;out_top];   }
+int q_empty(MyQueue *q){ return q-&gt;in_top &lt; 0 &amp;&amp; q-&gt;out_top &lt; 0;     }
+
+int main(void) {
+    MyQueue q; q_init(&amp;q);
+    q_push(&amp;q, 1); q_push(&amp;q, 2); q_push(&amp;q, 3);
+    printf("%d\n", q_pop(&amp;q));   /* 1 */
+    printf("%d\n", q_peek(&amp;q));  /* 2 */
+    q_push(&amp;q, 4);
+    printf("%d\n", q_pop(&amp;q));   /* 2 */
+    printf("%d\n", q_pop(&amp;q));   /* 3 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">push 1,2,3: inbox=[1,2,3], outbox=[]
+pop: outbox empty → transfer: outbox=[3,2,1]; pop outbox top=1. outbox=[3,2]
+peek: outbox non-empty → peek outbox top=2.
+push 4: inbox=[4], outbox=[3,2]
+pop: outbox non-empty → pop 2. outbox=[3]
+pop: outbox non-empty → pop 3. outbox=[]
+Output: 1 2 2 3 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Only transfer when outbox is completely empty</div>
+    <p>Transfer inbox→outbox only when outbox is empty. If you transfer on every dequeue, you break FIFO order by mixing partially consumed outbox items with newly transferred ones.</p>
+  </div>
+  <div class="leetcode"><span>232 · Implement Queue using Stacks</span></div>
+  <div class="trigger">When implementing a queue with stacks → think: inbox for push, outbox for pop, lazy transfer only when outbox is empty.</div>
+</div>
+
+<!-- P31 -->
+<div class="card" id="p31">
+  <div class="pattern-num">Pattern 31</div>
+  <h2>Stack with getMax() / getMin() in O(1)</h2>
+  <div class="story">A stack that also answers "what's the current maximum?" in O(1) at any time. Naively scanning the stack is O(n). The trick: maintain a parallel max-stack that stores the running maximum at each level — updated on every push, and popped in sync.</div>
+  <div class="insight">Core insight: On push(x), the new running maximum = max(x, max_stack top). Push that onto the max_stack. On pop, pop both stacks in sync. max_stack top always holds the current maximum of all elements in the data stack.</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>Maintain two stacks: data[] and max_s[].</li>
+    <li>push(x): push x on data; push max(x, max_s top) on max_s.</li>
+    <li>pop(): pop both data and max_s; return data popped value.</li>
+    <li>getMax(): return max_s top (current maximum).</li>
+    <li>For getMin(): same pattern, store running min instead.</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+
+typedef struct {
+    int data[100], max_s[100], top;
+} MaxStack;
+
+void ms_init(MaxStack *s) { s-&gt;top = -1; }
+
+void ms_push(MaxStack *s, int x) {
+    s-&gt;data[++s-&gt;top] = x;
+    int prev_max = (s-&gt;top == 0) ? x : s-&gt;max_s[s-&gt;top - 1];
+    s-&gt;max_s[s-&gt;top] = (x &gt; prev_max) ? x : prev_max;
+}
+
+int ms_pop(MaxStack *s) {
+    return s-&gt;data[s-&gt;top--];  /* max_s[top] automatically invalidated */
+}
+
+int ms_get_max(MaxStack *s) { return s-&gt;max_s[s-&gt;top]; }
+
+int main(void) {
+    MaxStack s; ms_init(&amp;s);
+    ms_push(&amp;s, 3);
+    ms_push(&amp;s, 1);
+    ms_push(&amp;s, 5);
+    printf("max=%d\n", ms_get_max(&amp;s));  /* 5 */
+    ms_pop(&amp;s);
+    printf("max=%d\n", ms_get_max(&amp;s));  /* 3 */
+    ms_pop(&amp;s);
+    printf("max=%d\n", ms_get_max(&amp;s));  /* 3 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">push 3: data=[3], max_s=[3]
+push 1: data=[3,1], max_s=[3,3]  (max(1,3)=3)
+push 5: data=[3,1,5], max_s=[3,3,5]
+getMax()=5 ✓
+pop(): data=[3,1], max_s=[3,3]
+getMax()=3 ✓
+pop(): data=[3], max_s=[3]
+getMax()=3 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: max_s stores the running max, not the pushed element</div>
+    <p>max_s[i] is <em>not</em> just the pushed element — it's the maximum of everything from index 0 to i. If you only store pushed values, popping an intermediate maximum leaves max_s out of sync with the true maximum below it.</p>
+  </div>
+  <div class="leetcode"><span>155 · Min Stack (same idea with min), 716 · Max Stack</span></div>
+  <div class="trigger">When a stack needs O(1) min/max queries → think: parallel auxiliary stack tracking running min/max at each depth level.</div>
+</div>
+
+<!-- P32 -->
+<div class="card" id="p32">
+  <div class="pattern-num">Pattern 32</div>
+  <h2>Largest Rectangle in Histogram — Two-Pass (Simpler Variant)</h2>
+  <div class="story">An alternative approach to the classic histogram problem (P09): for each bar, find its left boundary (first shorter bar to the left) and its right boundary (first shorter bar to the right) separately in two dedicated passes, then compute area = height × (right − left − 1). This is O(n) with two stacks and easier to debug step by step.</div>
+  <div class="insight">Core insight: left_boundary[i] = index of the nearest bar shorter than h[i] to the left (or −1). right_boundary[i] = index of the nearest bar shorter than h[i] to the right (or n). Area at i = h[i] × (right[i] − left[i] − 1). The two separate passes make the logic explicit.</div>
+  <div class="section-label">③ Step-by-step Logic</div>
+  <ol>
+    <li>Left pass (left to right): monotonic increasing stack. On each i, pop while stack top ≥ h[i]; left[i] = stack top index (or −1 if empty). Push i.</li>
+    <li>Right pass (right to left): same but scanning backwards; right[i] = stack top index (or n if empty).</li>
+    <li>Compute area[i] = h[i] × (right[i] − left[i] − 1) for each i; return max.</li>
+  </ol>
+  <div class="section-label">④ Annotated Code</div>
+  <pre><code class="language-c">#include &lt;stdio.h&gt;
+
+int largest_rect_two_pass(int *h, int n) {
+    int left[n], right[n];
+    int stack[n], top = -1;
+
+    /* left boundary: nearest index with h &lt; h[i] */
+    for (int i = 0; i &lt; n; i++) {
+        while (top &gt;= 0 &amp;&amp; h[stack[top]] &gt;= h[i]) top--;
+        left[i] = (top &lt; 0) ? -1 : stack[top];
+        stack[++top] = i;
+    }
+
+    top = -1;
+    /* right boundary: nearest index with h &lt; h[i] */
+    for (int i = n-1; i &gt;= 0; i--) {
+        while (top &gt;= 0 &amp;&amp; h[stack[top]] &gt;= h[i]) top--;
+        right[i] = (top &lt; 0) ? n : stack[top];
+        stack[++top] = i;
+    }
+
+    int ans = 0;
+    for (int i = 0; i &lt; n; i++) {
+        int area = h[i] * (right[i] - left[i] - 1);
+        if (area &gt; ans) ans = area;
+    }
+    return ans;
+}
+
+int main(void) {
+    int h[] = {2,1,5,6,2,3};
+    printf("%d\n", largest_rect_two_pass(h, 6));  /* 10 */
+    return 0;
+}</code></pre>
+  <div class="section-label">⑤ Dry Run</div>
+  <div class="dry-run">h=[2,1,5,6,2,3]
+Left pass:
+i=0: stack empty, left[0]=-1. push 0
+i=1: h[0]=2&gt;=1→pop; stack empty, left[1]=-1. push 1
+i=2: h[1]=1&lt;5; left[2]=1. push 2
+i=3: h[2]=5&lt;6; left[3]=2. push 3
+i=4: h[3]=6&gt;=2→pop; h[2]=5&gt;=2→pop; h[1]=1&lt;2; left[4]=1. push 4
+i=5: h[4]=2&lt;3; left[5]=4. push 5
+left=[-1,-1,1,2,1,4]
+
+Right pass (symmetric):
+right=[1,6,4,4,6,6]
+
+Areas: 2*(1-(-1)-1)=2, 1*(6-(-1)-1)=6, 5*(4-1-1)=10, 6*(4-2-1)=6, 2*(6-1-1)=8, 3*(6-4-1)=3
+max=10 ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">⚠ Gotcha: Use strict &lt; when finding boundaries (handle equal heights)</div>
+    <p>When finding boundaries, pop equal-height bars (<code>&gt;=</code>) to avoid assigning both equal-height bars as each other's boundaries — that would over-count width. If h=[3,3], each should see the other as a boundary; with <code>&gt;=</code> on both sides each bar's area is correctly limited to its own span.</p>
+  </div>
+  <div class="leetcode"><span>84 · Largest Rectangle in Histogram (two-pass variant)</span></div>
+  <div class="trigger">When the one-pass sentinel method is confusing → think: two separate monotonic-stack passes for left and right boundaries, then compute area explicitly.</div>
+</div>
+
 <!-- PATTERNS_END -->
 <script>hljs.highlightAll();</script>
 </body>
