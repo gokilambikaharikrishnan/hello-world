@@ -706,3 +706,83 @@ On the BMS board itself — reference for the BMS chip's own temperature limits.
 The BMS uses the highest reading across all sensors for safety cutoffs,
 and the average reading for SOC correction.
 
+
+============================================================
+SECTION 2.9 — WORKED EXAMPLES: REAL NUMBERS
+============================================================
+
+Let's make everything concrete with three calculations using our actual pack.
+
+EXAMPLE ONE — UPS RUNTIME PREDICTION
+
+Setup: sixteen-cell LFP pack, two-eighty amp-hour cells, SOH is ninety-two percent,
+temperature is fifteen degrees Celsius, starting charge is ninety-five percent.
+Load: eight hundred watts for the first ten minutes, then four hundred watts until empty.
+
+Step one — how much energy is actually available?
+
+The cell capacity adjusted for health and temperature is:
+two-eighty times zero-point-nine-two times zero-point-nine-four.
+That gives two-hundred-and-forty-two amp-hours.
+Multiply by fifty-one-point-two volts: twelve-thousand-three-hundred-and-ninety-five watt-hours.
+At ninety-five percent starting charge: eleven-thousand-seven-hundred-and-seventy-five watt-hours available.
+
+Step two — first ten minutes at eight hundred watts.
+
+Energy used: eight hundred times ten-sixtieths of an hour: one-hundred-and-thirty-three watt-hours.
+State of charge drops from ninety-five percent to ninety-three-point-nine percent.
+
+Step three — remaining runtime at four hundred watts.
+
+Energy remaining: eleven-thousand-seven-hundred-and-seventy-five minus one-hundred-and-thirty-three.
+That is eleven-thousand-six-hundred-and-forty-two watt-hours.
+Divided by four hundred watts: twenty-nine-point-one hours.
+
+Total predicted runtime: just over twenty-nine hours.
+
+Why can we use a flat fifty-one-point-two volts for this calculation?
+Because of LFP's flat OCV curve. The voltage barely changes during discharge,
+so the error from using a fixed voltage is less than three percent.
+With NMC, the voltage drops noticeably and you would need to account for it.
+This is one of LFP's underappreciated practical advantages.
+
+EXAMPLE TWO — SOC DRIFT OVER TWENTY-FOUR HOURS
+
+Setup: same pack, sitting idle. Current sensor has a point-zero-five percent
+gain error and a half-milliamp offset. Natural self-discharge is fifty milliamps.
+
+After twenty-four hours at idle:
+Gain error adds: roughly zero-point-zero-zero-zero-two percent drift. Negligible.
+Offset error adds: zero-point-zero-zero-four percent. Also negligible.
+Unmodelled self-discharge: fifty milliamps times twenty-four hours is one-thousand-two-hundred
+milliamp-hours. Divided by the cell capacity: zero-point-four-three percent per day.
+
+So the dominant drift is the natural self-discharge that the BMS does not know about —
+not the sensor errors. Over thirty days idle: about thirteen percent accumulated drift.
+
+The fix: the BMS subtracts a small self-discharge current from the coulomb counter
+even when no external current flows. This background subtraction keeps the SOC
+reading accurate during long idle periods — essential for UPS systems
+that may go months without a discharge event.
+
+EXAMPLE THREE — PASSIVE BALANCING TIME
+
+Setup: after a full charge, one cell sits at three-point-six-five volts,
+while the others are at three-point-six-two. The BMS uses ten-ohm balancing resistors.
+
+Balancing current: the thirty-millivolt gap divided by ten ohms: three milliamps.
+Power dissipated: ninety microwatts per cell. Almost nothing.
+
+Charge to remove: the LFP plateau has such a flat voltage curve that
+a thirty-millivolt gap corresponds to about one-hundred-and-sixty-eight milliamp-hours
+of imbalance.
+
+Time to balance: one-hundred-and-sixty-eight milliamp-hours divided by three milliamps:
+fifty-six hours.
+
+This reveals why passive balancing for LFP must happen continuously over many charging
+cycles — not just in a single session. If the imbalance were larger, say one hundred
+millivolts, it could take several days to correct with a ten-ohm resistor.
+This is why high-power applications sometimes use active balancing — which transfers
+charge from full cells to empty ones rather than just burning it off as heat.
+
