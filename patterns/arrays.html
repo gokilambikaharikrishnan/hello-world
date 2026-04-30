@@ -34,6 +34,28 @@ nav a:hover { text-decoration: underline; }
 .trigger { margin-top: 1rem; background: #0d1117; border: 1px solid #3fb950; border-radius: 4px; padding: 0.7rem 1rem; color: #3fb950; font-weight: bold; font-size: 0.9rem; }
 pre { border-radius: 6px !important; margin: 0.5rem 0 !important; }
 code.hljs { font-size: 0.82rem !important; }
+/* ── rework additions ── */
+.bg-section { color: #c9d1d9; line-height: 1.85; margin-bottom: 0.5rem; }
+.bg-section p { margin-bottom: 0.9rem; }
+.where-list { list-style: none; padding: 0; margin: 0; }
+.where-list li { padding: 0.45rem 0; border-bottom: 1px solid #21262d; font-size: 0.93rem; }
+.where-list li:last-child { border-bottom: none; }
+.where-list .sit { color: #79c0ff; font-weight: bold; }
+.where-list .why { color: #c9d1d9; }
+.logic-build { color: #c9d1d9; line-height: 1.85; }
+.logic-build p { margin-bottom: 0.9rem; }
+.logic-build .aha { color: #3fb950; font-weight: bold; }
+.logic-build .ascii { background: #0d1117; border: 1px solid #21262d; border-radius: 4px; padding: 0.8rem 1rem; font-family: monospace; font-size: 0.83rem; color: #79c0ff; white-space: pre; overflow-x: auto; margin: 0.6rem 0; }
+.pseudo { background: #0d1117; border-left: 3px solid #8b949e; padding: 0.8rem 1rem; font-family: monospace; font-size: 0.87rem; color: #8b949e; white-space: pre; overflow-x: auto; margin: 0.5rem 0; border-radius: 0 4px 4px 0; }
+.confidence { background: #0d2d1e; border: 1px solid #3fb950; border-radius: 4px; padding: 1rem; margin-top: 0.8rem; }
+.confidence-title { color: #3fb950; font-weight: bold; margin-bottom: 0.5rem; }
+.confidence ol { padding-left: 1.4rem; color: #adbac7; font-size: 0.9rem; }
+.confidence li { margin-bottom: 0.35rem; }
+.trigger-big { margin-top: 1rem; background: #0d1117; border: 2px solid #3fb950; border-radius: 6px; padding: 1rem 1.2rem; }
+.trigger-main { color: #3fb950; font-weight: bold; font-size: 1.05rem; margin-bottom: 0.5rem; }
+.trigger-variants { list-style: none; padding: 0; margin: 0.4rem 0 0 0; }
+.trigger-variants li { color: #7ee787; font-size: 0.88rem; padding: 0.18rem 0; }
+.trigger-variants li::before { content: "↳ "; color: #3fb950; }
 .toc { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; columns: 2; column-gap: 2rem; }
 .toc a { color: #58a6ff; text-decoration: none; display: block; padding: 0.15rem 0; font-size: 0.88rem; }
 .toc a:hover { color: #79c0ff; }
@@ -121,91 +143,160 @@ code.hljs { font-size: 0.82rem !important; }
     <span class="pattern-name">Prefix Sum: Range Query</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    Imagine you run a cash register and your boss keeps asking: "what were total sales between hour 3 and hour 7?"
-    You could add them up from scratch each time — but that is slow.
-    Instead, you write down a running total after each hour. Then any range question is just one subtraction: total-up-to-hour-7 minus total-up-to-hour-2.
+  <div class="section-label">&#9312; Background</div>
+  <div class="bg-section">
+    <p>Imagine you are a database analyst and your table has one million rows of daily sales figures. Your manager emails you five times a day asking "what were total sales between day 40 and day 200?" Each time, you loop through 160 rows and add them up. That is 160 operations per query. With 100 queries a day, you are doing 16,000 additions — for data that never changes.</p>
+    <p>Before prefix sums existed as a recognized tool, the naive approach was exactly this: for every query (l, r), loop from index l to r and accumulate. This is O(n) per query. If you have Q queries and N elements, the total cost is O(N × Q). For large datasets and many queries, this becomes completely unacceptable.</p>
+    <p>The prefix sum pattern solves this by doing a one-time O(n) preprocessing step that builds a "running total" array. Once that array exists, every range query costs exactly one subtraction — O(1). You are converting repeated work into a one-time investment. This is the classic space-time tradeoff: one extra array of size n buys you instant answers forever.</p>
+    <p>This pattern is everywhere in production systems. Database engines use it for range aggregations on indexed columns. Game engines use it for spatial queries — "how many enemies are in this bounding box?" GPS systems use it in elevation queries — "what is the total climb between checkpoint 3 and checkpoint 7?" Image processing uses 2D prefix sums (called summed-area tables) to compute the average pixel brightness of any rectangular region of an image in O(1), regardless of region size. Battery management systems in EVs use prefix sums to compute cumulative charge drawn over arbitrary time windows.</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    sum(l, r) = prefix[r] &minus; prefix[l&minus;1]. Build the prefix array once in O(n), answer every range query in O(1). You are trading a little extra space for instant answers.
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="where-list">
+    <li><span class="sit">Repeated range sum queries on a static array.</span> <span class="why">The classic use case — build once, query many times.</span></li>
+    <li><span class="sit">Database aggregate queries on immutable time-series data.</span> <span class="why">Same idea as an indexed column sum — precompute to avoid full-table scans.</span></li>
+    <li><span class="sit">Image processing: summed-area table.</span> <span class="why">Extends to 2D — any rectangular region sum in O(1) using the 2D prefix formula.</span></li>
+    <li><span class="sit">Game development: spatial partitioning queries.</span> <span class="why">Counting objects in axis-aligned regions without iterating every object each frame.</span></li>
+    <li><span class="sit">Embedded / BMS: cumulative energy counters.</span> <span class="why">Querying total ampere-hours drawn between two timestamps on a fixed sensor log.</span></li>
+    <li><span class="sit">Subarray sum problems (equals K, at most K, etc.).</span> <span class="why">Prefix sum + hashmap converts O(n²) subarray enumeration into O(n) lookup.</span></li>
+    <li><span class="sit">Counting problems: "how many subarrays have even sum?"</span> <span class="why">Prefix sum parity — odd-count × odd-count pairs gives the answer instantly.</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p>Let us start with just four elements: arr = [3, 1, 4, 2]. You want to answer: "what is the sum of elements from index 1 to index 3?" The dumb way loops: 1 + 4 + 2 = 7. Fine for one query. But what if I ask you for sum(0,3), then sum(1,2), then sum(0,1), then sum(2,3)? You are looping over the same data repeatedly.</p>
+    <p>What if we stored partial totals as we scan left to right? Let us write down after each element, the total so far:</p>
+    <div class="ascii">arr:    [ 3,  1,  4,  2 ]
+              ↓    ↓    ↓    ↓
+prefix: [ 3,  4,  8, 10 ]
+         (3) (3+1)(3+1+4)(3+1+4+2)</div>
+    <p>Now notice something: prefix[3] = 10, which is the sum of everything from index 0 to 3. prefix[1] = 4, which is the sum from index 0 to 1. <span class="aha">The key insight: sum(2, 3) = prefix[3] − prefix[1] = 10 − 4 = 6. We subtracted everything before index 2.</span> Let us verify: arr[2] + arr[3] = 4 + 2 = 6. Correct.</p>
+    <p>Why does this work? prefix[r] includes everything from index 0 through index r. prefix[l−1] includes everything from index 0 through index l−1. Subtracting them cancels everything before index l and leaves exactly the range [l, r]. In plain English: <em>total up to r</em> minus <em>total up to just before l</em>.</p>
+    <p>There is one edge case we need to handle. What if l = 0? Then we would compute prefix[r] − prefix[−1]. There is no prefix[−1] — that would be out of bounds. The fix is simple: when l = 0, just return prefix[r] directly. Nothing to subtract because the range starts at the beginning. Alternatively, you can use a one-indexed prefix array of size n+1 where prefix[0] = 0 is a dummy sentinel. Then prefix[r+1] − prefix[l] works for all l ≥ 0 without any special case.</p>
   </div>
 
-  <div class="section-label">&#9314; Step-by-Step Logic</div>
-  <div class="steps"><ol>
-    <li>Create a <code>prefix[]</code> array the same length as the input array.</li>
-    <li>Set <code>prefix[0] = arr[0]</code> — the first running total is just the first element.</li>
-    <li>For every index <code>i</code> from 1 to n&minus;1: <code>prefix[i] = prefix[i&minus;1] + arr[i]</code>.</li>
-    <li>To answer "what is the sum of arr[l..r]?": return <code>prefix[r] - prefix[l-1]</code>.</li>
-    <li>Special case: if l == 0, there is no left side to subtract, so return <code>prefix[r]</code> directly.</li>
-  </ol></div>
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+  <div class="pseudo">PSEUDOCODE:
+  build_prefix(arr, n):
+      prefix[0] = arr[0]
+      for i = 1 to n-1:
+          prefix[i] = prefix[i-1] + arr[i]
 
-  <div class="section-label">Diagram</div>
-  <div class="diagram">arr:    [  2,   3,   1,   5,   4 ]
-index:    0    1    2    3    4
-
-prefix: [  2,   5,   6,  11,  15 ]
-          +3   +1   +5   +4
-
-Query sum(1, 3) = prefix[3] - prefix[0] = 11 - 2 = 9
-  check: arr[1]+arr[2]+arr[3] = 3+1+5 = 9  ✓</div>
-
-  <div class="section-label">&#9316; Annotated Code</div>
+  range_sum(prefix, l, r):
+      if l == 0: return prefix[r]
+      else:      return prefix[r] - prefix[l-1]</div>
 <pre><code class="language-c">#include &lt;stdio.h&gt;
 
-/* Build prefix sum array.
-   After calling this, prefix[i] holds the sum of arr[0..i]. */
+/* Build the prefix sum array.
+   prefix[i] will hold the sum of arr[0] through arr[i] inclusive. */
 void build_prefix(int *arr, int *prefix, int n) {
-    prefix[0] = arr[0];               /* first running total is just arr[0] itself */
-    for (int i = 1; i &lt; n; i++)      /* visit every remaining element left to right */
-        prefix[i] = prefix[i-1] + arr[i]; /* add this element to the previous running total */
+    prefix[0] = arr[0];
+    /* WHY: the running total for just the first element is the element itself */
+
+    for (int i = 1; i &lt; n; i++)
+        prefix[i] = prefix[i-1] + arr[i];
+    /* WHY: each prefix entry is the PREVIOUS running total plus this new element.
+       We never recompute from scratch — we extend the total by one step. */
 }
 
-/* Return the sum of arr[l..r] inclusive, in O(1). */
+/* Answer a range sum query in O(1).
+   Returns the sum of arr[l], arr[l+1], ..., arr[r]. */
 int range_sum(int *prefix, int l, int r) {
-    if (l == 0)                        /* nothing to the left of index 0 to subtract */
-        return prefix[r];              /* prefix[r] already equals sum of arr[0..r] */
-    return prefix[r] - prefix[l-1];   /* total up to r, minus total up to (l-1) */
+    if (l == 0)
+        return prefix[r];
+    /* WHY: when the range starts at index 0, prefix[r] IS the answer.
+       There is nothing to the left of index 0 to subtract. */
+
+    return prefix[r] - prefix[l-1];
+    /* WHY: prefix[r]   = sum of arr[0..r]
+            prefix[l-1] = sum of arr[0..l-1]
+            subtracting cancels arr[0..l-1], leaving exactly arr[l..r]. */
 }
 
 int main(void) {
-    int arr[]  = {2, 3, 1, 5, 4};
-    int n      = 5;
+    int arr[]    = {2, 3, 1, 5, 4};
+    int n        = 5;
     int prefix[5];
 
     build_prefix(arr, prefix, n);
 
-    printf("%d\n", range_sum(prefix, 1, 3)); /* 9  (3+1+5) */
-    printf("%d\n", range_sum(prefix, 0, 4)); /* 15 (whole array) */
+    printf("%d\n", range_sum(prefix, 1, 3)); /* 9  → 3+1+5 */
+    printf("%d\n", range_sum(prefix, 0, 4)); /* 15 → whole array */
+    printf("%d\n", range_sum(prefix, 2, 2)); /* 1  → single element */
     return 0;
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
+  <div class="section-label">&#9316; Dry Run</div>
   <div class="dry-run">arr = [2, 3, 1, 5, 4],  n = 5
 
-BUILD prefix array:
-  i=0: prefix[0] = arr[0]                = 2
-  i=1: prefix[1] = prefix[0] + arr[1]   = 2 + 3  =  5
-  i=2: prefix[2] = prefix[1] + arr[2]   = 5 + 1  =  6
-  i=3: prefix[3] = prefix[2] + arr[3]   = 6 + 5  = 11
-  i=4: prefix[4] = prefix[3] + arr[4]   = 11 + 4 = 15
+── BUILD PHASE ─────────────────────────────────────────────────────
+  Step   i   arr[i]   prefix[i-1]   prefix[i]
+  ─────  ─   ──────   ───────────   ─────────
+  init   0     2          —              2
+         1     3          2              5
+         2     1          5              6
+         3     5          6             11
+         4     4         11             15
 
-QUERY range_sum(prefix, 1, 3):
-  l=1, not 0, so: prefix[3] - prefix[0] = 11 - 2 = 9  ✓</div>
+  Final prefix: [ 2, 5, 6, 11, 15 ]
+
+── QUERY PHASE ──────────────────────────────────────────────────────
+  range_sum(prefix, 1, 3):
+    l=1 (not 0) → prefix[3] - prefix[0] = 11 - 2 = 9 ✓
+    verify: arr[1]+arr[2]+arr[3] = 3+1+5 = 9 ✓
+
+  range_sum(prefix, 0, 4):
+    l=0 → return prefix[4] = 15 ✓
+    verify: 2+3+1+5+4 = 15 ✓
+
+  EDGE CASE — single element: range_sum(prefix, 2, 2):
+    l=2 (not 0) → prefix[2] - prefix[1] = 6 - 5 = 1 ✓
+    verify: arr[2] = 1 ✓
+
+The trace confirms: any range reduces to at most one subtraction,
+regardless of how many elements are in the range.</div>
 
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Accessing prefix[-1] when l = 0</div>
-    <p>If you blindly write <code>prefix[r] - prefix[l-1]</code> and l is 0, you access <code>prefix[-1]</code> — that is reading random memory or crashing. Always check for l == 0 first. Alternatively, build a 1-indexed prefix array of size n+1 where <code>prefix[0] = 0</code>; then the formula <code>prefix[r+1] - prefix[l]</code> works for all l without any special case.</p>
+    <div class="gotcha-title">&#9888; The Mistake Everyone Makes: Forgetting the l = 0 edge case</div>
+    <p><strong>Wrong code:</strong></p>
+    <pre style="margin:0.4rem 0"><code class="language-c">int range_sum(int *prefix, int l, int r) {
+    return prefix[r] - prefix[l-1]; /* CRASH when l=0: reads prefix[-1] */
+}</code></pre>
+    <p><strong>What goes wrong:</strong> When l is 0, <code>l-1</code> is -1. In C, <code>prefix[-1]</code> reads memory before the array — undefined behaviour. On embedded targets it can silently return a garbage value; on desktops it may segfault.</p>
+    <p><strong>Correct code (option A — explicit check):</strong></p>
+    <pre style="margin:0.4rem 0"><code class="language-c">int range_sum(int *prefix, int l, int r) {
+    return (l == 0) ? prefix[r] : prefix[r] - prefix[l-1];
+}</code></pre>
+    <p><strong>Correct code (option B — 1-indexed sentinel, cleaner for interviews):</strong></p>
+    <pre style="margin:0.4rem 0"><code class="language-c">/* Build: prefix[0]=0, prefix[i] = prefix[i-1] + arr[i-1]  (size n+1) */
+/* Query: prefix[r+1] - prefix[l]  — works for ALL l including 0 */</code></pre>
+    <p><strong>Rule to remember:</strong> If your prefix array is 0-indexed and has no sentinel, always guard against l = 0. If you add a dummy prefix[0] = 0, you never need the guard.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">&#10003; Confidence Check — can you answer these without looking?</div>
+    <ol>
+      <li>If arr = [5, 2, 8, 1], what is prefix[2]? What does that number represent?</li>
+      <li>Why does range_sum(prefix, 0, n-1) equal the sum of the entire array?</li>
+      <li>You have 1 million elements and receive 500,000 range queries. Compare total operations with prefix sums vs. without.</li>
+    </ol>
   </div>
 
   <div class="leetcode">
     <span>303 &middot; Range Sum Query - Immutable</span>
     <span>560 &middot; Subarray Sum Equals K</span>
     <span>238 &middot; Product of Array Except Self</span>
+    <span>1991 &middot; Find the Middle Index in Array</span>
   </div>
-  <div class="trigger">When you see: repeated range sum queries on a static array &#8594; think: build a prefix sum array first, then answer each query in O(1)</div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">When you see repeated range sum queries on a fixed array &#8594; build a prefix array first.</div>
+    <ul class="trigger-variants">
+      <li>Queries ask "sum from index l to r" repeatedly → prefix sum.</li>
+      <li>Subarray sum equals a target → prefix sum + hashmap (P39).</li>
+      <li>2D rectangle sum queries → 2D prefix sum (P03).</li>
+    </ul>
+  </div>
 </div>
 <!-- ================================================================ P02 -->
 <div class="card" id="p02">
@@ -214,74 +305,132 @@ QUERY range_sum(prefix, 1, 3):
     <span class="pattern-name">Prefix Sum: Running Total / Pivot Index</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    You are balancing a see-saw. You want to find the one seat where, if you sit there, the total weight on your left equals the total weight on your right.
-    You do not need to try every seat and recount both sides from scratch each time.
-    Just keep a running left-total as you walk from left to right, and compute the right-total instantly from: right = total &minus; left &minus; current.
+  <div class="section-label">&#9312; Background</div>
+  <div class="bg-section">
+    <p>This is a focused variant of the prefix sum idea applied to a specific class of problem: find the index in an array where the sum of elements to the left equals the sum to the right. Before anyone thought of the running-total trick, the brute-force approach was to try every index, and for each candidate recompute both left and right sums from scratch — O(n) work per candidate, O(n²) total. For an array of 100,000 elements that means 10 billion operations.</p>
+    <p>The insight that makes this tractable is that you already know the total sum of the array. If you know the total, and you know everything to the left so far, then the right sum is trivially computable as: right = total − left − current. You never need to explicitly compute the right side at all. That reduces the algorithm to a single left-to-right pass.</p>
+    <p>This same "derive right from total minus left" idea appears in load balancing algorithms — find the cut point in a task list where the first half and second half have equal estimated cost. It appears in circuit board design when deciding where to split a bus into two equal-load segments. It appears in logistics when partitioning a delivery route so two trucks carry equal weight. The abstraction is the same every time: you know the whole, you are accumulating the left, and the right is implied.</p>
+    <p>A more subtle version of this pattern underlies the "contiguous array with equal 0s and 1s" problem (LeetCode 525), where you transform 0s to -1s and then ask for the longest subarray with sum 0. That is the same running-total structure with a hashmap added. Understanding the pivot-index pattern cleanly is the foundation for that harder variant.</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    At any index i: right_sum = total &minus; left_sum &minus; arr[i]. You never need a second pass or a separate right array. One pass with a running left total is enough.
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="where-list">
+    <li><span class="sit">Find pivot index where left sum equals right sum.</span> <span class="why">The canonical use case — O(n) with running left total.</span></li>
+    <li><span class="sit">Splitting an array into two halves with equal sums.</span> <span class="why">Same logic — find the index where the split is balanced.</span></li>
+    <li><span class="sit">Load balancing: divide tasks between two workers with equal load.</span> <span class="why">Find the cut point in a sorted task list; left worker takes left half, right takes rest.</span></li>
+    <li><span class="sit">Embedded systems: find the midpoint in a sensor log where cumulative readings balance.</span> <span class="why">Running accumulator over a fixed buffer — no extra memory needed beyond the total.</span></li>
+    <li><span class="sit">Circuit design: find the optimal bus split point for equal current draw.</span> <span class="why">Partition a list of load values where both halves sum to the same value.</span></li>
+    <li><span class="sit">Contiguous array with equal 0s and 1s (transform 0→-1, find sum=0).</span> <span class="why">Extension of this pattern with a hashmap to track prefix sums.</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p>Start with arr = [1, 4, 3, 2, 4] and ask: is there an index where the left sum equals the right sum? The brute-force approach checks every index:</p>
+    <div class="ascii">Index 0: left=[], right=[4,3,2,4]=13  →  0 ≠ 13
+Index 1: left=[1]=1, right=[3,2,4]=9  →  1 ≠ 9
+Index 2: left=[1,4]=5, right=[2,4]=6  →  5 ≠ 6
+Index 3: left=[1,4,3]=8, right=[4]=4  →  8 ≠ 4
+Index 4: left=[1,4,3,2]=10, right=[]  →  10 ≠ 0</div>
+    <p>No pivot in this example. That is fine — let us use arr = [1, 7, 3, 6, 5, 6] where the answer is index 3. The total sum is 1+7+3+6+5+6 = 28. Now, instead of recomputing both sides each time, notice: the moment I know left_sum = 11 (from 1+7+3) and I am standing at index 3 with value 6, the right side must be 28 − 11 − 6 = 11. <span class="aha">I never iterated the right side. I derived it in one subtraction.</span></p>
+    <p>We need to be careful about timing: arr[i] belongs to neither side. It is the candidate pivot itself. So when checking index i, left_sum contains everything strictly to the left (indices 0 to i-1), and right_sum = total − left_sum − arr[i] contains everything strictly to the right (indices i+1 to n-1). We only add arr[i] into left_sum after the check fails and we move to the next index.</p>
+    <div class="ascii">arr =  [ 1,  7,  3,  6,  5,  6 ]   total = 28
+        ────────────────────────────
+i=0:   left= 0  cur=1  right=27  → no  then left+=1 → left=1
+i=1:   left= 1  cur=7  right=20  → no  then left+=7 → left=8
+i=2:   left= 8  cur=3  right=17  → no  then left+=3 → left=11
+i=3:   left=11  cur=6  right=11  → YES pivot at 3 ✓</div>
   </div>
 
-  <div class="section-label">&#9314; Step-by-Step Logic</div>
-  <div class="steps"><ol>
-    <li>Compute the grand total of the entire array in one pass.</li>
-    <li>Initialize <code>left_sum = 0</code>.</li>
-    <li>Walk index i from 0 to n&minus;1.</li>
-    <li>At each i: <code>right_sum = total - left_sum - arr[i]</code>.</li>
-    <li>If <code>left_sum == right_sum</code>, index i is the pivot. Return it.</li>
-    <li>Otherwise: <code>left_sum += arr[i]</code> — add current to left before moving on.</li>
-  </ol></div>
-
-  <div class="section-label">Diagram</div>
-  <div class="diagram">arr = [1, 7, 3, 6, 5, 6]   total = 28
-
-i=0: left=0  arr[0]=1  right=28-0-1=27  0≠27
-i=1: left=1  arr[1]=7  right=28-1-7=20  1≠20
-i=2: left=8  arr[2]=3  right=28-8-3=17  8≠17
-i=3: left=11 arr[3]=6  right=28-11-6=11  11==11  ← pivot at index 3 ✓</div>
-
-  <div class="section-label">&#9316; Annotated Code</div>
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+  <div class="pseudo">PSEUDOCODE:
+  total = sum of all elements
+  left_sum = 0
+  for each i from 0 to n-1:
+      right_sum = total - left_sum - arr[i]
+      if left_sum == right_sum: return i
+      left_sum += arr[i]
+  return -1</div>
 <pre><code class="language-c">#include &lt;stdio.h&gt;
 
 int pivot_index(int *arr, int n) {
     int total = 0;
-    for (int i = 0; i &lt; n; i++)     /* first pass: sum up the entire array */
+    for (int i = 0; i &lt; n; i++)
         total += arr[i];
+    /* WHY: we need the grand total upfront so we can derive
+       right_sum without ever iterating the right side explicitly. */
 
-    int left_sum = 0;                /* running sum of everything to the LEFT of i */
+    int left_sum = 0;
+    /* WHY: left_sum starts at 0 because nothing is to the left of index 0. */
+
     for (int i = 0; i &lt; n; i++) {
-        /* right_sum = everything NOT on the left and NOT the current element */
         int right_sum = total - left_sum - arr[i];
+        /* WHY: total = left_sum + arr[i] + right_sum, so rearranging gives
+           right_sum = total - left_sum - arr[i]. This is O(1) per step. */
 
-        if (left_sum == right_sum)   /* left and right are balanced at this index */
-            return i;                /* this is the pivot */
+        /* We need this check BEFORE adding arr[i] to left_sum,
+           because arr[i] belongs to neither the left nor the right side. */
+        if (left_sum == right_sum)
+            return i;
 
-        left_sum += arr[i];          /* current element joins the left side for next iteration */
+        left_sum += arr[i];
+        /* WHY: only AFTER checking, the current element becomes part of
+           the left side for the next candidate index. */
     }
-    return -1;                       /* no pivot found */
+    return -1;
 }
 
 int main(void) {
-    int arr[] = {1, 7, 3, 6, 5, 6};
-    printf("%d\n", pivot_index(arr, 6)); /* prints 3 */
+    int a[] = {1, 7, 3, 6, 5, 6};
+    printf("%d\n", pivot_index(a, 6));   /* 3 */
+
+    int b[] = {2, 1, -1};
+    printf("%d\n", pivot_index(b, 3));   /* 0  (left=[], right=1+(-1)=0, arr[0]=2) */
+    /* wait: left=0, right=1-1=0, arr[0]=2 → 0==0 ✓ */
     return 0;
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
-  <div class="dry-run">arr = [1, 7, 3, 6, 5, 6],  total = 28
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run">── MAIN CASE: arr = [1, 7, 3, 6, 5, 6] ───────────────────────────
+  total = 28
 
-i=0: left=0,  right=28-0-1 =27  → 0≠27, left becomes 1
-i=1: left=1,  right=28-1-7 =20  → 1≠20, left becomes 8
-i=2: left=8,  right=28-8-3 =17  → 8≠17, left becomes 11
-i=3: left=11, right=28-11-6=11  → 11==11 ✓  return 3</div>
+  i   arr[i]  left_sum  right_sum=(28-l-a)   left==right?  left after
+  ─   ──────  ────────  ─────────────────    ────────────  ──────────
+  0     1        0        28-0-1 = 27           NO          0+1 = 1
+  1     7        1        28-1-7 = 20           NO          1+7 = 8
+  2     3        8        28-8-3 = 17           NO          8+3 = 11
+  3     6       11        28-11-6 = 11          YES → return 3 ✓
+
+── EDGE CASE: arr = [2, 1, -1] ─────────────────────────────────────
+  total = 2
+
+  i   arr[i]  left_sum  right_sum=(2-l-a)   left==right?
+  ─   ──────  ────────  ─────────────────   ────────────
+  0     2        0        2-0-2 = 0           YES → return 0 ✓
+  (left side is empty [], right side is [1,-1]=0, both zero)
+
+The trace confirms: the pivot is identified in a single O(n) pass.
+The timing of left_sum += arr[i] (after the check) is critical.</div>
 
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Adding arr[i] to left_sum at the wrong time</div>
-    <p>Do NOT add <code>arr[i]</code> to <code>left_sum</code> before computing <code>right_sum</code>. The current element at index i belongs to neither side — it is the pivot candidate itself. Compute right_sum first, check equality, then advance left_sum.</p>
+    <div class="gotcha-title">&#9888; The Mistake Everyone Makes: Adding arr[i] to left_sum too early</div>
+    <p><strong>Wrong code:</strong></p>
+    <pre style="margin:0.4rem 0"><code class="language-c">for (int i = 0; i &lt; n; i++) {
+    left_sum += arr[i];                     /* WRONG: added BEFORE the check */
+    int right_sum = total - left_sum - arr[i];
+    if (left_sum == right_sum) return i;
+}</code></pre>
+    <p><strong>What goes wrong:</strong> Now <code>left_sum</code> already includes arr[i] when you compute right_sum. The formula is wrong — arr[i] gets subtracted twice, and the pivot will never be found (or a wrong one will be returned).</p>
+    <p><strong>Correct:</strong> Always compute right_sum and do the check <em>before</em> adding arr[i] to left_sum. The current element is the pivot candidate — it belongs to neither side.</p>
+    <p><strong>Rule to remember:</strong> At index i, left_sum contains indices [0, i-1]. Add arr[i] only after the check fails.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">&#10003; Confidence Check — can you answer these without looking?</div>
+    <ol>
+      <li>If the array is [3, 3], is there a pivot index? Walk through the algorithm mentally.</li>
+      <li>Why do we subtract arr[i] from the formula? What does that term represent?</li>
+      <li>The array [0] has one element. What does the algorithm return, and why?</li>
+    </ol>
   </div>
 
   <div class="leetcode">
@@ -289,7 +438,15 @@ i=3: left=11, right=28-11-6=11  → 11==11 ✓  return 3</div>
     <span>1991 &middot; Find the Middle Index in Array</span>
     <span>525 &middot; Contiguous Array</span>
   </div>
-  <div class="trigger">When you see: find index where left sum equals right sum &#8594; think: running left total + derive right from total</div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">When you need to find a balance point (left sum = right sum) &#8594; running left total + derive right from total.</div>
+    <ul class="trigger-variants">
+      <li>Sum on one side equals sum on other side → pivot index pattern.</li>
+      <li>Split array into two equal-sum halves → same, stop at first match.</li>
+      <li>Contiguous array equal 0s and 1s → extend with hashmap on prefix sums.</li>
+    </ul>
+  </div>
 </div>
 
 <!-- ================================================================ P03 -->
@@ -299,85 +456,145 @@ i=3: left=11, right=28-11-6=11  → 11==11 ✓  return 3</div>
     <span class="pattern-name">Prefix Sum: 2D Matrix Range Sum</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    You have a city map on graph paper. Your boss keeps asking: "what is the total population in this rectangle?"
-    Drawing a box on the map and counting every cell inside is slow (O(rows&times;cols) per query).
-    Instead, build a "census table" where every cell stores the total population from the top-left corner up to that cell. Then any rectangle query is four table lookups and three additions.
+  <div class="section-label">&#9312; Background</div>
+  <div class="bg-section">
+    <p>The 1D prefix sum solves range queries on arrays. But what happens when your data is a 2D grid — a matrix of values — and you need the sum of any rectangular subregion? The naive approach is to loop over every row and column inside the rectangle: for an r×c rectangle that is O(r×c) per query, and for a large grid with many queries this is completely impractical.</p>
+    <p>The 2D prefix sum (also called a summed-area table or integral image) generalizes the 1D idea. You build a table P where P[r][c] stores the sum of all elements in the rectangle from the top-left corner (0,0) to position (r,c). Once built, any arbitrary rectangle sum is answered with four lookups and three arithmetic operations — O(1) regardless of rectangle size.</p>
+    <p>The key mathematical tool used in the query is inclusion-exclusion. When you want the sum of a rectangle from (r1,c1) to (r2,c2), you start with P[r2][c2] (everything from top-left to bottom-right of your target). That is too much — it includes areas above the rectangle and to its left. You subtract those strips. But now you have subtracted the top-left corner region twice, so you add it back once. This is exactly the same principle as Venn diagram overlap: A∪B = A + B − (A∩B).</p>
+    <p>This pattern is foundational in computer vision. The Viola-Jones face detection algorithm (used in every digital camera since 2001) uses summed-area tables to compute Haar-feature sums over hundreds of rectangular windows per pixel in real time. Without 2D prefix sums, it would be several orders of magnitude too slow for real-time use. The same idea appears in GIS systems (sum population in a geographic bounding box), medical imaging (average pixel intensity in a scan region), and signal processing (running 2D convolution).</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    Use inclusion-exclusion: rect(r1,c1,r2,c2) = P[r2][c2] &minus; P[r1&minus;1][c2] &minus; P[r2][c1&minus;1] + P[r1&minus;1][c1&minus;1]. Build once in O(n&times;m), query each rectangle in O(1).
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="where-list">
+    <li><span class="sit">Repeated rectangle sum queries on a static matrix.</span> <span class="why">Build once O(n×m), answer each query O(1) — the direct 2D generalization of P01.</span></li>
+    <li><span class="sit">Computer vision: Viola-Jones face detection (Haar features).</span> <span class="why">Computing thousands of rectangular feature sums per pixel per frame in real time.</span></li>
+    <li><span class="sit">Image processing: box blur and mean filter.</span> <span class="why">Average over any rectangular region in O(1) using the 2D prefix sum.</span></li>
+    <li><span class="sit">GIS / mapping: total population or sensor readings in a bounding box.</span> <span class="why">Spatial query on a rasterized grid answered without scanning the region.</span></li>
+    <li><span class="sit">Game development: fog-of-war visibility or lighting in tile maps.</span> <span class="why">Sum of lit tiles in any rectangular area without per-tile iteration.</span></li>
+    <li><span class="sit">Embedded: 2D sensor arrays (e.g., pressure mats, IR grids).</span> <span class="why">Aggregate readings over a subregion of a sensor matrix in constant time.</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p>Start with a tiny 3×3 grid. We want to answer: what is the sum of the bottom-right 2×2 subgrid (rows 1-2, cols 1-2 in 0-indexed)?</p>
+    <div class="ascii">grid (0-indexed):
+  [ 1  2  3 ]
+  [ 4  5  6 ]
+  [ 7  8  9 ]
+
+Target rectangle: (r1=1,c1=1) → (r2=2,c2=2)  = [5,6,8,9] = 28</div>
+    <p>Build the prefix table by making each cell store "total from top-left to here". We use 1-indexing so that row 0 and column 0 act as zero-filled borders — this eliminates boundary checks. So P[r][c] = sum of grid cells (0,0) to (r-1,c-1).</p>
+    <div class="ascii">Building P[r][c] = grid[r-1][c-1] + P[r-1][c] + P[r][c-1] - P[r-1][c-1]:
+
+P (1-indexed, row/col 0 = 0):
+     c=0  c=1  c=2  c=3
+r=0:  0    0    0    0
+r=1:  0    1    3    6   (P[1][1]=1, P[1][2]=1+2=3, P[1][3]=1+2+3=6)
+r=2:  0    5   12   21   (P[2][2]=4+5+P[1][2]+P[2][1]-P[1][1]=4+5+3+1... wait
+                           P[2][2]=grid[1][1]+P[1][2]+P[2][1]-P[1][1]=5+3+5-1=12 ✓)
+r=3:  0   12   27   45</div>
+    <p>Now the query. We want sum of (1,1)→(2,2) in 0-indexed = (2,2)→(3,3) in 1-indexed. <span class="aha">Inclusion-exclusion: start with all of P[3][3]=45. That includes everything. Subtract P[1][3]=6 (the top strip above our rectangle). Subtract P[3][1]=12 (the left strip). But P[1][1]=1 (the top-left corner) was subtracted twice, add it back once: 45 − 6 − 12 + 1 = 28. Correct.</span></p>
+    <div class="ascii">Visual of inclusion-exclusion:
+┌──────────────────┐
+│  A   │     B     │  A = top-left excluded region
+├──────┼───────────┤  B = top strip above rectangle
+│  C   │ TARGET    │  C = left strip beside rectangle
+└──────┴───────────┘
+P[r2][c2] = A + B + C + TARGET
+We want TARGET = P[r2][c2] - (A+B) - (A+C) + A
+             = P[r2][c2] - P[r1-1][c2] - P[r2][c1-1] + P[r1-1][c1-1]</div>
   </div>
 
-  <div class="section-label">&#9314; Step-by-Step Logic</div>
-  <div class="steps"><ol>
-    <li>Build a 1-indexed prefix table P of size (rows+1) &times; (cols+1), with row-0 and col-0 all zeroed.</li>
-    <li>For each cell (r,c): <code>P[r][c] = grid[r-1][c-1] + P[r-1][c] + P[r][c-1] - P[r-1][c-1]</code>.</li>
-    <li>To query rectangle with top-left (r1,c1) and bottom-right (r2,c2) (0-indexed): shift to 1-indexed, then apply inclusion-exclusion.</li>
-  </ol></div>
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+  <div class="pseudo">PSEUDOCODE — Build:
+  for r = 1 to rows:
+    for c = 1 to cols:
+      P[r][c] = grid[r-1][c-1] + P[r-1][c] + P[r][c-1] - P[r-1][c-1]
 
-  <div class="section-label">Diagram</div>
-  <div class="diagram">grid:          prefix P (1-indexed):
- 1  2  3        0  0  0  0
- 4  5  6   →   0  1  3  6
- 7  8  9        0  5 12 21
-                0 12 27 45
-
-Query rect (1,1)→(2,2) in 0-indexed = (2,2)→(3,3) in 1-indexed:
-  P[3][3] - P[1][3] - P[3][1] + P[1][1] = 45 - 6 - 12 + 1 = 28
-  check: 5+6+8+9 = 28 ✓</div>
-
-  <div class="section-label">&#9316; Annotated Code</div>
+PSEUDOCODE — Query (r1,c1)→(r2,c2) in 0-indexed:
+  convert to 1-indexed: r1++, c1++, r2++, c2++
+  return P[r2][c2] - P[r1-1][c2] - P[r2][c1-1] + P[r1-1][c1-1]</div>
 <pre><code class="language-c">#include &lt;stdio.h&gt;
 #define MAXN 101
 
-int P[MAXN+1][MAXN+1]; /* 1-indexed prefix table, row-0 and col-0 stay 0 */
+int P[MAXN+1][MAXN+1]; /* 1-indexed: P[0][*] and P[*][0] are 0 (zero border) */
 
-/* Build 2D prefix sum. grid is 0-indexed [rows][cols]. */
 void build_2d(int grid[MAXN][MAXN], int rows, int cols) {
     for (int r = 1; r &lt;= rows; r++) {
         for (int c = 1; c &lt;= cols; c++) {
-            P[r][c] = grid[r-1][c-1]   /* current cell value */
-                    + P[r-1][c]         /* sum of column above */
-                    + P[r][c-1]         /* sum of row to the left */
-                    - P[r-1][c-1];      /* top-left corner was counted twice, remove once */
+            P[r][c] = grid[r-1][c-1]   /* WHY: the actual cell value (1→0 index shift) */
+                    + P[r-1][c]         /* WHY: all cells directly above this column */
+                    + P[r][c-1]         /* WHY: all cells to the left in this row */
+                    - P[r-1][c-1];      /* WHY: top-left region was added twice above,
+                                                subtract once to count it exactly once */
         }
     }
 }
 
-/* Sum of rectangle top-left (r1,c1) to bottom-right (r2,c2), 0-indexed. */
+/* Query sum of rectangle (r1,c1)→(r2,c2), all 0-indexed. */
 int query_2d(int r1, int c1, int r2, int c2) {
-    r1++; c1++; r2++; c2++;            /* shift to 1-indexed to use prefix table */
+    r1++; c1++; r2++; c2++;
+    /* WHY: shift 0-indexed coords to 1-indexed to use our 1-indexed P table */
+
     return P[r2][c2]
-         - P[r1-1][c2]                 /* remove the strip above the rectangle */
-         - P[r2][c1-1]                 /* remove the strip to the left */
-         + P[r1-1][c1-1];             /* add back corner that was subtracted twice */
+         - P[r1-1][c2]      /* WHY: remove everything above the rectangle */
+         - P[r2][c1-1]      /* WHY: remove everything left of the rectangle */
+         + P[r1-1][c1-1];  /* WHY: top-left corner was subtracted twice, add back once */
 }
 
 int main(void) {
     int grid[MAXN][MAXN] = {{1,2,3},{4,5,6},{7,8,9}};
     build_2d(grid, 3, 3);
-    printf("%d\n", query_2d(1, 1, 2, 2)); /* 28 */
+    printf("%d\n", query_2d(1, 1, 2, 2)); /* 28  = 5+6+8+9 */
+    printf("%d\n", query_2d(0, 0, 0, 0)); /* 1   = top-left cell only */
+    printf("%d\n", query_2d(0, 0, 2, 2)); /* 45  = entire grid */
     return 0;
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
+  <div class="section-label">&#9316; Dry Run</div>
   <div class="dry-run">grid = [[1,2,3],[4,5,6],[7,8,9]]
 
-Build P (1-indexed):
-  P[1][1]=1,  P[1][2]=3,  P[1][3]=6
-  P[2][1]=5,  P[2][2]=12, P[2][3]=21
-  P[3][1]=12, P[3][2]=27, P[3][3]=45
+── BUILD PHASE ─────────────────────────────────────────────────────
+  P[1][1] = 1 + 0 + 0 - 0 = 1
+  P[1][2] = 2 + 0 + 1 - 0 = 3
+  P[1][3] = 3 + 0 + 3 - 0 = 6
+  P[2][1] = 4 + 1 + 0 - 0 = 5
+  P[2][2] = 5 + 3 + 5 - 1 = 12
+  P[2][3] = 6 + 6 + 12 - 3 = 21
+  P[3][1] = 7 + 5 + 0 - 0 = 12
+  P[3][2] = 8 + 12 + 12 - 5 = 27
+  P[3][3] = 9 + 21 + 27 - 12 = 45
 
-Query (1,1)→(2,2) 0-indexed → (2,2)→(3,3) 1-indexed:
-  45 - P[1][3] - P[3][1] + P[1][1]
-= 45 - 6 - 12 + 1 = 28  ✓ (5+6+8+9=28)</div>
+── QUERY (1,1)→(2,2) ───────────────────────────────────────────────
+  shift to 1-indexed: (2,2)→(3,3)
+  P[3][3] - P[1][3] - P[3][1] + P[1][1]
+  = 45 - 6 - 12 + 1 = 28  ✓
+  verify: 5+6+8+9 = 28 ✓
+
+── EDGE CASE: single cell (0,0)→(0,0) ──────────────────────────────
+  shift: (1,1)→(1,1)
+  P[1][1] - P[0][1] - P[1][0] + P[0][0] = 1 - 0 - 0 + 0 = 1  ✓
+
+The zero border (row 0, col 0 all zeros) means the formula works
+uniformly — no special-casing for rectangles touching the top or left edge.</div>
 
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Using 0-indexed prefix table directly</div>
-    <p>With a 0-indexed prefix table, querying a rectangle that touches the top row or left column requires messy boundary checks. Use a 1-indexed table (size n+1 &times; m+1 with zeroed border) to eliminate all edge cases. The formula then works uniformly for every rectangle.</p>
+    <div class="gotcha-title">&#9888; The Mistake Everyone Makes: Forgetting to subtract the corner twice</div>
+    <p><strong>Wrong code:</strong></p>
+    <pre style="margin:0.4rem 0"><code class="language-c">/* Missing the + P[r1-1][c1-1] term */
+return P[r2][c2] - P[r1-1][c2] - P[r2][c1-1]; /* WRONG */</code></pre>
+    <p><strong>What goes wrong:</strong> The top-left region (rows 0 to r1-1, cols 0 to c1-1) is included in both P[r1-1][c2] and P[r2][c1-1]. Subtracting both strips removes that corner region twice, leaving a negative contribution. The result is always too small.</p>
+    <p><strong>Correct:</strong> Always add back <code>P[r1-1][c1-1]</code> to compensate for the corner being subtracted twice.</p>
+    <p><strong>Rule to remember:</strong> The formula has 4 terms: +P[r2][c2] −P[r1-1][c2] −P[r2][c1-1] +P[r1-1][c1-1]. The signs follow the inclusion-exclusion pattern: +all, −top, −left, +corner.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">&#10003; Confidence Check — can you answer these without looking?</div>
+    <ol>
+      <li>What does P[r][c] represent? What region does it cover?</li>
+      <li>Why is the table 1-indexed with an extra zero row and column? What problem does that solve?</li>
+      <li>Given P for a 4×4 grid, describe in words how to compute the sum of the entire bottom-right 2×2 block.</li>
+    </ol>
   </div>
 
   <div class="leetcode">
@@ -385,7 +602,15 @@ Query (1,1)→(2,2) 0-indexed → (2,2)→(3,3) 1-indexed:
     <span>1314 &middot; Matrix Block Sum</span>
     <span>363 &middot; Max Sum of Rectangle No Larger Than K</span>
   </div>
-  <div class="trigger">When you see: repeated rectangle sum queries on a static grid &#8594; think: 2D prefix sum with 1-indexed table + inclusion-exclusion</div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">When you see repeated rectangle sum queries on a static 2D grid &#8594; 2D prefix sum + inclusion-exclusion formula.</div>
+    <ul class="trigger-variants">
+      <li>Sum of any rectangle in a matrix in O(1) → 2D prefix sum table.</li>
+      <li>Box blur / mean filter over any rectangular window → summed-area table.</li>
+      <li>Largest rectangle sum ≤ K → 2D prefix sum + sorted structure per row-pair.</li>
+    </ul>
+  </div>
 </div>
 
 <!-- ================================================================ P04 -->
@@ -395,76 +620,128 @@ Query (1,1)→(2,2) 0-indexed → (2,2)→(3,3) 1-indexed:
     <span class="pattern-name">Two Pointer: Sorted Array Pair Sum</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    Two people stand at opposite ends of a hallway and walk toward each other.
-    If the sum of their positions is too large, the person on the right takes a step left (shrinks the sum).
-    If the sum is too small, the person on the left takes a step right (grows the sum).
-    They keep adjusting until they find the target or meet in the middle.
+  <div class="section-label">&#9312; Background</div>
+  <div class="bg-section">
+    <p>The naive approach to finding two numbers in an array that sum to a target is the nested loop: for every pair (i, j) with i &lt; j, check if arr[i] + arr[j] == target. This is O(n²). For 10,000 elements that means 50 million pair checks. It works, but there is a much better way when the array is sorted.</p>
+    <p>The sorted two-pointer technique exploits a property that only sorted data has: the array has a natural "direction" — values increase as you go right. This means moving the left pointer right always increases the available sum, and moving the right pointer left always decreases it. You can make informed decisions about which direction to move based purely on whether the current sum is too big or too small.</p>
+    <p>This idea was recognized in the context of merge algorithms and computational geometry in the 1970s and 1980s. It reduces the pair-sum problem from O(n²) to O(n) with no extra space — you need only two integer indices. The two pointers start at opposite ends of the sorted array and converge toward each other, eliminating large swaths of the search space with each step.</p>
+    <p>In practice this pattern appears when you already have a sorted input (which is common — sorted sensor readings, sorted timestamps, sorted distances). It is also the inner loop of Three Sum (P07), which sorts first and then runs this as a sub-routine. Competitive programmers use it to solve problems in O(n) that beginners solve in O(n²). It also generalizes to "two pointer on two separate sorted arrays" — for example, merging two sorted streams or finding the pair from two different arrays whose sum is closest to a target.</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    Because the array is sorted, moving the right pointer left always decreases the sum, and moving the left pointer right always increases it. You never need to try every pair.
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="where-list">
+    <li><span class="sit">Find pair in sorted array summing to target.</span> <span class="why">Classic O(n) two-pointer after sorting — the template problem.</span></li>
+    <li><span class="sit">Three Sum: find all triplets summing to zero.</span> <span class="why">Fix one element, run two-pointer on the rest — O(n²) total (P07).</span></li>
+    <li><span class="sit">Squares of sorted array: square each, produce sorted result.</span> <span class="why">Largest squares come from both ends; converge two pointers inward.</span></li>
+    <li><span class="sit">Closest pair sum to a target in a sorted array.</span> <span class="why">Same convergence — track minimum absolute difference during the sweep.</span></li>
+    <li><span class="sit">Embedded: matching send/receive packets by sequence number.</span> <span class="why">Two sorted streams of packet IDs — converging two pointers finds paired entries.</span></li>
+    <li><span class="sit">Database join on sorted key columns.</span> <span class="why">Sort-merge join is this pattern applied to two separate sorted lists.</span></li>
+    <li><span class="sit">Valid palindrome check on a string (char-by-char).</span> <span class="why">Left and right pointers converging — same convergence logic, different termination.</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p>Take arr = [1, 3, 6, 8, 11] and target = 9. The brute force checks all pairs: (1,3), (1,6), (1,8), (1,11), (3,6), (3,8), (3,11), (6,8), (6,11), (8,11). That's 10 checks. But do we need all 10?</p>
+    <p>Start left at index 0 (value 1) and right at index 4 (value 11). Sum = 12. That is too big. Can the pair (1, 11) ever work for a target of 9? No. Can any pair that includes 11? Only if the other element is negative — but the array has no negatives. <span class="aha">Key insight: in a sorted array, when the sum is too big, the right element is the problem. Move right inward to get a smaller value.</span></p>
+    <div class="ascii">arr = [ 1,  3,  6,  8, 11 ]   target = 9
+          ↑               ↑
+        left=0          right=4
+sum = 1 + 11 = 12 > 9 → move right inward
+
+arr = [ 1,  3,  6,  8, 11 ]
+          ↑          ↑
+        left=0     right=3
+sum = 1 + 8 = 9 == target → FOUND ✓</div>
+    <p>Symmetrically, when sum is too small, move left rightward to get a bigger value. When left and right meet, every pair has been considered. The total number of pointer moves is at most n−1, so the algorithm is O(n).</p>
+    <p>We need the condition to be <code>left &lt; right</code>, not <code>left &lt;= right</code>. When left == right, both pointers are pointing at the same element — you cannot use the same element twice in a pair (unless the problem allows it). The loop must stop before they collide.</p>
   </div>
 
-  <div class="section-label">&#9314; Step-by-Step Logic</div>
-  <div class="steps"><ol>
-    <li>Set <code>left = 0</code> (smallest element) and <code>right = n-1</code> (largest element).</li>
-    <li>Compute <code>sum = arr[left] + arr[right]</code>.</li>
-    <li>If <code>sum == target</code>: found the pair, return it.</li>
-    <li>If <code>sum &gt; target</code>: the right value is too large — do <code>right--</code>.</li>
-    <li>If <code>sum &lt; target</code>: the left value is too small — do <code>left++</code>.</li>
-    <li>Repeat until <code>left &gt;= right</code>.</li>
-  </ol></div>
-
-  <div class="section-label">Diagram</div>
-  <div class="diagram">arr = [1, 3, 6, 8, 11],  target = 9
-
-Step 1: left=0(1)  right=4(11) sum=12 > 9 → right--
-Step 2: left=0(1)  right=3(8)  sum=9  == 9 → FOUND ✓</div>
-
-  <div class="section-label">&#9316; Annotated Code</div>
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+  <div class="pseudo">PSEUDOCODE:
+  left = 0, right = n - 1
+  while left < right:
+      sum = arr[left] + arr[right]
+      if sum == target: return (left, right)
+      if sum > target:  right--   (too big, shrink right)
+      if sum < target:  left++    (too small, grow left)</div>
 <pre><code class="language-c">#include &lt;stdio.h&gt;
 
-/* Find pair in sorted array summing to target.
-   Returns 1 if found (indices in *l, *r), 0 otherwise. */
-int two_sum_sorted(int *arr, int n, int target, int *l, int *r) {
-    int left  = 0;       /* start at the smallest value */
-    int right = n - 1;   /* start at the largest value */
+int two_sum_sorted(int *arr, int n, int target, int *out_l, int *out_r) {
+    int left  = 0;
+    int right = n - 1;
+    /* WHY: left starts at minimum value, right at maximum.
+       Between them, every possible pair sum is reachable. */
 
-    while (left &lt; right) {                        /* stop when pointers meet */
+    while (left &lt; right) {
+        /* WHY: when pointers meet, both would point to the same element.
+           A pair needs two distinct positions, so we stop before they meet. */
+
         int sum = arr[left] + arr[right];
 
-        if (sum == target) {                       /* exact match found */
-            *l = left; *r = right;
+        if (sum == target) {
+            *out_l = left;
+            *out_r = right;
             return 1;
-        } else if (sum &gt; target) {
-            right--;   /* sum too big: the right value is too large, shrink it */
-        } else {
-            left++;    /* sum too small: the left value is too small, grow it */
         }
+
+        /* WHY for each branch:
+           sum > target → right element is too large. Only fix: make right smaller.
+                          Moving left right would make sum even larger. So: right--.
+           sum < target → left element is too small. Only fix: make left larger.
+                          Moving right left would make sum even smaller. So: left++. */
+        if (sum &gt; target) right--;
+        else               left++;
     }
-    return 0;           /* no valid pair exists */
+    return 0;   /* exhausted all candidates */
 }
 
 int main(void) {
     int arr[] = {1, 3, 6, 8, 11};
     int l, r;
     if (two_sum_sorted(arr, 5, 9, &amp;l, &amp;r))
-        printf("indices %d and %d\n", l, r); /* indices 0 and 3 */
+        printf("indices %d and %d  (values %d+%d=9)\n", l, r, arr[l], arr[r]);
+    /* indices 0 and 3  (values 1+8=9) */
     return 0;
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
+  <div class="section-label">&#9316; Dry Run</div>
   <div class="dry-run">arr = [1, 3, 6, 8, 11],  target = 9
+              L              R
+Step  left  right  arr[L]  arr[R]  sum   decision
+────  ────  ─────  ──────  ──────  ───   ────────
+ 1      0     4       1      11    12    > 9 → right--
+ 2      0     3       1       8     9    == 9 → FOUND ✓
 
-left=0(val=1), right=4(val=11) → sum=12 > 9 → right--
-left=0(val=1), right=3(val=8)  → sum=9 ==9  → FOUND: indices 0, 3 ✓</div>
+Total pointer moves: 1. Contrast with brute force: 10 pair checks.
+
+── EDGE CASE: no valid pair ─────────────────────────────────────────
+arr = [1, 2, 4, 8],  target = 3
+Step  left  right  arr[L]  arr[R]  sum   decision
+────  ────  ─────  ──────  ──────  ───   ────────
+ 1      0     3       1       8     9    > 3 → right--
+ 2      0     2       1       4     5    > 3 → right--
+ 3      0     1       1       2     3    == 3 → FOUND (indices 0,1)
+
+Actually this finds it. Try target=100:
+ 1: 1+8=9 < 100 → left++
+ 2: 2+8=10 < 100 → left++
+ 3: 4+8=12 < 100 → left++
+ 4: left=3 == right=3 → exit loop → return 0 ✓</div>
 
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: This only works on a SORTED array</div>
-    <p>The two-pointer convergence relies on knowing that moving right inward reduces the sum and moving left inward increases it. On an unsorted array this logic is broken. Sort first (O(n log n)), or use a hash map for O(n) unsorted two-sum (see Pattern 38).</p>
+    <div class="gotcha-title">&#9888; The Mistake Everyone Makes: Using this on an unsorted array</div>
+    <p><strong>The problem:</strong> On arr = [5, 1, 3, 9, 2], target = 6: left=0(5), right=4(2), sum=7 &gt; 6, so right--. Now right=3(9), sum=14... the pointer moves make no sense because the "move right inward = smaller value" guarantee is gone.</p>
+    <p><strong>The fix:</strong> Sort first if the array is unsorted. Sorting costs O(n log n) — still better than O(n²). Alternatively, use the hash map approach (P38) which is O(n) even for unsorted arrays.</p>
+    <p><strong>Rule to remember:</strong> Two-pointer convergence for pair sum only works when the array is sorted. The sorted order is not just a convenience — it is the correctness guarantee.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">&#10003; Confidence Check — can you answer these without looking?</div>
+    <ol>
+      <li>Why do we use <code>left &lt; right</code> and not <code>left &lt;= right</code>?</li>
+      <li>For arr = [2, 5, 8, 12] and target = 13, trace the algorithm step by step.</li>
+      <li>How would you modify this to find the pair whose sum is <em>closest</em> to the target (not exactly equal)?</li>
+    </ol>
   </div>
 
   <div class="leetcode">
@@ -472,7 +749,15 @@ left=0(val=1), right=3(val=8)  → sum=9 ==9  → FOUND: indices 0, 3 ✓</div>
     <span>15 &middot; 3Sum</span>
     <span>977 &middot; Squares of a Sorted Array</span>
   </div>
-  <div class="trigger">When you see: sorted array + find pair with given sum &#8594; think: left and right pointer converging from both ends</div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Sorted array + find pair/triplet with given sum &#8594; two pointers from both ends, converge based on sum vs. target.</div>
+    <ul class="trigger-variants">
+      <li>Find pair summing to target in sorted array → left+right pointer convergence.</li>
+      <li>Find triplet summing to zero → sort + fix one, run two-pointer on rest.</li>
+      <li>Unsorted array pair sum → use hashmap instead (P38).</li>
+    </ul>
+  </div>
 </div>
 
 <!-- ================================================================ P05 -->
@@ -482,69 +767,132 @@ left=0(val=1), right=3(val=8)  → sum=9 ==9  → FOUND: indices 0, 3 ✓</div>
     <span class="pattern-name">Two Pointer: Remove Duplicates In-Place</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    A bouncer at a club checks IDs. Only new, unique people get in.
-    He keeps one hand on the door (the write pointer, only advances when someone unique arrives) and one hand scanning the line (the read pointer, always moving forward).
-    Duplicates are seen but not written to the door.
+  <div class="section-label">&#9312; Background</div>
+  <div class="bg-section">
+    <p>When working with sorted data, duplicates appear in consecutive runs. A classic problem is removing them in-place — without allocating a second array — and returning the new length. The naive approach would shift elements left every time a duplicate is found, giving O(n²) due to repeated copying. But there is an O(n) way that uses only two index variables: one for reading, one for writing.</p>
+    <p>This is called the slow-fast pointer or read-write pointer pattern. The write pointer marks the boundary of the "clean" de-duplicated region on the left. The read pointer scans through every element. When read encounters a value different from the last written value, it copies it to the write position and advances write. When read sees a duplicate (same as write's current value), it just moves on without writing anything. Write only moves when something new and unique is found.</p>
+    <p>The result is an in-place compaction in a single O(n) pass with O(1) extra space. This pattern is used in firmware when deduplicating sensor readings stored in a fixed buffer — you cannot allocate a new buffer on a microcontroller with 2 KB of RAM. It is also the core of database query engines that eliminate duplicates from a sorted intermediate result without materializing a copy. The Linux kernel uses the same concept when compacting page tables.</p>
+    <p>A generalization is "remove all instances of a given value" (LeetCode 27) and "allow at most k duplicates" (LeetCode 80). In both cases, the same read-write structure applies — only the condition that advances the write pointer changes.</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    Two pointers on the same array: slow pointer (write) marks where the next unique element goes, fast pointer (read) scans forward looking for new values. When read finds something new, write it at slow and advance slow.
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="where-list">
+    <li><span class="sit">Remove duplicates from a sorted array in-place.</span> <span class="why">The canonical use case — write advances only on new unique values.</span></li>
+    <li><span class="sit">Remove all instances of a specific value in-place.</span> <span class="why">Same pattern — write advances whenever read's value doesn't match the target.</span></li>
+    <li><span class="sit">Allow at most k duplicates (LeetCode 80).</span> <span class="why">Write advances when arr[read] != arr[write - k] — same skeleton, different condition.</span></li>
+    <li><span class="sit">Firmware: deduplicate a sorted sensor log buffer without extra allocation.</span> <span class="why">Constrained memory — read-write pointer compacts in-place with zero extra bytes.</span></li>
+    <li><span class="sit">Database: eliminate duplicates from a sorted query result.</span> <span class="why">Sorted intermediate results can be deduplicated in one pass during the scan.</span></li>
+    <li><span class="sit">Stream processing: compact a sliding window of sorted events.</span> <span class="why">As new events arrive, old duplicates are overwritten in-place by the write pointer.</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p>Start with arr = [1, 1, 2, 3, 3]. We want [1, 2, 3] in the first three positions, and we cannot use extra memory. Think about what "removing duplicates" means physically: we want to compress the unique elements toward the front.</p>
+    <p>What if we had two hands on the array? One hand (write) holds the position of the last unique element we have confirmed. The other hand (read) scans forward. <span class="aha">The key insight: the write pointer never needs to look backward — it only holds one piece of state: the last unique value written.</span> When read finds something different, write takes one step forward and copies it there.</p>
+    <div class="ascii">Initial:  [ 1,  1,  2,  3,  3 ]
+              W=0  R=1
+               ↑   ↑
+            write  read
+
+read=1: arr[1]=1 == arr[write=0]=1 → DUPLICATE, read moves on
+              [ 1,  1,  2,  3,  3 ]
+               W    ↑R=2
+
+read=2: arr[2]=2 != arr[write=0]=1 → NEW. write++, arr[1]=2
+              [ 1,  2,  2,  3,  3 ]
+                  W     ↑R=3
+
+read=3: arr[3]=3 != arr[write=1]=2 → NEW. write++, arr[2]=3
+              [ 1,  2,  3,  3,  3 ]
+                       W     ↑R=4
+
+read=4: arr[4]=3 == arr[write=2]=3 → DUPLICATE
+return write+1 = 3  →  arr[0..2] = [1, 2, 3] ✓</div>
+    <p>Notice that the region arr[0..write] is always the correctly de-duplicated prefix. The region arr[write+1..read-1] is "garbage" — elements we have already read but don't need. The region arr[read..n-1] is still to be examined. These three regions never overlap, and their boundaries are maintained automatically.</p>
   </div>
 
-  <div class="section-label">&#9314; Step-by-Step Logic</div>
-  <div class="steps"><ol>
-    <li>Start <code>write = 0</code> (first unique slot is position 0, which already holds arr[0]).</li>
-    <li>Start <code>read = 1</code> (begin scanning from the second element).</li>
-    <li>If <code>arr[read] != arr[write]</code>: a new unique value found — increment write, copy arr[read] to arr[write].</li>
-    <li>If <code>arr[read] == arr[write]</code>: duplicate — just advance read, do nothing to write.</li>
-    <li>Repeat until read reaches end. Return <code>write + 1</code> (the new length).</li>
-  </ol></div>
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+  <div class="pseudo">PSEUDOCODE:
+  if n == 0: return 0
+  write = 0
+  for read = 1 to n-1:
+      if arr[read] != arr[write]:
+          write++
+          arr[write] = arr[read]
+  return write + 1</div>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
 
-  <div class="section-label">Diagram</div>
-  <div class="diagram">arr = [1, 1, 2, 3, 3, 4]
-
-write=0(1), read=1(1): same → skip
-write=0(1), read=2(2): diff → write++, arr[1]=2  → [1,2,2,3,3,4]
-write=1(2), read=3(3): diff → write++, arr[2]=3  → [1,2,3,3,3,4]
-write=2(3), read=4(3): same → skip
-write=2(3), read=5(4): diff → write++, arr[3]=4  → [1,2,3,4,3,4]
-return write+1 = 4</div>
-
-  <div class="section-label">&#9316; Annotated Code</div>
-<pre><code class="language-c">/* Remove duplicates from sorted array in-place.
-   Returns the new length. Elements beyond new length may be garbage. */
 int remove_duplicates(int *arr, int n) {
     if (n == 0) return 0;
+    /* WHY: empty array has no first element to anchor write at index 0 */
 
-    int write = 0;   /* index of the last confirmed unique element */
+    int write = 0;
+    /* WHY: index 0 is always unique (nothing before it), so write starts there.
+       arr[0] is already in the right place — no need to copy it. */
 
-    for (int read = 1; read &lt; n; read++) {      /* read scans every element */
-        if (arr[read] != arr[write]) {           /* found a value different from last unique */
-            write++;                             /* advance to next write slot */
-            arr[write] = arr[read];              /* place new unique value there */
+    for (int read = 1; read &lt; n; read++) {
+        /* WHY: start read at 1 — we already "accepted" arr[0] via write=0 */
+
+        if (arr[read] != arr[write]) {
+            /* WHY: a new unique value was found.
+               We need to decide: is arr[read] different from the last accepted value?
+               arr[write] always holds the last accepted unique value. */
+            write++;
+            /* WHY: advance write to the next slot BEFORE writing.
+               write points to the current last-unique position; we need the NEXT slot. */
+            arr[write] = arr[read];
+            /* WHY: copy the new unique value into its final resting place. */
         }
-        /* if arr[read] == arr[write]: duplicate, read advances but write stays */
+        /* WHY when NOT entering the if: arr[read] is a duplicate.
+           read will advance automatically (via for loop).
+           write stays — we haven't found anything worth keeping. */
     }
-    return write + 1;   /* write is 0-indexed, so length = write + 1 */
+    return write + 1;
+    /* WHY: write is 0-indexed. If write=2, we have 3 unique elements at [0,1,2]. */
+}
+
+int main(void) {
+    int arr[] = {1, 1, 2, 3, 3};
+    int new_len = remove_duplicates(arr, 5);
+    printf("length=%d, arr=[", new_len);
+    for (int i = 0; i &lt; new_len; i++)
+        printf("%d%s", arr[i], i &lt; new_len-1 ? "," : "");
+    printf("]\n");  /* length=3, arr=[1,2,3] */
+    return 0;
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
-  <div class="dry-run">arr = [1, 1, 2, 3, 3],  n=5
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run">arr = [1, 1, 2, 3, 3],  n=5,  write=0
 
-write=0
-read=1: arr[1]=1 == arr[0]=1 → duplicate, skip
-read=2: arr[2]=2 != arr[0]=1 → write=1, arr[1]=2    arr=[1,2,2,3,3]
-read=3: arr[3]=3 != arr[1]=2 → write=2, arr[2]=3    arr=[1,2,3,3,3]
-read=4: arr[4]=3 == arr[2]=3 → duplicate, skip
+  read  arr[read]  arr[write]  same?  action          arr state
+  ────  ────────   ──────────  ─────  ──────          ─────────────────
+   1       1           1       YES    skip             [1, 1, 2, 3, 3]
+   2       2           1       NO     write=1,arr[1]=2 [1, 2, 2, 3, 3]
+   3       3           2       NO     write=2,arr[2]=3 [1, 2, 3, 3, 3]
+   4       3           3       YES    skip             [1, 2, 3, 3, 3]
 
-return write+1 = 3   (arr[0..2] = [1,2,3])  ✓</div>
+return write+1 = 3.  arr[0..2] = [1, 2, 3] ✓
+
+── EDGE CASE: all duplicates arr = [5, 5, 5] ────────────────────────
+  write=0
+  read=1: 5==5 → skip
+  read=2: 5==5 → skip
+  return 1.  arr[0] = [5] ✓  (only one unique element)</div>
 
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Starting read at 0 instead of 1</div>
-    <p>If read starts at 0, the first element compares against itself, incrementing write incorrectly. Start read at 1 — element at index 0 is always unique (nothing before it), so write starts at 0 pointing to it, and read begins looking for something different.</p>
+    <div class="gotcha-title">&#9888; The Mistake Everyone Makes: Starting read at 0</div>
+    <p><strong>Wrong:</strong> <code>for (int read = 0; read &lt; n; read++)</code> — when read=0, arr[0] compares to arr[write=0] — same element. This triggers <code>write++</code> and copies arr[0] to arr[1], corrupting the array before it starts.</p>
+    <p><strong>Correct:</strong> Start read at 1. The element at index 0 is always the first unique value — it anchors the write pointer without needing to be "discovered."</p>
+    <p><strong>Rule to remember:</strong> write=0 means "I've accepted arr[0]." read=1 means "now I'm looking for something different than arr[0]."</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">&#10003; Confidence Check — can you answer these without looking?</div>
+    <ol>
+      <li>After the loop runs on [1, 1, 1, 1], what are the values of write and new_len?</li>
+      <li>Why is it safe to overwrite arr[write+1] with arr[read]? What guarantee ensures we never overwrite something we still need?</li>
+      <li>How would you modify this to allow at most 2 of each value (LeetCode 80)?</li>
+    </ol>
   </div>
 
   <div class="leetcode">
@@ -552,7 +900,15 @@ return write+1 = 3   (arr[0..2] = [1,2,3])  ✓</div>
     <span>27 &middot; Remove Element</span>
     <span>80 &middot; Remove Duplicates from Sorted Array II</span>
   </div>
-  <div class="trigger">When you see: remove or compact elements in-place from a sorted array &#8594; think: slow write pointer + fast read pointer</div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Sorted array + remove/compact elements in-place &#8594; slow write pointer advances only when read finds something new.</div>
+    <ul class="trigger-variants">
+      <li>Remove all duplicates → write advances when arr[read] != arr[write].</li>
+      <li>Remove specific value → write advances when arr[read] != target.</li>
+      <li>Allow at most k duplicates → write advances when arr[read] != arr[write-k].</li>
+    </ul>
+  </div>
 </div>
 
 <!-- ================================================================ P06 -->
@@ -562,19 +918,157 @@ return write+1 = 3   (arr[0..2] = [1,2,3])  ✓</div>
     <span class="pattern-name">Two Pointer: Move Zeros to End</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    Imagine sorting a line of people where some are "ghosts" (zeros) — they take up space but don't count.
-    You want all real people at the front in their original order, and ghosts pushed to the back.
-    A write pointer marks where the next real person goes. A read pointer scans forward and whenever it finds a real person, it hands them to the write pointer.
+  <div class="section-label">&#9312; Background</div>
+  <div class="bg-section">
+    <p>Move-zeros-to-end is a small but important pattern: reorder an array so all zeros are at the back and all non-zero elements are at the front in their original relative order. No extra array is allowed. The naive approach — repeatedly finding the first zero and shifting all elements after it left — is O(n²) due to the shift cost. The two-pointer version is O(n) with a single pass.</p>
+    <p>This is the same read-write pointer skeleton as P05, but the condition is different: instead of "write advances when a new unique value is found", write advances when any non-zero value is found. The write pointer separates the "kept" region on the left from the "to be zeroed" region on the right. After the scan, anything from write to n-1 must be zeroed.</p>
+    <p>Alternatively, you can swap arr[write] and arr[read] instead of overwriting — this avoids the trailing fill step because zeros get swapped into the garbage region automatically. The overwrite version requires the fill; the swap version does not. Both are O(n), O(1) space.</p>
+    <p>In practice this pattern arises when filtering or partitioning arrays in-place — for example, moving all even elements to the front (LeetCode 905), or moving all elements less than a pivot to the front (partition step in quicksort). The underlying structure is identical: a write pointer that advances only on elements satisfying a predicate, with all "rejected" elements falling behind it.</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    Read pointer scans all elements. Write pointer only advances when a non-zero is found. After the scan, everything from write onward gets filled with zeros.
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="where-list">
+    <li><span class="sit">Move all zeros to the end, preserving non-zero order.</span> <span class="why">The canonical problem — write pointer advances on non-zero, fill zeros at end.</span></li>
+    <li><span class="sit">Sort array by parity (evens first, odds second).</span> <span class="why">Same skeleton — write advances when arr[read] is even.</span></li>
+    <li><span class="sit">Partition step in quicksort.</span> <span class="why">Write advances when arr[read] &lt;= pivot — same read-write structure.</span></li>
+    <li><span class="sit">Embedded: compact a DMA buffer by removing null/invalid frames.</span> <span class="why">In-place compaction with no allocation — critical in constrained memory environments.</span></li>
+    <li><span class="sit">Remove all instances of a value from an unsorted array.</span> <span class="why">Write advances when arr[read] != target — generalisation of this pattern.</span></li>
+    <li><span class="sit">Separating valid and invalid entries in a packet queue.</span> <span class="why">Write pointer holds position for next valid packet; invalid ones left behind.</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p>Take arr = [0, 1, 0, 3, 12]. We want [1, 3, 12, 0, 0]. We cannot allocate a new array. Think about the problem in terms of what we want: the non-zero elements should land at the beginning in their original order. The zeros just fill the rest.</p>
+    <p>If we only focus on the non-zero elements and where they need to go: 1 should be at index 0, 3 at index 1, 12 at index 2. That is exactly what a write pointer does — it marks the next available "destination" slot for a non-zero element. Read scans everything; when it finds a non-zero, write takes it.</p>
+    <div class="ascii">arr = [ 0,  1,  0,  3, 12 ]
+         R                      read scans, write starts at 0
+         W
+
+read=0: arr[0]=0 → zero, skip. read moves to 1.
+arr = [ 0,  1,  0,  3, 12 ]    W=0, R=1
+         W   R
+
+read=1: arr[1]=1 → non-zero! arr[W=0]=1, write=1. read moves to 2.
+arr = [ 1,  1,  0,  3, 12 ]    W=1, R=2
+              W   R
+
+read=2: arr[2]=0 → zero, skip. read moves to 3.
+read=3: arr[3]=3 → non-zero! arr[W=1]=3, write=2.
+arr = [ 1,  3,  0,  3, 12 ]    W=2, R=4
+
+read=4: arr[4]=12 → non-zero! arr[W=2]=12, write=3.
+arr = [ 1,  3, 12,  3, 12 ]    W=3, scan done.
+
+Fill positions 3,4 with 0:
+arr = [ 1,  3, 12,  0,  0 ] ✓</div>
+    <p><span class="aha">The key insight: read always advances. Write only advances when it finds a non-zero to keep. The gap between write and read is exactly the number of zeros we have "skipped over" so far — those positions will be filled with zeros at the end.</span></p>
   </div>
 
-  <div class="section-label">&#9314; Step-by-Step Logic</div>
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+  <div class="pseudo">PSEUDOCODE:
+  write = 0
+  for read = 0 to n-1:
+      if arr[read] != 0:
+          arr[write] = arr[read]
+          write++
+  while write < n:
+      arr[write++] = 0</div>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+
+void move_zeros(int *arr, int n) {
+    int write = 0;
+    /* WHY: write starts at 0 — first non-zero element should land at index 0.
+       Unlike P05, there is no guaranteed "first good element" so write starts at 0
+       unconditionally and read also starts at 0. */
+
+    for (int read = 0; read &lt; n; read++) {
+        if (arr[read] != 0) {
+            arr[write] = arr[read];
+            /* WHY: copy this non-zero to the current write position.
+               We are compacting all non-zeros to the front in original order. */
+            write++;
+            /* WHY: advance write to reserve the next slot for the next non-zero. */
+        }
+        /* WHY when arr[read]==0: skip writing. read will advance via the for loop.
+           write stays behind — the zero is implicitly "deferred" to the fill phase. */
+    }
+
+    /* WHY this loop: everything at indices [write, n-1] should be zero.
+       We never explicitly moved zeros — we compacted non-zeros over them.
+       Now fill the tail. */
+    while (write &lt; n)
+        arr[write++] = 0;
+}
+
+int main(void) {
+    int arr[] = {0, 1, 0, 3, 12};
+    move_zeros(arr, 5);
+    for (int i = 0; i &lt; 5; i++) printf("%d ", arr[i]);
+    /* 1 3 12 0 0 */
+    return 0;
+}</code></pre>
+
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run">arr = [0, 1, 0, 3, 12],  n=5,  write=0
+
+  read  arr[read]  non-zero?  action            arr state          write
+  ────  ────────   ─────────  ──────            ─────────────────  ─────
+   0       0          NO      skip              [0, 1, 0, 3, 12]     0
+   1       1          YES     arr[0]=1, w++     [1, 1, 0, 3, 12]     1
+   2       0          NO      skip              [1, 1, 0, 3, 12]     1
+   3       3          YES     arr[1]=3, w++     [1, 3, 0, 3, 12]     2
+   4      12          YES     arr[2]=12, w++    [1, 3,12, 3, 12]     3
+
+Fill [3,4] with 0: arr = [1, 3, 12, 0, 0] ✓
+
+── EDGE CASE: no zeros — arr = [4, 2, 7] ────────────────────────────
+  read=0: 4 non-zero → arr[0]=4, write=1
+  read=1: 2 non-zero → arr[1]=2, write=2
+  read=2: 7 non-zero → arr[2]=7, write=3
+  fill loop: write=3=n, doesn't run.
+  arr unchanged: [4, 2, 7] ✓  (no zeros to move)</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; The Mistake Everyone Makes: Forgetting the fill step</div>
+    <p><strong>Wrong code:</strong></p>
+    <pre style="margin:0.4rem 0"><code class="language-c">for (int read = 0; read &lt; n; read++)
+    if (arr[read] != 0)
+        arr[write++] = arr[read];
+/* Missing: while (write &lt; n) arr[write++] = 0; */</code></pre>
+    <p><strong>What goes wrong:</strong> On arr = [0, 1, 0, 3], after the loop arr = [1, 3, 0, 3]. The last two elements are garbage — you overwrote positions 0 and 1 but never put zeros at positions 2 and 3.</p>
+    <p><strong>Correct:</strong> After the compact loop, always fill arr[write..n-1] with zeros.</p>
+    <p><strong>Alternative (swap version — no fill needed):</strong></p>
+    <pre style="margin:0.4rem 0"><code class="language-c">for (int read = 0; read &lt; n; read++)
+    if (arr[read] != 0) {
+        int tmp = arr[write]; arr[write] = arr[read]; arr[read] = tmp;
+        write++;
+    }   /* zeros get swapped into the garbage region automatically */</code></pre>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">&#10003; Confidence Check — can you answer these without looking?</div>
+    <ol>
+      <li>What does the write pointer represent after the scan loop completes? What values are guaranteed to be at arr[0..write-1]?</li>
+      <li>Why doesn't the swap version need a fill step?</li>
+      <li>How would you modify this to move all odd numbers to the end while preserving the relative order of even numbers?</li>
+    </ol>
+  </div>
+
+  <div class="leetcode">
+    <span>283 &middot; Move Zeroes</span>
+    <span>27 &middot; Remove Element</span>
+    <span>905 &middot; Sort Array By Parity</span>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Push a category of elements to the end while preserving order of the rest &#8594; write pointer advances only on "keep" condition, fill tail at end.</div>
+    <ul class="trigger-variants">
+      <li>Move zeros to end → write advances when arr[read] != 0.</li>
+      <li>Remove specific value in-place → write advances when arr[read] != target.</li>
+      <li>Partition by predicate → write advances when predicate is true.</li>
+    </ul>
+  </div>
+</div>
   <div class="steps"><ol>
     <li>Set <code>write = 0</code>.</li>
     <li>For each <code>read</code> from 0 to n&minus;1: if <code>arr[read] != 0</code>, set <code>arr[write] = arr[read]</code> and increment write.</li>
@@ -641,55 +1135,79 @@ fill positions 3,4 with 0 → arr = [1, 3, 12, 0, 0] ✓</div>
     <span class="pattern-name">Two Pointer: Three Sum</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    You need three numbers that sum to zero. Trying every trio is O(n&sup3;) — too slow.
-    Instead: sort the array, then pin one number with a regular loop, and find the other two using the two-pointer pair-sum trick (Pattern 04) on the rest of the array.
-    Pinning one number turns a three-number problem into a two-number problem you already know how to solve.
+  <div class="section-label">&#9312; Background</div>
+  <div class="bg-section">
+    <p>Three Sum asks: find all unique triplets in an array that sum to zero. The brute force checks every combination of three indices: O(n³). For 1000 elements, that is one billion operations. A hash-set approach gets it to O(n²) time but requires O(n) extra space and complicated deduplication logic. The sort + two-pointer approach achieves O(n²) time with O(1) extra space and clean deduplication.</p>
+    <p>The core reduction is: once you fix one element arr[i], the remaining problem is "find two elements in the subarray [i+1, n-1] that sum to -arr[i]." That is exactly the pair-sum problem from P04, which we already know how to solve in O(n) on a sorted array. So Three Sum becomes: sort once O(n log n), then for each of n elements run a O(n) two-pointer scan — total O(n²).</p>
+    <p>The deduplication is the trickiest part. Because the array can contain repeating values, the same triplet can be "found" multiple times: once for each duplicate value of arr[i], and once for each duplicate value of arr[left] or arr[right] when a match is found. All three sources of duplicates need to be explicitly skipped.</p>
+    <p>This pattern generalizes directly to K-Sum for any K: sort first, then fix K-2 elements with nested loops, and use two-pointer for the final pair. Four Sum is O(n³), Five Sum is O(n⁴), and so on. Recognizing that any K-Sum reduces to a sorted two-pointer at its innermost level is a key insight for interview problems.</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    Fix index i, set target for the remaining pair as <code>0 - arr[i]</code>, then use left/right two-pointer on the sorted subarray <code>[i+1 .. n-1]</code>. Sort first so you can skip duplicates cleanly.
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="where-list">
+    <li><span class="sit">Find all unique triplets in an array summing to zero.</span> <span class="why">Sort + fix one + two-pointer inner loop — the canonical Three Sum.</span></li>
+    <li><span class="sit">Find triplet closest to a target (3Sum Closest).</span> <span class="why">Same skeleton — track minimum absolute difference instead of exact equality.</span></li>
+    <li><span class="sit">Four Sum: fix two with nested loops, two-pointer for remaining pair.</span> <span class="why">Direct generalization — O(n³) total, same deduplication logic at each level.</span></li>
+    <li><span class="sit">Pythagorean triplets in a sorted array.</span> <span class="why">Fix hypotenuse c², find a²+b²==c² with two-pointer — same structure.</span></li>
+    <li><span class="sit">Triangle validity: find any triplet forming a valid triangle.</span> <span class="why">Sort + fix longest side + two-pointer on remaining sides checking a+b &gt; c.</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p>Take arr = [-1, 0, 1, 2, -1, -4]. After sorting: [-4, -1, -1, 0, 1, 2]. We want all triplets summing to 0.</p>
+    <p>Fix arr[i] = -4 (index 0). We need two numbers from [-1,-1,0,1,2] summing to 4. Left pointer starts at index 1 (-1), right at index 5 (2). Sum = -1+2 = 1 ≠ 4. Since sum is too small, we need a bigger left value — left++. Continue... no pair found. Move to next i.</p>
+    <p>Fix arr[i] = -1 (index 1). We need two numbers summing to 1 from [-1,0,1,2]. Left=2(-1), right=5(2). Sum = -1+2 = 1 = target! Record [-1,-1,2]. <span class="aha">Now we must skip duplicates: advance left past any more -1s, advance right past any more 2s, then move both. Next: left=3(0), right=4(1). Sum=1. Record [-1,0,1]. Move both. Now left≥right, stop this inner loop.</span></p>
+    <div class="ascii">arr (sorted) = [-4, -1, -1,  0,  1,  2]
+                    i=0   i=1   L=2   3    4   R=5
+
+Fix i=1, arr[i]=-1, need pair summing to 1:
+left=2(-1), right=5(2):  -1+2=1 ✓  record [-1,-1,2]
+  skip dup lefts:  arr[2]=arr[3]? -1==0? no → no skip
+  skip dup rights: arr[5]=arr[4]? 2==1? no → no skip
+  left++→3, right--→4
+left=3(0), right=4(1):   0+1=1 ✓  record [-1,0,1]
+  left++→4, right--→3 → left≥right, stop
+
+Fix i=2, arr[2]=-1: arr[2]==arr[1] → SKIP (would produce duplicate triplets)</div>
+    <p>Why skip when arr[i]==arr[i-1]? Because the two-pointer sweep on subarray [i+1..n-1] will find exactly the same pairs as it did for i-1. Every triplet found for i=1 with arr[1]=-1 would be found again for i=2 with arr[2]=-1. The i&gt;0 guard prevents the very first index from being skipped.</p>
   </div>
 
-  <div class="section-label">&#9314; Step-by-Step Logic</div>
-  <div class="steps"><ol>
-    <li>Sort the array.</li>
-    <li>For each i from 0 to n&minus;3: if <code>arr[i] &gt; 0</code>, break (sorted, so no triple can sum to 0). Skip i if it duplicates arr[i&minus;1].</li>
-    <li>Set <code>left = i+1</code>, <code>right = n-1</code>.</li>
-    <li>Compute <code>sum = arr[i] + arr[left] + arr[right]</code>.</li>
-    <li>If sum == 0: record the triple, then skip duplicate lefts and rights, then advance both pointers.</li>
-    <li>If sum &gt; 0: right-- (need smaller). If sum &lt; 0: left++ (need larger).</li>
-  </ol></div>
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+  <div class="pseudo">PSEUDOCODE:
+  sort(arr)
+  for i = 0 to n-3:
+      if arr[i] > 0: break           (sorted, nothing can sum to 0)
+      if i > 0 and arr[i]==arr[i-1]: continue   (skip duplicate i)
+      left = i+1, right = n-1
+      while left < right:
+          sum = arr[i] + arr[left] + arr[right]
+          if sum == 0:
+              record (arr[i], arr[left], arr[right])
+              skip duplicate lefts and rights
+              left++, right--
+          elif sum > 0: right--
+          else: left++</div>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
 
-  <div class="section-label">Diagram</div>
-  <div class="diagram">arr = [-4,-1,-1,0,1,2]  (sorted)
+int cmp_int(const void *a, const void *b) { return *(int*)a - *(int*)b; }
 
-i=0, arr[i]=-4:  left=1(-1), right=5(2): sum=-3 < 0 → left++
-                 left=2(-1), right=5(2): sum=-3 < 0 → left++
-                 left=3(0),  right=5(2): sum=-2 < 0 → left++
-                 left=4(1),  right=5(2): sum=-1 < 0 → left++ → left>=right, done
-i=1, arr[i]=-1:  left=2(-1), right=5(2): sum=0  ✓ → record [-1,-1,2], skip dups
-                 left=3(0),  right=4(1): sum=0  ✓ → record [-1,0,1]</div>
-
-  <div class="section-label">&#9316; Annotated Code</div>
-<pre><code class="language-c">#include &lt;stdlib.h&gt;
-#include &lt;string.h&gt;
-
-int cmp_int(const void *a, const void *b) {
-    return *(int*)a - *(int*)b;   /* ascending comparator for qsort */
-}
-
-/* Find all unique triplets that sum to zero.
-   result is a caller-allocated [n][3] array. Returns count of triplets. */
 int three_sum(int *arr, int n, int result[][3]) {
-    qsort(arr, n, sizeof(int), cmp_int);   /* sort so two-pointer logic works */
+    qsort(arr, n, sizeof(int), cmp_int);
+    /* WHY sort: two-pointer only works on sorted data. Sort cost O(n log n)
+       is dominated by the O(n²) outer loops. */
+
     int count = 0;
 
     for (int i = 0; i &lt; n - 2; i++) {
-        if (arr[i] &gt; 0) break;             /* sorted: no triple can sum to 0 now */
-        if (i &gt; 0 &amp;&amp; arr[i] == arr[i-1]) continue; /* skip duplicate fixed values */
+        if (arr[i] &gt; 0) break;
+        /* WHY: sorted array — if arr[i] > 0, all remaining elements are also > 0.
+           Three positives can never sum to 0. Safe to stop entirely. */
+
+        if (i &gt; 0 &amp;&amp; arr[i] == arr[i-1]) continue;
+        /* WHY: arr[i] is a duplicate of the previous fixed element.
+           The two-pointer sweep would find the same triplets again → skip.
+           i > 0 guard prevents skipping the very first element. */
 
         int left = i + 1, right = n - 1;
 
@@ -701,35 +1219,66 @@ int three_sum(int *arr, int n, int result[][3]) {
                 result[count][1] = arr[left];
                 result[count][2] = arr[right];
                 count++;
-                /* skip duplicate values on both sides to avoid duplicate triplets */
+
+                /* WHY these while loops: skip duplicate left values before moving.
+                   If arr[left] appears multiple times, each would produce the same triplet. */
                 while (left &lt; right &amp;&amp; arr[left]  == arr[left+1])  left++;
                 while (left &lt; right &amp;&amp; arr[right] == arr[right-1]) right--;
-                left++; right--;             /* move both pointers past the used values */
+
+                left++;  right--;
+                /* WHY: move past the values we just recorded */
+
             } else if (sum &gt; 0) {
-                right--;   /* sum too big: right value too large */
+                right--;
+                /* WHY: sum too large. Right element is biggest available.
+                   Only shrinking the right can reduce the sum. */
             } else {
-                left++;    /* sum too small: left value too small */
+                left++;
+                /* WHY: sum too small. Left element is smallest available.
+                   Only growing the left can increase the sum. */
             }
         }
     }
     return count;
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
-  <div class="dry-run">arr (after sort) = [-1, 0, 1, 2, -1, -4] → [-4,-1,-1,0,1,2]
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run">Input: [-1, 0, 1, 2, -1, -4] → after sort: [-4, -1, -1, 0, 1, 2]
 
-i=1, arr[1]=-1, left=2(-1), right=5(2): sum=0 → record [-1,-1,2], count=1
-  skip dups: left stays (no dup), right stays → left++, right--
-  left=3(0), right=4(1): sum=0 → record [-1,0,1], count=2
-  left++, right-- → left=4, right=3 → left>=right, break
+i=0, arr[0]=-4  (not > 0, not dup):
+  left=1(-1), right=5(2): sum=-4-1+2=-3 < 0 → left++
+  left=2(-1), right=5(2): sum=-3 < 0 → left++
+  left=3(0),  right=5(2): sum=-2 < 0 → left++
+  left=4(1),  right=5(2): sum=-1 < 0 → left++ → left=5 ≥ right=5, stop
 
-i=2, arr[2]=-1: i>0 && arr[2]==arr[1] → skip (duplicate fixed value)
+i=1, arr[1]=-1  (not > 0, not dup):
+  left=2(-1), right=5(2): sum=-1-1+2=0 ✓ → record [-1,-1,2]
+    skip dup left:  arr[2]=-1, arr[3]=0, -1≠0 → no skip
+    skip dup right: arr[5]=2, arr[4]=1, 2≠1 → no skip
+    left++→3, right--→4
+  left=3(0), right=4(1): sum=-1+0+1=0 ✓ → record [-1,0,1]
+    left++→4, right--→3 → left ≥ right, stop
 
-Final: [[-1,-1,2], [-1,0,1]]  ✓</div>
+i=2, arr[2]=-1: i=2 > 0 AND arr[2]==-1==arr[1]==-1 → SKIP
+
+i=3, arr[3]=0:  left=4(1), right=5(2): sum=3 > 0 → right-- → left ≥ right, stop
+
+Result: [[-1,-1,2], [-1,0,1]]  count=2 ✓</div>
 
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Duplicate triplets from not skipping duplicates</div>
-    <p>If you record a match and immediately do <code>left++; right--</code> without first advancing past identical values, you will record the same triplet multiple times. After finding a match, advance both pointers past any consecutive equal values, then do the final left++/right--.</p>
+    <div class="gotcha-title">&#9888; The Mistake Everyone Makes: Missing duplicate skipping → repeated triplets</div>
+    <p><strong>What goes wrong without duplicate skipping:</strong> If arr = [-2, 0, 0, 2, 2], fixing i=0 (value -2), when left finds 0 and right finds 2 (sum=0), without skipping you record [-2,0,2]. Then left++ and right-- find the second 0 and second 2 — and record [-2,0,2] again. Duplicate output.</p>
+    <p><strong>Fix:</strong> After recording a match, advance left past all consecutive equal-value elements with <code>while (arr[left]==arr[left+1]) left++</code>, do the same for right, then do the final left++/right--.</p>
+    <p><strong>Rule to remember:</strong> Three places to skip duplicates: (1) the outer loop's fixed i, (2) left after a match, (3) right after a match.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">&#10003; Confidence Check — can you answer these without looking?</div>
+    <ol>
+      <li>Why do we sort before applying the two-pointer? What breaks if we skip the sort?</li>
+      <li>The code checks <code>if (arr[i] &gt; 0) break</code>. Why break and not continue?</li>
+      <li>If arr = [0, 0, 0, 0], how many triplets should be returned? Trace the algorithm to verify.</li>
+    </ol>
   </div>
 
   <div class="leetcode">
@@ -737,7 +1286,15 @@ Final: [[-1,-1,2], [-1,0,1]]  ✓</div>
     <span>16 &middot; 3Sum Closest</span>
     <span>18 &middot; 4Sum</span>
   </div>
-  <div class="trigger">When you see: find unique triplets summing to a target &#8594; think: sort + fix one element + two-pointer for the remaining pair</div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Find unique triplets summing to target &#8594; sort + fix one element + two-pointer inner loop + skip duplicates at all three levels.</div>
+    <ul class="trigger-variants">
+      <li>Unique triplets summing to zero → Three Sum template.</li>
+      <li>Triplet closest to target → same skeleton, track min abs difference.</li>
+      <li>Four Sum → fix two with nested loops, two-pointer as innermost.</li>
+    </ul>
+  </div>
 </div>
 
 <!-- ================================================================ P08 -->
@@ -747,72 +1304,116 @@ Final: [[-1,-1,2], [-1,0,1]]  ✓</div>
     <span class="pattern-name">Two Pointer: Container With Most Water</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    You have a row of walls of different heights. You want to pick two walls that, together, hold the most water.
-    The amount of water is: distance between walls &times; height of the shorter wall (because water spills over the shorter one).
-    The trick is deciding which wall to move inward. Hint: always move the shorter one — moving the taller one can only hurt you.
+  <div class="section-label">&#9312; Background</div>
+  <div class="bg-section">
+    <p>Given n vertical walls with heights h[0]..h[n-1], find the two walls that enclose the most water. The water volume between walls at positions i and j is (j − i) × min(h[i], h[j]). Brute force checks all n×(n-1)/2 pairs — O(n²). The two-pointer technique reduces this to O(n) with a beautiful greedy argument.</p>
+    <p>The key insight is about what happens when we make a move. We start with the widest possible configuration: left at index 0, right at index n-1. This maximizes width. Now, to improve, we must move one pointer inward — reducing width by 1. The question is which one to move.</p>
+    <p>If we move the taller wall, width decreases and the limiting height (the shorter wall) can only stay the same or decrease — because the shorter wall is still there unchanged. So moving the taller wall is guaranteed to either keep area the same or make it worse. Moving the shorter wall is the only bet that can pay off: we accept a smaller width in exchange for a chance at a taller shorter-wall. <span class="aha">This is the greedy proof: any optimal pair can be reached by always moving the shorter wall.</span></p>
+    <p>This pattern has applications beyond the literal water problem. In networking, you might want to maximize throughput between two endpoints where bandwidth is limited by the minimum of the two link speeds — moving the slower link to the next faster option follows the same logic. In distributed systems, the minimum of two latencies limits overall response time — you want to "move" the slower component first.</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    The shorter wall is the bottleneck. Moving the taller wall inward shrinks width AND can only keep or lower the min-height — guaranteed worse. Moving the shorter wall is the only chance to find a taller replacement that compensates for reduced width.
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="where-list">
+    <li><span class="sit">Container with most water — maximize area between two heights.</span> <span class="why">The canonical use case for this greedy two-pointer.</span></li>
+    <li><span class="sit">Finding the pair of points maximizing some width×height product.</span> <span class="why">Same greedy argument whenever the product is bounded by the minimum of two values.</span></li>
+    <li><span class="sit">Networking: maximize throughput between two nodes limited by min link speed.</span> <span class="why">Greedy: always upgrade the slower link first for best marginal gain.</span></li>
+    <li><span class="sit">Trapping rain water — different but related (needs both walls simultaneously).</span> <span class="why">Related problem — uses prefix max arrays instead of two-pointer, but same reasoning.</span></li>
+    <li><span class="sit">Any problem with two endpoints + area/volume = distance × min-of-heights.</span> <span class="why">Recognize the min(h[l], h[r]) × width formula → reach for this pattern.</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p>Take h = [1, 8, 6, 2, 5, 4, 8, 3, 7]. We want the max of (j-i) × min(h[i], h[j]).</p>
+    <p>Start widest: left=0 (h=1), right=8 (h=7). Area = 8 × 1 = 8. Now, which pointer to move? If we move right (the taller one, h=7), width becomes 7, and the cap is still h[0]=1 (since 1 is still there). Best possible area: 7×1=7 — worse. <span class="aha">Moving the taller wall can only maintain or reduce the area. So we move the shorter wall (left, h=1).</span></p>
+    <div class="ascii">h = [1,  8,  6,  2,  5,  4,  8,  3,  7]
+      L=0               ...             R=8
+area = (8-0) × min(1,7) = 8×1 = 8
+
+h[0]=1 < h[8]=7 → move LEFT pointer (shorter wall)
+      [1,  8,  6,  2,  5,  4,  8,  3,  7]
+           L=1                        R=8
+area = (8-1) × min(8,7) = 7×7 = 49  ← new max!
+
+h[1]=8 > h[8]=7 → move RIGHT pointer (shorter wall)
+      [1,  8,  6,  2,  5,  4,  8,  3,  7]
+           L=1                    R=7
+area = (7-1) × min(8,3) = 6×3 = 18  (less than 49)
+
+...continue until left meets right. Max = 49</div>
+    <p>The algorithm never misses the optimal pair. Here is the formal argument: if the optimal pair is (i, j) with i &lt; j, the algorithm will have left=i or right=j at some point during the traversal. When it does, it will compute that area. The key is that we never "skip" any candidate we should have computed — every potentially-optimal pair gets evaluated.</p>
   </div>
 
-  <div class="section-label">&#9314; Step-by-Step Logic</div>
-  <div class="steps"><ol>
-    <li>Set <code>left = 0</code>, <code>right = n-1</code>, <code>max_area = 0</code>.</li>
-    <li>Compute area: <code>(right - left) * min(heights[left], heights[right])</code>.</li>
-    <li>Update max_area if this area is larger.</li>
-    <li>Move the pointer pointing to the shorter wall: if heights[left] &lt; heights[right], left++; else right--.</li>
-    <li>Repeat until left &gt;= right.</li>
-  </ol></div>
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+  <div class="pseudo">PSEUDOCODE:
+  left = 0, right = n-1, max_area = 0
+  while left < right:
+      area = (right - left) * min(h[left], h[right])
+      update max_area
+      if h[left] < h[right]: left++    (shorter = left, move it)
+      else:                   right--   (shorter = right, move it)</div>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
 
-  <div class="section-label">Diagram</div>
-  <div class="diagram">heights = [1, 8, 6, 2, 5, 4, 8, 3, 7]
-indices:   0  1  2  3  4  5  6  7  8
-
-Step 1: l=0(h=1) r=8(h=7)  area=8*1=8   shorter=left → left++
-Step 2: l=1(h=8) r=8(h=7)  area=7*7=49  shorter=right → right--
-Step 3: l=1(h=8) r=7(h=3)  area=6*3=18  shorter=right → right--
-Step 4: l=1(h=8) r=6(h=8)  area=5*8=40  equal→right-- ...
-...max_area = 49 ✓</div>
-
-  <div class="section-label">&#9316; Annotated Code</div>
-<pre><code class="language-c">/* Return maximum water area between any two heights. */
 int max_water(int *h, int n) {
-    int left     = 0;       /* left wall starts at the beginning */
-    int right    = n - 1;   /* right wall starts at the end */
-    int max_area = 0;
+    int left = 0, right = n - 1, max_area = 0;
+    /* WHY start at extremes: widest possible configuration first.
+       We never need to consider pairs with wider separation — these are all considered. */
 
     while (left &lt; right) {
-        int width  = right - left;                    /* horizontal distance */
-        int height = h[left] &lt; h[right] ? h[left] : h[right]; /* shorter wall limits water */
-        int area   = width * height;
+        int width  = right - left;
+        int height = h[left] &lt; h[right] ? h[left] : h[right];
+        /* WHY min(h[left], h[right]): water spills over the shorter wall.
+           Height is limited by the bottleneck wall, not the taller one. */
 
-        if (area &gt; max_area) max_area = area;         /* keep the best seen so far */
+        int area = width * height;
+        if (area &gt; max_area) max_area = area;
 
+        /* WHY move the shorter wall:
+           Moving the TALLER wall → width decreases, min-height stays or decreases → area ≤ current.
+           Moving the SHORTER wall → width decreases but min-height could increase → area might improve.
+           Taller wall is "done contributing" as a bottleneck; shorter wall has upside potential. */
         if (h[left] &lt; h[right])
-            left++;    /* left is the bottleneck; only moving left can help */
+            left++;
         else
-            right--;   /* right is bottleneck (or equal); move it */
+            right--;
+        /* WHY else (not else-if): when equal, either move is fine — moving right is arbitrary. */
     }
     return max_area;
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
-  <div class="dry-run">h = [1, 8, 6, 2, 5, 4, 8, 3, 7]
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run">h = [1, 8, 6, 2, 5, 4, 8, 3, 7]  (n=9)
 
-l=0(1),  r=8(7): width=8,  min=1,  area=8   max=8   left<right → l++
-l=1(8),  r=8(7): width=7,  min=7,  area=49  max=49  left>right → r--
-l=1(8),  r=7(3): width=6,  min=3,  area=18  max=49  left>right → r--
-l=1(8),  r=6(8): width=5,  min=8,  area=40  max=49  equal      → r--
-... (remaining areas all < 49)
-Answer: 49 ✓</div>
+  Step  left  h[l]  right  h[r]  width  height  area   max    move
+  ────  ────  ────  ─────  ────  ─────  ──────  ────   ───    ────
+   1      0    1      8     7      8      1       8      8    left++ (1<7)
+   2      1    8      8     7      7      7      49     49    right--(8>7)
+   3      1    8      7     3      6      3      18     49    right--(8>3)
+   4      1    8      6     8      5      8      40     49    right--(tie, r--)
+   5      1    8      5     4      4      4      16     49    right--(8>4)
+   6      1    8      4     5      3      5      15     49    right--(8>5)
+   7      1    8      3     6      2      6      12     49    right--(8>6)
+   8      1    8      2     2      1      2       2     49    right--(8>2)
+   9:  left=1 ≥ right=1 → stop
+
+Answer: 49 ✓  (walls at index 1 and 8, heights 8 and 7, width 7)
+
+── EDGE CASE: two walls ─────────────────────────────────────────────
+h = [5, 3]:  area = 1 × min(5,3) = 3. Answer: 3.</div>
 
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Moving the taller wall hoping to find more water</div>
-    <p>Moving the taller wall inward always reduces width. The height can only stay the same or decrease (since you already have the shorter wall as the cap). You are guaranteed to lose area or stay equal. The only rational move is to give the shorter wall a chance to improve. Always move the shorter wall.</p>
+    <div class="gotcha-title">&#9888; The Mistake Everyone Makes: Moving the taller wall to "explore more"</div>
+    <p><strong>Wrong intuition:</strong> "Maybe the taller wall is blocking something better — let me move it to look." This is provably suboptimal. If you move the taller wall when h[l] &lt; h[r]: the new area is at most (width-1) × h[l] which is strictly less than current area (width × h[l]). You can only do worse.</p>
+    <p><strong>The proof:</strong> Current area = width × h[l] (where h[l] is shorter). Moving right: new area ≤ (width-1) × h[l] &lt; width × h[l]. Guaranteed worse. So move the shorter one.</p>
+    <p><strong>Rule to remember:</strong> The shorter wall is the bottleneck. Only by replacing the bottleneck can you possibly improve. Move the shorter pointer.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">&#10003; Confidence Check — can you answer these without looking?</div>
+    <ol>
+      <li>When h[left] == h[right], which pointer do we move? Does it matter? Why or why not?</li>
+      <li>Give a formal one-sentence argument for why moving the taller wall never improves the answer.</li>
+      <li>How does this problem differ from Trapping Rain Water (P43)? Why can't you use the same algorithm?</li>
+    </ol>
   </div>
 
   <div class="leetcode">
@@ -820,7 +1421,15 @@ Answer: 49 ✓</div>
     <span>42 &middot; Trapping Rain Water</span>
     <span>84 &middot; Largest Rectangle in Histogram</span>
   </div>
-  <div class="trigger">When you see: two walls / bars + maximize area between them &#8594; think: two pointers from both ends, always move the shorter wall inward</div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Two walls + maximize (distance × min-height) &#8594; two pointers from ends, always move the shorter wall inward.</div>
+    <ul class="trigger-variants">
+      <li>Maximize area bounded by two lines → two-pointer, move shorter wall.</li>
+      <li>Minimize some bounded quantity between two indices → same convergence logic.</li>
+      <li>Trapping rain water (total trapped, not max single container) → use prefix max arrays instead.</li>
+    </ul>
+  </div>
 </div>
 
 <!-- ================================================================ P09 -->
@@ -830,76 +1439,131 @@ Answer: 49 ✓</div>
     <span class="pattern-name">Sliding Window: Fixed Size Maximum Sum</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    A camera frame of fixed width slides across a film strip one frame at a time.
-    At each position you see exactly k elements.
-    Instead of adding up all k elements at every position (O(n&times;k)), you maintain a running window sum: subtract the element leaving the left edge, add the element entering the right edge. O(n) total.
+  <div class="section-label">&#9312; Background</div>
+  <div class="bg-section">
+    <p>Imagine you are monitoring a network switch and want to find the busiest consecutive five-second window in an hour-long traffic log. The naive approach recomputes the sum from scratch for every possible window position: that's O(n&times;k) operations, which for n=3600 seconds and k=5 still seems fine, but at millisecond granularity with millions of samples it becomes prohibitively slow.</p>
+    <p>The slow solution's flaw is that it discards the work it just did. When the window slides one step right, 4 of the 5 elements are identical to the previous window. We recompute their contribution for no reason. The fix is elegant: instead of recomputing the full sum, maintain a running total and make two O(1) adjustments — subtract the element that fell off the left edge, add the element that entered on the right.</p>
+    <p>This "slide by delta" idea appears everywhere signals and data streams are analyzed. Digital signal processing applies finite impulse response (FIR) filters this way — each output sample is the dot product of a fixed-length coefficient array with the last k input samples, and as the input stream advances the FIR filter just updates by one add and one subtract. Genomics tools scan for k-mers (substrings of length k) across DNA sequences using the same rolling-hash variation of this idea.</p>
+    <p>In embedded systems and firmware, circular-buffer designs often need the running sum of the last N ADC readings to compute a smoothed sensor value without storing the sum of all previous readings — the fixed-size window pattern maps directly onto that constraint. The pattern is deceptively simple but it is the foundation for all sliding-window reasoning: master it here before moving to the variable-size variant.</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    When a fixed-size window slides one step right, only one element leaves (the leftmost) and one enters (the new right). The rest of the window is unchanged. So window_sum updates in O(1) per step.
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="where-list">
+    <li><span class="sit">Max/min/average over a rolling window of exactly k elements</span> — <span class="why">any fixed-size aggregation query reduces to "build first window, slide by delta."</span></li>
+    <li><span class="sit">Network telemetry: peak throughput in any consecutive k milliseconds</span> — <span class="why">the window size is fixed by the SLA measurement interval; you slide over the packet-count array.</span></li>
+    <li><span class="sit">Firmware smoothing: running average of last N ADC readings</span> — <span class="why">embedded devices average sensor readings over a fixed history; the window slides as new samples arrive.</span></li>
+    <li><span class="sit">LeetCode 643 &mdash; Maximum Average Subarray I</span> — <span class="why">textbook application; max average = max sum / k, same window arithmetic.</span></li>
+    <li><span class="sit">LeetCode 438 &mdash; Find All Anagrams in a String</span> — <span class="why">uses a fixed-size frequency window and checks equality at each position.</span></li>
+    <li><span class="sit">FIR filters in DSP: output[i] = sum of coefficients &times; input[i..i+k-1]</span> — <span class="why">the sliding-sum is the unweighted version; weighted sums follow the same O(n) sliding structure.</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic From Scratch</div>
+  <div class="logic-build">
+    <p>Start with a tiny array so you can see every step without arithmetic fatigue. Let arr = [2, 3, 4, 1, 5] and k = 3. We want the maximum sum over any three consecutive elements.</p>
+    <p>Step one: compute the first window by hand. Window [0..2] = 2 + 3 + 4 = 9. Write this down as window_sum = 9, max_sum = 9.</p>
+    <div class="ascii">arr:  [ 2 | 3 | 4 | 1 | 5 ]
+         [←─── window ───→]
+          idx 0   1   2
+window_sum = 2+3+4 = 9</div>
+    <p>Step two: slide the window one position right. The new right element is arr[3] = 1. The element leaving is arr[0] = 2. <span class="aha">Notice that we do not touch arr[1] or arr[2] at all — they stay inside the window and their contribution is already embedded in window_sum.</span></p>
+    <div class="ascii">arr:  [ 2 | 3 | 4 | 1 | 5 ]
+              [←─── window ───→]
+          out  idx 1   2   3
+window_sum = 9 - 2 + 1 = 8   (max stays 9)</div>
+    <p>Step three: slide again. New right = arr[4] = 5. Element leaving = arr[1] = 3.</p>
+    <div class="ascii">arr:  [ 2 | 3 | 4 | 1 | 5 ]
+                  [←─── window ───→]
+              out  idx 2   3   4
+window_sum = 8 - 3 + 5 = 10  (max updates to 10)</div>
+    <p><span class="aha">The general formula when the right edge is at index i: subtract arr[i - k] (the element that just left), add arr[i] (the element that just entered). The leaving index is always exactly k positions behind the entering index.</span></p>
+    <p>Before writing any code, write the two-phase plain-English algorithm: (1) seed the sum with the first k elements; (2) for every subsequent index i, update window_sum = window_sum - arr[i-k] + arr[i], then check against max_sum.</p>
   </div>
 
-  <div class="section-label">&#9314; Step-by-Step Logic</div>
-  <div class="steps"><ol>
-    <li>Compute the sum of the first window: arr[0..k-1].</li>
-    <li>Set max_sum = window_sum.</li>
-    <li>For each i from k to n&minus;1: add arr[i] (new right element), subtract arr[i&minus;k] (old left element).</li>
-    <li>Update max_sum if window_sum is larger.</li>
-  </ol></div>
-
-  <div class="section-label">Diagram</div>
-  <div class="diagram">arr = [2, 3, 4, 1, 5],  k = 3
-
-Window [0..2]:       2+3+4 = 9   ← initial
-Slide to [1..3]: +1 -2 = 9-2+1 = 8
-Slide to [2..4]: +5 -3 = 8-3+5 = 10 ← max ✓</div>
-
-  <div class="section-label">&#9316; Annotated Code</div>
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+  <div class="pseudo">PSEUDOCODE
+  window_sum = sum(arr[0..k-1])
+  max_sum = window_sum
+  for i from k to n-1:
+      window_sum += arr[i]       // right element enters
+      window_sum -= arr[i - k]   // left element exits
+      max_sum = max(max_sum, window_sum)
+  return max_sum</div>
 <pre><code class="language-c">/* Maximum sum of any contiguous subarray of exactly k elements. */
 int max_sum_window(int *arr, int n, int k) {
     int window_sum = 0;
 
-    /* build the first window [0 .. k-1] */
+    /* Seed the first window [0..k-1].
+       We do this separately because the slide formula needs a previous
+       window_sum to update — there is no "previous" for the first window. */
     for (int i = 0; i &lt; k; i++)
         window_sum += arr[i];
 
-    int max_sum = window_sum;   /* first window is our initial best */
+    int max_sum = window_sum;
+    /* The first window is a valid answer; initialise max_sum here
+       so the slide loop only needs to check, not initialise. */
 
-    /* slide the window one step at a time */
     for (int i = k; i &lt; n; i++) {
-        window_sum += arr[i];       /* new element enters from the right */
-        window_sum -= arr[i - k];   /* old element exits from the left */
-        /* window now covers [i-k+1 .. i] */
+        /* arr[i] is the new right element entering the window. */
+        window_sum += arr[i];
+
+        /* arr[i - k] is the element that was at the LEFT edge before this slide.
+           After sliding right by 1, the new left edge is at (i - k + 1),
+           so (i - k) just exited. Subtract it to keep the sum correct. */
+        window_sum -= arr[i - k];
+
+        /* Update the global best. */
         if (window_sum &gt; max_sum)
             max_sum = window_sum;
     }
     return max_sum;
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
-  <div class="dry-run">arr = [2, 3, 4, 1, 5],  k=3
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run">arr = [2, 3, 4, 1, 5],  k = 3
 
-Init window [0..2]: sum = 2+3+4 = 9,  max=9
+Seed phase (i = 0..2):
+  window_sum = 2 + 3 + 4 = 9
+  max_sum = 9
 
-i=3: +arr[3]=1, -arr[0]=2 → sum=9+1-2=8   max=9
-i=4: +arr[4]=5, -arr[1]=3 → sum=8+5-3=10  max=10
+Slide phase:
+i | arr[i] | arr[i-k] | delta  | window_sum | max_sum
+--|--------|----------|--------|------------|--------
+3 |   1    |  arr[0]=2| +1 -2  |    8       |   9
+4 |   5    |  arr[1]=3| +5 -3  |   10       |  10  ←
 
-Answer: 10  ✓</div>
+Answer: 10  ✓
+
+Edge case — k equals n (only one window):
+arr = [1, 2, 3],  k = 3
+  Seed: window_sum = 6, max_sum = 6
+  Slide loop: i starts at 3, condition i&lt;3 is false → loop never runs
+  Answer: 6  ✓  (no off-by-one, the seed already handled it)</div>
 
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Using i&minus;k instead of i&minus;k+1 for the window left edge</div>
-    <p>When the right edge is at index i (after the slide loop step), the left edge is at <code>i - k + 1</code>. The element leaving the window is <code>arr[i - k]</code> (the element just before the new left edge). Getting this wrong shifts the window and produces wrong sums. Draw the window bounds explicitly when in doubt.</p>
+    <div class="gotcha-title">&#9888; Gotcha: subtracting arr[i-k+1] instead of arr[i-k]</div>
+    <p><strong>Wrong:</strong> <code>window_sum -= arr[i - k + 1];</code> — this subtracts the new left edge element instead of the one that exited, shrinking the window by one more position than intended, so every window sum is wrong by one element.</p>
+    <p><strong>Correct:</strong> <code>window_sum -= arr[i - k];</code> — when the right edge is i, the exiting element is at index i-k (one to the left of the new left edge at i-k+1).</p>
+    <p><strong>One-line rule:</strong> the element that exits is always exactly k positions to the left of the element that enters.</p>
   </div>
 
-  <div class="leetcode">
-    <span>643 &middot; Maximum Average Subarray I</span>
-    <span>438 &middot; Find All Anagrams in a String</span>
-    <span>567 &middot; Permutation in String</span>
+  <div class="section-label">&#9317; Confidence Check</div>
+  <div class="confidence">
+    <div class="confidence-title">Can you answer these without looking at the code?</div>
+    <ol>
+      <li>Why must you build the first window in a separate loop before starting the slide loop?</li>
+      <li>If the array has n elements and the window size is k, how many times does the slide loop body execute?</li>
+      <li>How would you adapt this pattern to find the minimum average subarray of size k?</li>
+    </ol>
   </div>
-  <div class="trigger">When you see: fixed-size subarray + max/min/average &#8594; think: build first window, then slide by subtracting old left and adding new right</div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">When you see: fixed-size subarray + aggregate (sum / max / average) &rarr; seed first window, then slide: add arr[i], subtract arr[i&minus;k]</div>
+    <ul class="trigger-variants">
+      <li>Max average over k elements &rarr; same window, divide by k at each step (or divide once at the end)</li>
+      <li>Count anagrams / permutations of pattern in text &rarr; fixed-size frequency window, compare freq arrays</li>
+      <li>Weighted moving average / FIR filter &rarr; weighted sum updates by removing weighted old left, adding weighted new right</li>
+    </ul>
+  </div>
 </div>
 
 <!-- ================================================================ P10 -->
@@ -909,90 +1573,130 @@ Answer: 10  ✓</div>
     <span class="pattern-name">Sliding Window: Variable Size (Shrink When Invalid)</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    Imagine a rubber band stretched around a group of items.
-    You keep stretching it to include the next item on the right.
-    When the group violates some rule (too many items, sum too large, etc.), you snap the left edge forward until the rule is satisfied again.
-    The window grows and shrinks dynamically — it's never fixed in size.
+  <div class="section-label">&#9312; Background</div>
+  <div class="bg-section">
+    <p>The fixed-size sliding window from P09 works when the window length is given. But many problems ask for the shortest or longest subarray satisfying a condition — and you do not know the length in advance. A brute-force approach tries every possible start and end index, recomputing the aggregate each time: O(n²) or O(n²k) depending on what you're computing. That is too slow for n = 10⁵.</p>
+    <p>The key insight that makes the variable window work in O(n) is that the left pointer never needs to go backwards. Once an element is no longer part of any promising window, it can be permanently discarded. Think of a sliding rubber band: you stretch it right to include new elements, and when the rubber band encloses something invalid, you pinch the left end and slide it forward — never backward — until validity is restored. Every element enters the window exactly once (when right passes over it) and exits exactly once (when left passes over it), so the total work is O(n) regardless of how many shrink steps happen.</p>
+    <p>This pattern is not just for sums. The condition can be "at most K distinct characters," "product less than K," "no duplicate elements," or any property that becomes invalid as the window grows and becomes valid again as the window shrinks. The critical requirement is monotonicity: if the window is invalid, adding more elements on the right cannot fix it — only removing elements from the left can. That monotonicity guarantee is what lets both pointers stay O(n) total.</p>
+    <p>In real systems this pattern appears in rate limiters (find the shortest time window with more than K requests), memory allocators (find the smallest contiguous free block satisfying a size requirement), and TCP receive-buffer analysis (find the minimum window of packets that covers a required acknowledgment range).</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    Right pointer always moves forward (O(n) total). Left pointer only moves forward to fix violations. Since both pointers only move right, the total work is O(n) — each element enters and leaves the window at most once.
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="where-list">
+    <li><span class="sit">LeetCode 209 &mdash; Minimum Size Subarray Sum</span> — <span class="why">textbook application: shrink while sum &ge; target, record minimum length.</span></li>
+    <li><span class="sit">LeetCode 3 &mdash; Longest Substring Without Repeating Characters</span> — <span class="why">grow right until a character repeats; shrink left until the repeat is gone; track max length.</span></li>
+    <li><span class="sit">LeetCode 76 &mdash; Minimum Window Substring</span> — <span class="why">variable window with a frequency-map condition; same grow-then-shrink skeleton.</span></li>
+    <li><span class="sit">Rate limiting: shortest interval containing more than K events</span> — <span class="why">event timestamps are the array; shrink-while-condition finds the tightest window.</span></li>
+    <li><span class="sit">Embedded / RTOS: smallest consecutive sample window whose average exceeds a threshold</span> — <span class="why">sensor data streams naturally map to arrays; fixed target with variable window size.</span></li>
+    <li><span class="sit">Network analysis: minimum consecutive packets whose total size covers a required byte count</span> — <span class="why">packet sizes are the array; find the shortest burst window covering the SLA threshold.</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic From Scratch</div>
+  <div class="logic-build">
+    <p>Use arr = [2, 3, 1, 2, 4, 3] with target = 7 (minimum-length subarray with sum &ge; 7). There are 6 elements; let's trace what happens step by step.</p>
+    <p>Start with left = 0, window_sum = 0, min_len = ∞. The right pointer moves forward one step at a time. Each step, include arr[right] in the window.</p>
+    <div class="ascii">right=0: window=[2]         sum=2   (2 &lt; 7, keep growing)
+right=1: window=[2,3]       sum=5   (5 &lt; 7, keep growing)
+right=2: window=[2,3,1]     sum=6   (6 &lt; 7, keep growing)
+right=3: window=[2,3,1,2]   sum=8   (8 ≥ 7, condition met!)</div>
+    <p><span class="aha">Notice that now we try to shrink. Can we remove elements from the left and still have sum &ge; 7?</span> Remove arr[0]=2: sum becomes 6. That's below 7, so we stop shrinking. We recorded length=4 before we shrunk. min_len = 4.</p>
+    <div class="ascii">right=4: add arr[4]=4, sum=6+4=10  (10 ≥ 7, condition met again)
+  shrink: remove arr[1]=3, sum=7, len=4 (min still 4)
+          still ≥ 7! remove arr[2]=1, sum=6, len=3 → stop.  min_len=3</div>
+    <p>Keep going for right=5. After all steps the answer is 2 (the window [4,3]).</p>
+    <p><span class="aha">The key realisation: the shrink step uses a WHILE loop, not an IF. At right=4, two shrink steps happened in a row. An IF would have missed the second, giving min_len=4 instead of 3.</span></p>
+    <p>Plain-English algorithm: grow right until condition is met; then shrink left (in a while loop) as long as condition holds, recording the window size each time before shrinking; repeat until right exhausts the array.</p>
   </div>
 
-  <div class="section-label">&#9314; Step-by-Step Logic</div>
-  <div class="steps"><ol>
-    <li>Initialize <code>left = 0</code>, <code>window_sum = 0</code>, <code>min_len = INT_MAX</code>.</li>
-    <li>Move right pointer forward, adding arr[right] to window_sum.</li>
-    <li>While the window satisfies the condition (sum &ge; target): record the window length, then shrink from left: subtract arr[left], left++.</li>
-    <li>Repeat until right reaches the end.</li>
-    <li>Return min_len (or 0 if never satisfied).</li>
-  </ol></div>
-
-  <div class="section-label">Diagram</div>
-  <div class="diagram">arr = [2, 3, 1, 2, 4, 3],  target = 7
-
-right=0: sum=2       < 7
-right=1: sum=5       < 7
-right=2: sum=6       < 7
-right=3: sum=8  >= 7 → len=4, shrink: -arr[0]=2, left=1, sum=6
-right=4: sum=10 >= 7 → len=4, shrink: -arr[1]=3, left=2, sum=7
-         sum=7  >= 7 → len=3, shrink: -arr[2]=1, left=3, sum=6
-right=5: sum=9  >= 7 → len=3, shrink: -arr[3]=2, left=4, sum=7
-         sum=7  >= 7 → len=2 ← new min! shrink: -arr[4]=4, left=5, sum=3
-Answer: 2 ✓</div>
-
-  <div class="section-label">&#9316; Annotated Code</div>
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+  <div class="pseudo">PSEUDOCODE
+  left = 0, window_sum = 0, min_len = INFINITY
+  for right in 0..n-1:
+      window_sum += arr[right]          // always expand right
+      while window_sum >= target:       // shrink as long as valid
+          min_len = min(min_len, right - left + 1)
+          window_sum -= arr[left]
+          left++
+  return (min_len == INFINITY) ? 0 : min_len</div>
 <pre><code class="language-c">#include &lt;limits.h&gt;
 
-/* Find length of smallest contiguous subarray with sum >= target.
-   Returns 0 if no such subarray exists. */
+/* Minimum length subarray with sum &gt;= target.  Returns 0 if none. */
 int min_subarray_len(int *arr, int n, int target) {
     int left       = 0;
     int window_sum = 0;
-    int min_len    = INT_MAX;   /* start with "infinity"; any valid window beats this */
+    int min_len    = INT_MAX;  /* sentinel: any real window length is smaller */
 
     for (int right = 0; right &lt; n; right++) {
-        window_sum += arr[right];   /* expand: bring right element into window */
+        /* Always expand: the right pointer never waits.
+           Every element gets a chance to contribute to a valid window. */
+        window_sum += arr[right];
 
-        /* shrink from left for as long as the window condition holds */
+        /* Shrink from the left for as long as the window is valid.
+           Using WHILE (not IF): multiple shrink steps may happen at a single
+           right-pointer position — each gives a potentially shorter valid window. */
         while (window_sum &gt;= target) {
-            int len = right - left + 1;          /* current window size */
-            if (len &lt; min_len) min_len = len;    /* update best if smaller */
-            window_sum -= arr[left];             /* remove left element from window */
-            left++;                              /* shrink window from the left */
+            int len = right - left + 1;       /* window is [left..right] */
+            if (len &lt; min_len) min_len = len; /* record before shrinking */
+
+            /* Remove the leftmost element and slide left forward.
+               After this, the window may no longer satisfy the condition,
+               which is fine — we exit the while and let right advance. */
+            window_sum -= arr[left];
+            left++;
         }
     }
-    return min_len == INT_MAX ? 0 : min_len;   /* 0 means no valid subarray found */
+
+    /* INT_MAX means the condition was never satisfied. */
+    return min_len == INT_MAX ? 0 : min_len;
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
+  <div class="section-label">&#9316; Dry Run</div>
   <div class="dry-run">arr = [2, 3, 1, 2, 4, 3],  target = 7
 
-right=0: sum=2  not>=7
-right=1: sum=5  not>=7
-right=2: sum=6  not>=7
-right=3: sum=8  >=7 → len=4(min=4), -arr[0]=2 left=1 sum=6 → not>=7
-right=4: sum=10 >=7 → len=4(min=4), -arr[1]=3 left=2 sum=7
-         sum=7  >=7 → len=3(min=3), -arr[2]=1 left=3 sum=6 → not>=7
-right=5: sum=9  >=7 → len=3(min=3), -arr[3]=2 left=4 sum=7
-         sum=7  >=7 → len=2(min=2), -arr[4]=4 left=5 sum=3 → not>=7
+right | arr[r] | window_sum | action                       | min_len
+------|--------|------------|------------------------------|--------
+  0   |   2    |     2      | &lt; 7, no shrink                |   ∞
+  1   |   3    |     5      | &lt; 7, no shrink                |   ∞
+  2   |   1    |     6      | &lt; 7, no shrink                |   ∞
+  3   |   2    |     8      | ≥ 7 → len=4(min=4), -arr[0]=2, left=1, sum=6   |   4
+      |        |     6      | &lt; 7, stop shrinking           |   4
+  4   |   4    |    10      | ≥ 7 → len=4(min=4), -arr[1]=3, left=2, sum=7   |   4
+      |        |     7      | ≥ 7 → len=3(min=3), -arr[2]=1, left=3, sum=6   |   3
+      |        |     6      | &lt; 7, stop shrinking           |   3
+  5   |   3    |     9      | ≥ 7 → len=3(min=3), -arr[3]=2, left=4, sum=7   |   3
+      |        |     7      | ≥ 7 → len=2(min=2), -arr[4]=4, left=5, sum=3   |   2
+      |        |     3      | &lt; 7, stop shrinking           |   2
 
-return 2 ✓</div>
+return 2  ✓  (the window [4,3])
+
+Edge case — no subarray reaches target:
+arr=[1,1,1], target=10: window_sum never reaches 10, min_len stays INT_MAX, return 0  ✓</div>
 
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Using an if instead of while for the shrink step</div>
-    <p>If you write <code>if (window_sum &gt;= target)</code> instead of <code>while (window_sum &gt;= target)</code>, you only shrink the window once per right-pointer step. You will miss cases where shrinking multiple times yields a shorter valid window. Always use <code>while</code> in the shrink step.</p>
+    <div class="gotcha-title">&#9888; Gotcha: using IF instead of WHILE in the shrink step</div>
+    <p><strong>Wrong:</strong> <code>if (window_sum &gt;= target) { record; shrink once; }</code> — shrinks at most once per right step, missing valid windows that require multiple shrinks. At right=4 in the dry run above, only one shrink would fire, giving min_len=4 instead of 3.</p>
+    <p><strong>Correct:</strong> <code>while (window_sum &gt;= target) { record; shrink; }</code> — keeps shrinking until the condition breaks, capturing every minimal window ending at this right position.</p>
+    <p><strong>One-line rule:</strong> always use WHILE for shrink — each right position can produce multiple valid windows of decreasing length.</p>
   </div>
 
-  <div class="leetcode">
-    <span>209 &middot; Minimum Size Subarray Sum</span>
-    <span>3 &middot; Longest Substring Without Repeating Characters</span>
-    <span>76 &middot; Minimum Window Substring</span>
+  <div class="section-label">&#9317; Confidence Check</div>
+  <div class="confidence">
+    <div class="confidence-title">Can you answer these without looking at the code?</div>
+    <ol>
+      <li>Why is the total time complexity O(n) even though there is a while loop inside the for loop?</li>
+      <li>The code records the window length before shrinking, not after. Why does that order matter?</li>
+      <li>If the problem asked for the longest subarray with sum &le; target instead of shortest with sum &ge; target, what would change in the shrink condition and the length-tracking logic?</li>
+    </ol>
   </div>
-  <div class="trigger">When you see: shortest/longest subarray + a condition that can be fixed by shrinking &#8594; think: variable sliding window with while-shrink on the left</div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">When you see: shortest / longest subarray + condition fixable by removing left elements &rarr; variable sliding window: grow right always, shrink left in a WHILE loop</div>
+    <ul class="trigger-variants">
+      <li>Minimum window containing all characters of pattern &rarr; same skeleton, condition = frequency map satisfied</li>
+      <li>Longest substring with at most K distinct characters &rarr; shrink when distinct count exceeds K, track max length</li>
+      <li>Count of subarrays satisfying a condition &rarr; when window is valid, all left-extension sub-windows also valid; count = left</li>
+    </ul>
+  </div>
 </div>
 
 <!-- ================================================================ P11 -->
