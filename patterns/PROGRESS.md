@@ -17,20 +17,20 @@
 ## arrays.html — Rework Audit (All 54 Cards)
 
 ### Prefix Sum (P01–P03)
-- [ ] P01 · Prefix Sum: Range Query
-- [ ] P02 · Prefix Sum: Running Total / Pivot Index
-- [ ] P03 · Prefix Sum: 2D Matrix Range Sum
+- [x] P01 · Prefix Sum: Range Query
+- [x] P02 · Prefix Sum: Running Total / Pivot Index
+- [x] P03 · Prefix Sum: 2D Matrix Range Sum
 
 ### Two Pointer (P04–P08)
-- [ ] P04 · Two Pointer: Sorted Array Pair Sum
-- [ ] P05 · Two Pointer: Remove Duplicates In-Place
-- [ ] P06 · Two Pointer: Move Zeros to End
-- [ ] P07 · Two Pointer: Three Sum
-- [ ] P08 · Two Pointer: Container With Most Water
+- [x] P04 · Two Pointer: Sorted Array Pair Sum
+- [x] P05 · Two Pointer: Remove Duplicates In-Place
+- [x] P06 · Two Pointer: Move Zeros to End
+- [x] P07 · Two Pointer: Three Sum
+- [x] P08 · Two Pointer: Container With Most Water
 
 ### Sliding Window (P09–P13)
-- [ ] P09 · Sliding Window: Fixed Size Maximum Sum
-- [ ] P10 · Sliding Window: Variable Size (Shrink When Invalid)
+- [x] P09 · Sliding Window: Fixed Size Maximum Sum
+- [x] P10 · Sliding Window: Variable Size (Shrink When Invalid)
 - [ ] P11 · Sliding Window: Longest Substring Without Repeat (Freq Map)
 - [ ] P12 · Sliding Window: Minimum Window Substring
 - [ ] P13 · Sliding Window: Count Subarrays with Condition
@@ -100,11 +100,11 @@
 
 | Batch | Cards | Status |
 |-------|-------|--------|
-| Batch 1 | P01–P10 | ⏳ Next |
-| Batch 2 | P11–P20 | — |
+| Batch 1 | P01–P10 | ✅ Done |
+| Batch 2 | P11–P20 | ⏳ Next |
 | Batch 3 | P21–P30 | — |
 | Batch 4 | P31–P40 | — |
 | Batch 5 | P41–P50 | — |
 | Batch 6 | P51–P54 | — |
 
-**Currently reworking:** P01 — Prefix Sum: Range Query
+**Currently reworking:** P11 — Sliding Window: Longest Substring Without Repeat (Freq Map)
