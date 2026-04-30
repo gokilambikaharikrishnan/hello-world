@@ -4191,59 +4191,133 @@ if (i &gt; max_reach) return 0;   /* stuck only if this index itself is unreacha
     <span class="pattern-name">Greedy: Jump Game II (Minimum Jumps to Reach End)</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    Same jumping platforms, but now you want the fewest jumps to reach the end.
-    Think of it as BFS in disguise: each "jump" covers a range of reachable positions.
-    From your current range, find the farthest you can reach in one more jump. When you exhaust your current range, you must take another jump.
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Same array as Jump Game I — each element is the maximum jump you can make from that index — but now the question changes from "can you reach the end?" to "what is the minimum number of jumps to reach the end?" Assuming reachability is guaranteed (problem constraint), you need an efficient count.</p>
+    <p>A brute-force approach tries all possible jump lengths at each position and recurses, yielding exponential time. A DP approach fills a table of minimum jumps for each index in O(n²). But greedy does it in O(n) and constant space, with a key insight borrowed from BFS: think of each "jump count level" as a layer. All positions reachable in exactly k jumps form layer k. Walk through the current layer, find the farthest you can push into layer k+1, and count layers to the end.</p>
+    <p>The BFS analogy is exact: the starting index is the source; the last index is the sink; edges connect index i to all indices in [i+1, i+arr[i]]. Minimum jumps = shortest path in this implicit graph. BFS on this graph is O(n) because every index is visited at most once across all layers.</p>
+    <p>This appears in firmware loaders that chain-load variable-length segments, in link-following where each page has a "max forward links" budget, and in any scheduling problem where you advance through stages with variable-length strides and want the minimum number of phase transitions.</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    Maintain a "current window" [current_start..current_end]. Walk through this window tracking the farthest next-jump reach. When you reach current_end, increment jump count and set the new window to [current_end+1..farthest_reach].
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 45 — Jump Game II</span><span class="why">canonical minimum-jumps form</span></li>
+    <li><span class="sit">LeetCode 1345 — Jump Game IV</span><span class="why">same BFS-layer idea extended with hash-linked equal-value jumps</span></li>
+    <li><span class="sit">Bootloader chain-loading</span><span class="why">each stage specifies max bytes it can hand off; minimum handoff count to reach the kernel</span></li>
+    <li><span class="sit">Web crawler hop counting</span><span class="why">each page has N outbound links; minimum hops to reach target URL</span></li>
+    <li><span class="sit">Game level minimum moves</span><span class="why">each tile allows up to k forward steps; minimum turns to exit</span></li>
+    <li><span class="sit">Memory garbage collector sweep</span><span class="why">each live object has a forward-pointer reach; minimum GC passes to mark all objects</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>BFS layer model:</strong> After 0 jumps you're at layer {0}. After 1 jump you can reach layer {1..arr[0]}. After 2 jumps, from each position in layer 1, you extend further. The farthest reachable position after k jumps is the right edge of layer k.</p>
+<pre class="ascii">
+arr = [2, 3, 1, 1, 4]
+idx:   0  1  2  3  4
+
+Layer 0 (0 jumps):  [0]              current_end=0
+From idx 0: farthest = 0+2 = 2
+
+Hit i==current_end (0): jumps→1, current_end=2
+
+Layer 1 (1 jump):  [1, 2]
+From idx 1: farthest = max(2, 1+3) = 4
+From idx 2: farthest = max(4, 2+1) = 4
+
+Hit i==current_end (2): jumps→2, current_end=4
+
+Layer 2 (2 jumps): [3, 4]
+Loop ends at i=3 (n-1=4 not processed by i&lt;n-1)
+
+→ 2 jumps
+</pre>
+    <p><strong>Three variables:</strong> <code>jumps</code> counts layers; <code>current_end</code> marks the right edge of the current layer; <code>farthest</code> tracks the best right edge for the next layer as we walk.</p>
+    <p class="aha">Aha moment: you don't pick which position in the current layer to jump from — you greedily take the maximum reach achievable from any position in the layer. When you exhaust the current layer (i reaches current_end), the best you could have done is already recorded in farthest.</p>
+    <p><strong>Pseudocode:</strong></p>
+<pre class="ascii">
+jumps = 0, current_end = 0, farthest = 0
+for i from 0 to n-2:            // don't jump FROM the last index
+    farthest = max(farthest, i + arr[i])
+    if i == current_end:        // current layer exhausted
+        jumps++
+        current_end = farthest  // advance to next layer
+return jumps
+</pre>
   </div>
 
-  <div class="section-label">&#9316; Annotated Code</div>
-<pre><code class="language-c">/* Minimum number of jumps to reach the last index. Guaranteed reachable. */
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Minimum jumps to reach the last index. Assumes it is reachable. */
 int jump_min(int *arr, int n) {
-    int jumps        = 0;   /* total jumps taken */
-    int current_end  = 0;   /* farthest index reachable with 'jumps' jumps */
-    int farthest     = 0;   /* farthest index reachable with 'jumps+1' jumps */
+    int jumps       = 0;   /* layers (BFS levels) traversed so far */
+    int current_end = 0;   /* right edge of the current BFS layer */
+    int farthest    = 0;   /* best right edge seen while scanning current layer */
 
-    for (int i = 0; i &lt; n - 1; i++) {   /* don't need to jump FROM the last index */
+    for (int i = 0; i &lt; n - 1; i++) {   /* n-1: no need to jump from the last index */
         int reach = i + arr[i];
-        if (reach &gt; farthest) farthest = reach;   /* update best next jump */
+        if (reach &gt; farthest) farthest = reach;   /* extend next-layer frontier */
 
-        if (i == current_end) {     /* exhausted current jump range */
-            jumps++;                /* must take another jump */
-            current_end = farthest; /* new range is everything reachable in one more jump */
+        if (i == current_end) {      /* scanned all of the current layer */
+            jumps++;                 /* commit one more jump */
+            current_end = farthest; /* the next layer spans up to farthest */
         }
     }
     return jumps;
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
-  <div class="dry-run">arr = [2, 3, 1, 1, 4]
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>arr = [2, 3, 1, 1, 4], n = 5</strong>
 
-i=0: reach=2, farthest=2, i==current_end(0) → jumps=1, current_end=2
-i=1: reach=4, farthest=4
-i=2: reach=3, farthest=4, i==current_end(2) → jumps=2, current_end=4
-i=3: reach=4, farthest=4
-(i reaches n-1=4, loop ends)
+ i  | arr[i] | farthest | current_end | jumps | note
+----+--------+----------+-------------+-------+-----
+ 0  |   2    |    2     |      0      |   0   | start
+ 0  |   —    |    2     |      2      |   1   | i==cur_end → jump, advance layer
+ 1  |   3    |    4     |      2      |   1   | 1+3=4
+ 2  |   1    |    4     |      2      |   1   | 2+1=3, no change
+ 2  |   —    |    4     |      4      |   2   | i==cur_end → jump, advance layer
+ 3  |   1    |    4     |      4      |   2   | loop ends at i&lt;n-1=4
 
-return 2 ✓ (jump from 0→1→4)</div>
+return 2
 
+<strong>Edge: arr = [0], n = 1</strong>
+Loop runs 0 times (n-1=0, i starts at 0, condition 0&lt;0 is false).
+return 0 — already at the end, no jumps needed.</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Looping up to n instead of n-1</div>
-    <p>The loop should run <code>i &lt; n - 1</code>. If you loop to <code>i &lt; n</code>, when i reaches the last index (n-1) and i == current_end, you increment jumps unnecessarily. You don't need to jump FROM the last index.</p>
+    <div class="gotcha-title">&#9888; Wrong: looping to i &lt; n instead of i &lt; n - 1</div>
+<pre><code class="language-c">/* WRONG */
+for (int i = 0; i &lt; n; i++) {
+    ...
+    if (i == current_end) { jumps++; current_end = farthest; }
+}</code></pre>
+    <p><strong>What breaks:</strong> When i reaches n-1 (the last index) and current_end happens to equal n-1, the condition fires and jumps is incremented one extra time. You're already at the destination — no jump needed from there.</p>
+<pre><code class="language-c">/* CORRECT */
+for (int i = 0; i &lt; n - 1; i++) { ... }</code></pre>
+    <p><strong>Why it works:</strong> You only ever need to count jumps <em>to</em> the last index, never <em>from</em> it. Stopping at n-2 as the last processed index avoids the spurious +1.</p>
+    <p><strong>Rule:</strong> Loop bound is <code>n - 1</code>, not <code>n</code>.</p>
   </div>
 
-  <div class="leetcode">
-    <span>45 &middot; Jump Game II</span>
-    <span>55 &middot; Jump Game</span>
-    <span>1345 &middot; Jump Game IV</span>
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. Why does this algorithm work even though it never explicitly chooses which position in the current layer to jump from?</p>
+    <p>2. What would go wrong if you updated <code>current_end = farthest</code> immediately whenever farthest grew, instead of only when <code>i == current_end</code>?</p>
+    <p>3. This is described as "BFS in disguise." What corresponds to the BFS queue, and why don't you need an explicit queue data structure here?</p>
   </div>
-  <div class="trigger">When you see: minimum jumps to reach end &#8594; think: greedy BFS window — extend window, increment jumps when window exhausted</div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>When you see "minimum jumps / minimum steps with variable stride" → maintain a current-layer window; scan it for the farthest reach; increment jump count when the window is exhausted.</strong>
+    <br>Also fires for: "minimum phase transitions across stages with variable-length strides" · "fewest BFS levels to reach a target in a reachability graph"
+  </div>
 </div>
 
 <!-- ================================================================ P32 -->
@@ -4253,63 +4327,135 @@ return 2 ✓ (jump from 0→1→4)</div>
     <span class="pattern-name">Greedy: Gas Station Circular Tour</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    You drive a circular route of gas stations. Each station has some gas and costs some gas to reach the next one.
-    You need to find the starting station from which you can complete the full circuit.
-    Key insight: if you run out of gas at station k starting from station i, then no station between i and k can be a valid start either (they all have the same deficit plus less surplus built up).
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>N gas stations are arranged in a circle. Station i has <code>gas[i]</code> units of fuel and costs <code>cost[i]</code> to travel to the next station. You start with an empty tank and can begin at any station. Find a starting station from which you can complete the full circuit without running dry, or report that no such station exists.</p>
+    <p>The brute-force approach tries all N starting points, simulating each circuit in O(n) time — O(n²) total. The greedy observation cuts this to O(n): if you start at station i and fail at station k (tank goes negative), every station between i and k is also an invalid start. Why? If you could have started at some j in [i+1, k] and succeeded, then starting from i you would have had <em>even more</em> gas when you reached j (the surplus from i to j is non-negative since you didn't fail there). Contradiction. So you can skip all of [i, k] and try k+1.</p>
+    <p>A separate global feasibility check: if total gas &lt; total cost, no solution exists regardless of starting point. This is checked in the same pass via a running total. If the global sum is ≥ 0, exactly one valid starting point exists, and the greedy candidate (the one that survived without going negative) is it.</p>
+    <p>Real-world parallels: circular pipeline routing where each pumping station has net flow capacity; round-robin task scheduling where each time slot has a net CPU budget; data replication rings where each node can relay a fixed amount of bandwidth per cycle.</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    First check: if total gas &lt; total cost, no solution exists. Otherwise, exactly one starting point works. Greedily: start at 0, track running tank. When tank goes negative, the start station must be after the current failure point.
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 134 — Gas Station</span><span class="why">canonical form; return start index or -1</span></li>
+    <li><span class="sit">LeetCode 860 — Lemonade Change</span><span class="why">greedy feasibility across a sequence with running balance</span></li>
+    <li><span class="sit">Circular pipeline routing</span><span class="why">each pump station has net flow; find the entry point for a complete circuit</span></li>
+    <li><span class="sit">Round-robin CPU scheduling</span><span class="why">each time slot has net slack; find the slot from which the round can complete without starvation</span></li>
+    <li><span class="sit">Token-bucket relay chains</span><span class="why">each relay node refills/drains a shared token pool; find a starting node for a full traversal</span></li>
+    <li><span class="sit">Network packet round-trip routing</span><span class="why">each hop has a forwarding budget; find the starting hop that guarantees round-trip completion</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Why skipping works:</strong> Suppose you start at i and fail at k. For any j in (i, k], the tank when you arrive at j (starting from i) is non-negative — you didn't fail before k. If starting at j was viable, starting at i and skipping to j gives you an even higher tank at j, so you'd also succeed. That means j alone can't fix the failure at k. So j is also invalid.</p>
+<pre class="ascii">
+gas  = [1, 2, 3, 4, 5]
+cost = [3, 4, 5, 1, 2]
+net  = [-2,-2,-2, 3, 3]
+
+Starting at 0:
+i=0: tank=-2 → fail → start=1, tank=0
+i=1: tank=-2 → fail → start=2, tank=0
+i=2: tank=-2 → fail → start=3, tank=0
+i=3: tank=+3 → ok
+i=4: tank=+6 → ok
+
+total_surplus = (-2-2-2+3+3) = 0 >= 0 → return 3 ✓
+
+Verify: start at 3, net gains: +3,+3,-2,-2,-2 = 0
+Running: 3, 6, 4, 2, 0 — never negative ✓
+</pre>
+    <p class="aha">Aha moment: the global total check and the candidate identification happen in a single pass. You don't need a second pass to verify the candidate — the math guarantees it.</p>
+    <p><strong>Pseudocode:</strong></p>
+<pre class="ascii">
+total = 0, tank = 0, start = 0
+for i in 0..n-1:
+    net = gas[i] - cost[i]
+    total += net
+    tank  += net
+    if tank < 0:
+        start = i + 1
+        tank  = 0
+return total >= 0 ? start : -1
+</pre>
   </div>
 
-  <div class="section-label">&#9316; Annotated Code</div>
-<pre><code class="language-c">/* Find the starting gas station index for a complete circuit, or -1. */
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Returns start index for a complete circuit, or -1 if impossible. */
 int can_complete_circuit(int *gas, int *cost, int n) {
-    int total_surplus = 0;   /* net gas over entire circuit (feasibility check) */
-    int tank          = 0;   /* running gas in tank from current start candidate */
-    int start         = 0;   /* current candidate starting station */
+    int total = 0;   /* global net — determines feasibility */
+    int tank  = 0;   /* running tank from current start candidate */
+    int start = 0;   /* current candidate starting station */
 
     for (int i = 0; i &lt; n; i++) {
-        int net = gas[i] - cost[i];     /* net gain/loss at station i */
-        total_surplus += net;
-        tank          += net;
+        int net = gas[i] - cost[i];
+        total += net;
+        tank  += net;
 
         if (tank &lt; 0) {
-            /* ran out of gas: starting from 'start' through i doesn't work */
-            /* any station from start..i is also invalid (would have even less gas) */
-            start = i + 1;   /* try starting from the next station */
-            tank  = 0;       /* reset the tank for the new start candidate */
+            /* failed at i: skip all stations up to and including i */
+            start = i + 1;   /* fresh candidate: try starting just after failure point */
+            tank  = 0;       /* reset tank — new candidate starts empty */
         }
     }
 
-    return total_surplus &lt; 0 ? -1 : start;  /* if total net is negative, no solution */
+    return total &lt; 0 ? -1 : start;   /* global deficit means no solution; otherwise start is it */
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
-  <div class="dry-run">gas=[1,2,3,4,5]  cost=[3,4,5,1,2]
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>Normal: gas=[1,2,3,4,5], cost=[3,4,5,1,2]</strong>
 
-i=0: net=-2, tank=-2 < 0 → start=1, tank=0
-i=1: net=-2, tank=-2 < 0 → start=2, tank=0
-i=2: net=-2, tank=-2 < 0 → start=3, tank=0
-i=3: net=3,  tank=3
-i=4: net=3,  tank=6
+ i  | net | total | tank | start | action
+----+-----+-------+------+-------+-------
+ 0  |  -2 |   -2  |  -2  |   0   | tank&lt;0 → start=1, tank=0
+ 1  |  -2 |   -4  |  -2  |   1   | tank&lt;0 → start=2, tank=0
+ 2  |  -2 |   -6  |  -2  |   2   | tank&lt;0 → start=3, tank=0
+ 3  |   3 |   -3  |   3  |   3   | ok
+ 4  |   3 |    0  |   6  |   3   | ok
 
-total_surplus = (-2-2-2+3+3) = 0 >= 0 → return start=3 ✓</div>
+total=0 >= 0 → return start=3 ✓
 
+<strong>Impossible: gas=[2,3,4], cost=[3,4,5]</strong>
+
+total = (2-3)+(3-4)+(4-5) = -3 &lt; 0 → return -1 ✓</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Resetting start to i+1 without resetting tank</div>
-    <p>When you update <code>start = i + 1</code>, you must also reset <code>tank = 0</code>. The new candidate starts with an empty tank. If you carry the negative tank forward, all subsequent candidates will look worse than they are.</p>
+    <div class="gotcha-title">&#9888; Wrong: forgetting to reset tank when updating start</div>
+<pre><code class="language-c">/* WRONG */
+if (tank &lt; 0) {
+    start = i + 1;
+    /* forgot: tank = 0; */
+}</code></pre>
+    <p><strong>What breaks:</strong> The negative balance from the old candidate carries forward into the new candidate's evaluation, making it look worse than it actually is. A station that could complete the circuit from a fresh start will appear to fail.</p>
+<pre><code class="language-c">/* CORRECT */
+if (tank &lt; 0) {
+    start = i + 1;
+    tank  = 0;   /* new candidate starts with an empty tank */
+}</code></pre>
+    <p><strong>Rule:</strong> Every time you move the start pointer, reset tank to zero — the new candidate hasn't collected any gas yet.</p>
   </div>
 
-  <div class="leetcode">
-    <span>134 &middot; Gas Station</span>
-    <span>1564 &middot; Put Boxes Into the Warehouse I</span>
-    <span>860 &middot; Lemonade Change</span>
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. Why is it safe to skip all stations between the old start and the failure point, rather than trying each one individually?</p>
+    <p>2. The algorithm returns the final value of <code>start</code> when <code>total >= 0</code>. Why is this guaranteed to be the correct starting station without a second verification pass?</p>
+    <p>3. What happens if <code>total == 0</code> exactly — does that mean one valid start exists, multiple, or none?</p>
   </div>
-  <div class="trigger">When you see: circular route feasibility with net gains/losses &#8594; think: greedy start candidate + total surplus check</div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>When you see "find a starting point for a circular route with net gains/losses" → track running tank; move start past any failure point; return start if global total ≥ 0.</strong>
+    <br>Also fires for: "circular buffer with per-slot credits and debits" · "ring topology routing feasibility"
+  </div>
 </div>
 
 <!-- ================================================================ P33 -->
@@ -4319,54 +4465,135 @@ total_surplus = (-2-2-2+3+3) = 0 >= 0 → return start=3 ✓</div>
     <span class="pattern-name">Greedy: Assign Cookies (Two-Sorted-Array Matching)</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    Children want cookies. Each child has a minimum greed factor; each cookie has a size.
-    You want to satisfy as many children as possible.
-    Greedy approach: sort both arrays. Assign the smallest sufficient cookie to the least greedy satisfied child. Don't waste a large cookie on an easy-to-please child.
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>You have a set of children, each with a minimum greed factor — the smallest cookie size that will satisfy them. You also have a bag of cookies of various sizes. You want to maximize the number of satisfied children. Each child gets at most one cookie; each cookie is used at most once.</p>
+    <p>The greedy insight is an exchange argument: if you're going to satisfy the least greedy child (smallest g[i]), use the smallest cookie that can satisfy them. Using a bigger cookie wastes it — the bigger cookie might have been able to satisfy someone greedier, but the smaller cookie cannot. So always assign the cheapest sufficient resource to the cheapest sufficient demand.</p>
+    <p>This exchange argument generalizes to a whole family of two-sorted-array matching problems: match the k smallest "demands" to the k smallest "supplies" that meet those demands. Sort both; walk both with two pointers. If the current supply meets the current demand, match and advance both. If not, the supply is too small for all future demands too — discard it.</p>
+    <p>In systems contexts: assigning tasks to threads where tasks have minimum CPU requirements and threads have fixed capacities; assigning memory requests to memory blocks where requests have minimum size and blocks have fixed size; matching packets to QoS queues where packets have minimum bandwidth requirements.</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    Sort children by greed (ascending) and cookies by size (ascending). Use two pointers: if the current cookie satisfies the current child, match them (advance both). Otherwise the cookie is too small — try the next larger cookie.
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 455 — Assign Cookies</span><span class="why">canonical form; maximize satisfied children</span></li>
+    <li><span class="sit">LeetCode 2410 — Maximum Matching of Players With Trainers</span><span class="why">same two-sorted-array matching structure</span></li>
+    <li><span class="sit">LeetCode 826 — Most Profit Assigning Work</span><span class="why">profit-maximizing variant; sort by difficulty, match with worker ability</span></li>
+    <li><span class="sit">Thread-pool task scheduling</span><span class="why">tasks have min CPU need; workers have fixed CPU; maximize tasks assigned</span></li>
+    <li><span class="sit">Memory block allocator</span><span class="why">requests have min size; blocks have exact size; first-fit or best-fit allocation is this pattern</span></li>
+    <li><span class="sit">QoS packet scheduling</span><span class="why">packets have min bandwidth need; queues have fixed bandwidth; assign queues to maximize served packets</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Exchange argument:</strong> Suppose an optimal solution assigns a big cookie to a small-greed child. If we swap in the smallest sufficient cookie instead, we free up the big cookie for a greedier child (or discard it if unused). The swap never decreases the count of satisfied children. Therefore sorting and matching smallest-to-smallest is optimal.</p>
+<pre class="ascii">
+g = [1, 2, 3]    (greed, sorted ascending)
+s = [1, 1, 2]   (cookies, sorted ascending)
+
+child=0(g=1), cookie=0(s=1): 1>=1 → match  child→1, cookie→1
+child=1(g=2), cookie=1(s=1): 1&lt;2  → skip   cookie→2
+child=1(g=2), cookie=2(s=2): 2>=2 → match  child→2, cookie→3 (exhausted)
+Loop ends.
+
+return 2 ✓
+</pre>
+    <p class="aha">Aha moment: the cookie pointer advances unconditionally — even if the cookie is too small it's useless for all future (greedier) children, so you must discard it. Only the child pointer advances on a successful match.</p>
+    <p><strong>Pseudocode:</strong></p>
+<pre class="ascii">
+sort g ascending, sort s ascending
+child = 0, cookie = 0
+while child &lt; len(g) and cookie &lt; len(s):
+    if s[cookie] >= g[child]:
+        child++       // satisfied
+    cookie++          // always advance cookie
+return child
+</pre>
   </div>
 
-  <div class="section-label">&#9316; Annotated Code</div>
-<pre><code class="language-c">/* Maximum number of content children. g[]=greed factors, s[]=cookie sizes. */
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">int cmp_asc(const void *a, const void *b) {
+    int x = *(const int *)a, y = *(const int *)b;
+    if (x &lt; y) return -1; if (x &gt; y) return 1; return 0;
+}
+
+/* Maximum satisfied children. g[gn]=greed factors, s[sn]=cookie sizes. */
 int find_content_children(int *g, int gn, int *s, int sn) {
-    qsort(g, gn, sizeof(int), cmp_asc);   /* sort children by greed ascending */
-    qsort(s, sn, sizeof(int), cmp_asc);   /* sort cookies by size ascending */
+    qsort(g, gn, sizeof(int), cmp_asc);
+    qsort(s, sn, sizeof(int), cmp_asc);
 
-    int child  = 0;   /* pointer for children (least greedy first) */
-    int cookie = 0;   /* pointer for cookies (smallest first) */
+    int child  = 0;   /* next unsatisfied child (greed ascending) */
+    int cookie = 0;   /* next unused cookie (size ascending) */
 
     while (child &lt; gn &amp;&amp; cookie &lt; sn) {
-        if (s[cookie] &gt;= g[child]) {   /* this cookie is big enough for this child */
-            child++;                    /* child is satisfied, move to next child */
-        }
-        cookie++;   /* always try the next cookie (whether this one worked or not) */
+        if (s[cookie] &gt;= g[child])   /* cookie is large enough — satisfy this child */
+            child++;
+        cookie++;   /* cookie is consumed whether or not it matched — too small for all future children if it didn't match */
     }
-    return child;   /* total satisfied children */
+    return child;
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
-  <div class="dry-run">g=[1,2,3] (greed), s=[1,1] (cookies)  both sorted
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>g=[1,2,3], s=[1,1] — fewer cookies than children</strong>
 
-child=0(g=1), cookie=0(s=1): 1>=1 → child=1, cookie=1
-child=1(g=2), cookie=1(s=1): 1<2  → cookie=2 (out of cookies)
-return 1 ✓ (only 1 child can be satisfied)</div>
+ child | g[child] | cookie | s[cookie] | match? | note
+-------+----------+--------+-----------+--------+-----
+   0   |    1     |   0    |     1     |  yes   | child→1, cookie→1
+   1   |    2     |   1    |     1     |  no    | cookie→2 (exhausted)
 
+return 1 ✓
+
+<strong>g=[1,2], s=[3] — one big cookie for two children</strong>
+
+ child | g[child] | cookie | s[cookie] | match?
+-------+----------+--------+-----------+-------
+   0   |    1     |   0    |     3     |  yes   → child→1, cookie→1 (exhausted)
+
+return 1 ✓ (can't give one cookie to two children)</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Advancing cookie pointer only on success</div>
-    <p>The cookie pointer must advance on every iteration, regardless of whether the cookie satisfied the child. If the cookie is too small for the current child, it's also too small for any future (greedier) child — discard it by advancing. Only the child pointer advances on success.</p>
+    <div class="gotcha-title">&#9888; Wrong: only advancing cookie on a failed match</div>
+<pre><code class="language-c">/* WRONG */
+while (child &lt; gn &amp;&amp; cookie &lt; sn) {
+    if (s[cookie] &gt;= g[child]) {
+        child++;
+        cookie++;   // only advance cookie on success
+    } else {
+        cookie++;   // also here — but wait, this is actually the same...
+    }
+}
+/* Actually both branches advance cookie, so this is correct.
+   The WRONG version is when you forget to advance cookie at all
+   on failure: */
+if (s[cookie] &gt;= g[child]) { child++; cookie++; }
+/* ← cookie never advances on failure → infinite loop */</code></pre>
+    <p><strong>What breaks:</strong> If you only advance <code>cookie</code> when the match succeeds, a cookie that's too small stays in place forever — infinite loop.</p>
+<pre><code class="language-c">/* CORRECT: cookie always advances */
+if (s[cookie] &gt;= g[child]) child++;
+cookie++;   /* unconditional — outside the if */</code></pre>
+    <p><strong>Rule:</strong> The resource (cookie) pointer always advances. The demand (child) pointer only advances on a successful match.</p>
   </div>
 
-  <div class="leetcode">
-    <span>455 &middot; Assign Cookies</span>
-    <span>2410 &middot; Maximum Matching of Players With Trainers</span>
-    <span>826 &middot; Most Profit Assigning Work</span>
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. Why is sorting both arrays a prerequisite — what goes wrong if either array is unsorted?</p>
+    <p>2. If a cookie is too small to satisfy the current child, why is it guaranteed to also be too small for every subsequent child?</p>
+    <p>3. This problem asks to maximize satisfied children. Would the same algorithm still work if instead you wanted to maximize the total "happiness" (some function of matched pairs)?</p>
   </div>
-  <div class="trigger">When you see: greedily match sorted elements from two arrays &#8594; think: sort both, two pointers — advance match pointer on success, resource pointer always</div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>When you see "greedily match two sorted arrays where one set has minimum requirements and the other has fixed capacities" → sort both, use two pointers — always advance the resource pointer, only advance the demand pointer on a successful match.</strong>
+    <br>Also fires for: "assign tasks to workers by capability" · "match requests to memory blocks" · "maximize feasible pairings from two sets"
+  </div>
 </div>
 
 <!-- ================================================================ P34 -->
@@ -4376,72 +4603,155 @@ return 1 ✓ (only 1 child can be satisfied)</div>
     <span class="pattern-name">Matrix: Spiral Order Traversal</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    Traverse a matrix like unwrapping the layers of an onion, starting from the outside and spiraling inward.
-    Maintain four boundaries: top, bottom, left, right. Traverse the top row left-to-right, right column top-to-bottom, bottom row right-to-left, left column bottom-to-top. Then shrink each boundary inward and repeat.
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Given an m×n matrix, output all elements in spiral order: traverse the top row left-to-right, then the right column top-to-bottom, then the bottom row right-to-left, then the left column bottom-to-top — then repeat for the inner ring, and so on until all elements are visited.</p>
+    <p>A direction-cycling approach (right→down→left→up→right…) with a visited grid works but requires O(mn) extra memory for the visited array. The boundary-shrink approach uses only four integer variables and no extra memory. After each edge is consumed, that boundary collapses inward, so the same traversal logic naturally avoids re-visiting.</p>
+    <p>The subtle correctness requirement is guarding the bottom-row and left-column traversals. After consuming the top row and right column in a pass, you may have reduced the matrix to zero remaining rows (top > bottom) or zero remaining columns (left > right). Without checking, you'd traverse a row or column that no longer exists — or worse, re-traverse elements in reverse, producing duplicates.</p>
+    <p>Spiral traversal appears in image processing (reading a convolution kernel from outside in), radar sweep algorithms, cache-warming for 2D data structures, and display buffer fills for embedded devices that write pixels along a snake path to maximize cache locality.</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    Four boundary variables (top, bottom, left, right). After each edge traversal, shrink that boundary inward. Stop when top &gt; bottom or left &gt; right.
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 54 — Spiral Matrix</span><span class="why">canonical read form; output elements in spiral order</span></li>
+    <li><span class="sit">LeetCode 59 — Spiral Matrix II</span><span class="why">write form; fill a matrix with 1..n² in spiral order</span></li>
+    <li><span class="sit">Image kernel application</span><span class="why">read a convolution kernel from center outward or outside inward for progressive refinement</span></li>
+    <li><span class="sit">Radar sweep / sonar scan</span><span class="why">sample a 2D field ring by ring from perimeter to center</span></li>
+    <li><span class="sit">Embedded display buffer fill</span><span class="why">write pixels in a spiral path to maximize DRAM row-buffer hits for certain memory layouts</span></li>
+    <li><span class="sit">Layer-peeling matrix algorithms</span><span class="why">any algorithm that processes a matrix from outside in — edge detection, border zeroing</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Think of peeling an onion:</strong> each iteration of the outer while-loop peels one ring. A ring has four edges: top, right, bottom, left. After each edge is traversed, the corresponding boundary shrinks inward by one. The outer loop exits when the boundaries cross.</p>
+<pre class="ascii">
+matrix = [[1, 2, 3],
+          [4, 5, 6],
+          [7, 8, 9]]
+
+Initial boundaries: top=0, bottom=2, left=0, right=2
+
+Pass 1:
+  Top row   (row 0, cols 0→2): 1, 2, 3  → top=1
+  Right col (col 2, rows 1→2): 6, 9     → right=1
+  Bottom row (row 2, cols 1→0): 8, 7    → bottom=1   (guard: top=1&lt;=bottom=2 ✓)
+  Left col  (col 0, rows 1→1): 4        → left=1     (guard: left=0&lt;=right=1 ✓)
+
+Pass 2: top=1, bottom=1, left=1, right=1
+  Top row (row 1, col 1): 5  → top=2
+  top(2) > bottom(1) → stop
+
+Spiral: [1, 2, 3, 6, 9, 8, 7, 4, 5] ✓
+</pre>
+    <p class="aha">Aha moment: the bottom-row and left-column edges need existence guards. After consuming the top row and right column, you might have used up all the rows or columns. Without checking, you revisit elements in reverse.</p>
+    <p><strong>Pseudocode:</strong></p>
+<pre class="ascii">
+top=0, bottom=rows-1, left=0, right=cols-1
+while top &lt;= bottom and left &lt;= right:
+    traverse row[top] left→right;  top++
+    traverse col[right] top→bottom; right--
+    if top &lt;= bottom: traverse row[bottom] right→left; bottom--
+    if left &lt;= right: traverse col[left] bottom→top; left++
+</pre>
   </div>
 
-  <div class="section-label">&#9316; Annotated Code</div>
-<pre><code class="language-c">/* Traverse matrix in spiral order. result must be pre-allocated to rows*cols. */
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Spiral order traversal. result[] pre-allocated to rows*cols elements. */
 void spiral_order(int matrix[][100], int rows, int cols, int *result) {
-    int top = 0, bottom = rows - 1;
-    int left = 0, right  = cols - 1;
-    int k = 0;   /* index into result array */
+    int top    = 0, bottom = rows - 1;
+    int left   = 0, right  = cols - 1;
+    int k = 0;
 
     while (top &lt;= bottom &amp;&amp; left &lt;= right) {
-        /* traverse top row: left to right */
-        for (int c = left; c &lt;= right; c++)   result[k++] = matrix[top][c];
-        top++;    /* top row consumed, shrink top boundary down */
+        for (int c = left;   c &lt;= right;  c++) result[k++] = matrix[top][c];
+        top++;    /* top ring edge consumed */
 
-        /* traverse right column: top to bottom */
-        for (int r = top; r &lt;= bottom; r++)   result[k++] = matrix[r][right];
-        right--;  /* right column consumed, shrink right boundary left */
+        for (int r = top;    r &lt;= bottom; r++) result[k++] = matrix[r][right];
+        right--;  /* right ring edge consumed */
 
-        /* traverse bottom row: right to left (only if a row remains) */
-        if (top &lt;= bottom) {
+        if (top &lt;= bottom) {   /* guard: at least one row still remains */
             for (int c = right; c &gt;= left; c--) result[k++] = matrix[bottom][c];
             bottom--;
         }
 
-        /* traverse left column: bottom to top (only if a column remains) */
-        if (left &lt;= right) {
+        if (left &lt;= right) {   /* guard: at least one column still remains */
             for (int r = bottom; r &gt;= top; r--) result[k++] = matrix[r][left];
             left++;
         }
     }
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
-  <div class="dry-run">matrix = [[1,2,3],[4,5,6],[7,8,9]]
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>3×3: [[1,2,3],[4,5,6],[7,8,9]]</strong>
 
-top=0,bottom=2,left=0,right=2
-Top row:    1 2 3      → top=1
-Right col:  6 9        → right=1
-Bottom row: 8 7        → bottom=1
-Left col:   4          → left=1
-top=1,bottom=1,left=1,right=1
-Top row:    5          → top=2
-top>bottom, stop
+Pass 1: top=0,bot=2,left=0,right=2
+  Top row → 1,2,3   top→1
+  Right col → 6,9   right→1
+  guard ok: bottom row → 8,7   bot→1
+  guard ok: left col → 4       left→1
 
-result: [1,2,3,6,9,8,7,4,5] ✓</div>
+Pass 2: top=1,bot=1,left=1,right=1
+  Top row → 5   top→2
+  Right col (top=2 > bot=1): no elements
+  guard: top(2) > bot(1) → skip bottom row
+  guard: left(1) &lt;= right(1) → left col (bot=0..top=2 reversed): no elements (bot&lt;top)
+  outer: top(2) > bot(1) → exit
 
+Result: [1,2,3,6,9,8,7,4,5] ✓
+
+<strong>1×3: [[1,2,3]]</strong>
+
+top=0,bot=0,left=0,right=2
+  Top row → 1,2,3   top→1
+  Right col (top=1>bot=0): no elements
+  guard: top(1)>bot(0) → skip
+  guard: left(0)&lt;=right(2) → left col (bot=0..top=1 reversed): no elements
+  outer: top>bot → exit
+
+Result: [1,2,3] ✓</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Not guarding the bottom-row and left-column traversals</div>
-    <p>After traversing the top row and right column, you may have consumed all rows (top &gt; bottom) or all columns (left &gt; right). Without the guards <code>if (top &lt;= bottom)</code> and <code>if (left &lt;= right)</code>, you'll traverse the same elements again in reverse, producing duplicates.</p>
+    <div class="gotcha-title">&#9888; Wrong: no guard on the bottom-row and left-column traversals</div>
+<pre><code class="language-c">/* WRONG: missing guards */
+for (int c = right; c &gt;= left; c--)  result[k++] = matrix[bottom][c];
+bottom--;
+for (int r = bottom; r &gt;= top; r--)  result[k++] = matrix[r][left];
+left++;
+</code></pre>
+    <p><strong>What breaks:</strong> For a 1×3 matrix [[1,2,3]], after the top-row pass top=1 > bottom=0. Without the guard, the bottom-row loop runs with bottom=0, traversing elements already collected in reverse — producing duplicates [1,2,3,3,2,1].</p>
+<pre><code class="language-c">/* CORRECT */
+if (top &lt;= bottom) {
+    for (int c = right; c &gt;= left; c--) result[k++] = matrix[bottom][c];
+    bottom--;
+}
+if (left &lt;= right) {
+    for (int r = bottom; r &gt;= top; r--) result[k++] = matrix[r][left];
+    left++;
+}</code></pre>
+    <p><strong>Rule:</strong> After advancing top and retreating right, always re-check whether rows and columns still remain before the backward traversals.</p>
   </div>
 
-  <div class="leetcode">
-    <span>54 &middot; Spiral Matrix</span>
-    <span>59 &middot; Spiral Matrix II</span>
-    <span>885 &middot; Spiral Matrix III</span>
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. Why does the outer <code>while</code> loop need both conditions <code>top &lt;= bottom</code> AND <code>left &lt;= right</code> rather than just one of them?</p>
+    <p>2. After the top row is traversed and <code>top++</code> executes, the right-column loop uses the updated <code>top</code>. Why is this correct and not an off-by-one error?</p>
+    <p>3. For a single-row matrix, which of the four edge traversals actually runs, and which are skipped by the guards?</p>
   </div>
-  <div class="trigger">When you see: spiral or layer-by-layer matrix traversal &#8594; think: four boundaries, shrink after each edge, guard inner traversals</div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>When you see "traverse a matrix layer by layer from outside in" → use four shrinking boundaries; guard the backward traversals against already-consumed rows/columns.</strong>
+    <br>Also fires for: "fill a matrix in spiral order" · "process a 2D grid ring by ring" · "peel a matrix like an onion"
+  </div>
 </div>
 
 <!-- ================================================================ P35 -->
