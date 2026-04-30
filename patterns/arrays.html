@@ -3236,82 +3236,112 @@ All-negative: arr=[-1,-2,-3], total=-6
     <span class="pattern-name">In-Place: Cyclic Sort (1-to-N Values)</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    You have numbered chairs 1 through N and students sitting in the wrong seats.
-    You want each student in their correct chair without using extra space.
-    Walk down the row: if the student in chair i is not student i, swap them into their correct chair. Keep swapping until chair i has the right student, then advance.
+  <div class="section-label">&#9312; Background</div>
+  <div class="bg-section">
+    <p>When an array contains integers in the range [1, n] and you need to find missing or duplicate values, the obvious approaches use O(n) extra space (a boolean seen[] array) or O(n log n) time (sort then scan). Cyclic sort achieves O(n) time and O(1) space by exploiting the fact that value v has exactly one correct home: index v−1.</p>
+    <p>The algorithm walks through the array. At each position i, if arr[i] does not equal i+1 (value is not in its correct home), swap arr[i] to its correct position arr[arr[i]−1]. Crucially, do not advance i after a swap — the newly arrived element might itself be out of place. Only advance when arr[i] == i+1, meaning position i is settled.</p>
+    <p>The total number of swaps is at most n−1, because each swap moves at least one element into its correct final position. An element already in the correct position is never swapped. This amortised argument gives O(n) overall even though there is a while loop inside the walk.</p>
+    <p>The duplicate-value guard is essential: if arr[i] == arr[arr[i]−1], both positions already hold the same value (a duplicate). Swapping them would produce an infinite loop because nothing changes. The guard condition <code>arr[i] != arr[correct]</code> detects this and advances i past the duplicate instead of swapping.</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    Value v (1-indexed) belongs at index v&minus;1. If arr[i] != i+1, swap arr[i] with arr[arr[i]-1]. After sorting, any index where arr[i] != i+1 reveals a missing or duplicate number. Total swaps = O(n) because each swap places at least one element in its correct position.
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="where-list">
+    <li><span class="sit">LeetCode 41 &mdash; First Missing Positive</span> — <span class="why">cyclic sort to place 1..n, then scan for first gap.</span></li>
+    <li><span class="sit">LeetCode 442 &mdash; Find All Duplicates in an Array</span> — <span class="why">after cyclic sort, any index where arr[i] ≠ i+1 holds a duplicate.</span></li>
+    <li><span class="sit">LeetCode 268 &mdash; Missing Number</span> — <span class="why">simpler variant: XOR or sum formula works, but cyclic sort also applies.</span></li>
+    <li><span class="sit">Embedded: validate that a 1-to-N sensor ID assignment has no gaps or repeats</span> — <span class="why">hardware ID arrays must be a permutation; cyclic sort checks this in place without extra memory.</span></li>
+    <li><span class="sit">Inventory check: verify items numbered 1 to N are all present exactly once</span> — <span class="why">cyclic sort reveals missing or duplicate item numbers in a single O(n) pass.</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic From Scratch</div>
+  <div class="logic-build">
+    <p>Use arr = [3, 1, 4, 2, 5], n = 5. Value 3 belongs at index 2, value 1 at index 0, etc.</p>
+    <div class="ascii">arr:  3  1  4  2  5
+idx:  0  1  2  3  4
+
+i=0: arr[0]=3. Correct home = index 2. arr[2]=4 ≠ 3, so swap idx 0 and 2.
+  → arr:  4  1  3  2  5   (3 is now at its home, index 2 ✓)
+
+i=0: arr[0]=4. Correct home = index 3. arr[3]=2 ≠ 4, swap idx 0 and 3.
+  → arr:  2  1  3  4  5   (4 is now at index 3 ✓)
+
+i=0: arr[0]=2. Correct home = index 1. arr[1]=1 ≠ 2, swap idx 0 and 1.
+  → arr:  1  2  3  4  5   (2 is now at index 1 ✓)
+
+i=0: arr[0]=1 == 0+1 ✓. Advance. i=1,2,3,4 all correct. Done.</div>
+    <p><span class="aha">Three swaps placed all five elements. Each swap permanently fixed one element's position. We never revisit a settled index. That is the O(n) guarantee.</span></p>
+    <p>Duplicate case: arr = [3, 1, 3, 2, 4]. At i=0: arr[0]=3, correct=2. arr[2]=3 == arr[0]=3. The guard <code>arr[i] != arr[correct]</code> triggers: advance i without swapping. Position 0 will be identified as "wrong" in the final scan, revealing the duplicate 3.</p>
   </div>
 
-  <div class="section-label">&#9314; Step-by-Step Logic</div>
-  <div class="steps"><ol>
-    <li>Walk index i from 0 to n&minus;1.</li>
-    <li>While arr[i] is not in its correct position (arr[i] != i+1): swap arr[i] with arr[arr[i]-1].</li>
-    <li>Only advance i when arr[i] == i+1 (the position is correct).</li>
-    <li>After the loop, scan again: any i where arr[i] != i+1 means value i+1 is missing.</li>
-  </ol></div>
-
-  <div class="section-label">Diagram</div>
-  <div class="diagram">arr = [3, 1, 4, 2, 5]
-
-i=0: arr[0]=3, correct pos=2. swap arr[0]↔arr[2] → [4,1,3,2,5]
-i=0: arr[0]=4, correct pos=3. swap arr[0]↔arr[3] → [2,1,3,4,5]
-i=0: arr[0]=2, correct pos=1. swap arr[0]↔arr[1] → [1,2,3,4,5]
-i=0: arr[0]=1 == 0+1 ✓, advance
-i=1: arr[1]=2 == 1+1 ✓, advance ... all correct
-No missing: found [1,2,3,4,5]</div>
-
-  <div class="section-label">&#9316; Annotated Code</div>
-<pre><code class="language-c">/* Cyclic sort: place each value v at index v-1 (values are 1..n). */
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Cyclic sort: place each value v at index v-1 (for values in range [1..n]). */
 void cyclic_sort(int *arr, int n) {
     int i = 0;
     while (i &lt; n) {
-        int correct = arr[i] - 1;         /* where arr[i] should live (0-indexed) */
-        if (arr[i] != arr[correct]) {      /* arr[i] is not in its correct place */
+        int correct = arr[i] - 1;  /* value arr[i] belongs at this index */
+
+        /* Guard: if arr[i] already equals arr[correct], either arr[i] is already
+           at its correct position (arr[i] == i+1), OR it's a duplicate of whatever
+           is already at index correct. Either way, swapping would loop forever. */
+        if (arr[i] != arr[correct]) {
             int tmp      = arr[i];
             arr[i]       = arr[correct];
-            arr[correct] = tmp;            /* swap arr[i] into its correct position */
-            /* do NOT advance i: the swapped-in value might also be wrong */
+            arr[correct] = tmp;
+            /* Don't advance i: newly arrived element may also be misplaced. */
         } else {
-            i++;   /* arr[i] is correct (or we have a duplicate), move forward */
+            i++;  /* position settled (correct or duplicate): move on */
         }
     }
 }
 
-/* After cyclic_sort, find the first missing positive. */
+/* Find the first missing positive in arr[0..n-1] using cyclic sort. */
 int first_missing_positive(int *arr, int n) {
     cyclic_sort(arr, n);
     for (int i = 0; i &lt; n; i++)
-        if (arr[i] != i + 1) return i + 1;   /* value i+1 is missing */
-    return n + 1;                              /* all 1..n present, missing is n+1 */
+        if (arr[i] != i + 1) return i + 1;  /* value i+1 is absent */
+    return n + 1;                            /* all 1..n present; missing is n+1 */
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
+  <div class="section-label">&#9316; Dry Run</div>
   <div class="dry-run">arr = [3, 1, 4, 2, 5]
 
-i=0: arr[0]=3, correct=2, arr[2]=4≠3 → swap[0,2] → [4,1,3,2,5]
-i=0: arr[0]=4, correct=3, arr[3]=2≠4 → swap[0,3] → [2,1,3,4,5]
-i=0: arr[0]=2, correct=1, arr[1]=1≠2 → swap[0,1] → [1,2,3,4,5]
-i=0: arr[0]=1==1 → i++
-i=1: arr[1]=2==2 → i++
-...all correct → no missing positive, return 6</div>
+i=0: correct=2, arr[2]=4 ≠ arr[0]=3 → swap(0,2) → [4,1,3,2,5]
+i=0: correct=3, arr[3]=2 ≠ arr[0]=4 → swap(0,3) → [2,1,3,4,5]
+i=0: correct=1, arr[1]=1 ≠ arr[0]=2 → swap(0,1) → [1,2,3,4,5]
+i=0: arr[0]=1 == arr[0]=1 → i++ (correct=0, arr[0]=1 == i+1=1)
+i=1,2,3,4: all arr[i]==i+1 → advance each
+Scan: no gap → return 6
+
+arr = [3, 4, -1, 1] (values out of 1..n range):
+  Values -1 and out-of-range: correct = arr[i]-1 could be negative.
+  Fix: skip values outside [1..n]: if arr[i] < 1 || arr[i] > n → just i++
+  (standard version handles this with the guard)</div>
 
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Infinite loop when arr[i] == arr[arr[i]-1] (duplicate values)</div>
-    <p>If arr[i] == arr[arr[i]-1], the value is a duplicate — both positions hold the same number. Swapping would loop forever. The condition <code>arr[i] != arr[correct]</code> (not just <code>arr[i] != i+1</code>) prevents this: if swapping would put the same value in both spots, just advance i instead.</p>
+    <div class="gotcha-title">&#9888; Gotcha: using arr[i] != i+1 as the swap guard instead of arr[i] != arr[correct]</div>
+    <p><strong>Wrong:</strong> <code>while (arr[i] != i+1) { swap; }</code> — for a duplicate like [1, 2, 2, 4], at i=2 arr[2]=2 and correct=1, arr[1]=2. The condition arr[i] != i+1 is true (2 ≠ 3), so you swap arr[2] with arr[1] — swapping two identical 2s — forever.</p>
+    <p><strong>Correct:</strong> <code>if (arr[i] != arr[correct])</code> — if the destination already holds the same value, swapping changes nothing; advance instead.</p>
+    <p><strong>One-line rule:</strong> guard the swap with arr[i] != arr[arr[i]-1], not arr[i] != i+1.</p>
   </div>
 
-  <div class="leetcode">
-    <span>268 &middot; Missing Number</span>
-    <span>41 &middot; First Missing Positive</span>
-    <span>442 &middot; Find All Duplicates in an Array</span>
+  <div class="section-label">&#9317; Confidence Check</div>
+  <div class="confidence">
+    <div class="confidence-title">Can you answer these without looking at the code?</div>
+    <ol>
+      <li>Why is the total number of swaps at most n−1, even though there is a while loop nested inside the walk over n elements?</li>
+      <li>After cyclic_sort completes on an array with one duplicate, what will the sorted array look like at the position of the duplicate?</li>
+      <li>How would you adapt cyclic sort to handle values in range [0, n−1] instead of [1, n]?</li>
+    </ol>
   </div>
-  <div class="trigger">When you see: find missing/duplicate numbers in a 1-to-N array with O(1) space &#8594; think: cyclic sort — swap each value to its correct index</div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">When you see: find missing/duplicate in a 1-to-N array with O(1) space &rarr; cyclic sort: swap arr[i] to arr[arr[i]&minus;1] until in place; guard with arr[i] != arr[correct]</div>
+    <ul class="trigger-variants">
+      <li>First missing positive &rarr; cyclic sort then find first i where arr[i] != i+1</li>
+      <li>All duplicates &rarr; after sort, collect indices where arr[i] != i+1</li>
+      <li>Values in [0..n-1] &rarr; change correct = arr[i] (not arr[i]-1)</li>
+    </ul>
+  </div>
 </div>
 
 <!-- ================================================================ P24 -->
@@ -3321,66 +3351,119 @@ i=1: arr[1]=2==2 → i++
     <span class="pattern-name">In-Place: Dutch National Flag (3-Way Partition)</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    Sort an array of red, white, and blue balls (values 0, 1, 2) in a single pass.
-    Use three regions: "definitely 0s" (left of low), "unknowns" (between low and high), "definitely 2s" (right of high).
-    A mid pointer walks through the unknowns and sorts each element into the correct region.
+  <div class="section-label">&#9312; Background</div>
+  <div class="bg-section">
+    <p>Sorting an array with three distinct values (0, 1, 2) in a single pass with O(1) space is the Dutch National Flag problem, named after the three-colour flag by Edsger Dijkstra who posed it in the 1970s. A two-pass approach is easy: count zeros, ones, and twos, then overwrite. But that reads the array twice. The one-pass version uses three pointers that maintain four invariant regions simultaneously.</p>
+    <p>The regions are: [0..low-1] contains only 0s; [low..mid-1] contains only 1s; [mid..high] is the unknown region; [high+1..n-1] contains only 2s. The mid pointer walks through the unknown region. When it finds a 0, it swaps with the low boundary (both low and mid advance because the element swapped in from low was previously classified). When it finds a 2, it swaps with the high boundary and only decrements high — the element arriving from the right has not been examined yet, so mid does not advance.</p>
+    <p>The asymmetry between handling 0s and 2s is the most common source of bugs. When swapping with low, the element that was at low had already been processed (it was a 1 or a 0 that got correctly placed); so after the swap, mid can safely advance. When swapping with high, the element that was at high has never been seen; mid must stay and re-examine it.</p>
+    <p>This pattern generalises beyond three values: any in-place partition into three groups (less-than, equal, greater-than a pivot) uses the same three-pointer structure, which is the basis of the three-way partition step in quicksort for arrays with many duplicate values.</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    Three pointers: low (next 0 slot), mid (current element), high (next 2 slot from the right). When mid hits a 0, swap with low (both advance). When mid hits a 2, swap with high (only high shrinks, mid stays to check the swapped-in element). When mid hits a 1, just advance mid.
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="where-list">
+    <li><span class="sit">LeetCode 75 &mdash; Sort Colors</span> — <span class="why">textbook Dutch National Flag; values are 0, 1, 2.</span></li>
+    <li><span class="sit">LeetCode 905 &mdash; Sort Array By Parity</span> — <span class="why">two-way partition (even/odd); simplification of DNF with only two regions.</span></li>
+    <li><span class="sit">Quicksort 3-way partition for arrays with duplicates</span> — <span class="why">when the pivot value appears many times, DNF partitions into &lt;pivot / =pivot / &gt;pivot in O(n).</span></li>
+    <li><span class="sit">Embedded: segregate sensor readings into below-threshold / normal / above-threshold</span> — <span class="why">real-time systems classify readings into three health zones; DNF does it in a single pass.</span></li>
+    <li><span class="sit">Packet classification: sort network packets into drop / forward / inspect queues</span> — <span class="why">three-priority classification maps directly to DNF's three-region invariant.</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic From Scratch</div>
+  <div class="logic-build">
+    <p>Use arr = [2, 0, 1]. Goal: sort to [0, 1, 2] in one pass. Three pointers: low=0 (next 0 slot), mid=0 (current element), high=2 (next 2 slot from right).</p>
+    <div class="ascii">arr:  2  0  1
+      low=0, mid=0, high=2
+      [unknown region: mid..high]
+
+Step 1: arr[mid]=arr[0]=2. It belongs at the RIGHT end.
+  Swap arr[mid] with arr[high]: arr[0] ↔ arr[2] → [1, 0, 2]
+  high-- → high=1.  DON'T advance mid (arr[0]=1 unexamined).
+
+arr:  1  0  2
+      low=0, mid=0, high=1
+
+Step 2: arr[mid]=arr[0]=1. It belongs in the MIDDLE (keep as-is).
+  mid++ → mid=1.
+
+arr:  1  0  2
+      low=0, mid=1, high=1
+
+Step 3: arr[mid]=arr[1]=0. It belongs at the LEFT end.
+  Swap arr[mid] with arr[low]: arr[1] ↔ arr[0] → [0, 1, 2]
+  low++ → low=1.  mid++ → mid=2.
+
+mid=2 > high=1 → stop.  Result: [0, 1, 2]  ✓</div>
+    <p><span class="aha">Key asymmetry: after swapping with high, mid does NOT advance (the incoming element is unknown). After swapping with low, mid DOES advance (the incoming element from the "1s zone" was already examined).</span></p>
   </div>
 
-  <div class="section-label">&#9316; Annotated Code</div>
-<pre><code class="language-c">/* Sort array containing only 0, 1, 2 in one pass. */
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Sort array of 0s, 1s, and 2s in a single pass, O(n) time O(1) space. */
 void dutch_flag(int *arr, int n) {
-    int low  = 0;       /* everything before low is 0 */
-    int mid  = 0;       /* current element being examined */
-    int high = n - 1;   /* everything after high is 2 */
+    int low  = 0;      /* boundary: arr[0..low-1] are all 0s */
+    int mid  = 0;      /* current element under examination */
+    int high = n - 1;  /* boundary: arr[high+1..n-1] are all 2s */
 
     while (mid &lt;= high) {
         if (arr[mid] == 0) {
-            /* 0 belongs at the low end: swap it there */
+            /* 0 belongs at the left boundary.
+               The element at arr[low] was a 1 (already processed), so after
+               the swap we can advance BOTH low and mid safely. */
             int tmp = arr[low]; arr[low] = arr[mid]; arr[mid] = tmp;
-            low++;   /* low region grows */
-            mid++;   /* the swapped-in element from low was already checked (it was 1 or 0 we processed), safe to advance */
+            low++;
+            mid++;
         } else if (arr[mid] == 2) {
-            /* 2 belongs at the high end: swap it there */
+            /* 2 belongs at the right boundary.
+               The element arriving from arr[high] is UNKNOWN — we have not
+               examined it yet. Advance high but NOT mid; re-examine arr[mid]. */
             int tmp = arr[high]; arr[high] = arr[mid]; arr[mid] = tmp;
-            high--;  /* high region grows from the right */
-            /* do NOT advance mid: the swapped-in element (from high) is unknown */
+            high--;
         } else {
-            mid++;   /* arr[mid] == 1: it is in the right place, just advance */
+            /* arr[mid] == 1: already in the correct middle region. Just advance. */
+            mid++;
         }
     }
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
-  <div class="dry-run">arr = [2, 0, 2, 1, 1, 0]   low=0, mid=0, high=5
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run">arr = [2, 0, 2, 1, 1, 0],  low=0, mid=0, high=5
 
-mid=0(2): swap[0,5] → [0,0,2,1,1,2], high=4
-mid=0(0): swap[0,0] → [0,0,2,1,1,2], low=1, mid=1
-mid=1(0): swap[1,1] → [0,0,2,1,1,2], low=2, mid=2
-mid=2(2): swap[2,4] → [0,0,1,1,2,2], high=3
-mid=2(1): mid=3
-mid=3(1): mid=4
-mid=4 > high=3 → stop
+mid | arr[mid] | action                          | arr state        | low | high
+----|----------|---------------------------------|------------------|-----|-----
+ 0  |    2     | swap(0,5), high--               | [0,0,2,1,1,2]    |  0  |  4
+ 0  |    0     | swap(0,0)=noop, low++, mid++    | [0,0,2,1,1,2]    |  1  |  4
+ 1  |    0     | swap(1,1)=noop, low++, mid++    | [0,0,2,1,1,2]    |  2  |  4
+ 2  |    2     | swap(2,4), high--               | [0,0,1,1,2,2]    |  2  |  3
+ 2  |    1     | mid++                           | [0,0,1,1,2,2]    |  2  |  3
+ 3  |    1     | mid++                           | [0,0,1,1,2,2]    |  2  |  3
+ 4  | mid>high | stop
 
-Result: [0,0,1,1,2,2] ✓</div>
+Result: [0,0,1,1,2,2]  ✓</div>
 
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Advancing mid after swapping with high</div>
-    <p>When you swap arr[mid] with arr[high], you bring an unknown element into position mid. You have not examined it yet. Do NOT advance mid — re-examine arr[mid] in the next loop iteration. Only advance mid when you place a 0 (swap with low, which held something already processed) or when arr[mid] is 1.</p>
+    <div class="gotcha-title">&#9888; Gotcha: advancing mid after swapping with high</div>
+    <p><strong>Wrong:</strong> adding <code>mid++</code> after the swap-with-high — this skips the examination of the newly arrived element, which could be a 0 or 2 that still needs to be classified.</p>
+    <p><strong>Correct:</strong> only decrement high; do not touch mid. The next loop iteration will re-examine arr[mid] with the newly arrived element.</p>
+    <p><strong>One-line rule:</strong> swap-with-low → advance both low and mid; swap-with-high → advance only high, not mid.</p>
   </div>
 
-  <div class="leetcode">
-    <span>75 &middot; Sort Colors</span>
-    <span>905 &middot; Sort Array By Parity</span>
-    <span>922 &middot; Sort Array By Parity II</span>
+  <div class="section-label">&#9317; Confidence Check</div>
+  <div class="confidence">
+    <div class="confidence-title">Can you answer these without looking at the code?</div>
+    <ol>
+      <li>When mid encounters a 0 and swaps with low, why is it safe to advance mid immediately? What was at arr[low] before the swap?</li>
+      <li>What is the invariant of the four regions [0..low-1], [low..mid-1], [mid..high], [high+1..n-1] at the start of each loop iteration?</li>
+      <li>How would you extend this to a four-way partition (0, 1, 2, 3)?</li>
+    </ol>
   </div>
-  <div class="trigger">When you see: sort array with 3 distinct values in one pass &#8594; think: Dutch National Flag — three pointers, low/mid/high regions</div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">When you see: sort array with exactly 3 distinct values in one pass &rarr; Dutch National Flag: low/mid/high pointers; swap-with-low advances both, swap-with-high advances only high</div>
+    <ul class="trigger-variants">
+      <li>Two-way partition (even/odd, negative/positive) &rarr; same idea with only two pointers</li>
+      <li>Quicksort with many duplicates &rarr; DNF 3-way partition around pivot avoids O(n²) worst case</li>
+      <li>Generalise to k values &rarr; k-way stable partition or multiple passes of DNF</li>
+    </ul>
+  </div>
 </div>
 
 <!-- ================================================================ P25 -->
