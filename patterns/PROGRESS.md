@@ -31,20 +31,20 @@
 ### Sliding Window (P09–P13)
 - [x] P09 · Sliding Window: Fixed Size Maximum Sum
 - [x] P10 · Sliding Window: Variable Size (Shrink When Invalid)
-- [ ] P11 · Sliding Window: Longest Substring Without Repeat (Freq Map)
-- [ ] P12 · Sliding Window: Minimum Window Substring
-- [ ] P13 · Sliding Window: Count Subarrays with Condition
+- [x] P11 · Sliding Window: Longest Substring Without Repeat (Freq Map)
+- [x] P12 · Sliding Window: Minimum Window Substring
+- [x] P13 · Sliding Window: Count Subarrays with Condition
 
 ### Binary Search (P14–P19)
-- [ ] P14 · Binary Search: Classic Target Find
-- [ ] P15 · Binary Search: Find Leftmost (First) Occurrence
-- [ ] P16 · Binary Search: Find Rightmost (Last) Occurrence
-- [ ] P17 · Binary Search: Search in Rotated Sorted Array
-- [ ] P18 · Binary Search: Find Peak Element
-- [ ] P19 · Binary Search: Answer Space (Minimize/Maximize a Value)
+- [x] P14 · Binary Search: Classic Target Find
+- [x] P15 · Binary Search: Find Leftmost (First) Occurrence
+- [x] P16 · Binary Search: Find Rightmost (Last) Occurrence
+- [x] P17 · Binary Search: Search in Rotated Sorted Array
+- [x] P18 · Binary Search: Find Peak Element
+- [x] P19 · Binary Search: Answer Space (Minimize/Maximize a Value)
 
 ### Kadane's (P20–P22)
-- [ ] P20 · Kadane's Algorithm: Maximum Subarray Sum
+- [x] P20 · Kadane's Algorithm: Maximum Subarray Sum
 - [ ] P21 · Kadane's Variant: Maximum Product Subarray
 - [ ] P22 · Kadane's Variant: Circular Maximum Subarray
 
@@ -101,10 +101,10 @@
 | Batch | Cards | Status |
 |-------|-------|--------|
 | Batch 1 | P01–P10 | ✅ Done |
-| Batch 2 | P11–P20 | ⏳ Next |
-| Batch 3 | P21–P30 | — |
+| Batch 2 | P11–P20 | ✅ Done |
+| Batch 3 | P21–P30 | ⏳ Next |
 | Batch 4 | P31–P40 | — |
 | Batch 5 | P41–P50 | — |
 | Batch 6 | P51–P54 | — |
 
-**Currently reworking:** P11 — Sliding Window: Longest Substring Without Repeat (Freq Map)
+**Currently reworking:** P21 — Kadane's Variant: Maximum Product Subarray
