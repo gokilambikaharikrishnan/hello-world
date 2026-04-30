@@ -2994,86 +2994,127 @@ All-negative case: arr=[-3,-1,-2]
     <span class="pattern-name">Kadane&rsquo;s Variant: Maximum Product Subarray</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    Just like Kadane's for sums, but products have a twist: a large negative number multiplied by another negative number becomes a large positive.
-    So you cannot just track one running value — a very negative running product could become the best product in one multiplication.
-    Track both the running maximum AND the running minimum at every step.
+  <div class="section-label">&#9312; Background</div>
+  <div class="bg-section">
+    <p>Maximum sum subarray (P20) only needed one running value because sums are monotone: adding a positive number always increases the sum, adding a negative always decreases it. Products behave differently. A large negative product multiplied by another negative number becomes a large positive — so the worst running product at index i-1 might become the best at index i if arr[i] is negative.</p>
+    <p>The fix is to track two running values simultaneously: the maximum product of any subarray ending at the current index (hi), and the minimum product of any subarray ending at the current index (lo). At each step, the new hi is the maximum of three candidates: arr[i] alone (fresh start), hi × arr[i] (extend the current max), and lo × arr[i] (extend the current min, which might flip sign). The new lo is the minimum of those same three candidates.</p>
+    <p>The critical implementation detail: you must compute both new hi and new lo from the OLD hi and lo values. If you update hi first and then use it to compute lo, you get the wrong answer. The safe approach is to compute all three candidate values before assigning anything, using temporary variables to hold the old hi and lo.</p>
+    <p>This two-value tracking technique generalises to any problem where both a running maximum and running minimum matter at each step — for example, maximum subarray with at most one deletion, or maximum product with mixed-sign matrices.</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    At each index, the new max could come from: (1) arr[i] alone, (2) prev_max &times; arr[i], or (3) prev_min &times; arr[i] (if arr[i] is negative, the minimum flips to become maximum). Always track both max and min.
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="where-list">
+    <li><span class="sit">LeetCode 152 &mdash; Maximum Product Subarray</span> — <span class="why">direct application; the two-variable Kadane is the standard O(n) solution.</span></li>
+    <li><span class="sit">Signal processing: maximum energy (product of amplitudes) in a contiguous burst</span> — <span class="why">amplitudes can be negative (phase inversion); the min-tracking handles sign flips.</span></li>
+    <li><span class="sit">Finance: maximum multiplicative return over a contiguous period</span> — <span class="why">returns are multiplicative; negative returns can flip to gains over two periods.</span></li>
+    <li><span class="sit">LeetCode 713 &mdash; Subarray Product Less Than K</span> — <span class="why">sliding window variant; uses a running product instead of sum.</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic From Scratch</div>
+  <div class="logic-build">
+    <p>Use arr = [2, 3, -2, 4]. Goal: maximum product of any contiguous subarray.</p>
+    <p>At each index, the subarray ending here can be: just arr[i], or arr[i] times the previous best (or worst). Compute all three candidates from saved old values, then pick hi = max and lo = min.</p>
+    <div class="ascii">i=0: hi=2, lo=2, ans=2
+
+i=1 (arr[1]=3): old_hi=2, old_lo=2
+  candidates: [3, 2*3=6, 2*3=6]
+  hi = max(3,6,6) = 6
+  lo = min(3,6,6) = 3
+  ans = 6
+
+i=2 (arr[2]=-2): old_hi=6, old_lo=3
+  candidates: [-2, 6*-2=-12, 3*-2=-6]
+  hi = max(-2, -12, -6) = -2
+  lo = min(-2, -12, -6) = -12
+  ans = 6  (no improvement)
+
+i=3 (arr[3]=4): old_hi=-2, old_lo=-12
+  candidates: [4, -2*4=-8, -12*4=-48]
+  hi = max(4, -8, -48) = 4
+  lo = min(4, -8, -48) = -48
+  ans = 6</div>
+    <p><span class="aha">At i=2, arr[2]=-2 flipped everything: the previous hi (6) became the most negative product (-12), stored in lo. If a future negative number appeared, -12 × negative would give a large positive. That is exactly why we keep lo around.</span></p>
   </div>
 
-  <div class="section-label">&#9316; Annotated Code</div>
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+  <div class="pseudo">PSEUDOCODE
+  hi = lo = ans = arr[0]
+  for i from 1 to n-1:
+      save old_hi = hi, old_lo = lo
+      hi = max(arr[i], old_hi * arr[i], old_lo * arr[i])
+      lo = min(arr[i], old_hi * arr[i], old_lo * arr[i])
+      ans = max(ans, hi)
+  return ans</div>
 <pre><code class="language-c">/* Maximum product of any contiguous subarray. */
 int max_product(int *arr, int n) {
-    int cur_max = arr[0];   /* max product of subarray ending here */
-    int cur_min = arr[0];   /* min product of subarray ending here (could flip!) */
-    int result  = arr[0];
+    int hi  = arr[0];  /* max product of any subarray ending at current index */
+    int lo  = arr[0];  /* min product of any subarray ending at current index */
+    int ans = arr[0];
 
     for (int i = 1; i &lt; n; i++) {
-        /* when we multiply by arr[i], max and min might swap if arr[i] is negative */
-        int tmp = cur_max;
+        /* Save old values BEFORE updating — both hi and lo depend on the OLD hi and lo.
+           Updating hi first and using new hi to compute lo gives the wrong answer. */
+        int old_hi = hi, old_lo = lo;
 
-        /* new max is one of: arr[i] alone, extend max, or extend min (if arr[i]<0) */
-        cur_max = arr[i];
-        if (tmp     * arr[i] &gt; cur_max) cur_max = tmp     * arr[i];
-        if (cur_min * arr[i] &gt; cur_max) cur_max = cur_min * arr[i];
+        /* Three candidates: start fresh, extend old max, extend old min (sign may flip). */
+        int a = arr[i];
+        int b = old_hi * arr[i];
+        int c = old_lo * arr[i];
 
-        /* new min similarly */
-        cur_min = arr[i];
-        if (tmp     * arr[i] &lt; cur_min) cur_min = tmp     * arr[i];
-        if (cur_min * arr[i] &lt; cur_min) cur_min = cur_min * arr[i]; /* recalc with new tmp */
+        hi = a;
+        if (b &gt; hi) hi = b;
+        if (c &gt; hi) hi = c;
 
-        /* simpler: recalculate from saved tmp */
-        int a = tmp * arr[i], b = cur_min; /* cur_min was just set to arr[i] above */
-        cur_min = arr[i];
-        if (a &lt; cur_min) cur_min = a;
-        if (tmp * arr[i] &lt; cur_min) cur_min = tmp * arr[i]; /* already have a=tmp*arr[i] */
+        lo = a;
+        if (b &lt; lo) lo = b;
+        if (c &lt; lo) lo = c;
 
-        if (cur_max &gt; result) result = cur_max;
-    }
-    return result;
-}
-
-/* Cleaner version using a temp swap trick: */
-int max_product_clean(int *arr, int n) {
-    int hi = arr[0], lo = arr[0], ans = arr[0];
-    for (int i = 1; i &lt; n; i++) {
-        int candidates[3] = {arr[i], hi * arr[i], lo * arr[i]};
-        hi = candidates[0];
-        if (candidates[1] &gt; hi) hi = candidates[1];
-        if (candidates[2] &gt; hi) hi = candidates[2];
-        lo = candidates[0];
-        if (candidates[1] &lt; lo) lo = candidates[1];
-        if (candidates[2] &lt; lo) lo = candidates[2];
         if (hi &gt; ans) ans = hi;
     }
     return ans;
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
+  <div class="section-label">&#9316; Dry Run</div>
   <div class="dry-run">arr = [2, 3, -2, 4]
 
-i=1: candidates=[3, 2*3=6, 2*3=6]  hi=6, lo=3, ans=6
-i=2: candidates=[-2, 6*-2=-12, 3*-2=-6]  hi=-2, lo=-12, ans=6
-i=3: candidates=[4, -2*4=-8, -12*4=-48]  hi=4, lo=-48, ans=6
+i | arr[i] | old_hi | old_lo | a  |  b   |  c   | hi  | lo  | ans
+--|--------|--------|--------|----|------|------|-----|-----|----
+0 |   —    |   —    |   —    | — |  —   |  —   |  2  |  2  |  2
+1 |   3    |   2    |   2    | 3 |  6   |  6   |  6  |  3  |  6
+2 |  -2    |   6    |   3    |-2 | -12  | -6   | -2  | -12 |  6
+3 |   4    |  -2    |  -12   | 4 |  -8  | -48  |  4  | -48 |  6
 
-Answer: 6  (subarray [2,3]) ✓</div>
+Answer: 6  (subarray [2,3] at indices 0..1)  ✓
+
+arr = [-2, 3, -4]:
+i=1(3): a=3, b=-2*3=-6, c=-2*3=-6 → hi=3, lo=-6, ans=3
+i=2(-4): a=-4, b=3*-4=-12, c=-6*-4=24 → hi=24, lo=-12, ans=24  ✓  ([-2,3,-4])</div>
 
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Updating cur_min using the already-updated cur_max</div>
-    <p>Always save <code>prev_max = cur_max</code> before updating cur_max. When you compute the new cur_min, you need the old cur_max — not the one just computed. Using the new cur_max in the min calculation gives wrong results. The "candidates array" approach sidesteps this by computing all three options from the old values first.</p>
+    <div class="gotcha-title">&#9888; Gotcha: updating hi before computing lo</div>
+    <p><strong>Wrong:</strong> <code>hi = max(arr[i], hi*arr[i], lo*arr[i]); lo = min(arr[i], hi*arr[i], lo*arr[i]);</code> — the second line uses the already-updated hi, so lo is computed from new-hi × arr[i], not old-hi × arr[i].</p>
+    <p><strong>Correct:</strong> save <code>old_hi = hi</code> before any updates, then use old_hi in both the new hi and new lo computations.</p>
+    <p><strong>One-line rule:</strong> compute all candidates from old values first, assign both hi and lo from those saved candidates.</p>
   </div>
 
-  <div class="leetcode">
-    <span>152 &middot; Maximum Product Subarray</span>
-    <span>713 &middot; Subarray Product Less Than K</span>
-    <span>53 &middot; Maximum Subarray</span>
+  <div class="section-label">&#9317; Confidence Check</div>
+  <div class="confidence">
+    <div class="confidence-title">Can you answer these without looking at the code?</div>
+    <ol>
+      <li>Why does multiplying the minimum product by a negative number potentially give the new maximum? Walk through a concrete example.</li>
+      <li>The code tracks three candidates for each of hi and lo. Can you prove that these three are exhaustive — that no other candidate could yield a higher or lower product?</li>
+      <li>What happens if the array contains a zero? How does the fresh-start candidate (arr[i] alone) handle the reset?</li>
+    </ol>
   </div>
-  <div class="trigger">When you see: maximum product subarray &#8594; think: track both running max AND min — a negative min can flip to best max</div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">When you see: maximum product subarray (with possible negatives) &rarr; track both hi and lo at each step; save old values before updating both</div>
+    <ul class="trigger-variants">
+      <li>Array contains zeros &rarr; the fresh-start candidate resets naturally; no special handling needed</li>
+      <li>Minimum product subarray &rarr; same code, track lo separately; return lo at end</li>
+      <li>Even number of negatives guarantees positive max &rarr; true, but the algorithm handles it without needing to count</li>
+    </ul>
+  </div>
 </div>
 
 <!-- ================================================================ P22 -->
@@ -3083,64 +3124,109 @@ Answer: 6  (subarray [2,3]) ✓</div>
     <span class="pattern-name">Kadane&rsquo;s Variant: Circular Maximum Subarray</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    The array wraps around like a circular track. The maximum subarray can either stay within the linear array, or it can wrap around from the end to the beginning.
-    Wrapping-around means: total sum minus the minimum subarray in the middle.
-    So the answer is the larger of: (1) normal Kadane's max, (2) total &minus; min_subarray.
+  <div class="section-label">&#9312; Background</div>
+  <div class="bg-section">
+    <p>Linear Kadane's (P20) finds the maximum sum subarray within the array bounds. When the array is circular — the last element wraps around to connect back to the first — the maximum subarray might span that wrap point. For example in [5, -3, 5], the best subarray is [5, 5] which wraps around, with sum 10, better than the linear best of 7.</p>
+    <p>The key insight is a complement argument. A wrapping subarray is everything EXCEPT some contiguous middle segment. If the total array sum is T and the middle (non-wrapping) segment has sum M, the wrapping subarray has sum T − M. To maximise T − M, we minimise M. Minimising a contiguous subarray sum is exactly Kadane's algorithm run "in reverse" — track the running minimum instead of maximum.</p>
+    <p>So the answer is max(linear_max, total − min_subarray_sum). Run one Kadane's pass tracking both max and min simultaneously, then apply the formula. This is O(n) time and O(1) space.</p>
+    <p>One edge case destroys the formula: if all elements are negative, the minimum subarray equals the total, making total − min = 0 — but an empty subarray is invalid. Guard: if linear_max &lt; 0 (all negative), return linear_max directly and skip the circular candidate.</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    A wrapping subarray = total_sum &minus; (the minimum subarray in the non-wrapping part). Run Kadane's for max and also for min (by negating the array). Edge case: if all elements are negative, the circular answer would be 0 (empty), which is invalid — in that case return the normal max.
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="where-list">
+    <li><span class="sit">LeetCode 918 &mdash; Maximum Sum Circular Subarray</span> — <span class="why">direct application of the complement formula.</span></li>
+    <li><span class="sit">Circular buffer processing: maximum energy segment in a ring buffer</span> — <span class="why">sensor data stored in circular buffers; the peak-energy window may wrap around the write pointer.</span></li>
+    <li><span class="sit">Scheduling: maximum-value task sequence in a circular job queue</span> — <span class="why">jobs wrap around; the complement trick applies directly.</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic From Scratch</div>
+  <div class="logic-build">
+    <p>Use arr = [5, -3, 5], total = 7. Two cases for a circular subarray:</p>
+    <div class="ascii">Case 1 — no wrap (standard Kadane's):
+  Best subarray entirely within arr[0..2]
+  Kadane's max: 5 → max(5, 5-3=2)=5 → max(5, 5+5=10)=10... wait
+  Actually: i=0:cur=5,max=5. i=1:cur=max(-3,5-3=2)=2,max=5. i=2:cur=max(5,2+5=7)=7,max=7
+  Linear max = 7  (subarray [5,-3,5])
+
+Case 2 — wraps around (complement trick):
+  Wrapping subarray = total - (minimum middle segment)
+  Kadane's MIN: i=0:cur=5,min=5. i=1:cur=min(-3,5-3=2)=-3,min=-3. i=2:cur=min(5,-3+5=2)=2,min=-3
+  min_sum = -3  (the segment [-3])
+  circular = total - min_sum = 7 - (-3) = 10  (wrapping subarray [5,5] = 10)</div>
+    <p><span class="aha">Answer = max(linear_max=7, circular=10) = 10. The wrapping [5,5] wins over the linear [5,-3,5].</span></p>
+    <p>Now the all-negative edge case: arr = [-1, -2, -3]. total = -6. linear_max = -1. min_sum = -6 (the whole array). circular = -6 - (-6) = 0. But 0 means empty subarray — invalid. The guard <code>if (max_sum &lt; 0) return max_sum</code> short-circuits to return -1.</p>
   </div>
 
-  <div class="section-label">&#9316; Annotated Code</div>
-<pre><code class="language-c">/* Maximum sum subarray in a circular array. */
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Maximum sum subarray in a circular array (wrapping allowed). */
 int max_circular(int *arr, int n) {
     int total   = 0;
+    /* Seed both Kadane's passes with arr[0]; start loop at i=0 to accumulate total. */
     int cur_max = arr[0], max_sum = arr[0];
     int cur_min = arr[0], min_sum = arr[0];
 
     for (int i = 0; i &lt; n; i++) {
-        total += arr[i];               /* sum of entire array */
+        total += arr[i];
 
-        /* Kadane's for maximum */
-        cur_max = cur_max + arr[i] &gt; arr[i] ? cur_max + arr[i] : arr[i];
+        /* Kadane's for maximum: extend or restart. */
+        cur_max = (cur_max + arr[i] &gt; arr[i]) ? cur_max + arr[i] : arr[i];
         if (cur_max &gt; max_sum) max_sum = cur_max;
 
-        /* Kadane's for minimum (to find the middle chunk to remove) */
-        cur_min = cur_min + arr[i] &lt; arr[i] ? cur_min + arr[i] : arr[i];
+        /* Kadane's for minimum: same logic, opposite comparison.
+           This finds the contiguous middle segment to "remove" for the circular case. */
+        cur_min = (cur_min + arr[i] &lt; arr[i]) ? cur_min + arr[i] : arr[i];
         if (cur_min &lt; min_sum) min_sum = cur_min;
     }
 
-    /* if all elements are negative, max_sum < 0 and total - min_sum = 0 (invalid) */
-    if (max_sum &lt; 0) return max_sum;  /* all negative: best is the least negative */
+    /* Guard: if all elements are negative, total - min_sum = 0 (empty subarray), invalid.
+       max_sum < 0 detects this: when all elements negative, the best is the least-negative. */
+    if (max_sum &lt; 0) return max_sum;
 
-    int circular = total - min_sum;   /* wrapping subarray = total minus the minimum chunk */
+    /* Circular candidate: remove the minimum middle segment from the total. */
+    int circular = total - min_sum;
     return max_sum &gt; circular ? max_sum : circular;
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
-  <div class="dry-run">arr = [5, -3, 5]  total=7
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run">arr = [5, -3, 5],  total = 7
 
-Kadane max: 5 → 2 → 7   max_sum=7
-Kadane min: 5 → -3 → 2  min_sum=-3
+i=0: cur_max=5, max_sum=5;  cur_min=5, min_sum=5
+i=1: cur_max=max(-3, 5-3=2)=2, max_sum=5;  cur_min=min(-3, 5-3=2)=-3, min_sum=-3
+i=2: cur_max=max(5, 2+5=7)=7, max_sum=7;   cur_min=min(5, -3+5=2)=2,  min_sum=-3
 
-circular = total - min_sum = 7 - (-3) = 10
-max(7, 10) = 10 ✓  (wraps: [5,5] = 10)</div>
+max_sum=7 (not &lt; 0, proceed)
+circular = 7 - (-3) = 10
+return max(7, 10) = 10  ✓
+
+All-negative: arr=[-1,-2,-3], total=-6
+  max_sum=-1 (least negative), min_sum=-6
+  max_sum &lt; 0 → return -1  ✓  (skip circular=0)</div>
 
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Forgetting the all-negative edge case</div>
-    <p>If all elements are negative, min_sum equals the total sum, so <code>total - min_sum = 0</code>, which looks great but represents an empty subarray — invalid if the problem requires at least one element. Check: if max_sum &lt; 0 (all negative), return max_sum directly, skipping the circular comparison.</p>
+    <div class="gotcha-title">&#9888; Gotcha: forgetting the all-negative guard</div>
+    <p><strong>Wrong:</strong> no guard — returns max(-1, -6-(-6)=0) = 0 for an all-negative array, claiming the empty subarray has sum 0, which is invalid when at least one element is required.</p>
+    <p><strong>Correct:</strong> <code>if (max_sum &lt; 0) return max_sum;</code> before computing the circular candidate. This detects all-negative arrays (where linear_max is the least-negative element).</p>
+    <p><strong>One-line rule:</strong> if max_sum &lt; 0, all elements are negative — skip the circular candidate and return max_sum.</p>
   </div>
 
-  <div class="leetcode">
-    <span>918 &middot; Maximum Sum Circular Subarray</span>
-    <span>53 &middot; Maximum Subarray</span>
-    <span>1191 &middot; K-Concatenation Maximum Sum</span>
+  <div class="section-label">&#9317; Confidence Check</div>
+  <div class="confidence">
+    <div class="confidence-title">Can you answer these without looking at the code?</div>
+    <ol>
+      <li>Why does "total − min_subarray_sum" give the sum of the wrapping subarray? Draw a picture with a 5-element array to convince yourself.</li>
+      <li>What does the circular candidate equal when the minimum subarray is the entire array? Why is that case only reached when all elements are negative?</li>
+      <li>How would you extend this algorithm to find the maximum product (not sum) in a circular array?</li>
+    </ol>
   </div>
-  <div class="trigger">When you see: maximum subarray in a circular/wrap-around array &#8594; think: max(Kadane_max, total &minus; Kadane_min), handle all-negatives case</div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">When you see: maximum subarray in a circular / wrap-around array &rarr; max(Kadane linear, total &minus; Kadane minimum); guard against all-negative with max_sum &lt; 0 check</div>
+    <ul class="trigger-variants">
+      <li>Minimum circular subarray &rarr; min(Kadane_min, total &minus; Kadane_max); guard total &minus; max = 0</li>
+      <li>K-concatenation max sum &rarr; for K&ge;2, answer is max(one-array max, K&times;total + circular adjustment)</li>
+      <li>The complement trick works for any "remove a contiguous piece to maximise what remains" problem</li>
+    </ul>
+  </div>
 </div>
 
 <!-- ================================================================ P23 -->
