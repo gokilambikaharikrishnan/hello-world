@@ -45,22 +45,22 @@
 
 ### Kadane's (P20–P22)
 - [x] P20 · Kadane's Algorithm: Maximum Subarray Sum
-- [ ] P21 · Kadane's Variant: Maximum Product Subarray
-- [ ] P22 · Kadane's Variant: Circular Maximum Subarray
+- [x] P21 · Kadane's Variant: Maximum Product Subarray
+- [x] P22 · Kadane's Variant: Circular Maximum Subarray
 
 ### In-Place (P23–P26)
-- [ ] P23 · In-Place: Cyclic Sort (1-to-N Values)
-- [ ] P24 · In-Place: Dutch National Flag (3-Way Partition)
-- [ ] P25 · In-Place: Rotate Array Right by K
-- [ ] P26 · In-Place: Reverse Segments
+- [x] P23 · In-Place: Cyclic Sort (1-to-N Values)
+- [x] P24 · In-Place: Dutch National Flag (3-Way Partition)
+- [x] P25 · In-Place: Rotate Array Right by K
+- [x] P26 · In-Place: Reverse Segments
 
 ### Sorting (P27–P29)
-- [ ] P27 · Sorting: Custom Comparator with qsort
-- [ ] P28 · Sorting: Merge Overlapping Intervals
-- [ ] P29 · Sorting: Meeting Rooms / Interval Overlap Check
+- [x] P27 · Sorting: Custom Comparator with qsort
+- [x] P28 · Sorting: Merge Overlapping Intervals
+- [x] P29 · Sorting: Meeting Rooms / Interval Overlap Check
 
 ### Greedy (P30–P33)
-- [ ] P30 · Greedy: Jump Game (Can You Reach the End?)
+- [x] P30 · Greedy: Jump Game (Can You Reach the End?)
 - [ ] P31 · Greedy: Jump Game II (Minimum Jumps to Reach End)
 - [ ] P32 · Greedy: Gas Station Circular Tour
 - [ ] P33 · Greedy: Assign Cookies (Two-Sorted-Array Matching)
@@ -102,9 +102,9 @@
 |-------|-------|--------|
 | Batch 1 | P01–P10 | ✅ Done |
 | Batch 2 | P11–P20 | ✅ Done |
-| Batch 3 | P21–P30 | ⏳ Next |
-| Batch 4 | P31–P40 | — |
+| Batch 3 | P21–P30 | ✅ Done |
+| Batch 4 | P31–P40 | ⏳ Next |
 | Batch 5 | P41–P50 | — |
 | Batch 6 | P51–P54 | — |
 
-**Currently reworking:** P21 — Kadane's Variant: Maximum Product Subarray
+**Currently reworking:** P31 — Greedy: Jump Game II (Minimum Jumps to Reach End)
