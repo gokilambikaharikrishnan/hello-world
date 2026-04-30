@@ -3473,53 +3473,97 @@ Result: [0,0,1,1,2,2]  ✓</div>
     <span class="pattern-name">In-Place: Rotate Array Right by K</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    Rotating right by K means the last K elements jump to the front. [1,2,3,4,5] rotated by 2 becomes [4,5,1,2,3].
-    The trick: reverse the whole array, then reverse the first K elements, then reverse the rest. Three reversals, no extra space.
+  <div class="section-label">&#9312; Background</div>
+  <div class="bg-section">
+    <p>Rotating an array right by K moves the last K elements to the front. [1,2,3,4,5] rotated right by 2 gives [4,5,1,2,3]. The naive approach copies the last K elements to a temporary buffer, shifts the rest right by K, then writes the buffer back: O(n) time but O(k) extra space. For very large arrays under memory constraints, that extra space is unacceptable.</p>
+    <p>The three-reversal trick achieves O(n) time with O(1) extra space. The insight is algebraic: reversing the whole array then reversing each of the two segments separately is equivalent to a rotation. For right-by-K: reverse all, then reverse [0..K-1], then reverse [K..n-1]. This looks magical but can be verified with any small example in under a minute.</p>
+    <p>Why three reversals? After reversing the whole array, the last K elements (which should end up at the front) are now at the front but in reverse order. Reversing [0..K-1] puts them in the correct order. The remaining n−K elements (which should end up at the back) are also reversed and in the second segment; reversing [K..n-1] restores their order.</p>
+    <p>The K mod n normalisation is mandatory: rotating by exactly n positions returns the array to its original state, and rotating by n+2 is identical to rotating by 2. Without normalisation, step 2 would reverse [0..K-1] with K &gt; n, an out-of-bounds operation.</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    Reverse all → reverse [0..k-1] → reverse [k..n-1]. This is the "three reversal" trick. Works because reversing twice in different scopes cancels out except for the rotation effect.
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="where-list">
+    <li><span class="sit">LeetCode 189 &mdash; Rotate Array</span> — <span class="why">textbook application of the three-reversal trick.</span></li>
+    <li><span class="sit">LeetCode 186 &mdash; Reverse Words in a String II</span> — <span class="why">reverse all words, then reverse each individual word — same three-reversal structure.</span></li>
+    <li><span class="sit">Circular buffer: advance the read pointer by K positions</span> — <span class="why">rotating the view of a circular buffer by K aligns the logical start; the three-reversal trick does this in-place.</span></li>
+    <li><span class="sit">Cryptography: Caesar cipher key rotation on a key schedule array</span> — <span class="why">periodic rotation of a key array by one position is a common operation in symmetric cipher scheduling.</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic From Scratch</div>
+  <div class="logic-build">
+    <p>Use arr = [1, 2, 3, 4, 5], rotate right by k = 2. Goal: [4, 5, 1, 2, 3].</p>
+    <div class="ascii">Original:          [1, 2, 3, 4, 5]
+
+Step 1 — reverse whole array:
+  [1,2,3,4,5] → [5,4,3,2,1]
+
+Step 2 — reverse first k=2 elements [0..1]:
+  [5,4,3,2,1] → [4,5,3,2,1]
+  (the last-k=2 elements 4,5 are now at the front in the right order)
+
+Step 3 — reverse remaining [k..n-1] = [2..4]:
+  [4,5,3,2,1] → [4,5,1,2,3]  ✓</div>
+    <p><span class="aha">After step 1, the last-k elements (originally [4,5]) are at positions [0..k-1] but reversed ([5,4]). Reversing [0..k-1] in step 2 fixes their order. The original first (n-k) elements are at [k..n-1] but reversed; step 3 fixes them.</span></p>
+    <p>Normalisation: what if k = 7 for n = 5? 7 mod 5 = 2. Rotating by 7 is identical to rotating by 2. Always apply k = k % n first; if k becomes 0, the array is already correct.</p>
   </div>
 
-  <div class="section-label">&#9316; Annotated Code</div>
-<pre><code class="language-c">void reverse_range(int *arr, int lo, int hi) {
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Reverse arr[lo..hi] in place. */
+static void rev(int *arr, int lo, int hi) {
     while (lo &lt; hi) {
         int tmp = arr[lo]; arr[lo] = arr[hi]; arr[hi] = tmp;
         lo++; hi--;
     }
 }
 
-/* Rotate array right by k positions in-place, O(n) time O(1) space. */
+/* Rotate arr right by k positions in-place, O(n) time O(1) space. */
 void rotate_right(int *arr, int n, int k) {
-    k = k % n;              /* if k >= n, a full rotation brings us back to start */
-    if (k == 0) return;
+    /* Normalise: rotating by n is a no-op; rotating by k > n equals rotating by k%n. */
+    k = k % n;
+    if (k == 0) return;  /* nothing to do */
 
-    reverse_range(arr, 0, n - 1);   /* step 1: reverse entire array */
-    reverse_range(arr, 0, k - 1);   /* step 2: reverse the first k elements */
-    reverse_range(arr, k, n - 1);   /* step 3: reverse the remaining n-k elements */
+    rev(arr, 0, n - 1);  /* step 1: reverse the entire array */
+    rev(arr, 0, k - 1);  /* step 2: un-reverse the first k (now-correct) elements */
+    rev(arr, k, n - 1);  /* step 3: un-reverse the remaining n-k elements */
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
-  <div class="dry-run">arr = [1,2,3,4,5],  k=2
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run">arr = [1,2,3,4,5],  n=5,  k=2
 
-Step 1 - reverse all:    [5,4,3,2,1]
-Step 2 - reverse [0..1]: [4,5,3,2,1]
-Step 3 - reverse [2..4]: [4,5,1,2,3]  ✓</div>
+k = 2 % 5 = 2 (no change)
+
+rev(arr, 0, 4): [1,2,3,4,5] → [5,4,3,2,1]
+rev(arr, 0, 1): [5,4,...] → [4,5,3,2,1]
+rev(arr, 2, 4): [...3,2,1] → [4,5,1,2,3]  ✓
+
+k=7 case: k = 7%5 = 2. Same result.
+k=5 case: k = 5%5 = 0. return immediately (no change).  ✓</div>
 
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Not taking k mod n</div>
-    <p>If k equals n, rotating brings the array back to its original state. If k &gt; n, only <code>k % n</code> positions matter. Without the mod, step 2 would reverse more elements than intended, corrupting the result. Always normalize: <code>k = k % n</code> before anything else.</p>
+    <div class="gotcha-title">&#9888; Gotcha: missing k = k % n normalisation</div>
+    <p><strong>Wrong:</strong> if k = 7 and n = 5, step 2 calls <code>rev(arr, 0, 6)</code> which is out of bounds (index 6 does not exist), causing undefined behaviour.</p>
+    <p><strong>Correct:</strong> always normalise: <code>k = k % n;</code> before any reversals. If k becomes 0, return early.</p>
+    <p><strong>One-line rule:</strong> always apply k %= n first; rotating by a multiple of n is always a no-op.</p>
   </div>
 
-  <div class="leetcode">
-    <span>189 &middot; Rotate Array</span>
-    <span>186 &middot; Reverse Words in a String II</span>
-    <span>796 &middot; Rotate String</span>
+  <div class="section-label">&#9317; Confidence Check</div>
+  <div class="confidence">
+    <div class="confidence-title">Can you answer these without looking at the code?</div>
+    <ol>
+      <li>Trace the three-reversal trick for left rotation by k (instead of right). What changes in the reversal order or segment boundaries?</li>
+      <li>Why must you apply k = k % n before checking if k == 0? What happens if n divides k exactly?</li>
+      <li>Can you achieve the same rotation using a single cycle-following approach (placing each element directly in its final position)? What are the trade-offs?</li>
+    </ol>
   </div>
-  <div class="trigger">When you see: rotate array in-place by K &#8594; think: three reversals — whole, first K, last N-K</div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">When you see: rotate array right by K in-place &rarr; k %= n; reverse all; reverse [0..k-1]; reverse [k..n-1]</div>
+    <ul class="trigger-variants">
+      <li>Left rotation by k &rarr; reverse [0..k-1]; reverse [k..n-1]; reverse all</li>
+      <li>Reverse words in a string &rarr; reverse whole string, then reverse each word in place</li>
+      <li>Rotate matrix rows &rarr; apply the same three-reversal logic row by row</li>
+    </ul>
+  </div>
 </div>
 
 <!-- ================================================================ P26 -->
@@ -3529,64 +3573,117 @@ Step 3 - reverse [2..4]: [4,5,1,2,3]  ✓</div>
     <span class="pattern-name">In-Place: Reverse Segments</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    Many in-place rearrangement problems (reverse words in a string, rotate an array, palindrome check) reduce to reversing a segment of an array or string.
-    The two-pointer swap walks inward from both ends of the segment, swapping elements until the pointers meet.
+  <div class="section-label">&#9312; Background</div>
+  <div class="bg-section">
+    <p>Reversing a contiguous segment of an array or string is the atomic building block underlying rotate (P25), reverse-words-in-string, palindrome check, and countless other in-place transformations. The two-pointer swap is so simple that developers often write it inline without thinking, which is also where bugs appear — off-by-one on the segment boundaries, incorrect loop termination, or the XOR-swap self-corruption trap.</p>
+    <p>The algorithm walks two pointers from both ends of the segment toward the center, swapping at each step. When they meet (or cross), every pair has been swapped exactly once and the segment is reversed. The middle element of an odd-length segment needs no swap — when lo == hi it is already in place and the <code>lo &lt; hi</code> condition stops the loop before touching it.</p>
+    <p>The XOR swap trick (<code>a ^= b; b ^= a; a ^= b</code>) is a common "clever" alternative to using a temporary variable. It works when a and b are distinct variables or different memory locations. But when a and b are the same memory location (lo == hi, self-swap), all three XOR operations cancel and the value becomes zero. Never use XOR swap without a guard, and prefer the temporary-variable version for clarity.</p>
+    <p>The reverse-words application demonstrates why segment reversal is powerful: reverse the entire string to bring words to approximately their final positions (but each word is itself reversed), then reverse each individual word to restore its characters. Two passes of the same O(1)-space primitive handle what would otherwise require O(n) extra space to shift words.</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    Reversing a segment [lo..hi] is the atomic building block of dozens of in-place algorithms. O(hi&minus;lo+1) time, O(1) space. No temporary array needed — swap in place.
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="where-list">
+    <li><span class="sit">LeetCode 344 &mdash; Reverse String</span> — <span class="why">direct application on the whole array.</span></li>
+    <li><span class="sit">LeetCode 151 &mdash; Reverse Words in a String</span> — <span class="why">reverse all, then reverse each word; two uses of the same segment-reverse primitive.</span></li>
+    <li><span class="sit">LeetCode 189 &mdash; Rotate Array</span> — <span class="why">three calls to segment reverse (P25 depends on this as a subroutine).</span></li>
+    <li><span class="sit">Palindrome check: verify arr[lo..hi] reads the same forwards and backwards</span> — <span class="why">the two-pointer inward walk with comparison instead of swap checks palindrome in O(n) time O(1) space.</span></li>
+    <li><span class="sit">Firmware: in-place reversal of a sensor reading buffer before transmission</span> — <span class="why">embedded systems often need to reverse byte order (big/little endian swap) without heap allocation.</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic From Scratch</div>
+  <div class="logic-build">
+    <p>Use arr = [1, 2, 3, 4, 5], reverse [1..3] (elements 2, 3, 4). Expected result at those positions: [4, 3, 2].</p>
+    <div class="ascii">arr:  1  [2  3  4]  5
+           lo       hi
+           lo=1, hi=3
+
+Step 1: lo=1, hi=3. arr[1]=2, arr[3]=4. Swap → arr: 1 [4  3  2] 5. lo=2, hi=2.
+Step 2: lo=2 == hi=2. Loop condition lo &lt; hi is FALSE. Stop.
+
+Result: [1, 4, 3, 2, 5]  ✓  (middle element 3 was untouched — already in place)</div>
+    <p><span class="aha">The loop terminates naturally on odd-length segments when lo == hi: the condition lo &lt; hi fails, so the middle element is never swapped — it is already in its correct position.</span></p>
   </div>
 
-  <div class="section-label">&#9316; Annotated Code</div>
-<pre><code class="language-c">/* Reverse arr[lo..hi] in place. */
-void reverse(int *arr, int lo, int hi) {
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Reverse arr[lo..hi] in place, O(hi-lo+1) time, O(1) space. */
+void reverse_segment(int *arr, int lo, int hi) {
     while (lo &lt; hi) {
+        /* Use a temporary variable — never XOR swap when lo and hi might be equal
+           (same memory location would zero out the value). */
         int tmp  = arr[lo];
         arr[lo]  = arr[hi];
         arr[hi]  = tmp;
-        lo++;               /* move left pointer right */
-        hi--;               /* move right pointer left */
+        lo++;
+        hi--;
     }
 }
 
-/* Reverse words in a null-terminated string (words separated by spaces).
-   Two-pass: reverse whole string, then reverse each word. */
-void reverse_words(char *s, int n) {
-    reverse((int*)s, 0, n - 1);   /* conceptually; real code uses char swap */
+/* Reverse all words in a null-terminated string in-place.
+   "the sky is blue" → "blue is sky the"  */
+void reverse_words(char *s) {
+    int n = 0;
+    while (s[n]) n++;  /* find length */
+
+    /* Step 1: reverse entire string → "eulb si yks eht" */
+    int lo = 0, hi = n - 1;
+    while (lo &lt; hi) {
+        char tmp = s[lo]; s[lo] = s[hi]; s[hi] = tmp; lo++; hi--;
+    }
+
+    /* Step 2: reverse each word to restore its character order */
     int start = 0;
     for (int i = 0; i &lt;= n; i++) {
         if (s[i] == ' ' || s[i] == '\0') {
-            /* reverse the word from start to i-1 */
-            int lo = start, hi = i - 1;
+            lo = start; hi = i - 1;
             while (lo &lt; hi) {
-                char tmp = s[lo]; s[lo] = s[hi]; s[hi] = tmp;
-                lo++; hi--;
+                char tmp = s[lo]; s[lo] = s[hi]; s[hi] = tmp; lo++; hi--;
             }
             start = i + 1;
         }
     }
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
-  <div class="dry-run">reverse([1,2,3,4,5], 1, 3):
-  lo=1(2), hi=3(4): swap → [1,4,3,2,5], lo=2, hi=2
-  lo >= hi → stop
-  result: [1,4,3,2,5] ✓</div>
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run">reverse_segment([1,2,3,4,5], lo=1, hi=3):
+
+lo | hi | arr[lo] | arr[hi] | swap result      | next lo | next hi
+---|----|---------|---------|--------------------|---------|--------
+ 1 |  3 |    2    |    4    | [1,4,3,2,5]        |    2    |    2
+ lo=2 not &lt; hi=2 → stop
+ result: [1, 4, 3, 2, 5]  ✓
+
+reverse_words("the sky is blue"):
+  n=14
+  Step 1: reverse all  → "eulb si yks eht"
+  Step 2: reverse each word:
+    "eulb" → "blue", "si" → "is", "yks" → "sky", "eht" → "the"
+  result: "blue is sky the"  ✓</div>
 
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Using XOR swap with lo == hi (same variable)</div>
-    <p>The XOR swap trick (<code>a ^= b; b ^= a; a ^= b;</code>) zeroes out the value if a and b point to the same memory location. If lo == hi (odd-length segment, middle element), the XOR swap corrupts that element to 0. Always use a temporary variable for swapping, or guard with <code>if (lo != hi)</code>.</p>
+    <div class="gotcha-title">&#9888; Gotcha: using XOR swap without checking lo != hi</div>
+    <p><strong>Wrong:</strong> <code>arr[lo] ^= arr[hi]; arr[hi] ^= arr[lo]; arr[lo] ^= arr[hi];</code> — if lo == hi (same address), all three XORs cancel: a ^= a = 0, 0 ^= 0 = 0, 0 ^= 0 = 0. The middle element becomes 0.</p>
+    <p><strong>Correct:</strong> use a temporary variable: <code>int tmp = arr[lo]; arr[lo] = arr[hi]; arr[hi] = tmp;</code> — always safe regardless of whether lo == hi.</p>
+    <p><strong>One-line rule:</strong> never use XOR swap in a reverse loop; use a temp variable and let <code>lo &lt; hi</code> guard the middle element.</p>
   </div>
 
-  <div class="leetcode">
-    <span>151 &middot; Reverse Words in a String</span>
-    <span>189 &middot; Rotate Array</span>
-    <span>344 &middot; Reverse String</span>
+  <div class="section-label">&#9317; Confidence Check</div>
+  <div class="confidence">
+    <div class="confidence-title">Can you answer these without looking at the code?</div>
+    <ol>
+      <li>For an odd-length segment [lo..hi], how many swap operations does the reverse perform? For even-length?</li>
+      <li>Explain why reversing the whole string and then reversing each word restores the correct word order. Why doesn't the double reversal restore the original string?</li>
+      <li>If you wanted to check whether a segment is a palindrome (instead of reversing it), how would you modify the two-pointer walk?</li>
+    </ol>
   </div>
-  <div class="trigger">When you see: reverse a subarray or segment in-place &#8594; think: two pointers walking inward, swap until they meet</div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">When you see: reverse a subarray or string segment in-place &rarr; two pointers from both ends, swap with temp variable, stop when lo &ge; hi</div>
+    <ul class="trigger-variants">
+      <li>Reverse words in string &rarr; reverse all, then reverse each word</li>
+      <li>Rotate array &rarr; three calls to reverse_segment (P25)</li>
+      <li>Palindrome check &rarr; same two-pointer walk but compare instead of swap</li>
+    </ul>
+  </div>
 </div>
 
 <!-- ================================================================ P27 -->
