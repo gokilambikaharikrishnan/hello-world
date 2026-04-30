@@ -3693,75 +3693,121 @@ reverse_words("the sky is blue"):
     <span class="pattern-name">Sorting: Custom Comparator with qsort</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    C's standard qsort takes a comparator function that defines the ordering rule.
-    The comparator receives two void pointers (pointing to elements) and must return negative, zero, or positive to indicate which element is "less."
-    Getting the casting right and understanding the return value convention is the key skill.
+  <div class="section-label">&#9312; Background</div>
+  <div class="bg-section">
+    <p>C's standard library qsort() is a general-purpose sort that works on any array of any element type by accepting a caller-supplied comparator function. The comparator receives two <code>const void *</code> pointers — each pointing to one element in the array — and must return a negative integer if the first element should precede the second, zero if they are equivalent, or a positive integer if the second should precede the first.</p>
+    <p>The most important skill is correct pointer casting. The comparator's parameters are void pointers to array elements, not to values. For an array of ints, each void pointer points to an int; cast to <code>const int *</code> and dereference. For an array of char pointers (string array), each void pointer points to a <code>char *</code>; cast to <code>const char **</code> and dereference to get the string. Getting this double indirection wrong is the single most common qsort bug.</p>
+    <p>The subtraction shortcut for integers (<code>return *a - *b</code>) is tempting but subtly wrong: if a = INT_MAX and b = -1, the subtraction INT_MAX - (-1) = INT_MAX + 1 overflows to a negative number, silently reversing the sort order for that pair. Always use explicit comparisons with -1/0/1 returns for integer comparators.</p>
+    <p>qsort is not stable — equal elements may appear in any relative order after sorting. If stability is required (preserving original order for equal elements), implement a stable sort or use the index-comparison trick: compare by primary key first, break ties by original index.</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    The comparator contract: return &lt;0 if a should come first, 0 if equal, &gt;0 if b should come first. Cast void* to the correct pointer type, dereference, and compare.
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="where-list">
+    <li><span class="sit">LeetCode 179 &mdash; Largest Number</span> — <span class="why">sort integers by which concatenation order produces a larger number; custom comparator compares s1+s2 vs s2+s1.</span></li>
+    <li><span class="sit">LeetCode 56 &mdash; Merge Intervals</span> — <span class="why">sort intervals by start time before merging; custom comparator on struct fields.</span></li>
+    <li><span class="sit">C standard library bsearch()</span> — <span class="why">same comparator contract as qsort; the comparator you write for qsort works unchanged in bsearch.</span></li>
+    <li><span class="sit">Embedded: sort sensor records by timestamp then by sensor ID</span> — <span class="why">multi-key sort using a struct comparator with primary/secondary key checks.</span></li>
+    <li><span class="sit">Kernel: sort process list by priority then by PID for deterministic scheduling output</span> — <span class="why">OS diagnostic tools sort process tables; custom comparator handles the multi-field ordering.</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic From Scratch</div>
+  <div class="logic-build">
+    <p>qsort signature: <code>void qsort(void *base, size_t n, size_t size, int (*cmp)(const void *, const void *))</code>. qsort calls <code>cmp(p, q)</code> where p and q are pointers into the array, each offset by <code>size</code> bytes from the base.</p>
+    <div class="ascii">Array of ints: int arr[] = {5, 2, 8}
+Memory layout: [5][2][8]   (each element is sizeof(int)=4 bytes)
+
+qsort calls cmp(&arr[0], &arr[1]):
+  a = (void*)&arr[0]  → cast to (const int*) → dereference → 5
+  b = (void*)&arr[1]  → cast to (const int*) → dereference → 2
+  5 > 2 → return 1   → qsort swaps them → [2][5][8]
+
+Array of strings: char *words[] = {"cat", "ant", "bee"}
+Memory layout: [ptr→"cat"][ptr→"ant"][ptr→"bee"]
+
+qsort calls cmp(&words[0], &words[1]):
+  a = (void*)&words[0]  → cast to (const char**) → dereference → ptr→"cat"
+  b = (void*)&words[1]  → cast to (const char**) → dereference → ptr→"ant"
+  compare "cat" vs "ant" → 'c' > 'a' → return 1</div>
+    <p><span class="aha">For a string array, the cast is TWO levels of indirection: const char **. The void pointer points to a char* (the string pointer), not to the character data directly. A single cast to const char* would give you a pointer to the pointer, not a pointer to the string.</span></p>
   </div>
 
-  <div class="section-label">&#9316; Annotated Code</div>
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
 <pre><code class="language-c">#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
 
-/* Sort integers ascending. */
-int cmp_asc(const void *a, const void *b) {
-    /* cast void* to int*, dereference to get the actual integers */
-    int x = *(const int*)a;
-    int y = *(const int*)b;
-    /* return negative if x < y (x comes first), positive if x > y */
+/* Sort integers ascending — safe version with explicit comparison. */
+int cmp_int_asc(const void *a, const void *b) {
+    int x = *(const int *)a;
+    int y = *(const int *)b;
+    /* Do NOT write: return x - y;  (overflows when x=INT_MAX, y=-1) */
     if (x &lt; y) return -1;
     if (x &gt; y) return  1;
     return 0;
-    /* WARNING: do NOT use (x - y) — it overflows if x is INT_MAX and y is negative */
 }
 
-/* Sort strings by length (shortest first). */
-int cmp_by_length(const void *a, const void *b) {
-    const char *sa = *(const char**)a;   /* a points to a char*, dereference to get string */
-    const char *sb = *(const char**)b;
-    int la = 0, lb = 0;
-    while (sa[la]) la++;   /* manual strlen to avoid include */
-    while (sb[lb]) lb++;
-    return la - lb;         /* safe: lengths are non-negative, no overflow risk */
+/* Sort an array of C strings lexicographically. */
+int cmp_str(const void *a, const void *b) {
+    /* a and b are pointers to elements of a char* array, so they are char**. */
+    const char *sa = *(const char **)a;
+    const char *sb = *(const char **)b;
+    return strcmp(sa, sb);  /* strcmp already returns negative/0/positive */
 }
 
-/* Sort 2D points by x, then by y for ties. */
+/* Sort struct by primary key (x), then secondary key (y). */
 typedef struct { int x, y; } Point;
 int cmp_point(const void *a, const void *b) {
-    const Point *pa = (const Point*)a;
-    const Point *pb = (const Point*)b;
-    if (pa-&gt;x != pb-&gt;x) return pa-&gt;x - pb-&gt;x;   /* primary: sort by x */
-    return pa-&gt;y - pb-&gt;y;                          /* tiebreak: sort by y */
+    const Point *pa = (const Point *)a;
+    const Point *pb = (const Point *)b;
+    if (pa-&gt;x != pb-&gt;x) {
+        /* Primary key differs: safe subtraction (x values assumed in range) */
+        return (pa-&gt;x &gt; pb-&gt;x) - (pa-&gt;x &lt; pb-&gt;x);  /* branchless -1/0/1 */
+    }
+    return (pa-&gt;y &gt; pb-&gt;y) - (pa-&gt;y &lt; pb-&gt;y);
 }
 
-int main(void) {
+/* Usage: */
+void example(void) {
     int arr[] = {5, 2, 8, 1, 9};
-    qsort(arr, 5, sizeof(int), cmp_asc);
+    qsort(arr, 5, sizeof(int), cmp_int_asc);
     /* arr is now [1, 2, 5, 8, 9] */
-    return 0;
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
-  <div class="dry-run">cmp_asc called with a=&arr[0]=5, b=&arr[1]=2:
-  x=5, y=2 → x > y → return 1 (meaning: 5 should come AFTER 2)
-  qsort will swap them</div>
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run">cmp_int_asc called by qsort with a=&5, b=&2:
+  x=5, y=2 → x &gt; y → return 1 → qsort places 2 before 5
+
+cmp_str called with a=&"banana", b=&"apple":
+  sa = "banana", sb = "apple"
+  strcmp("banana","apple") → 'b'-'a' = 1 &gt; 0 → return positive → "apple" before "banana"
+
+cmp_point on (3,5) vs (3,2):
+  pa-&gt;x == pb-&gt;x (both 3) → compare y: 5 &gt; 2 → return 1 → (3,2) before (3,5)</div>
 
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Using subtraction (x - y) as the comparator return value for integers</div>
-    <p><code>return *(int*)a - *(int*)b</code> overflows when one value is very large positive and the other is very large negative (e.g., INT_MAX - (-1) wraps around to a negative number, reversing the sort order silently). Always use explicit <code>if (x &lt; y) return -1; if (x &gt; y) return 1; return 0;</code> for safety.</p>
+    <div class="gotcha-title">&#9888; Gotcha: returning x - y for integer comparator</div>
+    <p><strong>Wrong:</strong> <code>return *(int*)a - *(int*)b;</code> — if a=INT_MAX (2147483647) and b=-1, the subtraction overflows to a negative number, making qsort think INT_MAX &lt; -1.</p>
+    <p><strong>Correct:</strong> explicit branching: <code>if (x &lt; y) return -1; if (x &gt; y) return 1; return 0;</code> — or the branchless idiom: <code>return (x &gt; y) - (x &lt; y);</code></p>
+    <p><strong>One-line rule:</strong> never use subtraction as a comparator return value for integers; always use explicit &lt;/&gt; comparisons.</p>
   </div>
 
-  <div class="leetcode">
-    <span>56 &middot; Merge Intervals</span>
-    <span>179 &middot; Largest Number</span>
-    <span>1710 &middot; Maximum Units on a Truck</span>
+  <div class="section-label">&#9317; Confidence Check</div>
+  <div class="confidence">
+    <div class="confidence-title">Can you answer these without looking at the code?</div>
+    <ol>
+      <li>For a char *words[] array, why is the correct cast <code>(const char **)</code> and not <code>(const char *)</code>?</li>
+      <li>qsort is not stable. If you sort an array of structs by one field and need to preserve original order for ties, what comparator technique achieves stability?</li>
+      <li>Can you use the same comparator function for both qsort and bsearch on the same array? What would bsearch pass as its key parameter?</li>
+    </ol>
   </div>
-  <div class="trigger">When you see: sort by custom rule in C &#8594; think: qsort + comparator returning -1/0/1, avoid subtraction overflow</div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">When you see: sort by custom rule in C &rarr; qsort + comparator: cast void* correctly, return &minus;1/0/1 with explicit comparisons (never subtraction)</div>
+    <ul class="trigger-variants">
+      <li>Integer array &rarr; cast to (const int *), compare with if/else or (x&gt;y)-(x&lt;y)</li>
+      <li>String (char *) array &rarr; cast to (const char **), dereference, use strcmp()</li>
+      <li>Struct array &rarr; cast to (const MyStruct *), compare fields directly</li>
+    </ul>
+  </div>
 </div>
 
 <!-- ================================================================ P28 -->
@@ -3771,73 +3817,114 @@ int main(void) {
     <span class="pattern-name">Sorting: Merge Overlapping Intervals</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    You have a list of time slots on a calendar: [1,3], [2,6], [8,10], [15,18].
-    Slots [1,3] and [2,6] overlap, so they can be merged into [1,6].
-    Sort by start time first, then walk through: if the current interval overlaps the last merged one, extend it. Otherwise start a new one.
+  <div class="section-label">&#9312; Background</div>
+  <div class="bg-section">
+    <p>Given a collection of intervals that may overlap, find the minimal set of non-overlapping intervals that covers the same range. The brute-force approach compares every pair of intervals to find overlaps: O(n²). The sorting-based approach reduces this to O(n log n) sort followed by a single O(n) scan.</p>
+    <p>The key insight is that after sorting by start time, two intervals can only overlap if they are adjacent in the sorted order. If [a, b] is fully before [c, d] (b &lt; c) with all intervals sorted by start, then nothing between them in the sorted list can overlap with [a, b] — because every interval between them starts after a and therefore also after b (if b &lt; c ≤ next_start). So once you have sorted order, a single left-to-right scan with one pointer is sufficient.</p>
+    <p>The merge step itself has one subtle trap: when two intervals overlap, you extend the current interval's end to max(current.end, next.end) — not just next.end. A contained interval like [1,10] followed by [2,3] must not shrink the end from 10 to 3. Always take the max when extending.</p>
+    <p>In systems contexts this pattern appears in memory allocator coalescing (merging adjacent free blocks), in calendar applications (computing busy/free time), in log file analysis (finding consecutive error windows), and in network routing table compression (merging overlapping IP prefix ranges).</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    After sorting by start time, two consecutive intervals [a,b] and [c,d] overlap if and only if c &le; b. Merge them into [a, max(b,d)]. No need to look further back because sorting guarantees all previous intervals are already non-overlapping.
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="where-list">
+    <li><span class="sit">LeetCode 56 &mdash; Merge Intervals</span> — <span class="why">textbook application.</span></li>
+    <li><span class="sit">LeetCode 57 &mdash; Insert Interval</span> — <span class="why">insert a new interval into a sorted list, then merge any resulting overlaps.</span></li>
+    <li><span class="sit">Memory allocator: coalesce adjacent free blocks into one larger block</span> — <span class="why">free block ranges sorted by address; merge overlapping/touching ranges to reduce fragmentation.</span></li>
+    <li><span class="sit">Network: compress overlapping IP prefix ranges into minimal set</span> — <span class="why">routing table optimisation; overlapping address ranges are merged to reduce table size.</span></li>
+    <li><span class="sit">Calendar: compute free slots from a list of busy intervals</span> — <span class="why">merge all busy intervals, then free slots are the gaps between merged intervals.</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic From Scratch</div>
+  <div class="logic-build">
+    <p>Intervals: [[1,3],[2,6],[8,10],[15,18]]. Sort by start (already sorted here). Walk left to right, maintaining the last merged interval.</p>
+    <div class="ascii">result = [[1,3]]   (seed with first interval)
+
+i=1: [2,6]. Does 2 ≤ 3 (next.start ≤ cur.end)? YES → overlap.
+  Extend: end = max(3, 6) = 6.  result = [[1,6]]
+
+i=2: [8,10]. Does 8 ≤ 6? NO → no overlap.
+  Start new entry.  result = [[1,6], [8,10]]
+
+i=3: [15,18]. Does 15 ≤ 10? NO → no overlap.
+  Start new entry.  result = [[1,6], [8,10], [15,18]]  ✓</div>
+    <p><span class="aha">The "contained interval" trap: if input were [[1,10],[2,3]], at i=1: 2 ≤ 10, overlap. end = max(10,3) = 10. Without the max, we'd incorrectly shrink [1,10] to [1,3].</span></p>
   </div>
 
-  <div class="section-label">&#9316; Annotated Code</div>
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
 <pre><code class="language-c">#include &lt;stdlib.h&gt;
 
 typedef struct { int start, end; } Interval;
 
 int cmp_interval(const void *a, const void *b) {
-    return ((Interval*)a)-&gt;start - ((Interval*)b)-&gt;start; /* sort by start time */
+    /* Safe: start values are non-negative so subtraction won't overflow. */
+    return ((const Interval *)a)-&gt;start - ((const Interval *)b)-&gt;start;
 }
 
-/* Merge overlapping intervals. Returns number of merged intervals.
-   result must be pre-allocated to size n. */
+/* Merge overlapping intervals.  result[] must have room for n entries.
+   Returns the count of merged (non-overlapping) intervals. */
 int merge_intervals(Interval *ivs, int n, Interval *result) {
     if (n == 0) return 0;
 
-    qsort(ivs, n, sizeof(Interval), cmp_interval);   /* sort by start time */
+    qsort(ivs, n, sizeof(Interval), cmp_interval);
 
-    int k = 0;                /* count of merged intervals in result */
-    result[0] = ivs[0];       /* first interval is always in the result */
+    int k = 0;
+    result[0] = ivs[0];  /* seed: first interval always starts the first merged group */
 
     for (int i = 1; i &lt; n; i++) {
-        /* does ivs[i] overlap the last merged interval? */
         if (ivs[i].start &lt;= result[k].end) {
-            /* yes: extend the end of the last merged interval if needed */
+            /* Overlap: extend the end to whichever is larger.
+               Must use max — the new interval might be contained within the current one. */
             if (ivs[i].end &gt; result[k].end)
                 result[k].end = ivs[i].end;
         } else {
-            /* no overlap: start a new interval in the result */
+            /* No overlap: start a fresh merged interval. */
             k++;
             result[k] = ivs[i];
         }
     }
-    return k + 1;   /* k is 0-indexed, total count is k+1 */
+    return k + 1;  /* k is zero-based index of the last entry */
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
-  <div class="dry-run">ivs = [[1,3],[2,6],[8,10],[15,18]]  (already sorted by start)
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run">ivs = [[1,3],[2,6],[8,10],[15,18]]
 
-result[0] = [1,3]
-i=1: [2,6]: 2<=3 (overlap) → extend end: result[0]=[1,6]
-i=2: [8,10]: 8>6 (no overlap) → k=1, result[1]=[8,10]
-i=3: [15,18]: 15>10 (no overlap) → k=2, result[2]=[15,18]
+After qsort (already sorted by start):  [[1,3],[2,6],[8,10],[15,18]]
+result[0] = [1,3], k=0
 
-return 3: [[1,6],[8,10],[15,18]] ✓</div>
+i=1: [2,6]. 2 ≤ 3 → overlap. max(3,6)=6 → result[0]=[1,6]
+i=2: [8,10]. 8 &gt; 6 → no overlap. k=1, result[1]=[8,10]
+i=3: [15,18]. 15 &gt; 10 → no overlap. k=2, result[2]=[15,18]
+return 3  →  [[1,6],[8,10],[15,18]]  ✓
+
+Contained interval trap: ivs = [[1,10],[2,3]]
+  result[0]=[1,10], k=0
+  i=1: [2,3]. 2 ≤ 10 → overlap. max(10,3)=10 → result[0]=[1,10]  ✓ (not shrunk)</div>
 
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Using result[k].end = max(result[k].end, ivs[i].end) vs just ivs[i].end</div>
-    <p>If a large interval completely contains the next one ([1,10] followed by [2,3]), ivs[i].end = 3 is smaller than result[k].end = 10. Writing just <code>result[k].end = ivs[i].end</code> would shrink the merged interval incorrectly. Always use max: only update end if the new interval extends further right.</p>
+    <div class="gotcha-title">&#9888; Gotcha: writing result[k].end = ivs[i].end instead of max</div>
+    <p><strong>Wrong:</strong> <code>result[k].end = ivs[i].end;</code> — if the next interval is contained within the current one ([2,3] inside [1,10]), this shrinks the end from 10 to 3.</p>
+    <p><strong>Correct:</strong> <code>if (ivs[i].end &gt; result[k].end) result[k].end = ivs[i].end;</code> — only extend, never shrink.</p>
+    <p><strong>One-line rule:</strong> when merging intervals, always take max(current.end, next.end).</p>
   </div>
 
-  <div class="leetcode">
-    <span>56 &middot; Merge Intervals</span>
-    <span>57 &middot; Insert Interval</span>
-    <span>435 &middot; Non-overlapping Intervals</span>
+  <div class="section-label">&#9317; Confidence Check</div>
+  <div class="confidence">
+    <div class="confidence-title">Can you answer these without looking at the code?</div>
+    <ol>
+      <li>Why is it sufficient to only compare each new interval against the LAST merged interval (result[k]) rather than all previous merged intervals?</li>
+      <li>What is the overlap condition — is it <code>next.start &lt;= cur.end</code> or <code>next.start &lt; cur.end</code>? When does the choice matter?</li>
+      <li>How would you solve "insert interval" (LeetCode 57): insert a new interval into an already-sorted non-overlapping list and merge any resulting overlaps?</li>
+    </ol>
   </div>
-  <div class="trigger">When you see: merge overlapping intervals &#8594; think: sort by start, walk and extend or start new — overlap when next.start &le; cur.end</div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">When you see: merge overlapping intervals &rarr; sort by start; walk left-to-right; extend end = max(cur.end, next.end) if overlap (next.start &le; cur.end), else start new</div>
+    <ul class="trigger-variants">
+      <li>Find free time slots &rarr; merge all busy intervals, gaps between merged = free</li>
+      <li>Insert interval &rarr; binary-search insert position, then merge with neighbours</li>
+      <li>Count overlapping pairs &rarr; sort by start, sweep with max-end tracking</li>
+    </ul>
+  </div>
 </div>
 
 <!-- ================================================================ P29 -->
@@ -3847,76 +3934,114 @@ return 3: [[1,6],[8,10],[15,18]] ✓</div>
     <span class="pattern-name">Sorting: Meeting Rooms / Interval Overlap Check</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    You have a list of meetings and one conference room. Can all meetings happen without conflict?
-    Sort them by start time. Walk through and check: does the next meeting start before the previous one ends?
-    If yes, two meetings overlap — you need more rooms (or report conflict).
+  <div class="section-label">&#9312; Background</div>
+  <div class="bg-section">
+    <p>Two related problems: (1) can one person attend all meetings (no overlaps)? and (2) what is the minimum number of rooms needed for all meetings to happen simultaneously? Both have O(n log n) solutions built on the same sort-then-scan skeleton.</p>
+    <p>For the "can attend all" question, sort by start time. After sorting, two intervals can only conflict if they are adjacent in sorted order. A single linear scan checking adjacent pairs is sufficient.</p>
+    <p>For minimum rooms, the chronological sweep approach: sort start times and end times independently into two arrays. Walk through start times in order. For each new meeting starting, check if any previous meeting has already ended (by comparing with the current minimum end time). If yes, reuse that room (advance the end pointer); if no, allocate a new room. The peak room count at any point is the answer.</p>
+    <p>This sweep-line technique applies to any resource-counting problem over overlapping intervals — OS thread scheduling, CPU core allocation, network connection tracking, and elevator dispatch scheduling.</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    After sorting by start time, only adjacent meetings can overlap (a meeting can only conflict with the one directly before it, not earlier ones). One linear scan after sorting is enough.
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="where-list">
+    <li><span class="sit">LeetCode 252 &mdash; Meeting Rooms (can attend all?)</span> — <span class="why">sort by start, check adjacent pairs for overlap; first overlap found → return false.</span></li>
+    <li><span class="sit">LeetCode 253 &mdash; Meeting Rooms II (min rooms)</span> — <span class="why">two sorted arrays + two-pointer sweep for peak concurrent count.</span></li>
+    <li><span class="sit">OS scheduling: max concurrent threads at any instant</span> — <span class="why">thread execution intervals → sweep gives peak thread count for capacity planning.</span></li>
+    <li><span class="sit">Network: maximum simultaneous TCP connections in a time window</span> — <span class="why">connection start/end times; sweep to find peak concurrency.</span></li>
+    <li><span class="sit">LeetCode 435 &mdash; Non-overlapping Intervals (greedy removal)</span> — <span class="why">sort by end time; greedy skip of overlapping intervals gives minimum removals.</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic From Scratch</div>
+  <div class="logic-build">
+    <p>Meetings: [[0,30],[5,10],[15,20]]. Sort starts: [0,5,15]. Sort ends: [10,20,30].</p>
+    <div class="ascii">s=0: starts[0]=0. Compare with ends[e=0]=10. 0 &lt; 10 → new room. rooms=1.
+s=1: starts[1]=5. Compare with ends[e=0]=10. 5 &lt; 10 → new room. rooms=2. ← peak
+s=2: starts[2]=15. Compare with ends[e=0]=10. 15 ≥ 10 → meeting ended, reuse (e=1). rooms=2.</div>
+    <p><span class="aha">We never need to know WHICH meeting ended — only whether any meeting ended before the new one starts. The sorted end-times array with a single pointer e always gives us the earliest ending meeting in O(1).</span></p>
   </div>
 
-  <div class="section-label">&#9316; Annotated Code</div>
-<pre><code class="language-c">/* Can one person attend all meetings? Returns 1 if yes (no overlaps), 0 if no. */
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Can one person attend all meetings? Returns 1 if yes, 0 if any overlap. */
 int can_attend_all(Interval *ivs, int n) {
     qsort(ivs, n, sizeof(Interval), cmp_interval);  /* sort by start time */
 
     for (int i = 1; i &lt; n; i++) {
-        if (ivs[i].start &lt; ivs[i-1].end) {  /* next meeting starts before previous ends */
-            return 0;                         /* overlap found */
-        }
+        /* After sorting, only adjacent intervals can overlap.
+           Use &lt; not &lt;= if end-time is exclusive (half-open interval convention). */
+        if (ivs[i].start &lt; ivs[i-1].end)
+            return 0;  /* this meeting starts before the previous one ends */
     }
-    return 1;   /* no overlap found */
+    return 1;
 }
 
-/* Minimum number of conference rooms needed. */
+static int cmp_int(const void *a, const void *b) {
+    int x = *(const int *)a, y = *(const int *)b;
+    return (x &gt; y) - (x &lt; y);
+}
+
+/* Minimum conference rooms needed for all meetings. */
 int min_rooms(Interval *ivs, int n) {
-    /* Sort start times and end times separately.
-       Walk both sorted arrays with two pointers. */
-    int starts[n], ends[n];
+    int *starts = malloc(n * sizeof(int));
+    int *ends   = malloc(n * sizeof(int));
     for (int i = 0; i &lt; n; i++) { starts[i] = ivs[i].start; ends[i] = ivs[i].end; }
-    qsort(starts, n, sizeof(int), cmp_int_asc);
-    qsort(ends,   n, sizeof(int), cmp_int_asc);
+    qsort(starts, n, sizeof(int), cmp_int);
+    qsort(ends,   n, sizeof(int), cmp_int);
 
     int rooms = 0, max_rooms = 0, e = 0;
     for (int s = 0; s &lt; n; s++) {
         if (starts[s] &lt; ends[e]) {
-            rooms++;                  /* new meeting starts before any ends: need a new room */
+            rooms++;  /* new meeting starts before earliest end: need another room */
         } else {
-            e++;                      /* a meeting ended before this one starts: reuse room */
+            e++;      /* an earlier meeting ended: reuse its room */
         }
         if (rooms &gt; max_rooms) max_rooms = rooms;
     }
+    free(starts); free(ends);
     return max_rooms;
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
-  <div class="dry-run">ivs = [[0,30],[5,10],[15,20]]  (sorted by start)
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run">ivs = [[0,30],[5,10],[15,20]],  n=3
 
-can_attend_all:
-  i=1: starts[5] < ends[30] → overlap → return 0 (can't attend all) ✓
+can_attend_all (sorted by start: [0,30],[5,10],[15,20]):
+  i=1: ivs[1].start=5 &lt; ivs[0].end=30 → return 0  ✓ (overlap at t=5)
 
 min_rooms:
-  starts=[0,5,15]  ends=[10,20,30]
-  s=0(0) < e[0](10) → rooms=1
-  s=1(5) < e[0](10) → rooms=2
-  s=2(15) >= e[0](10) → e=1, rooms stays 2
-  max_rooms = 2 ✓</div>
+  starts=[0,5,15]  ends=[10,20,30]  e=0, rooms=0
+
+s=0: starts[0]=0 vs ends[0]=10:  0&lt;10 → rooms=1, max=1
+s=1: starts[1]=5 vs ends[0]=10:  5&lt;10 → rooms=2, max=2
+s=2: starts[2]=15 vs ends[0]=10: 15≥10 → e=1, rooms=2
+     (check again) starts[2]=15 vs ends[1]=20: only one check per s
+     rooms stays 2, max=2
+
+return 2  ✓</div>
 
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Checking start &lt; end vs start &lt;= end for overlap</div>
-    <p>Whether [0,30] and [30,40] overlap depends on the problem definition. If meetings are half-open intervals ([start, end)), then <code>start &lt; end</code> means overlap. If they are closed ([start, end]), then <code>start &lt;= end</code> means overlap. Read the problem carefully to know which convention to use.</p>
+    <div class="gotcha-title">&#9888; Gotcha: using &lt; vs &le; in the overlap check</div>
+    <p><strong>Half-open intervals [start, end):</strong> meetings [0,10] and [10,20] don't overlap (one ends exactly when the other starts). Use <code>start &lt; prev_end</code>.</p>
+    <p><strong>Closed intervals [start, end]:</strong> meetings [0,10] and [10,20] do overlap at time 10. Use <code>start &lt;= prev_end</code>.</p>
+    <p><strong>One-line rule:</strong> read the problem's interval convention carefully; the single-character difference &lt; vs &lt;= determines whether touching endpoints count as overlap.</p>
   </div>
 
-  <div class="leetcode">
-    <span>252 &middot; Meeting Rooms</span>
-    <span>253 &middot; Meeting Rooms II</span>
-    <span>435 &middot; Non-overlapping Intervals</span>
+  <div class="section-label">&#9317; Confidence Check</div>
+  <div class="confidence">
+    <div class="confidence-title">Can you answer these without looking at the code?</div>
+    <ol>
+      <li>In min_rooms, why is it sufficient to sort start times and end times into separate arrays rather than keeping them paired? What information do we not need?</li>
+      <li>After the sweep loop, why does rooms (not max_rooms) sometimes stay elevated? Is that a bug?</li>
+      <li>How would you solve "minimum number of people needed to attend all meetings" if each person can attend multiple non-overlapping meetings? Is it the same as min_rooms?</li>
+    </ol>
   </div>
-  <div class="trigger">When you see: meeting rooms / minimum resources for overlapping intervals &#8594; think: sort starts and ends separately, two pointers to track peak overlap</div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">When you see: interval overlap detection or peak concurrent count &rarr; sort by start (for overlap check) or sort starts+ends separately (for min rooms sweep)</div>
+    <ul class="trigger-variants">
+      <li>Can attend all &rarr; sort by start, check adjacent: ivs[i].start &lt; ivs[i-1].end</li>
+      <li>Min rooms &rarr; sort starts and ends separately; two-pointer sweep tracks rooms in use</li>
+      <li>Non-overlapping intervals (min removals) &rarr; sort by end time; greedy keep</li>
+    </ul>
+  </div>
 </div>
 
 <!-- ================================================================ P30 -->
