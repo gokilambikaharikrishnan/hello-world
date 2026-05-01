@@ -6524,22 +6524,64 @@ Scan: arr[0]=1==1✓, arr[1]=-1≠2 → return 2 ✓</div>
     <span class="pattern-name">Hard Classic: Count of Smaller Numbers After Self</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    For each element, count how many elements to its right are smaller. Brute force is O(n&sup2;).
-    The key approach: merge sort from right to left. During the merge step, when we pick from the right sub-array over the left sub-array, all remaining left elements are larger — increment their counts.
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>For each element in an array, count how many elements to its right are strictly smaller. Brute force is O(n²). The O(n log n) solution uses a modified merge sort that counts inversions as it sorts.</p>
+    <p>The merge step insight: when merging the left half [lo..mid) and right half [mid..hi), both halves are already sorted. When a right-half element is placed before a left-half element, it means that right element is smaller than all remaining left-half elements. Track how many right-half elements have been placed so far (right_count). When a left-half element is placed, add right_count to its answer — those are exactly the elements to its right that are smaller.</p>
+    <p>Because merge sort rearranges elements, you must carry each element's original index alongside its value. Otherwise when you update counts[idx], you don't know which original position the count belongs to. The pair (value, original_index) travels through all swaps and merges, and the index lets you write to the correct output slot.</p>
+    <p>This pattern generalizes: LeetCode 493 (Reverse Pairs: count pairs where nums[i] > 2*nums[j]) and 327 (Count of Range Sum) both use merge-sort-with-counting, tracking different conditions during the merge step.</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    Modified merge sort: sort pairs (value, original_index) in descending order. During merge, when an element from the right half is placed, all left-half elements not yet placed are larger — add the count of already-placed right elements to each such left element's answer.
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 315 — Count of Smaller Numbers After Self</span><span class="why">canonical form; modified merge sort with (val,idx) pairs</span></li>
+    <li><span class="sit">LeetCode 493 — Reverse Pairs</span><span class="why">same merge framework; count pairs nums[i] > 2*nums[j], i &lt; j</span></li>
+    <li><span class="sit">LeetCode 327 — Count of Range Sum</span><span class="why">merge sort on prefix sums; count pairs in a range during merge</span></li>
+    <li><span class="sit">Inversion count in a sequence</span><span class="why">total inversions = sum of count_smaller values; classic merge-sort application</span></li>
+    <li><span class="sit">Ranking anomaly detection</span><span class="why">given a permutation of scores, count how many later scores are lower — quality regression detection</span></li>
+    <li><span class="sit">Sort metric: Kendall tau distance</span><span class="why">pairwise inversion count between two rankings; merge-sort counting is the standard O(n log n) computation</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Merge-step accounting:</strong> When merging sorted left=[5] and sorted right=[2], to produce sorted=[2,5]: element 2 (from right) is placed first. Now right_count=1. When 5 (from left) is placed, we know 1 element from the right was already placed and is smaller than 5. So counts[original_index_of_5] += 1.</p>
+<pre class="ascii">
+nums = [5, 2, 6, 1]
+pairs: [(5,0),(2,1),(6,2),(1,3)]
+
+Merge sort call tree:
+  merge_count([(5,0),(2,1)]):
+    merge_count([(5,0)]) — base
+    merge_count([(2,1)]) — base
+    Merge: left=(5,0), right=(2,1)
+      (2,1) &lt; (5,0) → place (2,1), right_count=1
+      place (5,0): counts[0] += 1 = 1
+    Sorted: [(2,1),(5,0)]
+
+  merge_count([(6,2),(1,3)]):
+    Merge: (1,3) &lt; (6,2) → place (1,3), right_count=1
+           place (6,2): counts[2] += 1 = 1
+    Sorted: [(1,3),(6,2)]
+
+  Merge [(2,1),(5,0)] with [(1,3),(6,2)]:
+    (1,3) &lt; (2,1) → place (1,3), right_count=1
+    (2,1) &lt; (6,2) → place (2,1): counts[1] += 1 = 1
+    (5,0) &lt; (6,2) → place (5,0): counts[0] += 1 = 2
+    place (6,2): counts[2] += 0 = 1 (no new right elements since last left)
+
+Final: counts = [2, 1, 1, 0] ✓
+</pre>
+    <p class="aha">Aha moment: right_count only resets per merge call, not per element. It accumulates as right-half elements are placed, and each left-half placement reads the current right_count total — capturing all right elements placed before this left element in this merge.</p>
   </div>
 
-  <div class="section-label">&#9316; Annotated Code</div>
-<pre><code class="language-c">int counts[10000];   /* global count array */
-
-typedef struct { int val, idx; } Pair;
-Pair tmp_buf[10000]; /* merge sort buffer */
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">typedef struct { int val, idx; } Pair;
+static int  g_counts[10000];
+static Pair g_tmp[10000];
 
 void merge_count(Pair *arr, int lo, int hi) {
     if (hi - lo &lt;= 1) return;
@@ -6547,52 +6589,80 @@ void merge_count(Pair *arr, int lo, int hi) {
     merge_count(arr, lo, mid);
     merge_count(arr, mid, hi);
 
-    int i = lo, j = mid, k = lo, right_count = 0;
+    int i = lo, j = mid, k = lo, rc = 0;   /* rc = right_count */
     while (i &lt; mid &amp;&amp; j &lt; hi) {
-        if (arr[i].val &gt; arr[j].val) {
-            right_count++;        /* arr[j] (from right) is smaller than arr[i] (from left) */
-            tmp_buf[k++] = arr[j++];
+        if (arr[j].val &lt; arr[i].val) {
+            rc++;                          /* one more right element placed before left[i..] */
+            g_tmp[k++] = arr[j++];
         } else {
-            counts[arr[i].idx] += right_count;  /* arr[i] has 'right_count' smaller on its right */
-            tmp_buf[k++] = arr[i++];
+            g_counts[arr[i].idx] += rc;   /* rc right elements are smaller than arr[i] */
+            g_tmp[k++] = arr[i++];
         }
     }
-    while (i &lt; mid) { counts[arr[i].idx] += right_count; tmp_buf[k++] = arr[i++]; }
-    while (j &lt; hi)  { tmp_buf[k++] = arr[j++]; }
-    for (int x = lo; x &lt; hi; x++) arr[x] = tmp_buf[x];
+    while (i &lt; mid) { g_counts[arr[i].idx] += rc; g_tmp[k++] = arr[i++]; }
+    while (j &lt; hi)  { g_tmp[k++] = arr[j++]; }
+    for (int x = lo; x &lt; hi; x++) arr[x] = g_tmp[x];
 }
 
 void count_smaller(int *nums, int n, int *result) {
     Pair arr[10000];
-    for (int i = 0; i &lt; n; i++) { arr[i].val = nums[i]; arr[i].idx = i; counts[i] = 0; }
+    for (int i = 0; i &lt; n; i++) { arr[i].val = nums[i]; arr[i].idx = i; g_counts[i] = 0; }
     merge_count(arr, 0, n);
-    for (int i = 0; i &lt; n; i++) result[i] = counts[i];
+    for (int i = 0; i &lt; n; i++) result[i] = g_counts[i];
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
-  <div class="dry-run">nums = [5, 2, 6, 1]
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>nums=[5,2,6,1]</strong>
 
-After merge sort (tracking counts):
-  Merge [5,2]: 2<5 → right_count=1 for 5; counts[0]=1
-  Merge [6,1]: 1<6 → right_count=1 for 6; counts[2]=1
-  Merge [2,5] with [1,6]:
-    1<2 → place 1, right_count=1
-    2>1,place 2: counts[1]+=1=1
-    5>1,place 5: counts[0]+=1=2 → wait, recalculate...
+Merge [(5,0)] + [(2,1)]:
+  (2,1)&lt;(5,0) → place (2,1), rc=1
+  place (5,0): counts[0]+=1=1
+  → sorted: [(2,1),(5,0)]
 
-Final result: [2, 1, 1, 0] ✓</div>
+Merge [(6,2)] + [(1,3)]:
+  (1,3)&lt;(6,2) → place (1,3), rc=1
+  place (6,2): counts[2]+=1=1
+  → sorted: [(1,3),(6,2)]
 
+Merge [(2,1),(5,0)] + [(1,3),(6,2)]:
+  (1,3)&lt;(2,1) → place (1,3), rc=1
+  (2,1)&lt;(6,2) → place (2,1): counts[1]+=1=1
+  (5,0)&lt;(6,2) → place (5,0): counts[0]+=1=2
+  place (6,2): no left remaining
+
+counts = [2, 1, 1, 0] ✓
+([5] has 2 smaller to its right: 2,1; [2] has 1: 1; [6] has 1: 1; [1] has 0)</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Sorting values directly instead of (value, original_index) pairs</div>
-    <p>Merge sort rearranges elements. If you only sort values, you lose track of which original index each count belongs to. Always carry the original index with the value as a pair, so when you update counts[arr[i].idx], you're updating the correct original position.</p>
+    <div class="gotcha-title">&#9888; Wrong: sorting values without carrying original indices</div>
+<pre><code class="language-c">/* WRONG: only values in the pair array */
+int arr[n];  /* no original index */
+/* after merge rearranges arr, result[i] = counts[i] is wrong —
+   i in the sorted array ≠ i in the original array */</code></pre>
+    <p><strong>What breaks:</strong> After merge sort rearranges elements, position i in the sorted array corresponds to a different original position. Without tracking the original index, counts[i] is written to the wrong output slot.</p>
+<pre><code class="language-c">/* CORRECT: carry original index */
+typedef struct { int val, idx; } Pair;
+/* update g_counts[arr[i].idx] — always uses the ORIGINAL index */</code></pre>
+    <p><strong>Rule:</strong> When merge sort needs to associate counts with original positions, carry (value, original_index) pairs. Never use the post-sort position as the original index.</p>
   </div>
 
-  <div class="leetcode">
-    <span>315 &middot; Count of Smaller Numbers After Self</span>
-    <span>493 &middot; Reverse Pairs</span>
-    <span>327 &middot; Count of Range Sum</span>
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. Why does right_count accumulate correctly — specifically, why does it count elements to the right of the left-half element in the <em>original</em> array, not just in the current subarray?</p>
+    <p>2. After the left and right halves are fully processed in the inner while-loops, the remaining right-half elements are placed. Do we need to update counts for those right-half elements?</p>
+    <p>3. This solution counts elements smaller to the right. How would you modify it to count elements larger to the right?</p>
   </div>
-  <div class="trigger">When you see: count smaller/larger elements to the right in O(n log n) &#8594; think: modified merge sort tracking cross-half comparisons</div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>When you see "count smaller/larger elements to the right in O(n log n)" → modified merge sort with (val,idx) pairs; accumulate right_count when right-half element is placed; add to counts[idx] when left-half element is placed.</strong>
+    <br>Also fires for: "count inversions" · "reverse pairs (i&lt;j, nums[i]&gt;2*nums[j])" · "Kendall tau distance between two rankings"
+  </div>
 </div>
 
 <!-- ================================================================ P49 -->
