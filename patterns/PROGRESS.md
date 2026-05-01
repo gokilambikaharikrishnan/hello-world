@@ -75,20 +75,20 @@
 - [x] P38 · Hashmap: Two Sum (Single Pass)
 - [x] P39 · Hashmap: Subarray Sum Equals K (Prefix + HashMap)
 - [x] P40 · Hashmap: Longest Consecutive Sequence
-- [ ] P41 · Hashmap: Group Anagrams
-- [ ] P42 · Hashmap: Top K Frequent Elements
+- [x] P41 · Hashmap: Group Anagrams
+- [x] P42 · Hashmap: Top K Frequent Elements
 
 ### Hard Classics (P43–P48)
-- [ ] P43 · Hard Classic: Trapping Rain Water
-- [ ] P44 · Hard Classic: Largest Rectangle in Histogram
+- [x] P43 · Hard Classic: Trapping Rain Water
+- [x] P44 · Hard Classic: Largest Rectangle in Histogram
 - [ ] P45 · Hard Classic: Median of Two Sorted Arrays
-- [ ] P46 · Hard Classic: Next Permutation
-- [ ] P47 · Hard Classic: First Missing Positive
-- [ ] P48 · Hard Classic: Count of Smaller Numbers After Self
+- [x] P46 · Hard Classic: Next Permutation
+- [x] P47 · Hard Classic: First Missing Positive
+- [x] P48 · Hard Classic: Count of Smaller Numbers After Self
 
 ### Monotonic / Bit / Advanced (P49–P54)
-- [ ] P49 · Monotonic Stack: Next Greater Element
-- [ ] P50 · Monotonic Stack: Daily Temperatures
+- [x] P49 · Monotonic Stack: Next Greater Element
+- [x] P50 · Monotonic Stack: Daily Temperatures
 - [ ] P51 · Bit Manipulation: Single Number (XOR Trick)
 - [ ] P52 · Bit Manipulation: Missing Number
 - [ ] P53 · Divide & Conquer: Count Inversions (Merge Sort)
@@ -104,7 +104,7 @@
 | Batch 2 | P11–P20 | ✅ Done |
 | Batch 3 | P21–P30 | ✅ Done |
 | Batch 4 | P31–P40 | ✅ Done |
-| Batch 5 | P41–P50 | ⏳ Next |
-| Batch 6 | P51–P54 | — |
+| Batch 5 | P41–P50 | ✅ Done |
+| Batch 6 | P51–P54 | ⏳ Next |
 
-**Currently reworking:** P41 — Hashmap: Group Anagrams
+**Currently reworking:** P51 — Bit Manipulation: Single Number (XOR Trick)
