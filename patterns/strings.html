@@ -2959,6 +2959,512 @@ for (int i = 0; i &lt; n; i++) {
   </div>
 </div>
 
+
+<!-- ================================================================ S21 -->
+<div class="card" id="s21">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 21</span>
+    <span class="pattern-name">Reverse Words in a String</span>
+  </div>
+
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>"the sky is blue" → "blue is sky the". The words reverse order, but each word stays intact. The in-place O(1) space trick uses two reversal passes: first reverse the entire string, then reverse each individual word. After the full reverse, the words appear in the right order but each is spelled backwards; the second pass fixes each word.</p>
+    <p>This "reverse the whole, then reverse each part" pattern appears in rotate-array problems too (arrays.html P25). The key insight is that reversing is its own inverse: applying it twice restores the original. Reversing the whole string brings words to their final positions, and reversing each word un-scrambles the characters within it.</p>
+    <p>Edge cases: leading/trailing spaces and multiple consecutive spaces. If the problem requires collapsing them (as in LeetCode 151), you need a two-pass clean-up: compact the spaces first, then apply the double-reverse. Alternatively, build the output word-by-word with a write pointer in a single pass.</p>
+  </div>
+
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 151 — Reverse Words in a String</span><span class="why">trim spaces + split + reverse; or in-place double-reverse with space compaction</span></li>
+    <li><span class="sit">LeetCode 557 — Reverse Words in a String III</span><span class="why">reverse each word in-place, keep word order; no full-string reverse needed</span></li>
+    <li><span class="sit">LeetCode 186 — Reverse Words in a String II</span><span class="why">char array; in-place double-reverse, no extra space</span></li>
+    <li><span class="sit">Display formatting</span><span class="why">right-to-left text rendering; reverse word order for RTL languages</span></li>
+    <li><span class="sit">Command-line argument reversal</span><span class="why">reverse the argv list before processing to match stack-based evaluation order</span></li>
+    <li><span class="sit">Embedded terminal output</span><span class="why">reverse a fixed-width display buffer word-by-word for mirrored LCD output</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Double-reverse strategy:</strong></p>
+<pre class="ascii">
+Input:   "the sky is blue"
+
+Step 1 — reverse entire string:
+         "eulb si yks eht"
+
+Step 2 — reverse each word individually:
+  word "eulb" → "blue"   → "blue si yks eht"
+  word "si"   → "is"     → "blue is yks eht"
+  word "yks"  → "sky"    → "blue is sky eht"
+  word "eht"  → "the"    → "blue is sky the"
+
+Result: "blue is sky the" ✓
+</pre>
+    <p class="aha">Aha moment: after reversing the whole string, each word is at the right position but spelled backwards. One pass over words (find start, find end, reverse the word) corrects the spelling. The word boundaries are still delimited by spaces.</p>
+  </div>
+
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Reverse a sub-range [lo, hi] in-place. */
+static void rev(char *s, int lo, int hi) {
+    while (lo &lt; hi) { char t = s[lo]; s[lo++] = s[hi]; s[hi--] = t; }
+}
+
+/* Reverse words in a char array in-place. Assumes single spaces, no leading/trailing. */
+void reverse_words(char *s) {
+    int n = strlen(s);
+    rev(s, 0, n - 1);      /* Step 1: reverse whole string */
+
+    int start = 0;
+    for (int i = 0; i &lt;= n; i++) {
+        if (i == n || s[i] == ' ') {   /* end of a word */
+            rev(s, start, i - 1);       /* Step 2: reverse this word */
+            start = i + 1;
+        }
+    }
+}
+
+/* LeetCode 151 variant: collapse multiple spaces, trim leading/trailing. */
+int reverse_words_clean(char *s, char *out, int out_size) {
+    int n = strlen(s), w = 0;
+    /* Collect words right-to-left into out[] */
+    int i = n - 1;
+    while (i &gt;= 0) {
+        while (i &gt;= 0 &amp;&amp; s[i] == ' ') i--;   /* skip trailing space */
+        if (i &lt; 0) break;
+        int end = i;
+        while (i &gt;= 0 &amp;&amp; s[i] != ' ') i--;   /* find word start */
+        int start = i + 1;
+        if (w &gt; 0 &amp;&amp; w &lt; out_size - 1) out[w++] = ' ';
+        int wlen = end - start + 1;
+        if (w + wlen &gt;= out_size) wlen = out_size - w - 1;
+        memcpy(out + w, s + start, wlen);
+        w += wlen;
+    }
+    out[w] = '\0';
+    return w;
+}</code></pre>
+
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>reverse_words("cat bat")</strong>
+
+Step 1 rev(0,6): "tab tac"
+Step 2:
+  i=0..2: i=3 is ' ' → rev(0,2): "bat tac"
+  i=4..6: i=7==n → rev(4,6): "bat cat"
+Result: "bat cat" ✓
+
+<strong>reverse_words("a")  — single word</strong>
+
+Step 1 rev(0,0): "a" (no change)
+Step 2: i=1==n → rev(0,0): "a" ✓</div>
+
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: not handling the last word (loop ends before final rev call)</div>
+<pre><code class="language-c">/* WRONG: loop stops at i &lt; n, last word never reversed */
+for (int i = 0; i &lt; n; i++) {
+    if (s[i] == ' ') { rev(s, start, i - 1); start = i + 1; }
+}
+/* For "cat bat": only "cat"→"tac" is reversed (on space at i=3).
+   "bat" at the end is never reached. */</code></pre>
+    <p><strong>Fix:</strong> loop to <code>i &le; n</code> and treat <code>i == n</code> the same as a space — it marks the end of the last word.</p>
+  </div>
+
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. For the double-reverse strategy, how many total character swaps happen? (Step 1 costs n/2; step 2 costs sum of word_len/2 for each word.)</p>
+    <p>2. What does reverse_words produce for the empty string ""? Trace through the code.</p>
+    <p>3. LeetCode 557 asks to reverse ONLY the characters within each word, keeping word order. How does this differ from the double-reverse? Write the simpler solution.</p>
+  </div>
+
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>Reverse words in-place: (1) reverse entire string, (2) reverse each word. Loop to i&le;n treating i==n same as space to catch the last word. O(n) time, O(1) space.</strong>
+    <br>Also fires for: "rotate array by k" &middot; "reverse each word but keep order" &middot; "trim and reverse word order in a sentence"
+  </div>
+</div>
+
+<!-- ================================================================ S22 -->
+<div class="card" id="s22">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 22</span>
+    <span class="pattern-name">Custom atoi (String to Integer)</span>
+  </div>
+
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Converting a string like "  -42" or "+1000" to an integer by hand exercises every corner of C string handling: skipping whitespace, reading the sign, accumulating digits, and handling overflow. The standard <code>atoi</code> has undefined behavior on overflow; <code>strtol</code> detects it via LONG_MAX/LONG_MIN. In interviews and embedded parsing, you often need to roll your own with explicit overflow guards.</p>
+    <p>The algorithm is: (1) skip leading whitespace, (2) read optional sign, (3) accumulate digits one at a time with <code>result = result * 10 + digit</code>, (4) stop at the first non-digit. Overflow is the subtle part: before multiplying, check whether <code>result &gt; (INT_MAX - digit) / 10</code>. If so, clamp to INT_MAX or INT_MIN depending on the sign.</p>
+    <p>Implementing this correctly is a standard interview check for attention to detail. The LeetCode version (8) specifies exact behavior: clamp to INT_MAX/INT_MIN on overflow, stop at first invalid character after digits, return 0 if no digits found at all.</p>
+  </div>
+
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 8 — String to Integer (atoi)</span><span class="why">direct application; whitespace skip, sign, digits, overflow clamp</span></li>
+    <li><span class="sit">Config file parser</span><span class="why">read numeric values from INI/TOML files where values are strings</span></li>
+    <li><span class="sit">UART command parser</span><span class="why">parse "SET_FREQ 9600" — extract integer after the command keyword</span></li>
+    <li><span class="sit">Embedded sensor firmware</span><span class="why">convert ASCII decimal readings from an ADC or GPS NMEA sentence to integers</span></li>
+    <li><span class="sit">HTTP header value extraction</span><span class="why">parse Content-Length: 4096 — read the integer after the colon and whitespace</span></li>
+    <li><span class="sit">Calculator expression evaluator</span><span class="why">tokenize a math expression string; convert number tokens to int values</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Step-by-step state machine:</strong></p>
+<pre class="ascii">
+Input: "  -42abc"
+
+State 1 — skip whitespace:
+  s[0]=' ', s[1]=' ' → advance. s[2]='-'
+
+State 2 — read sign:
+  s[2]='-' → sign=-1, advance. s[3]='4'
+
+State 3 — accumulate digits (stop at first non-digit):
+  s[3]='4': result = 0*10+4 = 4
+  s[4]='2': result = 4*10+2 = 42
+  s[5]='a': not digit → STOP
+
+Apply sign: result = -1 * 42 = -42
+
+Overflow guard (checked BEFORE multiplying):
+  if result > (INT_MAX - digit) / 10  → clamp
+  INT_MAX = 2147483647
+  For "2147483648":
+    after "214748364": result=214748364
+    next digit=8: 214748364 > (2147483647-8)/10 = 214748363 → CLAMP to INT_MAX
+</pre>
+    <p class="aha">Aha moment: check overflow BEFORE computing, not after. Once <code>result = result*10 + digit</code> overflows an int, the value is already corrupted. The guard is <code>result &gt; (INT_MAX - digit) / 10</code>.</p>
+  </div>
+
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">#include &lt;limits.h&gt;
+#include &lt;ctype.h&gt;
+
+int my_atoi(const char *s) {
+    /* Step 1: skip leading whitespace */
+    while (isspace((unsigned char)*s)) s++;
+
+    /* Step 2: read optional sign */
+    int sign = 1;
+    if (*s == '-') { sign = -1; s++; }
+    else if (*s == '+') { s++; }
+
+    /* Step 3: accumulate digits with overflow guard */
+    int result = 0;
+    while (isdigit((unsigned char)*s)) {
+        int digit = *s - '0';
+        /* Check overflow before computing result*10 + digit */
+        if (result &gt; (INT_MAX - digit) / 10) {
+            return sign == 1 ? INT_MAX : INT_MIN;  /* clamp */
+        }
+        result = result * 10 + digit;
+        s++;
+    }
+    return sign * result;
+}</code></pre>
+
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>my_atoi("  +123 abc")</strong>
+
+Skip spaces: s→"+123 abc"
+Sign: '+' → sign=1, s→"123 abc"
+Digits:
+  '1': guard: 0 &lt;= (MAX-1)/10 ✓, result=1
+  '2': result=12
+  '3': result=123
+  ' ': not digit → stop
+return 1*123 = 123 ✓
+
+<strong>my_atoi("2147483648")  — overflow</strong>
+
+sign=1
+After 9 digits: result=214748364, next digit=8
+guard: 214748364 &gt; (2147483647-8)/10 = 214748363 → TRUE → clamp
+return INT_MAX = 2147483647 ✓</div>
+
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: checking overflow after the multiply — already corrupted</div>
+<pre><code class="language-c">/* WRONG: overflow check after the computation */
+result = result * 10 + digit;
+if (result &lt; 0) return sign == 1 ? INT_MAX : INT_MIN;  /* too late! */
+/* If result was INT_MAX before the multiply, result*10 wraps to a negative
+   number. The check catches a symptom, not the cause. Undefined behavior. */</code></pre>
+    <p><strong>Fix:</strong> guard <em>before</em> the computation: <code>if (result &gt; (INT_MAX - digit) / 10)</code> uses only safe arithmetic.</p>
+  </div>
+
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. What does my_atoi return for the empty string ""? Trace through each step.</p>
+    <p>2. What does my_atoi return for "-2147483649" (one below INT_MIN)? Walk through the overflow guard.</p>
+    <p>3. Why is the overflow condition <code>result &gt; (INT_MAX - digit) / 10</code> and not <code>result &gt; INT_MAX / 10</code>? Give a counterexample where the simpler check fails.</p>
+  </div>
+
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>Custom atoi: skip whitespace → read sign → accumulate digits (stop at non-digit) → guard overflow BEFORE multiply: if result &gt; (INT_MAX-digit)/10 → clamp. Return sign*result.</strong>
+    <br>Also fires for: "parse integer from string field" &middot; "UART decimal number parsing" &middot; "safe strtol alternative"
+  </div>
+</div>
+
+<!-- ================================================================ S23 -->
+<div class="card" id="s23">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 23</span>
+    <span class="pattern-name">Integer to String (itoa)</span>
+  </div>
+
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Converting an integer to its decimal string representation without using sprintf. The algorithm: repeatedly take the number modulo 10 to get the last digit, divide by 10 to drop it, and write the digit character to a buffer. This builds the digits in reverse order (least significant first), so the buffer must be reversed before use.</p>
+    <p>Special cases to handle: zero (the loop never executes), negative numbers (record sign, negate before the loop, prepend '-' after reversal), and INT_MIN (-2147483648) which cannot be negated in a 32-bit int without overflow (negate to long long first or handle separately).</p>
+    <p><code>sprintf(buf, "%d", n)</code> does this correctly and handles all edge cases — prefer it when available. Roll your own only when sprintf is unavailable (bare-metal embedded systems without libc) or when you need a specific base (hex, binary, base-N).</p>
+  </div>
+
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 7 — Reverse Integer</span><span class="why">related: extract digits via modulo; check overflow before each step</span></li>
+    <li><span class="sit">LeetCode 9 — Palindrome Number</span><span class="why">one approach: convert to string then two-pointer check</span></li>
+    <li><span class="sit">Embedded systems without libc</span><span class="why">printf unavailable on bare-metal; manual itoa to send numbers over UART</span></li>
+    <li><span class="sit">Custom logger / diagnostics</span><span class="why">format integers into a fixed-size log buffer without heap allocation</span></li>
+    <li><span class="sit">Base conversion utilities</span><span class="why">generalize to any base: digit = n % base; map to '0'-'9' or 'a'-'f'</span></li>
+    <li><span class="sit">Integer to Roman (LeetCode 12)</span><span class="why">related: extract digit groups using division/modulo, map to Roman symbols</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Extract digits by repeated modulo:</strong></p>
+<pre class="ascii">
+n = 1234
+
+digits extracted (least significant first):
+  1234 % 10 = 4 → write '4', n = 123
+   123 % 10 = 3 → write '3', n = 12
+    12 % 10 = 2 → write '2', n = 1
+     1 % 10 = 1 → write '1', n = 0
+  n == 0 → stop
+
+Buffer so far: "4321"  ← reversed!
+Reverse buffer: "1234" ✓
+</pre>
+    <p><strong>Negative number handling:</strong></p>
+<pre class="ascii">
+n = -42
+
+Record sign, work with |n|:
+  Convert 42 → "24" → reverse → "42"
+  Prepend '-': "-42" ✓
+
+INT_MIN = -2147483648, but INT_MAX = 2147483647
+-INT_MIN overflows int! Use: long long abs_n = (n == INT_MIN) ? 2147483648LL : -n;
+</pre>
+    <p class="aha">Aha moment: digits come out in reverse order because modulo gives the least significant digit. Always build into a scratch buffer and reverse at the end. The zero case must be handled explicitly since the loop body never executes for n=0.</p>
+  </div>
+
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Convert integer n to decimal string in buf[size]. Returns length. */
+int my_itoa(int n, char *buf, int size) {
+    if (size &lt;= 1) { if (size == 1) buf[0] = '\0'; return 0; }
+
+    int neg = (n &lt; 0);
+    long long v = neg ? -(long long)n : (long long)n;  /* handles INT_MIN */
+
+    int i = 0;
+    if (v == 0) {
+        buf[i++] = '0';   /* special case: zero */
+    } else {
+        while (v &gt; 0 &amp;&amp; i &lt; size - 1) {
+            buf[i++] = '0' + (int)(v % 10);  /* least significant digit first */
+            v /= 10;
+        }
+    }
+
+    if (neg &amp;&amp; i &lt; size - 1) buf[i++] = '-';  /* add sign before reversing */
+    buf[i] = '\0';
+
+    /* Reverse the digit string (sign is at buf[i-1] if negative) */
+    int lo = 0, hi = i - 1;
+    while (lo &lt; hi) { char t = buf[lo]; buf[lo++] = buf[hi]; buf[hi--] = t; }
+
+    return i;   /* length of the string (not counting '\0') */
+}</code></pre>
+
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>my_itoa(0, buf, 8)</strong>
+
+neg=0, v=0
+v==0: buf[0]='0', i=1
+buf[1]='\0'
+rev("0"): no-op (single char)
+return 1, buf="0" ✓
+
+<strong>my_itoa(-123, buf, 8)</strong>
+
+neg=1, v=123
+'3'→buf[0], v=12
+'2'→buf[1], v=1
+'1'→buf[2], v=0
+'-'→buf[3], i=4
+buf[4]='\0'
+Reverse "321-": lo=0,hi=3 → swap '3'↔'-' → "-123"? No:
+  swap buf[0]='3' and buf[3]='-' → buf="-21 3"... wait
+  buf before reverse: ['3','2','1','-','\0']
+  rev: swap[0]↔[3]: '-','2','1','3' → reverse positions:
+  lo=0,hi=3: swap '3'↔'-' → ['-','2','1','3']
+  lo=1,hi=2: swap '2'↔'1' → ['-','1','2','3']
+  buf="-123" ✓</div>
+
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: negating INT_MIN with -n overflows int</div>
+<pre><code class="language-c">/* WRONG: -INT_MIN overflows 32-bit int */
+int v = (n &lt; 0) ? -n : n;   /* if n == INT_MIN: -(-2147483648) = 2147483648 → overflow */</code></pre>
+    <p><strong>What breaks:</strong> INT_MIN = -2147483648 has no positive counterpart in 32-bit int (INT_MAX = 2147483647). Negating it wraps back to INT_MIN on two's complement systems.</p>
+<pre><code class="language-c">/* CORRECT: cast to long long before negating */
+long long v = (n &lt; 0) ? -(long long)n : (long long)n;</code></pre>
+  </div>
+
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. Modify my_itoa to support hexadecimal output (base 16). What changes in the digit extraction and character mapping?</p>
+    <p>2. What buffer size is needed to hold any 32-bit integer as a decimal string (including sign and null terminator)?</p>
+    <p>3. The sign character '-' is appended before reversing so it ends up at the front. Why is it safe to append it after the digits and then reverse?</p>
+  </div>
+
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>Integer to string: extract digits via n%10 (least significant first) into buffer; append '-' if negative; reverse the buffer. Use long long for negation to avoid INT_MIN overflow. Handle zero as special case.</strong>
+    <br>Also fires for: "base conversion" &middot; "reverse digits of integer" &middot; "number formatting without sprintf"
+  </div>
+</div>
+
+<!-- ================================================================ S24 -->
+<div class="card" id="s24">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 24</span>
+    <span class="pattern-name">Run-Length Encoding</span>
+  </div>
+
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Run-length encoding (RLE) compresses consecutive repeated characters into (count, character) pairs. "aaabbbcc" → "a3b3c2" or "3a3b2c" depending on convention. It is effective when strings have long runs of repeated characters (e.g., black-and-white bitmaps, simple sensor data) and counterproductive on random data (each single character expands to two bytes).</p>
+    <p>The encoding pass scans with two pointers: a scan pointer advances through a run of identical characters, and the count is the distance traveled. When the character changes, write the (character, count) pair to output and reset. The decoding pass reads character-count pairs and expands them.</p>
+    <p>LeetCode 443 (String Compression) is the in-place version: use the write-pointer pattern to compress into the same array. The critical invariant is that the write pointer never overtakes the read pointer (you are always compressing, never expanding), so in-place is safe — except for count digits greater than 9, which take multiple characters and can break the invariant for runs of length 10+.</p>
+  </div>
+
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 443 — String Compression</span><span class="why">in-place RLE; write compressed form back into the same char array</span></li>
+    <li><span class="sit">LeetCode 1313 — Decompress Run-Length Encoded List</span><span class="why">expand [freq,val] pairs into a full array</span></li>
+    <li><span class="sit">Bitmap / image compression</span><span class="why">BMP/TIFF run-length encoding for regions of uniform color</span></li>
+    <li><span class="sit">UART data compression</span><span class="why">compress repeated zero bytes in sensor telemetry before transmission</span></li>
+    <li><span class="sit">Log deduplication</span><span class="why">compress runs of identical log lines into "repeated N times" entries</span></li>
+    <li><span class="sit">DNA sequence encoding</span><span class="why">AAATTTCCCGGG → A3T3C3G3 for compact storage of repetitive regions</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Encoding with a run pointer:</strong></p>
+<pre class="ascii">
+s = "aaabbc"
+
+i=0: 'a', run starts. Advance while s[i]==s[0]:
+  i=0,1,2 are 'a'. i=3 is 'b'. count=3.
+  Write: 'a', '3'. output="a3"
+
+i=3: 'b', run starts. i=3,4 are 'b'. i=5 is 'c'. count=2.
+  Write: 'b', '2'. output="a3b2"
+
+i=5: 'c', run starts. i=5 is 'c'. i=6='\0'. count=1.
+  Write: 'c', '1'. output="a3b2c1"
+</pre>
+    <p><strong>LeetCode 443 — in-place compression rule:</strong> only write the count if it is &gt; 1. Write count digits one by one (using itoa). The write pointer stays &le; read pointer because you always compress or stay equal (a single unique char compresses to 1 char, same size).</p>
+    <p class="aha">Aha moment: for in-place compression, the write pointer can NEVER overtake the read pointer because one character (the char itself) is written for every run, and the run length (1+) means the read pointer has already moved ahead by at least as many characters.</p>
+  </div>
+
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* RLE encode: "aaabbc" → "a3b2c1". Returns length of out. */
+int rle_encode(const char *s, char *out, int out_size) {
+    int w = 0;
+    for (int i = 0; s[i]; ) {
+        char c = s[i];
+        int  count = 0;
+        while (s[i] == c) { i++; count++; }   /* count the run */
+
+        if (w &lt; out_size - 1) out[w++] = c;   /* write character */
+
+        /* Write count as digits */
+        char num[12];
+        int nlen = 0;
+        int tmp = count;
+        do { num[nlen++] = '0' + tmp % 10; tmp /= 10; } while (tmp &gt; 0);
+        for (int j = nlen - 1; j &gt;= 0 &amp;&amp; w &lt; out_size - 1; j--)
+            out[w++] = num[j];
+    }
+    if (w &lt; out_size) out[w] = '\0';
+    return w;
+}
+
+/* LeetCode 443 in-place compression. Returns new length. */
+int compress_inplace(char *s) {
+    int r = 0, w = 0;
+    int n = strlen(s);
+    while (r &lt; n) {
+        char c = s[r];
+        int count = 0;
+        while (r &lt; n &amp;&amp; s[r] == c) { r++; count++; }
+        s[w++] = c;
+        if (count &gt; 1) {
+            char num[12]; int nlen = 0, tmp = count;
+            do { num[nlen++] = '0' + tmp % 10; tmp /= 10; } while (tmp &gt; 0);
+            for (int j = nlen - 1; j &gt;= 0; j--) s[w++] = num[j];
+        }
+    }
+    s[w] = '\0';
+    return w;
+}</code></pre>
+
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>compress_inplace("aabb")</strong>
+
+r=0, w=0
+Run 'a': r advances 0→2, count=2. s[w=0]='a', w=1. count&gt;1: write '2', w=2.
+Run 'b': r advances 2→4, count=2. s[w=2]='b', w=3. write '2', w=4.
+s[4]='\0'. return 4.
+Result: "a2b2" ✓
+
+<strong>compress_inplace("abc")  — no compression possible</strong>
+
+Run 'a': count=1 → s[0]='a', w=1. count==1: no digit.
+Run 'b': count=1 → s[1]='b', w=2.
+Run 'c': count=1 → s[2]='c', w=3.
+s[3]='\0'. return 3. "abc" unchanged ✓</div>
+
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: writing count when count==1 — makes output longer than input</div>
+<pre><code class="language-c">/* WRONG: always writes char+count, even for runs of 1 */
+s[w++] = c;
+s[w++] = '0' + count;  /* "abc" → "a1b1c1" — 6 chars from 3! */</code></pre>
+    <p><strong>Rule:</strong> Only write the count digit(s) when count &gt; 1. Single-character runs are represented by the character alone.</p>
+  </div>
+
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. For compress_inplace on "aaaaaaaaaa" (10 'a's), what is written? The count '10' needs two characters — does the write pointer still stay &le; read pointer?</p>
+    <p>2. How would you decode a run-length encoded string "a3b2c1" back to "aaabbc"? Write the decode loop.</p>
+    <p>3. When would RLE make a string LONGER instead of shorter? Give a concrete example and explain why.</p>
+  </div>
+
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>Run-length encoding: scan runs with a counter; write (char, count-as-string); only write count when &gt;1. In-place: write pointer stays &le; read pointer. Use itoa-style digit extraction for multi-digit counts.</strong>
+    <br>Also fires for: "string compression" &middot; "LeetCode 443" &middot; "decode compressed string back to original"
+  </div>
+</div>
+
 <!-- CARDS_END -->
 <script>hljs.highlightAll();</script>
 </body>
