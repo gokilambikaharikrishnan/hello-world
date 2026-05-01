@@ -7380,79 +7380,137 @@ Total count = 0+0+0+2+1 = 3 ✓</div>
     <span class="pattern-name">Difference Array: Range Update in O(1)</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    You need to add a value to every element in a range [l, r] — repeatedly, many times.
-    Doing it naively updates O(r&minus;l+1) elements each time.
-    The difference array trick: only mark the start and end of each range update. Then reconstruct the actual values with a prefix sum at query time.
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>When you need to apply many range-increment updates ("add val to every element in [l, r]") and then read the final values, the naive approach takes O(r−l+1) per update. For m updates on an array of size n, that's O(m*n) total.</p>
+    <p>The difference array reduces each update to O(1): instead of touching every element in [l, r], record only two numbers — <code>diff[l] += val</code> (the addition starts here) and <code>diff[r+1] -= val</code> (the addition stops after r). After all updates, a single prefix-sum pass over <code>diff[]</code> reconstructs the final array. Total cost: O(m) updates + O(n) reconstruction.</p>
+    <p>The technique extends to 2D (mark four corners of a rectangle) and to any "add to a range, query the result" problem where updates precede queries. When queries are interleaved with updates, a Fenwick tree (BIT) or segment tree with lazy propagation is needed instead.</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    Store <code>diff[l] += val</code> and <code>diff[r+1] -= val</code>. Each range update is O(1). After all updates, the actual array is the prefix sum of diff[]. Then queries are O(n) but amortized over many updates.
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 1109 — Corporate Flight Bookings</span><span class="why">add seats to consecutive flight segments; query total per flight</span></li>
+    <li><span class="sit">LeetCode 1094 — Car Pooling</span><span class="why">passengers board/alight at positions; check capacity never exceeded</span></li>
+    <li><span class="sit">LeetCode 370 — Range Addition</span><span class="why">canonical difference array; m range updates then return final array</span></li>
+    <li><span class="sit">Painting a fence / coloring segments</span><span class="why">add color layers over ranges; final color at each cell from prefix sum</span></li>
+    <li><span class="sit">Scheduling / calendar overlap</span><span class="why">each event adds 1 to its time range; prefix sum reveals concurrent event count</span></li>
+    <li><span class="sit">Rainfall / temperature range adjustments</span><span class="why">forecast adjustments applied to date ranges; reconstruct per-day totals</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Core idea:</strong> <code>diff[i]</code> stores how much the running total changes at position i. <code>diff[l] += val</code> says "from here, add val." <code>diff[r+1] -= val</code> says "after r, stop adding val." The prefix sum of diff then gives the final values.</p>
+<pre class="ascii">
+n=5, three updates:
+  range_update(1, 3, +2):  diff[1]+=2, diff[4]-=2
+  range_update(0, 2, +1):  diff[0]+=1, diff[3]-=1
+  range_update(2, 4, +3):  diff[2]+=3, diff[5]-=3
+
+diff indices: 0   1   2   3   4   5
+diff values:  1   2   3  -1  -2  -3
+
+Prefix sum (running total):
+  i=0: running = 0+1 = 1   → result[0] = 1
+  i=1: running = 1+2 = 3   → result[1] = 3
+  i=2: running = 3+3 = 6   → result[2] = 6
+  i=3: running = 6-1 = 5   → result[3] = 5
+  i=4: running = 5-2 = 3   → result[4] = 3
+
+result = [1, 3, 6, 5, 3]
+
+Verify result[2]=6: update 0 added 1, update 1 added 2, update 2 added 3 → 1+2+3=6 ✓
+</pre>
+    <p class="aha">Aha moment: diff[r+1] -= val, not diff[r] -= val. You want position r to be included in the addition. The subtraction at r+1 cancels the effect starting from the next position. Writing diff[r] -= val would exclude position r itself.</p>
+    <p><strong>Array sizing:</strong> diff[] must have size n+1 to safely write to diff[r+1] when r = n-1.</p>
   </div>
 
-  <div class="section-label">&#9316; Annotated Code</div>
-<pre><code class="language-c">/* Difference array for multiple range updates.
-   After all updates, call build() to get the final array values. */
-int diff[10001] = {0};
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Difference array for O(1) range updates. O(n) reconstruction.
+   diff[] must be of size n+1 (to allow diff[r+1] when r = n-1). */
 
-/* Range update: add val to every element in arr[l..r] */
-void range_update(int l, int r, int val) {
-    diff[l]     += val;    /* range starts here: begin adding val */
-    diff[r + 1] -= val;    /* range ends here: stop adding val */
+void range_update(int *diff, int l, int r, int val) {
+    diff[l]     += val;   /* addition begins at l */
+    diff[r + 1] -= val;   /* addition ends after r */
 }
 
-/* Reconstruct final array by prefix-summing the difference array. */
-void build(int *result, int n) {
+void build(int *diff, int *result, int n) {
     int running = 0;
     for (int i = 0; i &lt; n; i++) {
-        running   += diff[i];   /* running sum accumulates all active range additions */
+        running   += diff[i];
         result[i]  = running;
     }
 }
 
-/* Example: corporate flight bookings — seats booked per flight segment */
-int max_seats(int bookings[][3], int nb, int n) {
-    for (int i = 0; i &lt;= n + 1; i++) diff[i] = 0;
+/* Example: corporate flight bookings.
+   bookings[i] = {first_flight, last_flight, seats}.
+   Flights are 1-indexed. Return seats reserved per flight. */
+int *corp_flight_bookings(int bookings[][3], int nb, int n, int *returnSize) {
+    int *diff   = calloc(n + 1, sizeof(int));
+    int *result = malloc(n * sizeof(int));
+
     for (int i = 0; i &lt; nb; i++)
-        range_update(bookings[i][0], bookings[i][1], bookings[i][2]);
-    int result[n], max_val = 0;
-    build(result, n);
-    for (int i = 0; i &lt; n; i++) if (result[i] &gt; max_val) max_val = result[i];
-    return max_val;
+        range_update(diff, bookings[i][0] - 1, bookings[i][1] - 1, bookings[i][2]);
+
+    build(diff, result, n);
+    free(diff);
+    *returnSize = n;
+    return result;
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
-  <div class="dry-run">Updates on arr[0..4]:
-  range_update(1, 3, +2)  → diff[1]+=2, diff[4]-=2
-  range_update(0, 2, +1)  → diff[0]+=1, diff[3]-=1
-  range_update(2, 4, +3)  → diff[2]+=3, diff[5]-=3
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>bookings = [[1,2,10],[2,3,20],[2,5,25]], n=5</strong>
+(1-indexed flights → 0-indexed diff)
 
-diff = [1, 2, 3, -1, -2, -3]
+range_update(0, 1, 10): diff[0]+=10, diff[2]-=10
+range_update(1, 2, 20): diff[1]+=20, diff[3]-=20
+range_update(1, 4, 25): diff[1]+=25, diff[5]-=25
 
-Build (prefix sum of diff):
-  i=0: running=1  result[0]=1
-  i=1: running=3  result[1]=3
-  i=2: running=6  result[2]=6
-  i=3: running=5  result[3]=5
-  i=4: running=3  result[4]=3
+diff = [10, 45, -10, -20, 0, -25]
 
-result = [1, 3, 6, 5, 3] ✓</div>
+Build:
+  i=0: running=10  result[0]=10
+  i=1: running=55  result[1]=55
+  i=2: running=45  result[2]=45
+  i=3: running=25  result[3]=25
+  i=4: running=25  result[4]=25
 
+return [10, 55, 45, 25, 25] ✓</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Writing diff[r] instead of diff[r+1] for the range end marker</div>
-    <p>The subtraction must go at index r+1, not r. You want val to be added for all positions l through r (inclusive). If you subtract at r, position r itself won't get val. The diff array requires diff[r+1] -= val so the prefix sum includes r but not r+1.</p>
+    <div class="gotcha-title">&#9888; Wrong: diff[r] -= val instead of diff[r+1] -= val — excludes position r</div>
+<pre><code class="language-c">/* WRONG: the subtraction at r cancels the addition one position too early */
+void range_update(int *diff, int l, int r, int val) {
+    diff[l] += val;
+    diff[r] -= val;   /* position r loses val in the prefix sum — wrong */
+}</code></pre>
+    <p><strong>What breaks:</strong> For range_update(1, 3, +5) with WRONG code: diff[1]+=5, diff[3]-=5. Prefix sum gives result[3] = prev + 5 - 5 = prev. Position 3 should have received +5 but doesn't. The subtraction must be at r+1 to include r.</p>
+<pre><code class="language-c">/* CORRECT */
+diff[r + 1] -= val;   /* cancels AFTER position r */</code></pre>
+    <p><strong>Second gotcha:</strong> not sizing diff[] as n+1. When r = n-1, writing diff[r+1] = diff[n] requires the array to have at least n+1 slots. Allocating only n elements causes a buffer overwrite.</p>
   </div>
 
-  <div class="leetcode">
-    <span>1109 &middot; Corporate Flight Bookings</span>
-    <span>1094 &middot; Car Pooling</span>
-    <span>370 &middot; Range Addition</span>
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. After three calls to range_update, how do you undo a specific update (say, undo range_update(2, 4, +3))? What calls would you make to diff[] to reverse it?</p>
+    <p>2. How would you use the difference array to find the maximum concurrent events? (Hint: add +1 for each event start and -1 for each event end, then prefix sum.)</p>
+    <p>3. If updates and queries are interleaved (not all updates before all queries), why does the difference array break? What data structure would you use instead?</p>
   </div>
-  <div class="trigger">When you see: multiple range-add updates then query final values &#8594; think: difference array — mark start/end, reconstruct with prefix sum</div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>When you see "add val to a range [l,r] many times, then read final values" → difference array: diff[l]+=val, diff[r+1]-=val; reconstruct with prefix sum. O(1) per update, O(n) total reconstruction.</strong>
+    <br>Also fires for: "count concurrent overlapping events" · "maximum seats/load at any position" · "painting overlapping segments"
+  </div>
 </div>
-
 <!-- PATTERNS_END -->
 <script>hljs.highlightAll();</script>
 </body>
