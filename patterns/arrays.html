@@ -7250,73 +7250,130 @@ long long expected = (long long)n * (n + 1) / 2;</code></pre>
     <span class="pattern-name">Divide &amp; Conquer: Count Inversions (Merge Sort)</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    An inversion is a pair (i,j) where i &lt; j but arr[i] &gt; arr[j] — out of order.
-    Count them all in O(n log n) using merge sort.
-    During the merge step, whenever we pick from the right half, all remaining left-half elements are larger than it — they ALL form inversions with this right element.
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>An inversion is a pair (i, j) where i &lt; j but arr[i] &gt; arr[j] — elements that are out of order. Counting inversions measures how "unsorted" an array is: a fully sorted array has 0 inversions; a reverse-sorted array has n*(n-1)/2.</p>
+    <p>The naive O(n²) approach checks every pair. The O(n log n) approach embeds the count inside merge sort. During the merge step, when the left-half pointer is at position i and we pick from the right half, all remaining left-half elements (positions i through mid-1) are greater than the right element — because the left half is already sorted. So we add <code>(mid - i)</code> inversions in O(1) instead of counting them one by one.</p>
+    <p>This is a classic "divide and conquer bonus": the merge step does extra bookkeeping for free while doing its normal work. The total inversion count must use <code>long long</code> — for n=100,000 it can reach ~5×10⁹.</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    During merge of two sorted halves [L] and [R]: when we pick R[j] because L[i] &gt; R[j], all of L[i..end] are also &gt; R[j] (L is sorted). So we add (mid - i) inversions at once — an O(1) count per element.
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 315 — Count of Smaller Numbers After Self</span><span class="why">per-element inversion count; extend merge sort with index tracking</span></li>
+    <li><span class="sit">LeetCode 493 — Reverse Pairs</span><span class="why">count pairs where arr[i] &gt; 2*arr[j]; same merge-sort skeleton, different condition</span></li>
+    <li><span class="sit">LeetCode 912 — Sort an Array</span><span class="why">pure merge sort; same structure without the counting</span></li>
+    <li><span class="sit">Ranking comparison / Kendall tau distance</span><span class="why">inversions measure disagreement between two rankings</span></li>
+    <li><span class="sit">Bubble sort step count</span><span class="why">number of swaps bubble sort performs equals the inversion count</span></li>
+    <li><span class="sit">Signal disorder metrics</span><span class="why">count how many adjacent pairs in a sensor stream are out of expected order</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Key observation:</strong> After recursively sorting both halves, a standard merge runs two pointers i (left half) and j (right half). Whenever arr[i] &gt; arr[j], arr[j] is smaller than everything at positions i through mid-1 (all of them). That's <code>mid - i</code> inversions added at once.</p>
+<pre class="ascii">
+arr = [3, 1, 2]
+Split → [3] [1, 2]
+  Left already sorted: [3]
+  Right already sorted: [1, 2]
+
+Merge [3] and [1, 2]:
+  i=0(val=3), j=0(val=1): 3 &gt; 1 → pick 1, count += (mid-i) = (1-0) = 1
+  i=0(val=3), j=1(val=2): 3 &gt; 2 → pick 2, count += (mid-i) = (1-0) = 1
+  i=0(val=3), drain: pick 3
+
+Total inversions = 2   [(3,1) and (3,2)] ✓
+</pre>
+    <p class="aha">Aha moment: (mid - i) not 1. You're not just counting one inversion per pick from the right — you're counting ALL left-half elements still unplaced, because sorted left means ALL of them are bigger than the current right element.</p>
+    <p><strong>Why long long:</strong> max inversions for n elements = n*(n-1)/2. For n=100,000 that's ~5×10⁹, which overflows a 32-bit int (max ~2.1×10⁹). Always accumulate into <code>long long</code>.</p>
   </div>
 
-  <div class="section-label">&#9316; Annotated Code</div>
-<pre><code class="language-c">long long merge_count_inv(int *arr, int *tmp, int lo, int hi) {
-    if (hi - lo &lt;= 1) return 0;   /* single element: no inversions */
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Count inversions in arr[lo..hi) using merge sort. O(n log n). */
+long long merge_count(int *arr, int *tmp, int lo, int hi) {
+    if (hi - lo &lt;= 1) return 0;   /* 0 or 1 element: no inversions */
     int mid = lo + (hi - lo) / 2;
 
-    long long count = merge_count_inv(arr, tmp, lo,  mid)
-                    + merge_count_inv(arr, tmp, mid, hi);
+    long long count = merge_count(arr, tmp, lo,  mid)   /* left half */
+                    + merge_count(arr, tmp, mid, hi);   /* right half */
 
     int i = lo, j = mid, k = lo;
     while (i &lt; mid &amp;&amp; j &lt; hi) {
         if (arr[i] &lt;= arr[j]) {
-            tmp[k++] = arr[i++];   /* left element is smaller: no inversion */
+            tmp[k++] = arr[i++];          /* in order: no new inversion */
         } else {
-            /* arr[j] < arr[i], and all of arr[i..mid-1] > arr[j] (left is sorted) */
-            count  += (mid - i);   /* all remaining left elements form inversions with arr[j] */
+            count   += (mid - i);         /* arr[i..mid-1] all &gt; arr[j] */
             tmp[k++] = arr[j++];
         }
     }
-    while (i &lt; mid) tmp[k++] = arr[i++];
-    while (j &lt; hi)  tmp[k++] = arr[j++];
-    for (int x = lo; x &lt; hi; x++) arr[x] = tmp[x];
+    while (i &lt; mid) tmp[k++] = arr[i++]; /* drain left */
+    while (j &lt; hi)  tmp[k++] = arr[j++]; /* drain right */
+    for (int x = lo; x &lt; hi; x++) arr[x] = tmp[x];   /* copy back */
 
     return count;
 }
 
 long long count_inversions(int *arr, int n) {
-    int tmp[n];
-    return merge_count_inv(arr, tmp, 0, n);
+    int *tmp = malloc(n * sizeof(int));
+    long long result = merge_count(arr, tmp, 0, n);
+    free(tmp);
+    return result;
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
-  <div class="dry-run">arr = [2, 4, 1, 3, 5]
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>arr = [2, 4, 1, 3, 5]</strong>   expected inversions: (2,1),(4,1),(4,3) = 3
 
-Inversions: (2,1),(4,1),(4,3) → count = 3
+Divide: [2,4] | [1,3] | [5]
+  Merge [2] and [4]: 2&lt;4 → no inv. sorted [2,4], count=0
+  Merge [1] and [3]: 1&lt;3 → no inv. sorted [1,3], count=0
+  Merge [1,3] and [5]: both &lt; 5 → no inv. sorted [1,3,5], count=0
 
-Merge [2,4] and [1,3]:
-  arr[0]=2 > tmp[0]=1 → count+=2 (both 2,4 > 1), place 1
-  arr[0]=2 < arr[1]=3 → no inv, place 2
-  arr[1]=4 > arr[1]=3 → count+=1, place 3, place 4
-Total from this merge = 3 ✓</div>
+Merge [2,4] and [1,3,5]:
+  i=0(v=2), j=0(v=1): 2 &gt; 1 → count += (mid-i) = (2-0) = 2, place 1
+  i=0(v=2), j=1(v=3): 2 &lt; 3 → no inv, place 2
+  i=1(v=4), j=1(v=3): 4 &gt; 3 → count += (mid-i) = (2-1) = 1, place 3
+  drain left: place 4, drain right: place 5
 
+Total count = 0+0+0+2+1 = 3 ✓</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Adding 1 instead of (mid - i) when picking from the right</div>
-    <p>When you pick R[j] because L[i] &gt; R[j], ALL remaining elements in L (positions i through mid-1) are greater than R[j] — because L is sorted. The inversion count to add is <code>mid - i</code>, not just 1. Adding 1 undercounts severely for large left sub-arrays.</p>
+    <div class="gotcha-title">&#9888; Wrong: adding 1 instead of (mid - i) — undercounts inversions</div>
+<pre><code class="language-c">/* WRONG: only counts one inversion per right-pick */
+} else {
+    count += 1;          /* misses all other left elements that also invert with arr[j] */
+    tmp[k++] = arr[j++];
+}</code></pre>
+    <p><strong>What breaks:</strong> For arr=[4,5,1], when we pick 1 from the right, both 4 and 5 are inversions with 1. Adding 1 gives count=1; the correct answer is 2. The left half is sorted, so (mid - i) elements are all larger than arr[j].</p>
+<pre><code class="language-c">/* CORRECT: count all remaining left elements as inversions */
+} else {
+    count += (mid - i);   /* all of arr[i..mid-1] &gt; arr[j] because left is sorted */
+    tmp[k++] = arr[j++];
+}</code></pre>
+    <p><strong>Second gotcha:</strong> using <code>int count</code> instead of <code>long long count</code>. For n=100,000 the inversion count can reach ~5×10⁹, which overflows <code>int</code>.</p>
   </div>
 
-  <div class="leetcode">
-    <span>315 &middot; Count of Smaller Numbers After Self</span>
-    <span>493 &middot; Reverse Pairs</span>
-    <span>912 &middot; Sort an Array</span>
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. For a sorted array [1,2,3,4,5], trace merge_count. How many times is the <code>else</code> branch (count += mid-i) taken? What is the total inversion count?</p>
+    <p>2. For a reverse-sorted array [5,4,3,2,1], the answer is 10 (= 5*4/2). Convince yourself that the merge-sort accumulation correctly produces 10 by tracing the bottom-up merges.</p>
+    <p>3. Why does the merge copy-back step (<code>for x: arr[x]=tmp[x]</code>) need to happen before returning? What would go wrong if the parent call reads arr before it's copied back?</p>
   </div>
-  <div class="trigger">When you see: count inversions (out-of-order pairs) in O(n log n) &#8594; think: merge sort + add (mid-i) to count when picking from right half</div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>When you see "count out-of-order pairs in O(n log n)" → merge sort; when picking from right half, add (mid - i) to count (all remaining left elements are larger); use long long for the count.</strong>
+    <br>Also fires for: "Kendall tau ranking distance" · "bubble sort swap count" · "reverse pairs with different condition"
+  </div>
 </div>
 
-<!-- ================================================================ P54 -->
 <div class="card" id="p54">
   <div class="pattern-header">
     <span class="pattern-num">Pattern 54</span>
