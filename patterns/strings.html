@@ -1570,6 +1570,1395 @@ char tmp = s[lo]; s[lo] = s[hi]; s[hi] = tmp;</code></pre>
   </div>
 </div>
 
+
+<!-- ================================================================ S11 -->
+<div class="card" id="s11">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 11</span>
+    <span class="pattern-name">Palindrome Check (Two Pointer)</span>
+  </div>
+
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>A palindrome reads the same forwards and backwards: "racecar", "level", "noon". The two-pointer check is the most efficient method: place one pointer at the start and one at the end, compare the characters they point to, and march them inward. If any pair mismatches, return false. If the pointers meet or cross without a mismatch, return true.</p>
+    <p>This is O(n) time and O(1) space — no reversal, no extra array, no recursive call stack. The loop stops as soon as it finds a mismatch, so it is also efficient in the average case when strings are not palindromes: the mismatch is often found early.</p>
+    <p>The harder variant (LeetCode 125) ignores non-alphanumeric characters and treats uppercase and lowercase as equal. The two-pointer structure is identical but the advance step skips non-alphanumeric characters before each comparison. The comparison uses <code>tolower</code> to normalize case.</p>
+  </div>
+
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 125 — Valid Palindrome</span><span class="why">skip non-alnum, compare lowercase; two-pointer from both ends</span></li>
+    <li><span class="sit">LeetCode 680 — Valid Palindrome II</span><span class="why">allow one deletion; try skipping left or right on mismatch</span></li>
+    <li><span class="sit">LeetCode 9 — Palindrome Number</span><span class="why">convert to string then two-pointer, or reverse half the number</span></li>
+    <li><span class="sit">DNA sequence analysis</span><span class="why">palindromic sequences in DNA are restriction enzyme recognition sites</span></li>
+    <li><span class="sit">Data integrity check</span><span class="why">verify that a symmetric data structure (packet header mirrored in footer) matches</span></li>
+    <li><span class="sit">User input validation</span><span class="why">check if a user-entered word is a palindrome for a word game</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Basic palindrome check:</strong></p>
+<pre class="ascii">
+s = "racecar"
+     0123456
+
+lo=0, hi=6
+'r'=='r' ✓  lo=1, hi=5
+'a'=='a' ✓  lo=2, hi=4
+'c'=='c' ✓  lo=3, hi=3
+lo==hi → stop (odd center, already in place)
+return true ✓
+
+s = "hello"
+lo=0, hi=4
+'h'!='o' → return false immediately ✓
+</pre>
+    <p><strong>Skip non-alphanumeric (LeetCode 125 variant):</strong></p>
+<pre class="ascii">
+s = "A man, a plan, a canal: Panama"
+
+lo starts at 'A', hi starts at 'a'
+At each step: skip non-alnum, then compare tolower
+
+lo='A'→'a', hi='a'→'a': 'a'=='a' ✓, advance both
+lo='m', hi='m': equal ✓
+... (all match)
+→ palindrome ✓
+</pre>
+    <p class="aha">Aha moment: for the skip-non-alnum variant, advance the pointer BEFORE comparing. Do not compare and then decide to skip — advance both pointers to their next valid characters first, then compare.</p>
+  </div>
+
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">#include &lt;ctype.h&gt;
+#include &lt;string.h&gt;
+
+/* Basic palindrome check. O(n) time, O(1) space. */
+int is_palindrome(const char *s) {
+    int lo = 0, hi = strlen(s) - 1;
+    while (lo &lt; hi) {
+        if (s[lo] != s[hi]) return 0;   /* mismatch → not palindrome */
+        lo++;
+        hi--;
+    }
+    return 1;
+}
+
+/* Valid Palindrome variant: ignore non-alnum, case-insensitive */
+int is_palindrome_lc125(const char *s) {
+    int lo = 0, hi = strlen(s) - 1;
+    while (lo &lt; hi) {
+        /* skip non-alphanumeric from the left */
+        while (lo &lt; hi &amp;&amp; !isalnum((unsigned char)s[lo])) lo++;
+        /* skip non-alphanumeric from the right */
+        while (lo &lt; hi &amp;&amp; !isalnum((unsigned char)s[hi])) hi--;
+        /* compare lowercase versions */
+        if (tolower((unsigned char)s[lo]) != tolower((unsigned char)s[hi]))
+            return 0;
+        lo++;
+        hi--;
+    }
+    return 1;
+}</code></pre>
+
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>is_palindrome("abcba")</strong>
+
+lo=0,hi=4: 'a'=='a' ✓  lo=1,hi=3
+lo=1,hi=3: 'b'=='b' ✓  lo=2,hi=2
+lo==hi → return 1 ✓
+
+<strong>is_palindrome_lc125("race a car")</strong>
+
+lo=0,hi=9: both alnum → 'r' vs 'r'? s[9]='r'? No, s="race a car"
+s: r(0)a(1)c(2)e(3) (4)a(5) (6)c(7)a(8)r(9)
+lo=0,hi=9: 'r' vs 'r': equal ✓  lo=1,hi=8
+lo=1,hi=8: 'a' vs 'a': equal ✓  lo=2,hi=7
+lo=2,hi=7: 'c' vs 'c': equal ✓  lo=3,hi=5
+lo=3,hi=5: 'e' vs 'a': 'e'!='a' → return 0 ✓ (not palindrome)</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: advancing past the valid character before comparing</div>
+<pre><code class="language-c">/* WRONG: advances lo AFTER the check, skipping valid chars */
+while (lo &lt; hi) {
+    while (!isalnum(s[lo])) lo++;   /* advances without checking lo &lt; hi */
+    while (!isalnum(s[hi])) hi--;   /* same problem on right side */
+    if (s[lo] != s[hi]) return 0;
+    lo++; hi--;
+}
+/* Bug: inner while loops don't check lo &lt; hi → can run past each other */</code></pre>
+    <p><strong>What breaks:</strong> If there are no alphanumeric characters (s = "...,,,"), <code>lo</code> increments past <code>hi</code> in the inner loop, then the outer comparison accesses out-of-order indices. The fix is adding <code>lo &lt; hi</code> in every inner while condition.</p>
+<pre><code class="language-c">/* CORRECT: always guard lo &lt; hi in the inner skip loops */
+while (lo &lt; hi &amp;&amp; !isalnum((unsigned char)s[lo])) lo++;
+while (lo &lt; hi &amp;&amp; !isalnum((unsigned char)s[hi])) hi--;</code></pre>
+  </div>
+
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. What does <code>is_palindrome("")</code> return? What is <code>hi</code> when <code>strlen("") = 0</code>? Is the while loop entered?</p>
+    <p>2. Is "A" a palindrome? Is " " a palindrome according to the LeetCode 125 rules (single non-alphanumeric char)?</p>
+    <p>3. How would you check if a palindrome is also a pangram (contains every letter a-z)? Combine palindrome check with freq array.</p>
+  </div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>When checking if a string is a palindrome: two pointers lo=0, hi=n-1; compare s[lo] and s[hi]; advance inward; stop when lo &ge; hi. For skip-non-alnum variant: guard every inner skip with lo &lt; hi.</strong>
+    <br>Also fires for: "case-insensitive palindrome" &middot; "palindrome with one deletion allowed" &middot; "palindrome substring check"
+  </div>
+</div>
+
+<!-- ================================================================ S12 -->
+<div class="card" id="s12">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 12</span>
+    <span class="pattern-name">Valid Palindrome II (One Deletion Allowed)</span>
+  </div>
+
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Given a string, can you make it a palindrome by removing at most one character? "abca" → remove 'c' → "aba" (palindrome). This is a two-pointer problem with a single branch point: when the two-pointer scan hits a mismatch, you have two choices — delete the left character or delete the right character. Try both and check if either of the remaining substrings is a palindrome.</p>
+    <p>The key insight is that you only get to exercise the "delete" option once, and only when you hit the first mismatch. After that first deletion, the remainder must be a perfect palindrome with no further deletions. This means you need a helper function that checks if a range [lo, hi] is a palindrome with no deletions allowed.</p>
+    <p>This pattern generalizes: "at most k deletions" becomes a DP problem. But for k=1, the two-pointer + branch approach is O(n) time, O(1) space — far better than the DP approach for this special case.</p>
+  </div>
+
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 680 — Valid Palindrome II</span><span class="why">direct application; try skipping s[lo] or s[hi] on first mismatch</span></li>
+    <li><span class="sit">LeetCode 1216 — Valid Palindrome III</span><span class="why">k deletions allowed → DP on longest palindromic subsequence</span></li>
+    <li><span class="sit">Auto-correct systems</span><span class="why">check if a word becomes a palindrome with one typo correction</span></li>
+    <li><span class="sit">DNA repair simulation</span><span class="why">can a strand be made palindromic by removing one base?</span></li>
+    <li><span class="sit">Data validation with single-bit error tolerance</span><span class="why">one-byte corrupt palindromic header — can we recover?</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Two-pointer with one branch:</strong></p>
+<pre class="ascii">
+s = "abcba"  → perfect palindrome, no deletion needed
+
+s = "abcca"
+lo=0,hi=4: 'a'=='a' ✓  lo=1,hi=3
+lo=1,hi=3: 'b'!='c' → MISMATCH
+
+Two options:
+  Skip s[lo]='b': check if s[2..3] = "cc" is palindrome → YES ✓
+  Skip s[hi]='c': check if s[1..2] = "bc" is palindrome → NO
+
+Either option returns true → return true ✓
+
+s = "abcde"
+lo=0,hi=4: 'a'!='e' → MISMATCH
+  Skip 'a': check "bcde" → 'b'!='e' → not palindrome
+  Skip 'e': check "abcd" → 'a'!='d' → not palindrome
+Both false → return false ✓
+</pre>
+    <p class="aha">Aha moment: you only invoke the helper once — at the FIRST mismatch. After deleting one character, the remaining substring must be a perfect palindrome. If neither option works, the answer is false.</p>
+  </div>
+
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Check if s[lo..hi] is a palindrome (no deletions). */
+static int is_pal_range(const char *s, int lo, int hi) {
+    while (lo &lt; hi) {
+        if (s[lo] != s[hi]) return 0;
+        lo++; hi--;
+    }
+    return 1;
+}
+
+/* Valid Palindrome II: at most one deletion. O(n) time, O(1) space. */
+int valid_palindrome_ii(const char *s) {
+    int lo = 0, hi = strlen(s) - 1;
+    while (lo &lt; hi) {
+        if (s[lo] == s[hi]) {
+            lo++; hi--;              /* match: advance both */
+        } else {
+            /* First mismatch: try deleting either side */
+            return is_pal_range(s, lo + 1, hi) ||  /* skip s[lo] */
+                   is_pal_range(s, lo, hi - 1);    /* skip s[hi] */
+        }
+    }
+    return 1;   /* no mismatch found: already a palindrome */
+}</code></pre>
+
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>valid_palindrome_ii("aba")</strong>
+
+lo=0,hi=2: 'a'=='a' ✓, lo=1,hi=1
+lo==hi → exit while
+return 1 (already palindrome) ✓
+
+<strong>valid_palindrome_ii("abca")</strong>
+
+lo=0,hi=3: 'a'=='a' ✓, lo=1,hi=2
+lo=1,hi=2: 'b'!='c' → mismatch
+  Skip lo+1=2: is_pal_range("abca", 2, 2) → hi=2,lo=2 → trivially true → return 1 ✓
+(skip s[1]='b': remaining is s[2..2]="c", which is a palindrome)
+
+<strong>valid_palindrome_ii("abcdef")</strong>
+
+lo=0,hi=5: 'a'!='f' → mismatch
+  Skip lo+1=1: is_pal_range(s,1,5)="bcdef" → 'b'!='f' → false
+  Skip hi-1=4: is_pal_range(s,0,4)="abcde" → 'a'!='e' → false
+Both false → return 0 ✓</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: trying deletion at every mismatch instead of only the first</div>
+<pre><code class="language-c">/* WRONG: recursively allows multiple deletions */
+int valid_pal_wrong(const char *s, int lo, int hi, int deletions) {
+    while (lo &lt; hi) {
+        if (s[lo] == s[hi]) { lo++; hi--; }
+        else if (deletions &gt; 0) {
+            /* tries BOTH paths recursively — allows 2 deletions per call! */
+            return valid_pal_wrong(s, lo+1, hi, deletions-1) ||
+                   valid_pal_wrong(s, lo, hi-1, deletions-1);
+        } else return 0;
+    }
+    return 1;
+}
+/* "abcba" with deletions=1: correct.
+   But recursion can consume the deletion budget in ways the problem doesn't allow. */</code></pre>
+    <p><strong>What breaks:</strong> The problem allows deleting ONE character total, not one per mismatch pair. The recursive approach with a budget can combine two partial deletions and incorrectly return true. The correct approach: delete once at the first mismatch, then check the remainder with a strict (no-deletion) palindrome helper.</p>
+  </div>
+
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. For <code>s = "a"</code> (single character), what does <code>valid_palindrome_ii</code> return? Trace the while loop.</p>
+    <p>2. Is <code>valid_palindrome_ii</code> correct for a string that is already a palindrome? Does it ever call <code>is_pal_range</code> in that case?</p>
+    <p>3. How would you extend this to "at most 2 deletions"? Would two-pointer still work, or would you need DP?</p>
+  </div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>When asked "palindrome with one deletion": two pointer scan; on first mismatch, try is_pal(lo+1,hi) OR is_pal(lo,hi-1); return the OR result. Only one branch, only at the first mismatch.</strong>
+    <br>Also fires for: "near-palindrome detection" &middot; "one-edit-away palindrome" &middot; "at most k deletions → DP on LPS"
+  </div>
+</div>
+
+<!-- ================================================================ S13 -->
+<div class="card" id="s13">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 13</span>
+    <span class="pattern-name">Filter Characters In-Place (Write Pointer)</span>
+  </div>
+
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Removing characters from a string in-place without extra space uses the write pointer (also called slow/fast pointer or read/write pointer) pattern. One pointer — the write pointer — tracks where the next "kept" character should go. Another pointer — the read pointer — scans through every character. When a character passes the filter (should be kept), copy it to the write position and advance both pointers. When it fails the filter (should be removed), only advance the read pointer.</p>
+    <p>At the end, the write pointer holds the new length. Write a null terminator at that position to terminate the modified string. The original characters after the null terminator are still in memory but irrelevant — they will be overwritten or ignored. This technique is O(n) time and O(1) space.</p>
+    <p>The same write-pointer pattern is used for removing duplicates from a sorted array (arrays.html P05), compressing run-length encoded data, and applying character-level transformations in streaming contexts. It is one of the most broadly applicable single-pass string operations.</p>
+  </div>
+
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 27 — Remove Element</span><span class="why">remove all instances of val in-place; same read/write pointer pattern on arrays</span></li>
+    <li><span class="sit">LeetCode 26 — Remove Duplicates from Sorted Array</span><span class="why">write pointer keeps only the first occurrence of each value</span></li>
+    <li><span class="sit">LeetCode 443 — String Compression</span><span class="why">read groups, write count+char to write pointer; in-place RLE</span></li>
+    <li><span class="sit">Input sanitization (strip HTML tags)</span><span class="why">filter out characters between &lt; and &gt; using a state machine + write pointer</span></li>
+    <li><span class="sit">Embedded log compaction</span><span class="why">remove null bytes and control characters from a UART receive buffer</span></li>
+    <li><span class="sit">URL decode in-place</span><span class="why">%2B → '+'; write pointer moves slower than read pointer during expansion/contraction</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Read and write pointer movement:</strong></p>
+<pre class="ascii">
+Remove vowels from "hello world"
+
+r=read pointer, w=write pointer (both start at 0)
+
+r=0:'h' not vowel → s[w=0]='h', w=1, r=1
+r=1:'e' IS vowel  → skip, r=2
+r=2:'l' not vowel → s[w=1]='l', w=2, r=3
+r=3:'l' not vowel → s[w=2]='l', w=3, r=4
+r=4:'o' IS vowel  → skip, r=5
+r=5:' ' not vowel → s[w=3]=' ', w=4, r=6
+r=6:'w' not vowel → s[w=4]='w', w=5, r=7
+r=7:'o' IS vowel  → skip, r=8
+r=8:'r' not vowel → s[w=5]='r', w=6, r=9
+r=9:'l' not vowel → s[w=6]='l', w=7, r=10
+r=10:'d'not vowel → s[w=7]='d', w=8, r=11
+r=11:'\0'→ exit
+s[8]='\0'
+
+Result: "hll wrld" ✓
+</pre>
+    <p class="aha">Aha moment: the write pointer can never run ahead of the read pointer (w &le; r always), so you never risk overwriting a character you have not read yet. This makes the in-place modification safe.</p>
+  </div>
+
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">#include &lt;ctype.h&gt;
+
+/* Remove all characters that fail the keep() predicate. In-place. O(n). */
+int filter_string(char *s, int (*keep)(char)) {
+    int w = 0;   /* write pointer: next position to write a kept char */
+    for (int r = 0; s[r]; r++) {
+        if (keep(s[r])) s[w++] = s[r];   /* keep: copy to write pos, advance w */
+        /* else: skip (r advances, w stays) */
+    }
+    s[w] = '\0';   /* null-terminate at new end */
+    return w;      /* new length */
+}
+
+/* Example predicates */
+int is_not_vowel(char c) {
+    return !strchr("aeiouAEIOU", c);
+}
+int is_alphanumeric(char c) {
+    return isalnum((unsigned char)c);
+}
+
+/* Remove spaces in-place (no predicate overhead) */
+int remove_spaces(char *s) {
+    int w = 0;
+    for (int r = 0; s[r]; r++)
+        if (s[r] != ' ') s[w++] = s[r];
+    s[w] = '\0';
+    return w;
+}</code></pre>
+
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>remove_spaces("a b c")</strong>
+
+r=0:'a'!=' ' → s[w=0]='a', w=1
+r=1:' '==' ' → skip
+r=2:'b'!=' ' → s[w=1]='b', w=2
+r=3:' '==' ' → skip
+r=4:'c'!=' ' → s[w=2]='c', w=3
+r=5:'\0' → exit
+s[3]='\0'
+return 3, s="abc" ✓
+
+<strong>remove_spaces("   ")  — all spaces</strong>
+
+r=0,1,2: all spaces → skip
+r=3:'\0' → exit
+s[0]='\0'
+return 0, s="" ✓</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: forgetting to null-terminate after the write loop</div>
+<pre><code class="language-c">/* WRONG: filter runs correctly but doesn't terminate */
+int filter_bad(char *s) {
+    int w = 0;
+    for (int r = 0; s[r]; r++)
+        if (s[r] != ' ') s[w++] = s[r];
+    /* missing: s[w] = '\0'; */
+    return w;
+}
+/* Result: s still has old characters after position w.
+   If original was "a b" → after filter: s="ab b" (old 'b' at [2] not removed).
+   strlen(s) gives wrong result. printf prints extra chars. */</code></pre>
+    <p><strong>Rule:</strong> After any write-pointer filter, always write <code>s[w] = '\0'</code>. This is the single most commonly forgotten step.</p>
+<pre><code class="language-c">/* CORRECT */
+s[w] = '\0';   /* terminate at new end — mandatory */</code></pre>
+  </div>
+
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. After <code>filter_string(s, is_alphanumeric)</code>, what is the relationship between the original <code>strlen(s)</code> and the returned new length? Can the new length ever be greater?</p>
+    <p>2. Write a filter that collapses consecutive spaces into a single space (e.g., "a  b" → "a b"). How does the write-pointer pattern change?</p>
+    <p>3. Can this pattern be used to filter characters from a string literal? Why or why not?</p>
+  </div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>When removing characters in-place: write pointer w=0; for each read char r: if keep(s[r]) then s[w++]=s[r]; after loop: s[w]='\0'. W always &le; R, so overwrite is safe. Never forget the null terminator.</strong>
+    <br>Also fires for: "remove element from array in-place" &middot; "compact a string buffer" &middot; "strip non-alnum from input"
+  </div>
+</div>
+
+<!-- ================================================================ S14 -->
+<div class="card" id="s14">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 14</span>
+    <span class="pattern-name">Longest Substring Without Repeating Characters</span>
+  </div>
+
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Find the length of the longest substring of s that contains no repeated characters. "abcabcbb" → answer is 3 ("abc"). This is the canonical variable-size sliding window problem. A window [left, right] expands right one character at a time. When a repeated character enters the window, shrink the window from the left until the repeated character is gone.</p>
+    <p>The window invariant is: at all times, every character in s[left..right] is unique. The right pointer advances unconditionally each step. The left pointer advances only when a repeat is detected. The answer is the maximum window size seen at any point.</p>
+    <p>Tracking character positions (not just counts) lets the left pointer jump directly past the previous occurrence of the repeated character, avoiding a redundant inner loop. The data structure is an int array of size 128 (ASCII) or 256, mapping character → last seen index. When a character at index right was last seen at some index &ge; left, the window must shrink to last_seen+1.</p>
+  </div>
+
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 3 — Longest Substring Without Repeating Characters</span><span class="why">direct application; freq map or last-seen index array</span></li>
+    <li><span class="sit">LeetCode 159 — Longest Substring with At Most Two Distinct Characters</span><span class="why">same structure; shrink when distinct count &gt; 2</span></li>
+    <li><span class="sit">LeetCode 340 — At Most K Distinct Characters</span><span class="why">generalize to K; shrink when window has &gt;K distinct chars</span></li>
+    <li><span class="sit">Network session token uniqueness</span><span class="why">find longest prefix of a token stream with no repeated bytes</span></li>
+    <li><span class="sit">Sliding window deduplication</span><span class="why">process a stream where you must discard windows with repeated items</span></li>
+    <li><span class="sit">Password uniqueness constraint</span><span class="why">check if any window of length k in a sequence has all unique characters</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Approach 1 — freq count, shrink inner loop:</strong> maintain a count of each character in the window. When the incoming character's count exceeds 1, shrink left until it drops to 1.</p>
+    <p><strong>Approach 2 — last-seen index, O(1) jump:</strong></p>
+<pre class="ascii">
+s = "abcabcbb"
+last[128] = {-1}   (all -1: not seen)
+left=0, max_len=0
+
+right=0:'a': last['a']=-1 &lt; left=0 → no repeat, last['a']=0, len=1, max=1
+right=1:'b': last['b']=-1 &lt; 0 → no repeat, last['b']=1, len=2, max=2
+right=2:'c': last['c']=-1 &lt; 0 → no repeat, last['c']=2, len=3, max=3
+right=3:'a': last['a']=0 &ge; left=0 → REPEAT
+              left = last['a']+1 = 1   (jump left past the old 'a')
+              last['a']=3, len=right-left+1=3, max=3
+right=4:'b': last['b']=1 &ge; left=1 → REPEAT
+              left = last['b']+1 = 2
+              last['b']=4, len=3, max=3
+...
+Answer: 3 ✓
+</pre>
+    <p class="aha">Aha moment: update last[c] to right regardless of whether a repeat was found. If you only update it on repeats, the position becomes stale and future checks against it will give wrong jump distances.</p>
+  </div>
+
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Longest substring without repeating characters. O(n) time, O(1) space. */
+int length_of_longest_substring(const char *s) {
+    int last[128];
+    for (int i = 0; i &lt; 128; i++) last[i] = -1;  /* -1 means not yet seen */
+
+    int left = 0, max_len = 0;
+
+    for (int right = 0; s[right]; right++) {
+        int c = (unsigned char)s[right];
+
+        /* If c was seen at or after 'left', it would repeat in the window */
+        if (last[c] &gt;= left)
+            left = last[c] + 1;   /* jump left past the previous occurrence */
+
+        last[c] = right;          /* always update: c is now at position 'right' */
+
+        int len = right - left + 1;
+        if (len &gt; max_len) max_len = len;
+    }
+    return max_len;
+}</code></pre>
+
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>s = "dvdf"</strong>
+
+last[*]=-1, left=0, max=0
+
+r=0:'d': last['d']=-1 &lt; 0 → ok, last['d']=0, len=1, max=1
+r=1:'v': last['v']=-1 &lt; 0 → ok, last['v']=1, len=2, max=2
+r=2:'d': last['d']=0 &ge; left=0 → left=1, last['d']=2, len=2, max=2
+r=3:'f': last['f']=-1 &lt; 1 → ok, last['f']=3, len=3, max=3
+
+return 3 ✓  ("vdf" is the longest window)
+
+<strong>s = "bbbbb"</strong>
+
+r=0:'b': last=-1 → last['b']=0, len=1, max=1
+r=1:'b': last=0 &ge; 0 → left=1, last['b']=1, len=1, max=1
+r=2,3,4: same pattern
+return 1 ✓</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: moving left backward when the last-seen position is before left</div>
+<pre><code class="language-c">/* WRONG: left can jump backward, invalidating the window */
+if (last[c] != -1)
+    left = last[c] + 1;   /* moves left even if last[c] is before current left */
+
+/* Example: s="abba"
+   r=3:'a': last['a']=0. If left=2 (after 'b' repeat moved it here),
+   setting left=0+1=1 moves left BACKWARD. Now window includes the old 'b'
+   at index 1 — which was already excluded. Window is broken. */</code></pre>
+    <p><strong>What breaks:</strong> left can only move right. If last[c] is before the current left, the character is not actually in the window and should not trigger a left move.</p>
+<pre><code class="language-c">/* CORRECT: only move left forward */
+if (last[c] &gt;= left)      /* repeat is inside current window */
+    left = last[c] + 1;</code></pre>
+  </div>
+
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. For s = "pwwkew", trace the algorithm step by step. What is left and max_len after each step?</p>
+    <p>2. Why use last[128] with value -1 instead of last[128] with value 0? What goes wrong if you initialize to 0 and check <code>if (last[c] != 0)</code>?</p>
+    <p>3. How would you modify this to return the actual substring (start index and length), not just the length?</p>
+  </div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>Longest substring without repeat: sliding window with last-seen index array last[128]=-1; on repeat (last[c]&ge;left), jump left=last[c]+1; always update last[c]=right; track max window size.</strong>
+    <br>Also fires for: "longest window with all unique chars" &middot; "at most K distinct chars" &middot; "sliding deduplication window"
+  </div>
+</div>
+
+<!-- ================================================================ S15 -->
+<div class="card" id="s15">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 15</span>
+    <span class="pattern-name">Minimum Window Substring</span>
+  </div>
+
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Given strings s and t, find the shortest window in s that contains all characters of t (including duplicates). "ADOBECODEBANC", t="ABC" → answer is "BANC". This is a variable-size sliding window with two conditions: expand right until the window covers all required characters, then shrink from the left as far as possible while keeping all characters covered.</p>
+    <p>The coverage condition is tracked with two frequency maps: <code>need[c]</code> (how many of each character t requires) and <code>have[c]</code> (how many the current window has). A counter <code>formed</code> tracks how many distinct characters are "satisfied" (have[c] &ge; need[c]). When formed equals the number of distinct characters in t, the window is valid.</p>
+    <p>The algorithm alternates between two phases: expand right (looking for validity) and shrink left (looking for the minimum valid window). When the window becomes invalid after shrinking, switch back to expanding. The answer is the smallest window that was valid at any point during shrinking.</p>
+  </div>
+
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 76 — Minimum Window Substring</span><span class="why">direct application; the hardest sliding window problem</span></li>
+    <li><span class="sit">LeetCode 567 — Permutation in String</span><span class="why">simpler: fixed window size = len(p); check freq match</span></li>
+    <li><span class="sit">LeetCode 438 — Find All Anagrams in a String</span><span class="why">collect all start indices where window freq matches pattern freq</span></li>
+    <li><span class="sit">Log monitoring — find shortest sequence containing all event types</span><span class="why">real-time log tailing; find shortest span containing all required event codes</span></li>
+    <li><span class="sit">Genome sequencing</span><span class="why">find shortest DNA window containing all markers from a target set</span></li>
+    <li><span class="sit">Search engine snippet generation</span><span class="why">find shortest document window containing all query keywords</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Setup — need and formed:</strong></p>
+<pre class="ascii">
+t = "ABC"
+need: A=1, B=1, C=1    required = 3 distinct chars
+
+s = "ADOBECODEBANC"
+     0123456789012
+
+Expand right until formed==required:
+right=0:'A': have[A]=1==need[A]=1 → formed=1
+right=1:'D': have[D]=1, need[D]=0 → formed stays 1
+right=2:'O': formed=1
+right=3:'B': have[B]=1 → formed=2
+right=4:'E': formed=2
+right=5:'C': have[C]=1 → formed=3  ← VALID! window=[0..5]="ADOBEC", len=6
+
+Shrink left (formed==3):
+left=0:'A': remove, have[A]=0 &lt; need[A]=1 → formed=2 ← INVALID
+
+Expand right again:
+right=6:'O': formed=2
+right=7:'D': formed=2
+right=8:'E': formed=2
+right=9:'B': have[B]=2 → formed=2 (B already satisfied)
+right=10:'A': have[A]=1 → formed=3  ← VALID! window=[1..10], len=10? No: best so far="ADOBEC"=6
+
+Shrink left:
+left=1:'D': remove, have[D]=0, need[D]=0 → formed stays 3, update best=[2..10],len=9
+left=2:'O': remove, need[O]=0 → formed=3, best=[3..10],len=8
+...and so on until left=6:'A' is removed and formed drops.
+
+Final best: "BANC" [9..12], len=4 ✓
+</pre>
+    <p class="aha">Aha moment: the <code>formed</code> counter lets you avoid scanning all 128 characters on every step. Increment formed only when have[c] exactly reaches need[c] (not above). Decrement only when it drops below need[c].</p>
+  </div>
+
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Minimum Window Substring. O(|s| + |t|) time, O(1) space (fixed 128-char arrays). */
+/* Returns start index into s and sets *len. Returns -1 if no window exists. */
+int min_window(const char *s, const char *t, int *out_len) {
+    int need[128] = {0}, have[128] = {0};
+    int required = 0;   /* distinct chars in t */
+
+    /* Build need[] and count distinct required chars */
+    for (int i = 0; t[i]; i++) {
+        if (need[(unsigned char)t[i]]++ == 0) required++;
+    }
+
+    int formed = 0;     /* how many chars in t are currently satisfied */
+    int left = 0;
+    int best_start = -1, best_len = INT_MAX;
+
+    for (int right = 0; s[right]; right++) {
+        int c = (unsigned char)s[right];
+        have[c]++;
+        if (need[c] &gt; 0 &amp;&amp; have[c] == need[c]) formed++;  /* newly satisfied */
+
+        /* Shrink from left while window is valid */
+        while (formed == required) {
+            int window_len = right - left + 1;
+            if (window_len &lt; best_len) {
+                best_len = window_len;
+                best_start = left;
+            }
+            int lc = (unsigned char)s[left];
+            have[lc]--;
+            if (need[lc] &gt; 0 &amp;&amp; have[lc] &lt; need[lc]) formed--;  /* no longer satisfied */
+            left++;
+        }
+    }
+
+    *out_len = (best_start == -1) ? 0 : best_len;
+    return best_start;
+}</code></pre>
+
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>s="ADOBEC", t="ABC"  (simplified — just the first valid window)</strong>
+
+need: A=1,B=1,C=1   required=3, formed=0, left=0
+
+right=0:'A': have[A]=1==need[A]=1 → formed=1
+right=1:'D': have[D]=1, need[D]=0 → formed=1
+right=2:'O': have[O]=1, need[O]=0 → formed=1
+right=3:'B': have[B]=1==need[B]=1 → formed=2
+right=4:'E': have[E]=1, need[E]=0 → formed=2
+right=5:'C': have[C]=1==need[C]=1 → formed=3
+
+formed==required=3 → SHRINK:
+  window=[0..5], len=6 → best_start=0, best_len=6
+  remove s[0]='A': have[A]=0 &lt; need[A]=1 → formed=2 → exit shrink
+
+return best_start=0, best_len=6  ("ADOBEC") ✓</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: incrementing formed for every match, not just when newly satisfied</div>
+<pre><code class="language-c">/* WRONG: increments formed even for surplus copies */
+if (need[c] &gt; 0 &amp;&amp; have[c] &lt;= need[c]) formed++;  /* &lt;= instead of == */
+/* For t="AA" need[A]=2: when have[A] goes 0→1, 1→2:
+   Both trigger formed++. formed reaches 2 after one 'A'. Wrong — only 1 of 2 A's present. */</code></pre>
+    <p><strong>What breaks:</strong> Using <code>&lt;=</code> means a single copy satisfies the "need" check even when two are required. formed becomes 1 too early and the window looks valid when it is not.</p>
+<pre><code class="language-c">/* CORRECT: only increment when have[c] exactly reaches need[c] */
+if (need[c] &gt; 0 &amp;&amp; have[c] == need[c]) formed++;   /* == not &lt;= */</code></pre>
+    <p><strong>Same rule on decrement:</strong> only decrement formed when have[c] drops BELOW need[c], not when it drops at all.</p>
+  </div>
+
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. What happens when t has duplicate characters, like t="AAB"? How does need[A]=2 interact with the formed counter?</p>
+    <p>2. When is the window updated (best_start, best_len)? Is it during expansion or shrinking? Why?</p>
+    <p>3. The algorithm processes each character in s at most twice (once when right advances over it, once when left passes it). Why does this give O(|s|) total time?</p>
+  </div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>Minimum window covering all of t: need[c] from t; expand right until formed==required; then shrink left to minimize; track best. Increment/decrement formed only when have[c] exactly hits/drops-below need[c].</strong>
+    <br>Also fires for: "shortest superstring containing all chars" &middot; "minimum span covering all query terms" &middot; "permutation in string (fixed window variant)"
+  </div>
+</div>
+
+<!-- ================================================================ S16 -->
+<div class="card" id="s16">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 16</span>
+    <span class="pattern-name">Longest Substring with At Most K Distinct Characters</span>
+  </div>
+
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Find the longest substring of s that contains at most K distinct characters. K=2 is the most common interview variant: "eceba", K=2 → "ece" (length 3). This is a variable-size sliding window where the validity condition is "the number of distinct characters in the window must not exceed K."</p>
+    <p>Maintain a frequency map (int[128] or a simple count array) for characters in the current window. A counter <code>distinct</code> tracks how many entries in the map are non-zero. When <code>distinct</code> exceeds K, shrink from the left: decrement the left character's count, and if it reaches zero, decrement <code>distinct</code>. The answer is the maximum window size seen while the window was valid (distinct &le; K).</p>
+    <p>This pattern is a direct generalization of the "at most 0 distinct characters" (empty string), "no repeating characters" (K = number of distinct chars = all unique), and the two-distinct-character variant (K=2). Understanding it as a parameterized template lets you handle all of these with one mental model.</p>
+  </div>
+
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 340 — Longest Substring with At Most K Distinct Characters</span><span class="why">direct application; maintain distinct count, shrink when &gt;K</span></li>
+    <li><span class="sit">LeetCode 159 — Longest Substring with At Most Two Distinct Characters</span><span class="why">K=2 special case; same template</span></li>
+    <li><span class="sit">LeetCode 3 — Longest Substring Without Repeating</span><span class="why">K = window_size (each char must be distinct); different condition but same expand/shrink structure</span></li>
+    <li><span class="sit">Language detection window</span><span class="why">find longest text window using at most K different phonemes or character classes</span></li>
+    <li><span class="sit">Color-limited palette window</span><span class="why">find longest run of pixels using at most K distinct colors</span></li>
+    <li><span class="sit">Database query optimization</span><span class="why">find longest run of rows where at most K columns have distinct values</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Window expansion and contraction:</strong></p>
+<pre class="ascii">
+s = "eceba", K=2
+freq[128]={0}, distinct=0, left=0, max=0
+
+right=0:'e': freq[e]=0→1, distinct=1. distinct&le;2 → len=1, max=1
+right=1:'c': freq[c]=0→1, distinct=2. distinct&le;2 → len=2, max=2
+right=2:'e': freq[e]=1→2, distinct=2. → len=3, max=3
+right=3:'b': freq[b]=0→1, distinct=3. distinct&gt;2 → SHRINK:
+  left=0:'e': freq[e]=2→1, freq[e]&gt;0 → distinct stays 3, left=1
+  left=1:'c': freq[c]=1→0, freq[c]==0 → distinct=2, left=2
+  → distinct=2 ≤ K → stop shrinking. len=right-left+1=2, max=3
+right=4:'a': freq[a]=0→1, distinct=3. SHRINK:
+  left=2:'e': freq[e]=1→0, distinct=2, left=3
+  → len=2, max=3
+
+Answer: 3 ("ece") ✓
+</pre>
+    <p class="aha">Aha moment: track distinct as a separate counter — don't count non-zero entries in freq on every step. Increment distinct only when a new character enters the window (freq goes 0→1). Decrement only when a character leaves entirely (freq goes 1→0).</p>
+  </div>
+
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Longest substring with at most k distinct characters. O(n) time, O(1) space. */
+int longest_k_distinct(const char *s, int k) {
+    int freq[128] = {0};
+    int distinct = 0;   /* number of chars with freq &gt; 0 in window */
+    int left = 0, max_len = 0;
+
+    for (int right = 0; s[right]; right++) {
+        int c = (unsigned char)s[right];
+        if (freq[c]++ == 0) distinct++;   /* new char enters window */
+
+        /* Shrink until at most k distinct in window */
+        while (distinct &gt; k) {
+            int lc = (unsigned char)s[left++];
+            if (--freq[lc] == 0) distinct--;   /* char leaves window entirely */
+        }
+
+        int len = right - left + 1;
+        if (len &gt; max_len) max_len = len;
+    }
+    return max_len;
+}</code></pre>
+
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>s="aa", k=1</strong>
+
+right=0:'a': freq[a]=0→1, distinct=1. 1&le;1 → len=1, max=1
+right=1:'a': freq[a]=1→2, distinct=1 (no new char). 1&le;1 → len=2, max=2
+return 2 ✓ ("aa" — only 1 distinct char)
+
+<strong>s="abc", k=2</strong>
+
+right=0:'a': distinct=1, len=1, max=1
+right=1:'b': distinct=2, len=2, max=2
+right=2:'c': distinct=3 &gt; 2 → shrink:
+  left=0:'a': freq[a]=0 → distinct=2, left=1
+  len=right-left+1=2, max=2
+return 2 ✓ ("bc" or "ab" — both length 2)</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: updating max_len inside the shrink loop</div>
+<pre><code class="language-c">/* WRONG: max updated while window is still being shrunk */
+while (distinct &gt; k) {
+    int len = right - left + 1;
+    if (len &gt; max_len) max_len = len;   /* window is INVALID here — too many distinct */
+    int lc = (unsigned char)s[left++];
+    if (--freq[lc] == 0) distinct--;
+}
+/* Records lengths of invalid windows (distinct &gt; k) — wrong answer */</code></pre>
+    <p><strong>What breaks:</strong> Inside the shrink loop, distinct &gt; k — the window is invalid. Recording the length here counts windows that violate the constraint.</p>
+<pre><code class="language-c">/* CORRECT: update max_len AFTER the shrink loop, when window is valid */
+while (distinct &gt; k) { /* shrink */ }
+int len = right - left + 1;       /* window is now valid (distinct &le; k) */
+if (len &gt; max_len) max_len = len;</code></pre>
+  </div>
+
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. What is returned for k=0? What does a "0 distinct characters" window mean? Is any non-empty string valid?</p>
+    <p>2. How would you adapt this to find the MINIMUM length window with at least K distinct characters?</p>
+    <p>3. If k &ge; 26 (more than the alphabet size), what is the effective behavior of this function on lowercase-letter strings?</p>
+  </div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>At most K distinct chars: freq[128]+distinct counter; expand right (if freq[c]++ ==0: distinct++); shrink left while distinct&gt;K (if --freq[lc]==0: distinct--); update max AFTER shrink.</strong>
+    <br>Also fires for: "longest window with bounded diversity" &middot; "two-distinct-character substring" &middot; "fruit into baskets (two distinct fruit types)"
+  </div>
+</div>
+
+<!-- ================================================================ S17 -->
+<div class="card" id="s17">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 17</span>
+    <span class="pattern-name">Count Substrings with Condition</span>
+  </div>
+
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Count the number of substrings satisfying some condition — for example, "count substrings with all unique characters" or "count substrings with at most K vowels." These counting problems share a common structure: instead of tracking the maximum window size, you count how many valid windows exist at each step.</p>
+    <p>The key insight is that when a window [left, right] is valid, ALL subarrays ending at right with left index in [left, right] are also valid. That means the count of valid substrings ending at right is <code>right - left + 1</code>. Add this to the total on every step. When the window becomes invalid, shrink left until it is valid again, then recount.</p>
+    <p>This "at most K" counting trick is especially powerful: count(at most K) - count(at most K-1) = count(exactly K). So for "exactly K vowels," compute the difference of two at-most calls. This transforms "exactly K" counting problems (which are harder to do directly) into two simple at-most computations.</p>
+  </div>
+
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 713 — Subarray Product Less Than K</span><span class="why">count subarrays (not substrings) with product &lt; k; same structure</span></li>
+    <li><span class="sit">LeetCode 1358 — Number of Substrings Containing All Three Characters</span><span class="why">count substrings with at least one a, b, and c</span></li>
+    <li><span class="sit">LeetCode 1876 — Substrings of Size Three with Distinct Characters</span><span class="why">fixed-size window; count when all three chars distinct</span></li>
+    <li><span class="sit">LeetCode 930 — Binary Subarrays With Sum</span><span class="why">exactly K trick: count(atMost K) - count(atMost K-1)</span></li>
+    <li><span class="sit">Compliance window scanning</span><span class="why">how many log windows of any length have at most 2 error types?</span></li>
+    <li><span class="sit">Text analysis</span><span class="why">count substrings where vowel density is below a threshold</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Counting trick — valid windows ending at right:</strong></p>
+<pre class="ascii">
+s = "abc", all-unique condition
+
+right=0: window "a" (1 unique) → valid. Count += right-left+1 = 1
+  substrings ending at 0: {"a"} = 1
+
+right=1: window "ab" (2 unique) → valid. Count += 2
+  substrings ending at 1: {"b","ab"} = 2
+
+right=2: window "abc" (3 unique) → valid. Count += 3
+  substrings ending at 2: {"c","bc","abc"} = 3
+
+Total = 1+2+3 = 6 ✓ (all 6 substrings of "abc" have unique chars)
+</pre>
+    <p><strong>Exactly-K trick:</strong></p>
+<pre class="ascii">
+count_exactly_k(s, k) = count_atmost_k(s, k) - count_atmost_k(s, k-1)
+
+Example: count substrings with exactly 1 vowel in "aeiou"
+atmost(1) - atmost(0)
+atmost(0): windows with 0 vowels → 0 (all chars are vowels)
+atmost(1): windows with &le;1 vowel → each single char window = 5
+→ exactly 1 vowel = 5-0 = 5 ✓
+</pre>
+    <p class="aha">Aha moment: <code>count += right - left + 1</code> is the number of valid substrings ENDING at the current right position, with left ends from index left to right. All are valid because shrinking right-ward from any of those left endpoints keeps the window valid (it's more constrained, not less).</p>
+  </div>
+
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Count substrings with at most k distinct characters. O(n) time. */
+long long count_atmost_k_distinct(const char *s, int k) {
+    int freq[128] = {0};
+    int distinct = 0;
+    int left = 0;
+    long long count = 0;
+
+    for (int right = 0; s[right]; right++) {
+        int c = (unsigned char)s[right];
+        if (freq[c]++ == 0) distinct++;
+
+        while (distinct &gt; k) {
+            int lc = (unsigned char)s[left++];
+            if (--freq[lc] == 0) distinct--;
+        }
+
+        count += right - left + 1;  /* all substrings [left..right], [left+1..right], ... */
+    }
+    return count;
+}
+
+/* Count substrings with exactly k distinct characters. */
+long long count_exactly_k_distinct(const char *s, int k) {
+    return count_atmost_k_distinct(s, k) - count_atmost_k_distinct(s, k - 1);
+}</code></pre>
+
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>count_atmost_k_distinct("aba", k=1)</strong>
+
+right=0:'a': distinct=1, 1&le;1 → count += 0-0+1 = 1. count=1
+right=1:'b': distinct=2 &gt; 1 → shrink:
+  left=0:'a': freq[a]=0 → distinct=1, left=1
+  count += 1-1+1 = 1. count=2
+right=2:'a': distinct=1 (freq[a]=0→1, distinct back to 1? No: at left=1 window is "ba")
+  Actually freq[a]: at right=2 it was 0 → 1, distinct=2.
+  Wait: after shrink at right=1, left=1. freq={b:1}. distinct=1.
+  right=2:'a': freq[a]=0→1, distinct=2 &gt; 1 → shrink:
+    left=1:'b': freq[b]=0 → distinct=1, left=2
+  count += 2-2+1 = 1. count=3
+
+return 3   (substrings with &le;1 distinct: "a","b","a" = 3) ✓
+
+count_exactly_1_distinct("aba") = atmost(1)-atmost(0) = 3-0 = 3 ✓</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: using int instead of long long for the count</div>
+<pre><code class="language-c">/* WRONG: int count overflows for long strings */
+int count = 0;
+count += right - left + 1;
+/* For n=50000: max count ≈ n*(n+1)/2 ≈ 1.25 billion → overflows int (max ~2.1B)
+   For n=70000: ~2.45 billion → definite overflow */</code></pre>
+    <p><strong>What breaks:</strong> A string of length n can have up to n*(n+1)/2 substrings. For n around 64,000 this already approaches INT_MAX. Use <code>long long count</code>.</p>
+<pre><code class="language-c">/* CORRECT */
+long long count = 0;
+count += right - left + 1;</code></pre>
+    <p><strong>Second gotcha:</strong> for the exactly-K trick, if k=0, count_atmost_k_distinct(s, -1) is called. Handle k &lt; 0 by returning 0 immediately.</p>
+  </div>
+
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. For s="aab" and k=2, trace count_atmost_k_distinct step by step. What is the count after each step?</p>
+    <p>2. Why is count_exactly_k = count_atmost_k - count_atmost_(k-1) correct? Draw a Venn-like argument: what does each term count?</p>
+    <p>3. How would you count substrings where the number of vowels is at least K (not at most K)? Express it using the at-most formula.</p>
+  </div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>Count valid substrings ending at right: count += right-left+1 after each shrink. For "exactly K": atmost(K) - atmost(K-1). Use long long for the accumulator.</strong>
+    <br>Also fires for: "number of subarrays with product &lt; K" &middot; "count windows satisfying a constraint" &middot; "exactly-K counting via inclusion-exclusion"
+  </div>
+</div>
+
+
+<!-- ================================================================ S18 -->
+<div class="card" id="s18">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 18</span>
+    <span class="pattern-name">Longest Palindromic Substring (Expand Around Center)</span>
+  </div>
+
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Find the longest substring of s that is a palindrome. "babad" → "bab" or "aba" (length 3). The O(n²) expand-around-center approach works as follows: for each index i, treat it as the center of a palindrome and expand outward as long as the characters on both sides match. Try both odd-length centers (single character) and even-length centers (between two characters).</p>
+    <p>This is far simpler to implement than Manacher's algorithm (O(n)) and is the expected interview answer for most roles. For each of the 2n-1 centers, expansion takes O(n) worst case, giving O(n²) total. For strings up to length 1000, this is completely acceptable.</p>
+    <p>The key to the implementation is a reusable helper that takes (left, right) as the initial expansion boundaries and returns the longest palindrome found from that center. Then the main function calls this helper twice per index — once with (i, i) for odd-length and once with (i, i+1) for even-length — and tracks the best result.</p>
+  </div>
+
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 5 — Longest Palindromic Substring</span><span class="why">direct application; expand-around-center is the expected O(n²) solution</span></li>
+    <li><span class="sit">LeetCode 647 — Palindromic Substrings</span><span class="why">count all palindromic substrings; expand and count, don't track max</span></li>
+    <li><span class="sit">LeetCode 214 — Shortest Palindrome</span><span class="why">find longest palindromic prefix; related expansion idea</span></li>
+    <li><span class="sit">DNA palindrome detection</span><span class="why">biological palindromes in double-stranded DNA are restriction enzyme sites</span></li>
+    <li><span class="sit">Text compression preprocessing</span><span class="why">identify palindromic regions for redundancy analysis</span></li>
+    <li><span class="sit">Word game / anagram puzzle engines</span><span class="why">check all substrings for palindrome property during puzzle generation</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Centers and expansion:</strong></p>
+<pre class="ascii">
+s = "cbbd"
+     0123
+
+Odd-length centers (single char):
+  center i=0: expand from (0,0): no room to expand → "c" (len 1)
+  center i=1: expand from (1,1): s[-1]? stop → "b" (len 1)
+  center i=2: expand from (2,2): s[1]='b'==s[3]='d'? No → "b" (len 1)
+  center i=3: expand from (3,3): no room → "d" (len 1)
+
+Even-length centers (between chars):
+  between i=0,1: s[0]='c'==s[1]='b'? No
+  between i=1,2: s[1]='b'==s[2]='b'? YES → expand: s[0]='c'==s[3]='d'? No → "bb" (len 2)
+  between i=2,3: s[2]='b'==s[3]='d'? No
+
+Best: "bb" (start=1, len=2) ✓
+</pre>
+    <p class="aha">Aha moment: there are 2n-1 centers — n single-character centers (odd) and n-1 gaps between characters (even). Trying both from each index catches all palindromes without special cases. A one-character string is trivially a palindrome and is returned by the odd-center expansion.</p>
+  </div>
+
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Expand around center at (lo, hi) and return length of longest palindrome found. */
+static int expand(const char *s, int lo, int hi, int n) {
+    while (lo &gt;= 0 &amp;&amp; hi &lt; n &amp;&amp; s[lo] == s[hi]) {
+        lo--;   /* expand left */
+        hi++;   /* expand right */
+    }
+    /* After loop: lo and hi are one step outside the palindrome */
+    return hi - lo - 1;   /* length of palindrome found */
+}
+
+/* Longest palindromic substring. Sets *start and returns length. O(n²). */
+int longest_palindrome(const char *s, int *start) {
+    int n = strlen(s);
+    if (n == 0) { *start = 0; return 0; }
+
+    int best_start = 0, best_len = 1;
+
+    for (int i = 0; i &lt; n; i++) {
+        /* Odd-length: center at i */
+        int len = expand(s, i, i, n);
+        if (len &gt; best_len) {
+            best_len = len;
+            best_start = i - (len - 1) / 2;
+        }
+
+        /* Even-length: center between i and i+1 */
+        if (i + 1 &lt; n) {
+            len = expand(s, i, i + 1, n);
+            if (len &gt; best_len) {
+                best_len = len;
+                best_start = i - len / 2 + 1;
+            }
+        }
+    }
+    *start = best_start;
+    return best_len;
+}</code></pre>
+
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>s = "babad"</strong>
+
+i=0: odd expand(0,0): s[-1] stop → len=1. even expand(0,1):'b'!='a' → len=0
+i=1: odd expand(1,1): s[0]='b'==s[2]='b' → lo=-1,hi=3 → len=3-(-1)-1=3. best="bab"
+     even expand(1,2):'a'!='b' → len=0
+i=2: odd expand(2,2): s[1]='a'==s[3]='a' → lo=0,hi=4 → len=4-0-1=3. len==best_len=3
+     (not greater → keep "bab")
+...
+best_start=0, best_len=3 → "bab" ✓
+
+expand() return formula: after loop, lo is one left of the palindrome,
+hi is one right. So palindrome is s[lo+1..hi-1], length = hi-lo-1.</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: computing start index incorrectly from expand length</div>
+<pre><code class="language-c">/* WRONG: for odd-length palindrome centered at i with length len */
+best_start = i - len / 2;   /* integer division truncates — off by one for even lens */
+
+/* Example: i=2, len=5 (palindrome "abcba" centered at index 2)
+   Correct start = 2 - (5-1)/2 = 2 - 2 = 0 ✓
+   Wrong:   start = 2 - 5/2   = 2 - 2 = 0 ✓ (happens to be same here)
+   i=2, len=4 (even length "abba" with even center):
+   correct start = i - len/2 + 1 = 2 - 2 + 1 = 1
+   wrong (using odd formula): 2 - (4-1)/2 = 2-1 = 1 ✓ (coincidence)
+   Use the correct formulas: odd → i-(len-1)/2, even → i-len/2+1 */</code></pre>
+    <p><strong>Safest approach:</strong> track the actual start and length from within expand using the lo/hi values after the loop: start = lo+1, length = hi-lo-1. No formula to get wrong.</p>
+<pre><code class="language-c">/* Clearest: return start position directly */
+static void expand2(const char *s, int lo, int hi, int n, int *ret_start, int *ret_len) {
+    while (lo &gt;= 0 &amp;&amp; hi &lt; n &amp;&amp; s[lo] == s[hi]) { lo--; hi++; }
+    *ret_start = lo + 1;
+    *ret_len   = hi - lo - 1;
+}</code></pre>
+  </div>
+
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. For s="a" (single character), trace expand(s, 0, 0, 1). What does the while condition evaluate to on the first iteration? What is the returned length?</p>
+    <p>2. How many total expand calls does the algorithm make for a string of length n? (Count odd + even.) What is the worst-case total character comparisons?</p>
+    <p>3. How would you modify the algorithm to find ALL palindromic substrings of length &ge; 3, not just the longest?</p>
+  </div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>Longest palindromic substring: for each index i, expand from (i,i) and (i,i+1); while lo&ge;0 &amp;&amp; hi&lt;n &amp;&amp; s[lo]==s[hi]: lo--,hi++; length=hi-lo-1. Try both odd and even centers. O(n&sup2;).</strong>
+    <br>Also fires for: "palindrome radius at each center" &middot; "count palindromic substrings" &middot; "all palindromic substrings &ge; length K"
+  </div>
+</div>
+
+<!-- ================================================================ S19 -->
+<div class="card" id="s19">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 19</span>
+    <span class="pattern-name">Count Palindromic Substrings</span>
+  </div>
+
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Count how many substrings of s are palindromes. "abc" has 3 (each single character). "aaa" has 6: "a","a","a","aa","aa","aaa". The expand-around-center approach from Pattern 18 applies directly — for each center, instead of tracking the maximum length, add 1 to the count for every successful expansion step.</p>
+    <p>Each expansion step reveals one palindrome: the outermost palindrome that the current lo/hi points to. So the count from center (lo, hi) is the number of times the while loop body executes. A single-character center contributes at least 1 (the character itself). An even center contributes 0 before any expansion (the empty string between characters is not a palindrome).</p>
+    <p>The approach is O(n²) time and O(1) space. For the harder variant "longest palindromic subsequence" (not substring), dynamic programming is needed instead.</p>
+  </div>
+
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 647 — Palindromic Substrings</span><span class="why">direct application; expand and count</span></li>
+    <li><span class="sit">LeetCode 5 — Longest Palindromic Substring</span><span class="why">related: track max instead of counting</span></li>
+    <li><span class="sit">LeetCode 516 — Longest Palindromic Subsequence</span><span class="why">different (subsequence not substring); requires DP</span></li>
+    <li><span class="sit">String analysis / entropy measurement</span><span class="why">count palindromic substrings as a structural complexity metric</span></li>
+    <li><span class="sit">Palindrome-based cipher analysis</span><span class="why">count palindromic runs to detect patterns in encrypted text</span></li>
+    <li><span class="sit">Competitive programming warm-up</span><span class="why">frequently appears as a building block for harder palindrome DP problems</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Count from each center:</strong></p>
+<pre class="ascii">
+s = "aaa"
+
+Odd centers:
+  i=0: expand(0,0): "a" → count 1. expand further: lo=-1 → stop. total from i=0: 1
+  i=1: expand(1,1): "a" → count 1. expand: s[0]='a'==s[2]='a' → "aaa" count 1.
+         expand: lo=-1 → stop. total from i=1: 2
+  i=2: expand(2,2): "a" → count 1. expand: lo=1 → stop. total from i=2: 1
+
+Even centers:
+  between 0,1: s[0]='a'==s[1]='a' → "aa" count 1.
+         expand: lo=-1 → stop. total: 1
+  between 1,2: s[1]='a'==s[2]='a' → "aa" count 1.
+         expand: lo=0 → s[-1] → stop. total: 1
+
+Grand total = 1+2+1+1+1 = 6 ✓  ("a","a","a","aa","aa","aaa")
+</pre>
+    <p class="aha">Aha moment: each pass through the while loop body represents ONE new palindromic substring (the current expanded palindrome). Count++ inside the loop, not after it. The initial (lo, hi) check is the innermost palindrome; each expansion finds a larger one.</p>
+  </div>
+
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Count all palindromic substrings. O(n²) time, O(1) space. */
+int count_palindromes(const char *s) {
+    int n = strlen(s);
+    int count = 0;
+
+    for (int i = 0; i &lt; n; i++) {
+        /* Odd-length: center at i */
+        int lo = i, hi = i;
+        while (lo &gt;= 0 &amp;&amp; hi &lt; n &amp;&amp; s[lo] == s[hi]) {
+            count++;   /* s[lo..hi] is a palindrome */
+            lo--;
+            hi++;
+        }
+
+        /* Even-length: center between i and i+1 */
+        lo = i; hi = i + 1;
+        while (lo &gt;= 0 &amp;&amp; hi &lt; n &amp;&amp; s[lo] == s[hi]) {
+            count++;
+            lo--;
+            hi++;
+        }
+    }
+    return count;
+}</code></pre>
+
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>s = "abc"</strong>
+
+i=0: odd (0,0): s[0]='a'==s[0]='a' → count=1, lo=-1 → stop
+     even (0,1): s[0]='a'==s[1]='b'? No → stop
+i=1: odd (1,1): s[1]='b'==s[1]='b' → count=2, lo=0,hi=2: s[0]='a'==s[2]='c'? No → stop
+     even (1,2): s[1]='b'==s[2]='c'? No → stop
+i=2: odd (2,2): s[2]='c'==s[2]='c' → count=3, lo=1 → stop
+     even (2,3): hi=3&ge;n=3 → loop never entered
+
+return 3 ✓  ("a","b","c" — each single char is a palindrome)</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: incrementing count after the while loop instead of inside it</div>
+<pre><code class="language-c">/* WRONG: counts 1 per center no matter how many palindromes expand from it */
+for (int i = 0; i &lt; n; i++) {
+    int lo = i, hi = i;
+    while (lo &gt;= 0 &amp;&amp; hi &lt; n &amp;&amp; s[lo] == s[hi]) { lo--; hi++; }
+    count++;   /* only 1 per center — misses inner palindromes */
+}
+/* For s="aaa": count = 3 (one per odd center). Correct is 6. */</code></pre>
+    <p><strong>What breaks:</strong> Each while loop iteration finds one palindrome (the current span). Incrementing inside gives one count per palindrome. Incrementing after the loop counts centers, not palindromes.</p>
+<pre><code class="language-c">/* CORRECT: count++ INSIDE the while loop */
+while (lo &gt;= 0 &amp;&amp; hi &lt; n &amp;&amp; s[lo] == s[hi]) {
+    count++;   /* this expansion step = one new palindrome */
+    lo--; hi++;
+}</code></pre>
+  </div>
+
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. For s="aaaa", count manually: how many palindromic substrings are there? Verify with the algorithm.</p>
+    <p>2. A single character is always a palindrome. How does the algorithm ensure single characters are counted? (Trace the odd-center expansion for a center that does not expand.)</p>
+    <p>3. Modify count_palindromes to return the count of palindromic substrings with length &ge; 2 only. What changes?</p>
+  </div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>Count palindromic substrings: expand-around-center; count++ INSIDE the while loop (each expansion = one palindrome); try both odd (i,i) and even (i,i+1) centers. Total O(n&sup2;), O(1) space.</strong>
+    <br>Also fires for: "number of palindromes in string" &middot; "palindrome count by length range" &middot; "longest palindromic substring (track max instead of count)"
+  </div>
+</div>
+
+<!-- ================================================================ S20 -->
+<div class="card" id="s20">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 20</span>
+    <span class="pattern-name">Palindrome Partitioning Check</span>
+  </div>
+
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Can a string be split into substrings where every part is a palindrome? "aab" → "a" | "a" | "b" — yes (every single character is a palindrome, so any string can trivially be partitioned). The harder question is: what is the minimum number of cuts needed? "aab" can be split as "aa"|"b" (1 cut) — and "aa" is a palindrome, so 1 cut suffices.</p>
+    <p>The minimum-cut palindrome partition is a classic DP problem: <code>cut[i]</code> = minimum cuts for s[0..i]. For each i, if s[0..i] is itself a palindrome, cut[i]=0. Otherwise, try every split point j: if s[j+1..i] is a palindrome, cut[i] = min(cut[i], cut[j]+1). The inner palindrome check uses the precomputed is_pal[i][j] table built with O(n²) expansion, and the DP itself is O(n²), giving O(n²) total.</p>
+    <p>The simpler version — "is a given partition valid?" — just checks each part individually with the two-pointer palindrome test. This is useful as a validator in backtracking solutions for LeetCode 131 (generate all palindrome partitions).</p>
+  </div>
+
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 131 — Palindrome Partitioning</span><span class="why">generate all partitions where each part is a palindrome; backtrack + is_palindrome check</span></li>
+    <li><span class="sit">LeetCode 132 — Palindrome Partitioning II</span><span class="why">minimum number of cuts; DP with precomputed is_pal table</span></li>
+    <li><span class="sit">LeetCode 1745 — Palindrome Partitioning IV</span><span class="why">check if string can be split into exactly 3 palindromes</span></li>
+    <li><span class="sit">String compression analysis</span><span class="why">partition a string into palindromic chunks for encoding</span></li>
+    <li><span class="sit">DNA sequence partitioning</span><span class="why">find minimum cuts to split a sequence into palindromic regions</span></li>
+    <li><span class="sit">File format validation</span><span class="why">verify that a symmetric file structure can be partitioned into balanced palindromic sections</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Precompute is_pal[i][j] using expand-around-center:</strong></p>
+<pre class="ascii">
+s = "aab"  (n=3)
+
+is_pal[i][j] = is s[i..j] a palindrome?
+
+Expand odd centers:
+  center 0: is_pal[0][0]=true (just 'a')
+  center 1: is_pal[1][1]=true. expand: s[0]='a'==s[2]='b'? No → stop
+  center 2: is_pal[2][2]=true (just 'b')
+
+Expand even centers:
+  between 0,1: s[0]='a'==s[1]='a' → is_pal[0][1]=true! expand: lo=-1→stop
+  between 1,2: s[1]='a'==s[2]='b'? No
+
+is_pal table:
+  [0][0]=T [0][1]=T [0][2]=F
+  [1][1]=T [1][2]=F
+  [2][2]=T
+</pre>
+    <p><strong>DP for minimum cuts:</strong></p>
+<pre class="ascii">
+cut[i] = min cuts for s[0..i]
+
+i=0: is_pal[0][0]=T → cut[0]=0
+i=1: is_pal[0][1]=T → cut[1]=0
+i=2: is_pal[0][2]=F → try splits:
+  j=0: is_pal[1][2]=F → skip
+  j=1: is_pal[2][2]=T → cut[2]=min(INF, cut[1]+1) = 0+1 = 1
+
+Answer: cut[2] = 1 ("aa"|"b") ✓
+</pre>
+    <p class="aha">Aha moment: the is_pal table is filled using the expand-around-center trick — from each center, mark all palindromes it generates. This avoids recomputing palindrome checks inside the DP, and the table fill is itself O(n²).</p>
+  </div>
+
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">#include &lt;string.h&gt;
+#include &lt;limits.h&gt;
+
+/* Minimum cuts to partition s into palindromes. O(n²) time and space. */
+int min_cut_palindrome(const char *s) {
+    int n = strlen(s);
+    /* is_pal[i][j] = 1 if s[i..j] is a palindrome */
+    int is_pal[n][n];
+    memset(is_pal, 0, sizeof(is_pal));
+
+    /* Fill is_pal using expand-around-center */
+    for (int c = 0; c &lt; n; c++) {
+        /* Odd-length palindromes centered at c */
+        for (int lo = c, hi = c; lo &gt;= 0 &amp;&amp; hi &lt; n &amp;&amp; s[lo] == s[hi]; lo--, hi++)
+            is_pal[lo][hi] = 1;
+        /* Even-length palindromes centered between c and c+1 */
+        for (int lo = c, hi = c + 1; lo &gt;= 0 &amp;&amp; hi &lt; n &amp;&amp; s[lo] == s[hi]; lo--, hi++)
+            is_pal[lo][hi] = 1;
+    }
+
+    /* DP: cut[i] = minimum cuts for s[0..i] */
+    int cut[n];
+    for (int i = 0; i &lt; n; i++) {
+        if (is_pal[0][i]) { cut[i] = 0; continue; }  /* whole prefix is a palindrome */
+        cut[i] = INT_MAX;
+        for (int j = 1; j &lt;= i; j++) {
+            if (is_pal[j][i] &amp;&amp; cut[j - 1] != INT_MAX)
+                if (cut[j - 1] + 1 &lt; cut[i]) cut[i] = cut[j - 1] + 1;
+        }
+    }
+    return cut[n - 1];
+}</code></pre>
+
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>min_cut_palindrome("aba")</strong>
+
+n=3, is_pal fill:
+  center 0: is_pal[0][0]=1
+  center 1: is_pal[1][1]=1. expand: s[0]='a'==s[2]='a' → is_pal[0][2]=1
+  center 2: is_pal[2][2]=1
+  even 0-1: 'a'=='b'? No
+  even 1-2: 'b'=='a'? No
+
+is_pal: [0][0]=1, [1][1]=1, [2][2]=1, [0][2]=1
+
+DP:
+  i=0: is_pal[0][0]=1 → cut[0]=0
+  i=1: is_pal[0][1]=0 → try j=1: is_pal[1][1]=1, cut[0]=0 → cut[1]=1
+  i=2: is_pal[0][2]=1 → cut[2]=0
+
+return 0 ✓ ("aba" is itself a palindrome — 0 cuts needed)</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: recomputing palindrome check inside the DP loop — O(n³)</div>
+<pre><code class="language-c">/* WRONG: calling is_palindrome() inside the O(n²) DP → O(n³) total */
+for (int i = 0; i &lt; n; i++) {
+    for (int j = 1; j &lt;= i; j++) {
+        if (is_palindrome_range(s, j, i)) {   /* O(n) check inside O(n²) loop */
+            cut[i] = min(cut[i], cut[j-1] + 1);
+        }
+    }
+}
+/* For n=1000: 10^9 operations — too slow (TLE on LeetCode) */</code></pre>
+    <p><strong>Fix:</strong> precompute the O(n²) is_pal table using expand-around-center, then look up is_pal[j][i] in O(1) inside the DP loop. Total cost: O(n²) precompute + O(n²) DP = O(n²).</p>
+  </div>
+
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. For any string of length n, what is the guaranteed maximum number of cuts? (Hint: every single character is a palindrome.) What does this mean for the upper bound of cut[n-1]?</p>
+    <p>2. How does the even-center expansion in the is_pal fill differ from the odd-center? Give an example where only the even-center expansion marks a palindrome.</p>
+    <p>3. How would you modify min_cut_palindrome to instead generate all partitions (not just count them)? What algorithmic technique would you use?</p>
+  </div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>Palindrome partitioning (min cuts): precompute is_pal[i][j] with expand-around-center (O(n&sup2;)); DP: cut[i]=0 if s[0..i] is palindrome, else min over j of cut[j-1]+1 where is_pal[j][i]. Never recompute palindrome check inside DP — use the table.</strong>
+    <br>Also fires for: "generate all palindrome partitions" &middot; "split into exactly K palindromes" &middot; "minimum edits to make a palindrome partition"
+  </div>
+</div>
+
 <!-- CARDS_END -->
 <script>hljs.highlightAll();</script>
 </body>
