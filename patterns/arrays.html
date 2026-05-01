@@ -5461,66 +5461,134 @@ freq[0 + OFF] = 1;   /* seed before the loop */</code></pre>
     <span class="pattern-name">Hashmap: Longest Consecutive Sequence</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    Find the longest run of consecutive integers in an unsorted array (e.g., [5,3,1,2,4] → length 5).
-    Sorting would work in O(n log n), but the problem asks for O(n).
-    Load everything into a hash set. For each number that is the START of a sequence (num&minus;1 is NOT in the set), count how long the sequence runs by repeatedly checking if num+1 exists.
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Given an unsorted array of integers, find the length of the longest run of consecutive integers — e.g., [100,4,200,1,3,2] contains the run 1,2,3,4 of length 4. Sorting works in O(n log n) but the challenge asks for O(n). The hash-set approach delivers O(n) time and O(n) space.</p>
+    <p>The trick is to avoid redundant work. If you naively count the streak starting from every element, elements in the middle of a long streak each re-count most of the same sequence — making it O(n²). Instead, only start counting from sequence <em>beginnings</em>: an element is a beginning if (num−1) is not in the set. Each element therefore participates in at most one counting pass.</p>
+    <p>Why is the total work still O(n)? Across the entire array, each element is "extended through" at most once — during the counting pass that starts at its sequence's beginning. Elements that are not beginnings contribute zero inner-loop iterations. So the total number of inner while-loop steps across all outer iterations is exactly n (each element is counted once).</p>
+    <p>This appears in time-series analysis (longest unbroken coverage period), network uptime monitoring (longest streak without packet loss), and genomics (longest run of contiguous gene IDs with no gaps in a database).</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    Only start counting from the beginning of a sequence (num&minus;1 not in set). This ensures each number is visited at most once across all counting loops, giving O(n) total.
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 128 — Longest Consecutive Sequence</span><span class="why">canonical form; O(n) required</span></li>
+    <li><span class="sit">LeetCode 2177 — Find Three Consecutive Integers That Sum to a Given Number</span><span class="why">related structure: consecutive-integer reasoning</span></li>
+    <li><span class="sit">Network uptime streak</span><span class="why">given a set of "up" timestamps, find the longest unbroken run — same hash-set starter check</span></li>
+    <li><span class="sit">Genomic contig assembly</span><span class="why">find the longest chain of contiguous read IDs with no gaps in a BAM file index</span></li>
+    <li><span class="sit">Log analysis streak detection</span><span class="why">given a set of event IDs, find the longest unbroken sequence for a given metric</span></li>
+    <li><span class="sit">Version numbering gap detection</span><span class="why">given deployed version numbers, find the longest uninterrupted contiguous deployment range</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Why "only start from sequence beginnings"?</strong> Consider [1,2,3,4]. If you start a count from 2, you count 2,3,4 (len 3). If you also start from 1, you count 1,2,3,4 (len 4). You did redundant work on 2,3,4. By only starting from 1 (where 0 ∉ set), you count 1,2,3,4 once. Elements 2,3,4 are never starting points.</p>
+<pre class="ascii">
+arr = [100, 4, 200, 1, 3, 2]
+set = {100, 4, 200, 1, 3, 2}
+
+For num=100: is 99 in set? No → start. Count: 100→101? No. len=1.
+For num=4:   is 3  in set? Yes → NOT a start. Skip.
+For num=200: is 199 in set? No → start. Count: 200→201? No. len=1.
+For num=1:   is 0  in set? No → start. Count: 1→2✓→3✓→4✓→5? No. len=4.
+For num=3:   is 2  in set? Yes → NOT a start. Skip.
+For num=2:   is 1  in set? Yes → NOT a start. Skip.
+
+max_len = 4 ✓
+</pre>
+    <p class="aha">Aha moment: "start only when num−1 is absent" is not a heuristic — it's a guarantee that each element participates in exactly one counting pass, giving O(n) total iterations across all inner while-loops.</p>
+    <p><strong>Pseudocode:</strong></p>
+<pre class="ascii">
+put all values in a hash set
+max_len = 0
+for each num in arr:
+    if (num - 1) not in set:   // this is a sequence start
+        len = 1
+        while (num + len) in set: len++
+        max_len = max(max_len, len)
+return max_len
+</pre>
   </div>
 
-  <div class="section-label">&#9316; Annotated Code</div>
-<pre><code class="language-c">/* Longest consecutive sequence. O(n) time, O(n) space.
-   Using a boolean array as hash set (values assumed 0..9999). */
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Longest consecutive sequence. O(n) time. Values assumed 0..9999. */
 int longest_consecutive(int *arr, int n) {
     int in_set[10000] = {0};
     for (int i = 0; i &lt; n; i++)
         if (arr[i] &gt;= 0 &amp;&amp; arr[i] &lt; 10000)
-            in_set[arr[i]] = 1;   /* insert all values into the set */
+            in_set[arr[i]] = 1;
 
     int max_len = 0;
-
     for (int i = 0; i &lt; n; i++) {
         int num = arr[i];
-        if (num &lt;= 0 || !in_set[num - 1]) {  /* only start from beginning of a sequence */
+        /* only count if this is the start of a sequence */
+        if (num == 0 || !in_set[num - 1]) {
             int len = 1;
             while (num + len &lt; 10000 &amp;&amp; in_set[num + len])
-                len++;   /* extend the sequence as far as consecutive numbers go */
+                len++;   /* extend until the run breaks */
             if (len &gt; max_len) max_len = len;
         }
     }
     return max_len;
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
-  <div class="dry-run">arr = [100, 4, 200, 1, 3, 2]
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>arr = [100, 4, 200, 1, 3, 2]</strong>
 
-in_set: 1,2,3,4,100,200 all marked
+set = {1,2,3,4,100,200}
 
-i=0: num=100, in_set[99]=0 → start: 100,101?→no  len=1
-i=1: num=4,   in_set[3]=1  → not a start, skip
-i=2: num=200, in_set[199]=0 → start: 200,201?→no len=1
-i=3: num=1,   in_set[0]=0  → start: 1,2✓,3✓,4✓,5?→no  len=4 ← max
-i=4: num=3,   in_set[2]=1  → not a start, skip
-i=5: num=2,   in_set[1]=1  → not a start, skip
+ num | num-1 in set? | action
+-----+---------------+-------
+ 100 |  99 → No      | start, extend: 101? No → len=1
+   4 |   3 → Yes     | skip (mid-sequence)
+ 200 | 199 → No      | start, extend: 201? No → len=1
+   1 |   0 → No      | start, extend: 2✓→3✓→4✓→5? No → len=4 ← MAX
+   3 |   2 → Yes     | skip
+   2 |   1 → Yes     | skip
 
-return 4 ✓</div>
+return 4 ✓
 
+<strong>arr = [0, -1, 1, 2] (includes zero and negative)</strong>
+set = {0,-1,1,2} (if using a real hash set)
+num=0:  -1 in set → Yes → skip (−1,0,1,2 is the run; −1 is the start)
+num=-1: -2 in set → No  → start, extend: 0✓,1✓,2✓,3?No → len=4 ← MAX
+→ 4 ✓</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Starting the count from every element (making it O(n&sup2;))</div>
-    <p>If you start counting from every element (not just sequence starters), numbers in the middle of a long sequence will each trigger a full count of their sub-sequence. The total work becomes O(n) elements &times; O(n) counting = O(n&sup2;). The check <code>num-1 not in set</code> ensures counting only happens once per sequence.</p>
+    <div class="gotcha-title">&#9888; Wrong: starting a count from every element</div>
+<pre><code class="language-c">/* WRONG: O(n²) — counts from every element */
+for (int i = 0; i &lt; n; i++) {
+    int num = arr[i];
+    int len = 1;
+    while (in_set[num + len]) len++;   /* no starter check */
+    if (len &gt; max_len) max_len = len;
+}</code></pre>
+    <p><strong>What breaks:</strong> For arr=[1,2,3,...,1000], every element triggers a while loop that runs until the end of the run. Element 1 runs 1000 steps, element 2 runs 999 steps, etc. Total: ~500,000 steps for n=1000 — O(n²).</p>
+<pre><code class="language-c">/* CORRECT: only start when (num-1) is absent */
+if (num == 0 || !in_set[num - 1]) { /* count */ }</code></pre>
+    <p><strong>Rule:</strong> Only start counting from sequence beginnings — elements whose predecessor is absent from the set.</p>
   </div>
 
-  <div class="leetcode">
-    <span>128 &middot; Longest Consecutive Sequence</span>
-    <span>298 &middot; Binary Tree Longest Consecutive Sequence</span>
-    <span>549 &middot; Binary Tree Longest Consecutive Sequence II</span>
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. Why does the total work across all inner while-loops sum to O(n), even though each outer iteration might trigger an inner loop of arbitrary length?</p>
+    <p>2. If the array has duplicates (e.g., [1,1,2,3]), does the algorithm handle them correctly? What happens in the set and in the counting loop?</p>
+    <p>3. The boolean array trick limits values to 0..9999. What would you use in a real implementation to handle arbitrary integer values?</p>
   </div>
-  <div class="trigger">When you see: longest run of consecutive integers in O(n) &#8594; think: hash set + only start counting when (num-1) is not in the set</div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>When you see "longest run of consecutive integers in O(n)" → put all values in a hash set; only start counting from elements whose predecessor is absent; extend greedily.</strong>
+    <br>Also fires for: "longest unbroken streak" · "find the gap in a near-consecutive sequence" · "O(n) range detection without sorting"
+  </div>
 </div>
 
 <!-- ================================================================ P41 -->
