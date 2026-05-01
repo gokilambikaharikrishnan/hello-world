@@ -7,7 +7,7 @@
 | index.html | nav | ✅ Done | 2026-04-24 |
 | arrays.html | 54 | ✅ Done | 2026-05-01 |
 | pointers.html | 30 | ✅ Done | 2026-04-24 |
-| strings.html | 40 | ✅ Done | 2026-04-29 |
+| strings.html | 44 | 🔄 Rework In Progress | 2026-05-01 |
 | linkedlist.html | 35 | ✅ Done | 2026-04-29 |
 | stacks.html | 32 | ✅ Done | 2026-04-29 |
 | queues.html | 22 | ✅ Done | 2026-04-29 |
@@ -108,3 +108,85 @@
 | Batch 6 | P51–P54 | ✅ Done |
 
 **All 54 cards reworked. Rework complete 2026-05-01.**
+
+---
+
+## strings.html — Rework Audit (All 44 Cards)
+
+### C String Mechanics (S01–S05)
+- [ ] S01 · Null Terminator and String Length
+- [ ] S02 · char* vs char[] — Pointer vs Array
+- [ ] S03 · Safe String Copy (strcpy pitfalls)
+- [ ] S04 · String Comparison (strcmp)
+- [ ] S05 · String Search and Scan (strchr, strstr)
+
+### Frequency / Char Counting (S06–S09)
+- [ ] S06 · Frequency Array int[26]
+- [ ] S07 · Anagram Detection
+- [ ] S08 · First Non-Repeating Character
+- [ ] S09 · Character Classification (isalpha, isdigit, tolower)
+
+### Two Pointer on Strings (S10–S13)
+- [ ] S10 · Reverse String In-Place
+- [ ] S11 · Palindrome Check (Two Pointer)
+- [ ] S12 · Valid Palindrome (Skip Non-Alphanumeric)
+- [ ] S13 · Filter Characters In-Place (Write Pointer)
+
+### Sliding Window on Strings (S14–S17)
+- [ ] S14 · Longest Substring Without Repeating Characters
+- [ ] S15 · Minimum Window Substring
+- [ ] S16 · Longest Substring with At Most K Distinct Characters
+- [ ] S17 · Count Substrings with Condition
+
+### Palindrome Patterns (S18–S21)
+- [ ] S18 · Longest Palindromic Substring (Expand Around Center)
+- [ ] S19 · Count Palindromic Substrings
+- [ ] S20 · Valid Palindrome II (One Deletion Allowed)
+- [ ] S21 · Palindrome Partitioning Check
+
+### Parsing and Construction (S22–S27)
+- [ ] S22 · Reverse Words in a String
+- [ ] S23 · Custom atoi (String to Integer)
+- [ ] S24 · Integer to String (itoa)
+- [ ] S25 · Run-Length Encoding
+- [ ] S26 · Decode String (Stack)
+- [ ] S27 · Roman Numerals to Integer
+
+### Pattern Matching (S28–S32)
+- [ ] S28 · Naive String Search O(nm)
+- [ ] S29 · KMP: Failure Function Construction
+- [ ] S30 · KMP: Search Phase
+- [ ] S31 · Rolling Hash (Rabin-Karp)
+- [ ] S32 · Longest Common Prefix
+
+### Number / Conversion (S33–S36)
+- [ ] S33 · Add Two Binary Strings
+- [ ] S34 · Multiply Strings
+- [ ] S35 · Valid Number Detection
+- [ ] S36 · Integer to Roman
+
+### Hashing and Grouping (S37–S40)
+- [ ] S37 · Group Anagrams by Sorted Key
+- [ ] S38 · Isomorphic Strings
+- [ ] S39 · Word Pattern Matching
+- [ ] S40 · Longest Common Prefix (Sort + Compare)
+
+### Advanced (S41–S44)
+- [ ] S41 · Edit Distance (Levenshtein DP)
+- [ ] S42 · Wildcard Matching (* and ?)
+- [ ] S43 · Longest Palindromic Subsequence
+- [ ] S44 · Zigzag String Conversion
+
+---
+
+## strings.html Rework Progress Log
+
+| Batch | Cards | Status |
+|-------|-------|--------|
+| Batch 1 | S01–S10 | ⏳ Next |
+| Batch 2 | S11–S20 | |
+| Batch 3 | S21–S30 | |
+| Batch 4 | S31–S40 | |
+| Batch 5 | S41–S44 | |
+
+**Currently reworking:** S01 — Null Terminator and String Length
