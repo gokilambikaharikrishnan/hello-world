@@ -7056,52 +7056,121 @@ return ones;   /* bits that appeared 1 mod 3 times */</code></pre>
     <span class="pattern-name">Bit Manipulation: Missing Number</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    Given n distinct numbers from 0 to n, find the one that's missing.
-    Two approaches: (1) expected sum minus actual sum = missing number. (2) XOR all indices 0..n and all elements — the missing index will not have a matching element to cancel it.
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Given an array of n distinct integers in the range [0, n], find the one missing value. The array has n elements but the range [0, n] has n+1 values — exactly one is absent. Two O(n) O(1) approaches exist: the Gauss sum approach and the XOR approach.</p>
+    <p><strong>Sum approach:</strong> The expected sum of 0+1+2+...+n is n*(n+1)/2 (Gauss formula). Subtract the actual array sum. The difference is the missing number. Straightforward, but risks integer overflow for large n (n*(n+1)/2 overflows 32-bit int when n ≈ 65536).</p>
+    <p><strong>XOR approach:</strong> XOR all indices 0..n and all array elements. Since paired values cancel (index k XOR element k = 0 for all present values k), only the missing index's XOR survives unmatched. This approach is overflow-safe because XOR is a bitwise operation with no carry.</p>
+    <p>The sum approach is simpler to reason about. The XOR approach is the right choice when overflow is a concern or when you want to practice the XOR cancellation mental model that underpins Single Number and many other bit-manipulation problems.</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    Sum approach: expected = n*(n+1)/2, actual = sum of array. Difference is the missing number. XOR approach: XOR(0..n) ^ XOR(all elements) = missing number (same cancellation trick as Single Number).
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 268 — Missing Number</span><span class="why">canonical form; sum or XOR approach</span></li>
+    <li><span class="sit">LeetCode 645 — Set Mismatch</span><span class="why">one number appears twice and one is missing — find both with sum and sum-of-squares</span></li>
+    <li><span class="sit">LeetCode 41 — First Missing Positive</span><span class="why">harder variant: missing positive in arbitrary range — needs cyclic sort (P47)</span></li>
+    <li><span class="sit">Memory page ID validation</span><span class="why">given n page IDs that should cover [0..n], find the gap — sum comparison of expected vs actual</span></li>
+    <li><span class="sit">Sequence integrity check</span><span class="why">verify a sequence of log event IDs contains no gaps — compare expected XOR with actual XOR</span></li>
+    <li><span class="sit">UART packet sequence number gap detection</span><span class="why">find the missing sequence number in a received packet window using sum arithmetic</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Sum approach:</strong> Range [0..n] should sum to n*(n+1)/2. Actual sum is what we compute. Their difference is exactly the missing value.</p>
+<pre class="ascii">
+arr = [3, 0, 1],  n = 3
+Expected sum = 3*4/2 = 6
+Actual sum   = 3+0+1 = 4
+Missing      = 6 - 4 = 2 ✓
+</pre>
+    <p><strong>XOR approach:</strong> Think of it as two arrays: [0,1,2,...,n] and arr[0..n-1]. XOR all elements of both. Every index k that is present in arr pairs with index k — they XOR to 0. Only the missing index has no match.</p>
+<pre class="ascii">
+arr = [3, 0, 1],  n = 3
+XOR 0..3:     0^1^2^3 = 0
+XOR arr:      3^0^1   = 2
+XOR both:     0^2     = 2 ✓
+
+Implementation: start with result=n, then XOR each i ^ arr[i]:
+  result = 3
+  i=0: result ^= 0 ^ 3 = 3^0^3 = 0
+  i=1: result ^= 1 ^ 0 = 0^1^0 = 1
+  i=2: result ^= 2 ^ 1 = 1^2^1 = 2 ✓
+</pre>
+    <p class="aha">Aha moment: XOR of indices [0..n] XOR elements present = XOR of the missing index (all others cancel). Initializing result=n handles the fact that the index range is [0..n] but arr only has n elements (0..n-1).</p>
   </div>
 
-  <div class="section-label">&#9316; Annotated Code</div>
-<pre><code class="language-c">/* Find missing number in array containing n distinct values from [0, n]. */
-int missing_number(int *arr, int n) {
-    /* Math approach: sum of 0..n minus sum of array */
-    int expected = n * (n + 1) / 2;   /* Gauss formula: sum of 0+1+2+...+n */
-    int actual   = 0;
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Find missing number in arr[0..n-1] containing n distinct values from [0, n]. */
+
+/* Sum approach: O(n) time, O(1) space, risk of overflow for large n */
+int missing_number_sum(int *arr, int n) {
+    long long expected = (long long)n * (n + 1) / 2;   /* cast to avoid overflow */
+    long long actual   = 0;
     for (int i = 0; i &lt; n; i++) actual += arr[i];
-    return expected - actual;
+    return (int)(expected - actual);
+}
 
-    /* XOR approach (avoids potential overflow for large n):
-    int result = n;   // start by XORing with n itself
-    for (int i = 0; i < n; i++)
-        result ^= i ^ arr[i];   // XOR index i and element i
-    return result;
-    */
+/* XOR approach: O(n) time, O(1) space, overflow-safe */
+int missing_number_xor(int *arr, int n) {
+    int result = n;            /* start with n to include the index n in the XOR */
+    for (int i = 0; i &lt; n; i++)
+        result ^= i ^ arr[i]; /* each present value k: index k ^ element k = 0 */
+    return result;             /* only the missing index survives unmatched */
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
-  <div class="dry-run">arr = [3, 0, 1],  n=3
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>arr=[3,0,1], n=3 — sum approach</strong>
 
 expected = 3*4/2 = 6
 actual   = 3+0+1 = 4
-return 6-4 = 2 ✓</div>
+return 6-4 = 2 ✓
 
+<strong>arr=[3,0,1], n=3 — XOR approach</strong>
+
+result = 3 (start with n)
+i=0: result ^= 0 ^ arr[0] = result ^= 0^3 = 3^0^3 = 0
+i=1: result ^= 1 ^ arr[1] = 0 ^= 1^0 = 0^1 = 1
+i=2: result ^= 2 ^ arr[2] = 1 ^= 2^1 = 1^3 = 2
+
+return 2 ✓
+
+<strong>Edge: arr=[], n=0 — empty array, missing is 0</strong>
+
+Sum: expected=0, actual=0, return 0 ✓
+XOR: result=0, loop doesn't run, return 0 ✓</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Integer overflow for large n with the sum approach</div>
-    <p>n*(n+1)/2 overflows a 32-bit int when n is around 65536. Use <code>long long</code> for large inputs, or use the XOR approach which never overflows (XOR works bit by bit, no addition).</p>
+    <div class="gotcha-title">&#9888; Wrong: integer overflow in the sum approach with int</div>
+<pre><code class="language-c">/* WRONG for large n */
+int expected = n * (n + 1) / 2;   /* overflows when n*(n+1) > INT_MAX ≈ 2.1 billion */
+/* n=65536: 65536*65537 = 4,295,032,832 > 2,147,483,647 → overflow, wrong answer */</code></pre>
+    <p><strong>What breaks:</strong> For n ≈ 65536, n*(n+1) exceeds 32-bit int range. The multiplication wraps around before the division, giving a wrong expected sum.</p>
+<pre><code class="language-c">/* CORRECT: cast to long long before multiplication */
+long long expected = (long long)n * (n + 1) / 2;</code></pre>
+    <p><strong>Rule:</strong> When computing n*(n+1)/2 in C, cast n to <code>long long</code> before multiplying. Alternatively, use the XOR approach which has no addition and therefore no overflow risk.</p>
   </div>
 
-  <div class="leetcode">
-    <span>268 &middot; Missing Number</span>
-    <span>41 &middot; First Missing Positive</span>
-    <span>645 &middot; Set Mismatch</span>
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. In the XOR approach, why does initializing result=n (rather than 0) correctly account for the full index range [0..n]?</p>
+    <p>2. If the array had two missing numbers instead of one, could the sum approach still find both? What additional information would you need?</p>
+    <p>3. The XOR approach XORs each index i and element arr[i] together. What if arr[i] == i for some i — does XOR still work correctly?</p>
   </div>
-  <div class="trigger">When you see: find one missing from 0..n &#8594; think: expected sum minus actual sum, or XOR of indices vs values</div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>When you see "find the one missing value in [0..n]" → sum: expected − actual (cast to long long); XOR: start with n, XOR each i^arr[i] — missing index survives unmatched.</strong>
+    <br>Also fires for: "verify sequence completeness" · "find gap in a range of IDs" · "one duplicate + one missing (sum + sum-of-squares)"
+  </div>
 </div>
 
 <!-- ================================================================ P53 -->
