@@ -5181,73 +5181,129 @@ return found;</code></pre>
     <span class="pattern-name">Hashmap: Two Sum (Single Pass)</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    Find two numbers in an array that sum to a target. The brute force tries every pair (O(n&sup2;)).
-    The hashmap trick: as you visit each number, check if its complement (target &minus; current) was already seen.
-    If yes, you found the pair. If no, store the current number in the map for future lookups.
-    One pass through the array, O(1) lookup per step.
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Find two indices i and j in an array such that arr[i] + arr[j] == target, where i ≠ j. Brute force tries all O(n²) pairs. Sorting + two pointers solves the value-finding variant in O(n log n) but loses the original indices. A single-pass hashmap does it in O(n) time and O(n) space while preserving indices.</p>
+    <p>The core insight: for each element x, its required partner is exactly (target − x). As you walk the array, you don't need to look ahead — you only need to know whether you've already <em>seen</em> that complement. A hashmap from value to index tells you that in O(1).</p>
+    <p>The ordering discipline matters: check for the complement <em>before</em> inserting the current element. If you insert first and then check, an element can match itself when target equals twice its value. For example, arr=[3,5], target=6: inserting 3 first, then checking for complement 3, finds index 0 — but you're still at index 0. Checking first avoids this.</p>
+    <p>Two-sum is the prototype for a whole class of "complement lookup" problems: three-sum reduces to two-sum with one fixed element; four-sum to two-sum on pair-sum arrays; subarray sum equals K is prefix-sum two-sum. The pattern — "I need X, have I seen X before?" — repeats constantly.</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    For every element x, its required partner is (target - x). Store each element in a hash map as you go. Before storing, check if (target - x) is already in the map. If yes — instant O(1) answer.
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 1 — Two Sum</span><span class="why">canonical form; return indices of the two elements</span></li>
+    <li><span class="sit">LeetCode 15 — 3Sum</span><span class="why">fix one element, then two-sum the rest with two pointers</span></li>
+    <li><span class="sit">LeetCode 167 — Two Sum II (sorted)</span><span class="why">sorted input → two pointers; same logical structure</span></li>
+    <li><span class="sit">Packet pair matching</span><span class="why">match ingress + egress packets whose IDs sum to a session token — O(1) lookup per packet</span></li>
+    <li><span class="sit">Cache miss pair detection</span><span class="why">given a latency budget, find two cache lines whose sizes fit exactly — hashmap complement lookup</span></li>
+    <li><span class="sit">Cryptographic key pair check</span><span class="why">verify that two values XOR/sum to a known target — same single-pass pattern</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Why one pass works:</strong> Suppose the answer is the pair (arr[i], arr[j]) with i &lt; j. When we process index j, we've already stored arr[i] in the map. We compute complement = target − arr[j] = arr[i], find it in the map, and we're done. We never need to process beyond j.</p>
+<pre class="ascii">
+arr = [2, 7, 11, 15],  target = 9
+
+i=0: complement = 9-2 = 7.   map has {}          → not found. store map[2]=0.
+i=1: complement = 9-7 = 2.   map has {2→0}       → FOUND at index 0!
+     return [0, 1] ✓
+
+arr = [3, 3],  target = 6
+
+i=0: complement = 6-3 = 3.   map has {}          → not found. store map[3]=0.
+i=1: complement = 6-3 = 3.   map has {3→0}       → FOUND at index 0!
+     return [0, 1] ✓   (correct: two DIFFERENT indices)
+</pre>
+    <p class="aha">Aha moment: "check complement, then store" is not just an optimization — it's a correctness requirement when the target equals 2×arr[i] (the element must not match itself).</p>
   </div>
 
-  <div class="section-label">&#9316; Annotated Code</div>
-<pre><code class="language-c">/* Two Sum using a simple open-addressing hash map (for values 0..9999). */
-#define MAP_SIZE 10007
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Simple open-addressing hash map: value → index. */
+#define MSIZ 10007
+typedef struct { int key, val, used; } Entry;
+static Entry ht[MSIZ];
 
-typedef struct { int key; int val; int used; } Entry;
-Entry map[MAP_SIZE];
+static void ht_clear(void) { for (int i=0;i&lt;MSIZ;i++) ht[i].used=0; }
 
-void map_clear(void) { for (int i = 0; i &lt; MAP_SIZE; i++) map[i].used = 0; }
-
-/* Store key→value. Simple linear probing. */
-void map_put(int key, int val) {
-    int h = ((unsigned)key) % MAP_SIZE;
-    while (map[h].used &amp;&amp; map[h].key != key) h = (h + 1) % MAP_SIZE;
-    map[h] = (Entry){key, val, 1};
+static void ht_put(int key, int val) {
+    int h = ((unsigned)key) % MSIZ;
+    while (ht[h].used &amp;&amp; ht[h].key != key) h = (h+1) % MSIZ;
+    ht[h] = (Entry){key, val, 1};
 }
 
-/* Return stored value for key, or -1 if not found. */
-int map_get(int key) {
-    int h = ((unsigned)key) % MAP_SIZE;
-    while (map[h].used) {
-        if (map[h].key == key) return map[h].val;
-        h = (h + 1) % MAP_SIZE;
+static int ht_get(int key) {   /* returns -1 if not found */
+    int h = ((unsigned)key) % MSIZ;
+    while (ht[h].used) {
+        if (ht[h].key == key) return ht[h].val;
+        h = (h+1) % MSIZ;
     }
     return -1;
 }
 
-/* Find indices i,j such that arr[i]+arr[j]==target. Fills out[0] and out[1]. */
+/* Fills out[0], out[1] with the two indices. Assumes exactly one solution. */
 void two_sum(int *arr, int n, int target, int *out) {
-    map_clear();
+    ht_clear();
     for (int i = 0; i &lt; n; i++) {
-        int complement = target - arr[i];        /* what value do we need? */
-        int j = map_get(complement);             /* has it been seen before? */
+        int need = target - arr[i];   /* complement we're looking for */
+        int j    = ht_get(need);      /* has that complement been seen? */
         if (j != -1) { out[0] = j; out[1] = i; return; }
-        map_put(arr[i], i);                      /* store current value → its index */
+        ht_put(arr[i], i);            /* store AFTER checking — prevents self-match */
     }
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
-  <div class="dry-run">arr = [2, 7, 11, 15],  target = 9
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>arr=[2,7,11,15], target=9</strong>
 
-i=0: complement=7,  map_get(7)=-1 (not seen), store map[2]=0
-i=1: complement=2,  map_get(2)=0 (found!) → return indices [0,1] ✓</div>
+ i  | arr[i] | need | map contents       | found?
+----+--------+------+--------------------+-------
+ 0  |   2    |   7  | {}                 | no → store {2→0}
+ 1  |   7    |   2  | {2→0}              | YES → return [0,1]
 
+<strong>arr=[3,2,4], target=6</strong>
+
+ i  | arr[i] | need | map contents       | found?
+----+--------+------+--------------------+-------
+ 0  |   3    |   3  | {}                 | no → store {3→0}
+ 1  |   2    |   4  | {3→0}              | no → store {3→0,2→1}
+ 2  |   4    |   2  | {3→0,2→1}         | YES → return [1,2]</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Looking up arr[i] in the map before checking for complement</div>
-    <p>Check for the complement FIRST, then store arr[i]. If you store arr[i] first and then check, you might match an element with itself when target is double that element (e.g., arr = [3, 5], target = 6 — you don't want index 0 to match itself).</p>
+    <div class="gotcha-title">&#9888; Wrong: inserting before checking (self-match bug)</div>
+<pre><code class="language-c">/* WRONG */
+ht_put(arr[i], i);              /* store first */
+int j = ht_get(target - arr[i]);  /* then check */
+if (j != -1) { out[0] = j; out[1] = i; return; }
+/* Bug: arr=[3,5], target=6 → stores 3 at index 0, then finds 3 again → [0,0] */</code></pre>
+    <p><strong>What breaks:</strong> When target == 2 * arr[i], the element matches itself: the map returns its own index, giving i == j, which is invalid.</p>
+<pre><code class="language-c">/* CORRECT: check first, then store */
+int j = ht_get(target - arr[i]);
+if (j != -1) { out[0] = j; out[1] = i; return; }
+ht_put(arr[i], i);</code></pre>
+    <p><strong>Rule:</strong> In complement-lookup patterns, always check before inserting the current element.</p>
   </div>
 
-  <div class="leetcode">
-    <span>1 &middot; Two Sum</span>
-    <span>167 &middot; Two Sum II</span>
-    <span>15 &middot; 3Sum</span>
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. Why does this single-pass approach work — how do you know the complement will be in the map when you need it?</p>
+    <p>2. What changes if the problem asks for values rather than indices — could you then use sorting + two pointers, and why?</p>
+    <p>3. What would you change to handle duplicates (e.g., the array contains multiple 3s and target=6 — is a valid pair possible)?</p>
   </div>
-  <div class="trigger">When you see: find pair summing to target in unsorted array &#8594; think: hashmap — store each element, check complement before inserting</div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>When you see "find a pair summing to target in an unsorted array" → hashmap: check for complement first, then store current element.</strong>
+    <br>Also fires for: "three-sum (fix one, two-sum the rest)" · "any 'have I seen the complement?' lookup" · "O(n) pair matching with O(1) lookup"
+  </div>
 </div>
 
 <!-- ================================================================ P39 -->
@@ -5257,70 +5313,145 @@ i=1: complement=2,  map_get(2)=0 (found!) → return indices [0,1] ✓</div>
     <span class="pattern-name">Hashmap: Subarray Sum Equals K (Prefix + HashMap)</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    Count subarrays whose elements sum to exactly K. Two pointers won't work here because the array can have negative numbers.
-    Instead, build running prefix sums. For each prefix sum P at index i, you need to know: how many earlier prefix sums equaled P&minus;K? Because if prefix[j] = P&minus;K, then sum(j+1..i) = K.
-    Store prefix sum frequencies in a hashmap.
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Count the number of contiguous subarrays whose elements sum to exactly K. The array may contain negative numbers, so a sliding window won't work — shrinking the window doesn't guarantee a smaller sum. A brute O(n²) approach computes all prefix sums or all subarray sums. The O(n) solution uses prefix sums plus a hashmap of their frequencies.</p>
+    <p>The key equation: sum(j+1..i) = prefix[i] − prefix[j]. If this subarray sum equals K, then prefix[j] = prefix[i] − K. So for each new prefix[i], we need to know how many earlier prefix sums equal (prefix[i] − K). That's exactly what the frequency map stores.</p>
+    <p>The seed <code>freq[0] = 1</code> before the loop represents the empty prefix (the "prefix of length zero" before index 0, with sum 0). Without this seed, subarrays that start from index 0 and have sum exactly K are missed — because they require a "previous prefix sum" of 0 that was never recorded.</p>
+    <p>This pattern — prefix sum + frequency map — is one of the most powerful tools for subarray problems with arbitrary values. Variants include counting subarrays with sum divisible by K (store prefix%K), finding the longest subarray with sum K (store first-seen index), and counting subarrays with equal 0s and 1s (recode 0→-1, find sum=0).</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    sum(j+1..i) = prefix[i] &minus; prefix[j]. If this equals K, then prefix[j] = prefix[i] &minus; K. Count how many times (prefix[i] &minus; K) appeared as a prefix sum so far.
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 560 — Subarray Sum Equals K</span><span class="why">canonical form; count subarrays summing to K with possible negatives</span></li>
+    <li><span class="sit">LeetCode 974 — Subarray Sums Divisible by K</span><span class="why">same pattern; store prefix%K instead of prefix sum</span></li>
+    <li><span class="sit">LeetCode 525 — Contiguous Array</span><span class="why">recode 0→-1; find longest subarray with sum=0 using first-seen index map</span></li>
+    <li><span class="sit">Network packet loss detection</span><span class="why">count time windows where loss events sum to exactly threshold K</span></li>
+    <li><span class="sit">Financial ledger balance check</span><span class="why">count date ranges where net credit/debit sums to exactly zero or a target value</span></li>
+    <li><span class="sit">Sensor signal windowing</span><span class="why">count intervals where signed sensor deltas sum to a threshold — works with negative deltas</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Prefix sum identity:</strong> Define prefix[i] = arr[0] + ... + arr[i-1] (prefix[-1] = 0). Then sum(j..i) = prefix[i+1] − prefix[j]. For this to equal K: prefix[j] = prefix[i+1] − K.</p>
+<pre class="ascii">
+arr = [1, 1, 1],  K = 2
+
+Prefix sums (including "empty" prefix=0):
+idx:     -1  0  1  2
+prefix:   0  1  2  3
+
+Valid subarrays summing to 2:
+  [0..1]: prefix[2]-prefix[0] = 2-0 = 2 ✓
+  [1..2]: prefix[3]-prefix[1] = 3-1 = 2 ✓
+
+Walk with freq map:
+  seed: freq = {0:1}
+  i=0: prefix=1, need=1-2=-1, freq[-1]=0, count=0. freq={0:1,1:1}
+  i=1: prefix=2, need=2-2=0,  freq[0]=1,  count=1. freq={0:1,1:1,2:1}
+  i=2: prefix=3, need=3-2=1,  freq[1]=1,  count=2. freq={0:1,1:1,2:1,3:1}
+→ 2 ✓
+</pre>
+    <p class="aha">Aha moment: the seed <code>freq[0] = 1</code> is essential. When prefix[i] == K, the needed complement is 0, and without the seed that lookup returns 0 — missing the subarray arr[0..i].</p>
+    <p><strong>Pseudocode:</strong></p>
+<pre class="ascii">
+freq = {0: 1}
+prefix = 0, count = 0
+for x in arr:
+    prefix += x
+    count  += freq.get(prefix - K, 0)
+    freq[prefix]++
+return count
+</pre>
   </div>
 
-  <div class="section-label">&#9316; Annotated Code</div>
-<pre><code class="language-c">/* Count subarrays with sum exactly equal to k. Works with negative numbers. */
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Count subarrays summing to k. Works with negative values. */
 int subarray_sum_k(int *arr, int n, int k) {
-    /* Simple hash map for prefix sum frequencies: key=prefix_sum, value=count */
-    /* For interview, assume prefix sums fit in a reasonable range. */
-    /* Here we simulate with a fixed-size map for values -10000..10000 */
-    #define OFFSET 10000
-    #define RANGE  20001
-    int freq[RANGE] = {0};
+    #define OFF  10000          /* shift so negative prefix sums index into array */
+    #define SZ   20001
+    int freq[SZ];
+    for (int i = 0; i &lt; SZ; i++) freq[i] = 0;
 
-    freq[0 + OFFSET] = 1;   /* empty prefix (sum=0) has been seen once before starting */
+    freq[0 + OFF] = 1;   /* seed: empty prefix has sum 0, seen once */
 
-    int prefix = 0;   /* running prefix sum */
-    int count  = 0;
-
+    int prefix = 0, count = 0;
     for (int i = 0; i &lt; n; i++) {
-        prefix += arr[i];           /* extend prefix sum to include arr[i] */
+        prefix += arr[i];
 
-        /* how many earlier prefixes equal (prefix - k)? */
-        /* each one of those creates a valid subarray ending at i */
-        int need = prefix - k;
-        if (need + OFFSET &gt;= 0 &amp;&amp; need + OFFSET &lt; RANGE)
-            count += freq[need + OFFSET];
+        int need = prefix - k;                          /* which earlier prefix sum we need */
+        if (need + OFF &gt;= 0 &amp;&amp; need + OFF &lt; SZ)
+            count += freq[need + OFF];                  /* add count of matching earlier prefixes */
 
-        freq[prefix + OFFSET]++;    /* record this prefix sum for future lookups */
+        freq[prefix + OFF]++;                           /* record this prefix for future lookups */
     }
     return count;
-    #undef OFFSET
-    #undef RANGE
+    #undef OFF
+    #undef SZ
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
-  <div class="dry-run">arr = [1, 1, 1],  k = 2
-freq[0] = 1 (empty prefix)
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>arr=[1,1,1], k=2</strong>
 
-i=0: prefix=1, need=1-2=-1, freq[-1]=0, count=0, freq[1]++
-i=1: prefix=2, need=2-2=0,  freq[0]=1,  count=1, freq[2]++
-i=2: prefix=3, need=3-2=1,  freq[1]=1,  count=2, freq[3]++
+  freq={0:1}, prefix=0, count=0
 
-return 2 ✓  (subarrays [1,1] starting at 0 and at 1)</div>
+ i  | arr[i] | prefix | need=prefix-k | freq[need] | count | freq update
+----+--------+--------+---------------+------------+-------+------------
+ 0  |   1    |   1    |      -1       |     0      |   0   | freq[1]→1
+ 1  |   1    |   2    |       0       |     1      |   1   | freq[2]→1
+ 2  |   1    |   3    |       1       |     1      |   2   | freq[3]→1
 
+return 2 ✓
+
+<strong>arr=[1,-1,1], k=1 (contains negatives)</strong>
+
+  freq={0:1}, prefix=0, count=0
+
+ i  | prefix | need | freq[need] | count
+----+--------+------+------------+------
+ 0  |   1    |   0  |     1      |   1    (subarray [0..0])
+ 1  |   0    |  -1  |     0      |   1
+ 2  |   1    |   0  |     1      |   2    (subarray [2..2]) + freq[0] includes the seed
+
+return 2 ✓  ([arr[0]], [arr[2]])</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Not seeding freq[0] = 1 before starting</div>
-    <p>The empty prefix (prefix sum = 0 before any elements) must be in the map with count 1. If you don't seed it, subarrays that start from index 0 (where prefix[i] == k exactly) will not be counted. Always initialize <code>freq[0] = 1</code> before the loop.</p>
+    <div class="gotcha-title">&#9888; Wrong: forgetting to seed freq[0] = 1</div>
+<pre><code class="language-c">/* WRONG: no seed */
+int freq[SZ] = {0};   /* freq[0] stays 0 */
+int prefix = 0, count = 0;
+for (int i = 0; i &lt; n; i++) {
+    prefix += arr[i];
+    count += freq[(prefix - k) + OFF];   /* misses subarrays starting at index 0 */
+    freq[prefix + OFF]++;
+}</code></pre>
+    <p><strong>What breaks:</strong> arr=[2,1], k=2. At i=0: prefix=2, need=0, freq[0]=0 → count stays 0. But the subarray [arr[0]] = [2] sums to K=2 and should be counted.</p>
+<pre><code class="language-c">/* CORRECT */
+freq[0 + OFF] = 1;   /* seed before the loop */</code></pre>
+    <p><strong>Rule:</strong> Always seed the prefix-sum frequency map with <code>freq[0] = 1</code> before starting the loop — it represents the "empty prefix" that precedes index 0.</p>
   </div>
 
-  <div class="leetcode">
-    <span>560 &middot; Subarray Sum Equals K</span>
-    <span>974 &middot; Subarray Sums Divisible by K</span>
-    <span>525 &middot; Contiguous Array (0s and 1s)</span>
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. The seed represents an empty prefix with sum 0. What physical subarray does a match against the seed correspond to?</p>
+    <p>2. Why can't a sliding window replace this approach when the array contains negative numbers?</p>
+    <p>3. How would you adapt this to find the <em>longest</em> subarray with sum K instead of <em>counting</em> all of them?</p>
   </div>
-  <div class="trigger">When you see: count subarrays with exact sum (with possible negatives) &#8594; think: prefix sum + hashmap of frequencies, seed freq[0]=1</div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>When you see "count subarrays with exact sum (array may have negatives)" → running prefix sum + frequency map; seed freq[0]=1 before the loop; add freq[prefix−K] before recording freq[prefix].</strong>
+    <br>Also fires for: "subarrays divisible by K (store prefix%K)" · "longest subarray with sum K (store first-seen index)" · "equal 0s and 1s (recode 0→-1, find sum=0)"
+  </div>
 </div>
 
 <!-- ================================================================ P40 -->
