@@ -5,7 +5,7 @@
 | File | Patterns | Status | Last Updated |
 |------|----------|--------|--------------|
 | index.html | nav | ✅ Done | 2026-04-24 |
-| arrays.html | 54 | 🔄 Rework In Progress | 2026-04-30 |
+| arrays.html | 54 | ✅ Done | 2026-05-01 |
 | pointers.html | 30 | ✅ Done | 2026-04-24 |
 | strings.html | 40 | ✅ Done | 2026-04-29 |
 | linkedlist.html | 35 | ✅ Done | 2026-04-29 |
@@ -81,7 +81,7 @@
 ### Hard Classics (P43–P48)
 - [x] P43 · Hard Classic: Trapping Rain Water
 - [x] P44 · Hard Classic: Largest Rectangle in Histogram
-- [ ] P45 · Hard Classic: Median of Two Sorted Arrays
+- [x] P45 · Hard Classic: Median of Two Sorted Arrays
 - [x] P46 · Hard Classic: Next Permutation
 - [x] P47 · Hard Classic: First Missing Positive
 - [x] P48 · Hard Classic: Count of Smaller Numbers After Self
@@ -89,10 +89,10 @@
 ### Monotonic / Bit / Advanced (P49–P54)
 - [x] P49 · Monotonic Stack: Next Greater Element
 - [x] P50 · Monotonic Stack: Daily Temperatures
-- [ ] P51 · Bit Manipulation: Single Number (XOR Trick)
-- [ ] P52 · Bit Manipulation: Missing Number
-- [ ] P53 · Divide & Conquer: Count Inversions (Merge Sort)
-- [ ] P54 · Difference Array: Range Update in O(1)
+- [x] P51 · Bit Manipulation: Single Number (XOR Trick)
+- [x] P52 · Bit Manipulation: Missing Number
+- [x] P53 · Divide & Conquer: Count Inversions (Merge Sort)
+- [x] P54 · Difference Array: Range Update in O(1)
 
 ---
 
@@ -105,6 +105,6 @@
 | Batch 3 | P21–P30 | ✅ Done |
 | Batch 4 | P31–P40 | ✅ Done |
 | Batch 5 | P41–P50 | ✅ Done |
-| Batch 6 | P51–P54 | ⏳ Next |
+| Batch 6 | P51–P54 | ✅ Done |
 
-**Currently reworking:** P51 — Bit Manipulation: Single Number (XOR Trick)
+**All 54 cards reworked. Rework complete 2026-05-01.**
