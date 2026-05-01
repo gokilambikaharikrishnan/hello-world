@@ -61,20 +61,20 @@
 
 ### Greedy (P30–P33)
 - [x] P30 · Greedy: Jump Game (Can You Reach the End?)
-- [ ] P31 · Greedy: Jump Game II (Minimum Jumps to Reach End)
-- [ ] P32 · Greedy: Gas Station Circular Tour
-- [ ] P33 · Greedy: Assign Cookies (Two-Sorted-Array Matching)
+- [x] P31 · Greedy: Jump Game II (Minimum Jumps to Reach End)
+- [x] P32 · Greedy: Gas Station Circular Tour
+- [x] P33 · Greedy: Assign Cookies (Two-Sorted-Array Matching)
 
 ### Matrix (P34–P37)
-- [ ] P34 · Matrix: Spiral Order Traversal
-- [ ] P35 · Matrix: Set Row and Column to Zero
-- [ ] P36 · Matrix: Rotate 90 Degrees In-Place
-- [ ] P37 · Matrix: Word Search (DFS on Grid)
+- [x] P34 · Matrix: Spiral Order Traversal
+- [x] P35 · Matrix: Set Row and Column to Zero
+- [x] P36 · Matrix: Rotate 90 Degrees In-Place
+- [x] P37 · Matrix: Word Search (DFS on Grid)
 
 ### Hashmap (P38–P42)
-- [ ] P38 · Hashmap: Two Sum (Single Pass)
-- [ ] P39 · Hashmap: Subarray Sum Equals K (Prefix + HashMap)
-- [ ] P40 · Hashmap: Longest Consecutive Sequence
+- [x] P38 · Hashmap: Two Sum (Single Pass)
+- [x] P39 · Hashmap: Subarray Sum Equals K (Prefix + HashMap)
+- [x] P40 · Hashmap: Longest Consecutive Sequence
 - [ ] P41 · Hashmap: Group Anagrams
 - [ ] P42 · Hashmap: Top K Frequent Elements
 
@@ -103,8 +103,8 @@
 | Batch 1 | P01–P10 | ✅ Done |
 | Batch 2 | P11–P20 | ✅ Done |
 | Batch 3 | P21–P30 | ✅ Done |
-| Batch 4 | P31–P40 | ⏳ Next |
-| Batch 5 | P41–P50 | — |
+| Batch 4 | P31–P40 | ✅ Done |
+| Batch 5 | P41–P50 | ⏳ Next |
 | Batch 6 | P51–P54 | — |
 
-**Currently reworking:** P31 — Greedy: Jump Game II (Minimum Jumps to Reach End)
+**Currently reworking:** P41 — Hashmap: Group Anagrams
