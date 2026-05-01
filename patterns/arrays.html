@@ -6161,73 +6161,143 @@ for (int i = 0; i &lt;= n; i++) {
     <span class="pattern-name">Hard Classic: Median of Two Sorted Arrays</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    Find the median of two sorted arrays combined, in O(log(min(m,n))) time — no merging allowed.
-    Binary search on the partition point of the smaller array. A "partition" splits both arrays so that everything on the left is &le; everything on the right.
-    Adjust the partition until it's balanced.
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Find the median of two sorted arrays in O(log(min(m,n))) time — no merging. The key insight: the median divides all combined elements into a left half and a right half. If you fix how many elements come from array A on the left (call it <code>pa</code>), the number from B is forced: <code>pb = half − pa</code>. The partition is correct when <code>maxLeftA ≤ minRightB</code> and <code>maxLeftB ≤ minRightA</code>.</p>
+    <p>Binary search <code>pa</code> in <code>[0, m]</code> on the smaller array. If <code>maxLeftA &gt; minRightB</code>, <code>pa</code> is too large — move left. Otherwise move right. This converges in O(log m) steps. Always ensure A is the smaller array first; otherwise <code>pb = half − pa</code> can go negative for large <code>pa</code>.</p>
+    <p>Sentinel values handle edge cases cleanly: if <code>pa = 0</code> (nothing from A on the left), set <code>maxLeftA = INT_MIN</code> so the condition always passes on that side. If <code>pa = m</code> (all of A on the left), set <code>minRightA = INT_MAX</code>.</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    Binary search on the smaller array to find the right partition. Once the partition satisfies: maxLeft1 &le; minRight2 AND maxLeft2 &le; minRight1, you've found the median. O(log(min(m,n))).
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 4 — Median of Two Sorted Arrays</span><span class="why">canonical problem; O(log min(m,n)) required</span></li>
+    <li><span class="sit">LeetCode 295 — Find Median from Data Stream</span><span class="why">related: two heaps for dynamic median; same median concept</span></li>
+    <li><span class="sit">LeetCode 480 — Sliding Window Median</span><span class="why">maintain sorted window; median from partition idea applies</span></li>
+    <li><span class="sit">Database merge queries</span><span class="why">find the k-th element in a merge of two sorted result sets without materializing the merge</span></li>
+    <li><span class="sit">Statistics / A–B testing</span><span class="why">median of a combined sample from two pre-sorted group measurements</span></li>
+    <li><span class="sit">External sort / tape merge</span><span class="why">binary-search partition to find order statistics without full merge</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Setup:</strong> Let total = m + n. The left partition needs <code>half = (m + n + 1) / 2</code> elements (the +1 handles odd totals — the median sits in the left half).</p>
+<pre class="ascii">
+a = [1, 3, 8]      m=3
+b = [2, 4, 5, 7]   n=4   total=7, half=4
+
+pa=1 → left side has: a[0..0], b[0..2] = {1} {2,4,5}
+  maxLeftA=1, minRightA=3
+  maxLeftB=5, minRightB=7
+  1 &lt;= 7 ✓  but  5 &lt;= 3 ✗  → maxLeftB &gt; minRightA → pa too small, lo=pa+1=2
+
+pa=2 → left side has: a[0..1], b[0..1] = {1,3} {2,4}
+  maxLeftA=3, minRightA=8
+  maxLeftB=4, minRightB=5
+  3 &lt;= 5 ✓  and  4 &lt;= 8 ✓  → correct partition!
+  total=7 odd → median = max(maxLeftA=3, maxLeftB=4) = 4 ✓
+</pre>
+    <p class="aha">Aha moment: you never need to look at any element beyond the partition boundary. The four values (maxLeftA, minRightA, maxLeftB, minRightB) contain all the information needed. Everything else is irrelevant.</p>
+    <p><strong>Binary search direction:</strong></p>
+    <ul>
+      <li><code>maxLeftA &gt; minRightB</code>: too many elements from A on the left → <code>hi = pa − 1</code></li>
+      <li><code>maxLeftB &gt; minRightA</code>: too few from A → <code>lo = pa + 1</code></li>
+      <li>Both conditions pass → found; return median from the four boundary values</li>
+    </ul>
   </div>
 
-  <div class="section-label">&#9316; Annotated Code</div>
-<pre><code class="language-c">#include &lt;limits.h&gt;
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">#include &lt;limits.h&gt;   /* INT_MIN, INT_MAX */
 
+/* O(log(min(m,n))). Ensures a[] is the smaller array. */
 double find_median(int *a, int m, int *b, int n) {
-    if (m &gt; n) return find_median(b, n, a, m);   /* ensure a is the smaller array */
+    if (m &gt; n) return find_median(b, n, a, m);  /* always binary-search the shorter array */
 
-    int lo = 0, hi = m;
-    int half = (m + n + 1) / 2;   /* number of elements in the left partition */
+    int lo   = 0, hi = m;
+    int half = (m + n + 1) / 2;  /* elements needed in the combined left half */
 
     while (lo &lt;= hi) {
-        int pa = lo + (hi - lo) / 2;   /* partition a: pa elements from a on the left */
-        int pb = half - pa;             /* partition b: the rest come from b */
+        int pa = lo + (hi - lo) / 2;  /* try: take pa elements from a on the left */
+        int pb = half - pa;            /* forced: the rest come from b */
 
-        int maxLeftA  = (pa == 0) ? INT_MIN : a[pa-1];
+        int maxLeftA  = (pa == 0) ? INT_MIN : a[pa - 1];
         int minRightA = (pa == m) ? INT_MAX : a[pa];
-        int maxLeftB  = (pb == 0) ? INT_MIN : b[pb-1];
+        int maxLeftB  = (pb == 0) ? INT_MIN : b[pb - 1];
         int minRightB = (pb == n) ? INT_MAX : b[pb];
 
         if (maxLeftA &lt;= minRightB &amp;&amp; maxLeftB &lt;= minRightA) {
-            /* correct partition found */
+            /* correct partition: left half &le; right half on both sides */
             if ((m + n) % 2 == 1)
                 return (double)(maxLeftA &gt; maxLeftB ? maxLeftA : maxLeftB);
-            int left  = maxLeftA  &gt; maxLeftB  ? maxLeftA  : maxLeftB;
+            int left  = maxLeftA &gt; maxLeftB   ? maxLeftA  : maxLeftB;
             int right = minRightA &lt; minRightB ? minRightA : minRightB;
             return (double)(left + right) / 2.0;
         } else if (maxLeftA &gt; minRightB) {
-            hi = pa - 1;   /* too many from a: move partition left */
+            hi = pa - 1;   /* pa too large: move partition left in a */
         } else {
-            lo = pa + 1;   /* too few from a: move partition right */
+            lo = pa + 1;   /* pa too small: move partition right in a */
         }
     }
-    return 0.0;
+    return 0.0;   /* unreachable if inputs are valid sorted arrays */
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
-  <div class="dry-run">a=[1,3], b=[2], m=2, n=1   half=2
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>a=[1,3], b=[2]   m=2, n=1, half=(2+1+1)/2=2</strong>
 
-lo=0,hi=2: pa=1, pb=1
-  maxLeftA=1, minRightA=3, maxLeftB=2, minRightB=INT_MAX
-  1<=INT_MAX ✓ and 2<=3 ✓ → correct partition
-  (m+n)=3 odd → return max(maxLeftA=1, maxLeftB=2) = 2 ✓</div>
+lo=0, hi=2 → pa=1, pb=1
+  maxLeftA=a[0]=1   minRightA=a[1]=3
+  maxLeftB=b[0]=2   minRightB=INT_MAX
+  1 &lt;= INT_MAX ✓   2 &lt;= 3 ✓ → correct partition
+  total=3 (odd) → return max(1, 2) = 2.0 ✓
 
+<strong>a=[1,2], b=[3,4]   m=2, n=2, half=(2+2+1)/2=2</strong>
+
+lo=0, hi=2 → pa=1, pb=1
+  maxLeftA=1  minRightA=2
+  maxLeftB=3  minRightB=4
+  1 &lt;= 4 ✓   3 &lt;= 2 ✗ → maxLeftB &gt; minRightA → lo=2
+
+lo=2, hi=2 → pa=2, pb=0
+  maxLeftA=a[1]=2  minRightA=INT_MAX
+  maxLeftB=INT_MIN  minRightB=b[0]=3
+  2 &lt;= 3 ✓   INT_MIN &lt;= INT_MAX ✓ → correct partition
+  total=4 (even) → left=max(2,INT_MIN)=2, right=min(INT_MAX,3)=3
+  return (2+3)/2.0 = 2.5 ✓</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Not ensuring the first array is the smaller one</div>
-    <p>The algorithm binary searches the smaller array. If you binary search the larger array, <code>pb = half - pa</code> can become negative when pa is large, causing out-of-bounds access. Always swap so that m &le; n before starting.</p>
+    <div class="gotcha-title">&#9888; Wrong: binary searching the larger array — pb goes negative</div>
+<pre><code class="language-c">/* WRONG: no size check — if m &gt; n, pa can exceed half, making pb negative */
+double find_median(int *a, int m, int *b, int n) {
+    int half = (m + n + 1) / 2;
+    /* when pa=3 and half=2: pb = 2-3 = -1 → b[-1] is undefined behavior */
+}</code></pre>
+    <p><strong>What breaks:</strong> <code>pb = half − pa</code> is only guaranteed non-negative when <code>pa ≤ half ≤ n + pa</code>. If A is longer than B, large <code>pa</code> values will give <code>pb &lt; 0</code>. Always ensure <code>m ≤ n</code> before entering the loop.</p>
+<pre><code class="language-c">/* CORRECT: swap so a is always the shorter array */
+if (m &gt; n) return find_median(b, n, a, m);</code></pre>
+    <p><strong>Second gotcha:</strong> For even-length combined arrays, the median is <code>(max_of_left_halves + min_of_right_halves) / 2.0</code> — not just the leftmost right element. Forgetting to take the min of both right elements gives the wrong answer for cases like <code>a=[2], b=[1,3]</code>.</p>
   </div>
 
-  <div class="leetcode">
-    <span>4 &middot; Median of Two Sorted Arrays</span>
-    <span>295 &middot; Find Median from Data Stream</span>
-    <span>480 &middot; Sliding Window Median</span>
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. Why is <code>half = (m + n + 1) / 2</code> instead of <code>(m + n) / 2</code>? What goes wrong for odd totals if you use the latter?</p>
+    <p>2. When <code>pa = 0</code>, why must <code>maxLeftA = INT_MIN</code>? Trace what happens to the partition condition if you set it to 0 instead and array A contains only negative numbers.</p>
+    <p>3. For <code>a=[], b=[1]</code> (m=0, n=1): trace the algorithm. What does <code>pa=0, pb=1</code> evaluate to? Does the sentinel handling cover this edge case?</p>
   </div>
-  <div class="trigger">When you see: median of two sorted arrays in O(log n) &#8594; think: binary search the partition on the smaller array until left-max &le; right-min on both sides</div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>When you see "median of two sorted arrays in O(log n)" → swap so A is shorter; binary search pa in [0,m]; pa+pb=half=(m+n+1)/2; correct when maxLeftA≤minRightB AND maxLeftB≤minRightA; use INT_MIN/INT_MAX sentinels at boundaries.</strong>
+    <br>Also fires for: "k-th smallest element in two sorted arrays" · "order statistic without full merge"
+  </div>
 </div>
-
 <!-- ================================================================ P46 -->
 <div class="card" id="p46">
   <div class="pattern-header">
