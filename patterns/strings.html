@@ -114,6 +114,1462 @@ pre.ascii { background: #0d1117; border: 1px solid #21262d; border-radius: 4px; 
 
 <!-- CARDS_START -->
 
+<!-- ================================================================ S01 -->
+<div class="card" id="s01">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 01</span>
+    <span class="pattern-name">Null Terminator and String Length</span>
+  </div>
+
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>In C, a string is not a first-class type — it is a convention: a contiguous sequence of <code>char</code> values ending with a zero byte (<code>'\0'</code>, ASCII value 0). Every standard library function that takes a string relies on finding this sentinel to know where the string ends. There is no hidden length field, no bounds checking, and no exception if the null terminator is missing — the function just keeps reading memory until it finds a zero byte or crashes.</p>
+    <p><code>strlen(s)</code> counts bytes from <code>s[0]</code> until it hits <code>'\0'</code>, then returns that count — not including the null byte itself. This is O(n). Calling <code>strlen</code> in a loop header (<code>for (int i = 0; i &lt; strlen(s); i++)</code>) recomputes the length on every iteration — an O(n²) bug hiding in plain sight.</p>
+    <p><code>sizeof(arr)</code> on a char array gives the total allocated bytes including the null terminator. On a <code>char *</code> pointer it gives the pointer size (4 or 8), not the string length. These two are frequently confused: <code>char buf[10] = "hello"</code> has <code>sizeof(buf) = 10</code> but <code>strlen(buf) = 5</code>.</p>
+    <p>When you declare <code>char buf[n]</code> and want to store a string of length L, you need <code>n &ge; L + 1</code> — one extra byte for <code>'\0'</code>. Forgetting the +1 is the root cause of countless off-by-one buffer overflows. After manual construction of a string in a buffer, always write <code>buf[len] = '\0'</code> explicitly.</p>
+  </div>
+
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">Any strlen call in a loop condition</span><span class="why">recomputes length O(n) per iteration; cache it before the loop</span></li>
+    <li><span class="sit">Embedded firmware string buffers</span><span class="why">fixed-size char arrays on the stack; must reserve the null byte or corrupt adjacent memory</span></li>
+    <li><span class="sit">Network packet parsing</span><span class="why">reading a C-string from a socket; must null-terminate the receive buffer before calling strlen</span></li>
+    <li><span class="sit">LeetCode 344 / 541 — Reverse String</span><span class="why">modify char array in-place; null terminator marks the end so you know where to stop</span></li>
+    <li><span class="sit">Manual string builders</span><span class="why">appending characters one by one into a buf[] — track index and always write '\0' at the end</span></li>
+    <li><span class="sit">UART / serial driver output</span><span class="why">transmit-until-null loops; a missing '\0' causes the driver to send garbage bytes indefinitely</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>How strlen works internally:</strong> it is just a pointer walk. Start at the beginning, advance until the byte is zero, return the distance traveled.</p>
+<pre class="ascii">
+s = "hello"
+
+Memory layout (6 bytes):
+ index:  0    1    2    3    4    5
+ char:  'h'  'e'  'l'  'l'  'o'  '\0'
+ value:  104  101  108  108  111   0
+
+strlen starts at index 0, walks right until value == 0.
+Stops at index 5 (the '\0'), returns 5.
+sizeof("hello") = 6  (the string literal includes the null byte)
+</pre>
+    <p><strong>The loop-condition bug:</strong></p>
+<pre class="ascii">
+WRONG — strlen called on every iteration:
+for (int i = 0; i &lt; strlen(s); i++)   /* O(n) per check → O(n²) total */
+
+CORRECT — cache the length once:
+int n = strlen(s);
+for (int i = 0; i &lt; n; i++)           /* O(1) per check → O(n) total */
+</pre>
+    <p class="aha">Aha moment: strlen has no magic — it is a linear scan every time you call it. If the string does not change inside the loop, calling strlen once before the loop and storing the result is free speed.</p>
+    <p><strong>sizeof vs strlen:</strong></p>
+<pre class="ascii">
+char arr[] = "hello";    /* compiler sets aside 6 bytes */
+sizeof(arr)  == 6        /* total allocated bytes, compile-time constant */
+strlen(arr)  == 5        /* bytes before '\0', runtime scan */
+
+char *ptr = "hello";
+sizeof(ptr)  == 8        /* pointer size on 64-bit — NOT the string length */
+strlen(ptr)  == 5        /* still works: follows the pointer and scans */
+</pre>
+  </div>
+
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">#include &lt;string.h&gt;   /* strlen */
+#include &lt;stdio.h&gt;
+
+/* Manual strlen — walk until null byte */
+int my_strlen(const char *s) {
+    int n = 0;
+    while (s[n] != '\0') n++;   /* stop when null byte found */
+    return n;
+}
+
+/* Safe string builder: append chars one at a time into buf[size] */
+int build_string(char *buf, int size, const char *src) {
+    int i = 0;
+    /* leave room for '\0': stop at size-1 */
+    while (i &lt; size - 1 &amp;&amp; src[i] != '\0') {
+        buf[i] = src[i];
+        i++;
+    }
+    buf[i] = '\0';   /* always null-terminate, even if truncated */
+    return i;        /* number of chars written (not counting '\0') */
+}
+
+/* Demonstrate sizeof vs strlen */
+void demo(void) {
+    char arr[] = "hello";
+    char *ptr  = "hello";
+    printf("sizeof(arr)=%zu  strlen(arr)=%zu\n", sizeof(arr), strlen(arr));
+    /* sizeof(arr)=6  strlen(arr)=5 */
+    printf("sizeof(ptr)=%zu  strlen(ptr)=%zu\n", sizeof(ptr), strlen(ptr));
+    /* sizeof(ptr)=8  strlen(ptr)=5  (on 64-bit) */
+}</code></pre>
+
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>my_strlen("cat")</strong>
+
+s[0]='c' != '\0' → n=1
+s[1]='a' != '\0' → n=2
+s[2]='t' != '\0' → n=3
+s[3]='\0'        → exit loop
+return 3 ✓
+
+<strong>build_string(buf, 4, "hello")  — buf can hold 3 chars + '\0'</strong>
+
+i=0: size-1=3, src[0]='h' → buf[0]='h', i=1
+i=1: src[1]='e' → buf[1]='e', i=2
+i=2: src[2]='l' → buf[2]='l', i=3
+i=3: 3 &lt; 3 is false → exit loop (truncated)
+buf[3]='\0'
+return 3   (wrote "hel\0", safely truncated)</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: char buf[5] = "hello" — no room for '\0'</div>
+<pre><code class="language-c">/* WRONG: exact-fit leaves no room for the null terminator */
+char buf[5] = "hello";   /* buf = {'h','e','l','l','o'} — no '\0'! */
+printf("%s\n", buf);     /* reads past buf until a random zero byte → UB */</code></pre>
+    <p><strong>What breaks:</strong> strlen and printf walk past the end of buf into whatever memory follows. This is undefined behavior — it may print garbage, crash, or silently corrupt data.</p>
+<pre><code class="language-c">/* CORRECT: always +1 for the null terminator */
+char buf[6] = "hello";   /* buf = {'h','e','l','l','o','\0'} */
+/* or let the compiler count: */
+char buf[] = "hello";    /* compiler allocates exactly 6 bytes */</code></pre>
+    <p><strong>Rule:</strong> string capacity = max content length + 1. Always.</p>
+  </div>
+
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. You have <code>char buf[8]</code> and want to store "morning". How many bytes does "morning" need in the buffer? Will it fit?</p>
+    <p>2. Why does <code>sizeof(ptr)</code> return 8 instead of the string length when <code>ptr</code> is a <code>char *</code>? What would you call instead to get the length?</p>
+    <p>3. A junior dev writes <code>for (int i = 0; i &lt; strlen(s); i++) s[i] = toupper(s[i]);</code>. Identify two problems with this loop.</p>
+  </div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>When working with C strings: every buffer needs +1 byte for '\0'; cache strlen() before any loop; sizeof on a pointer gives pointer size, not string length.</strong>
+    <br>Also fires for: "off-by-one in string buffer allocation" &middot; "strlen in loop is O(n&sup2;)" &middot; "missing null terminator after manual string build"
+  </div>
+</div>
+
+<!-- ================================================================ S02 -->
+<div class="card" id="s02">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 02</span>
+    <span class="pattern-name">char* vs char[] &mdash; Pointer vs Array</span>
+  </div>
+
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p><code>char *p = "hello";</code> and <code>char a[] = "hello";</code> look nearly identical but behave very differently. The pointer form makes <code>p</code> point to a string literal — a read-only block of memory placed in the program's data segment by the compiler. Attempting to write through <code>p</code> (like <code>p[0] = 'H';</code>) is undefined behavior on all modern systems, and on most it causes a segmentation fault.</p>
+    <p>The array form copies the literal's bytes into a writable char array on the stack (or in static storage, depending on where it is declared). <code>a[0] = 'H';</code> is perfectly legal — you own those bytes. The key difference: <code>char[]</code> gives you a private, mutable copy; <code>char *</code> gives you a read-only view.</p>
+    <p>Function parameters that look like <code>char arr[]</code> are actually <code>char *</code> — the array decays to a pointer at the call site. Inside the function, <code>sizeof(arr)</code> gives the pointer size, not the original array size. This array-to-pointer decay is one of C's most pervasive implicit conversions.</p>
+    <p>When you want to modify a string passed into a function, the caller must pass a writable buffer (a <code>char[]</code> or heap-allocated memory), not a pointer to a string literal. Documenting whether a function modifies its argument is essential — <code>const char *</code> signals read-only, plain <code>char *</code> signals potentially writable.</p>
+  </div>
+
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">Function signature design</span><span class="why">const char* for read-only input; char* or char[] for output/modification buffers</span></li>
+    <li><span class="sit">String literal segfault bugs</span><span class="why">assigning to char* then trying to modify — crashes on Linux/macOS, silent corruption on some embedded targets</span></li>
+    <li><span class="sit">Returning strings from functions</span><span class="why">returning a pointer to a local char[] is a dangling pointer; must return heap-allocated or static storage</span></li>
+    <li><span class="sit">LeetCode string problems in C</span><span class="why">char** parameters for arrays of strings; each element may be a literal (don't modify) or heap (safe to modify)</span></li>
+    <li><span class="sit">argv in main()</span><span class="why">argv[i] is char* pointing to OS-managed memory; modifying it is implementation-defined</span></li>
+    <li><span class="sit">ROM / flash strings in microcontrollers</span><span class="why">string literals stored in flash (const); writing through char* pointer faults or silently fails</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Memory layout comparison:</strong></p>
+<pre class="ascii">
+char *p = "hello";
+
+  .rodata (read-only):          stack (p lives here):
+  [ h | e | l | l | o | \0 ]   [ ptr ─────────────────┐ ]
+                                                        ↓
+                                          points into read-only memory
+  Modifying p[0] = 'H' → SEGFAULT (writing to read-only page)
+
+char a[] = "hello";
+
+  stack (a lives here):
+  [ h | e | l | l | o | \0 ]   ← writable copy on the stack
+  a[0] = 'H' → OK, modifies the stack copy
+</pre>
+    <p><strong>Array decay at function call:</strong></p>
+<pre class="ascii">
+void f(char arr[]) {         /* arr is secretly char* inside the function */
+    sizeof(arr) == 8;        /* pointer size, NOT original array size */
+}
+
+char buf[20] = "hello";
+f(buf);                      /* buf decays to &buf[0], a char* */
+</pre>
+    <p class="aha">Aha moment: there is no "array type" in a function parameter list. <code>char arr[]</code> and <code>char *arr</code> are identical function parameter declarations. If you need the size, pass it as a separate argument.</p>
+  </div>
+
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Demonstrates char* vs char[] safety */
+
+void to_upper_safe(char *s) {    /* requires a writable buffer */
+    while (*s) {
+        if (*s &gt;= 'a' &amp;&amp; *s &lt;= 'z') *s -= 32;   /* modify in-place */
+        s++;
+    }
+}
+
+int main(void) {
+    char arr[] = "hello";   /* writable copy on stack */
+    to_upper_safe(arr);     /* OK — arr is mutable */
+
+    char *lit = "hello";    /* pointer to read-only literal */
+    /* to_upper_safe(lit); ← would SEGFAULT — do not modify a literal */
+
+    /* Safe pattern: if you receive char*, make a writable copy first */
+    char buf[64];
+    strncpy(buf, lit, sizeof(buf) - 1);
+    buf[sizeof(buf) - 1] = '\0';   /* guarantee null terminator */
+    to_upper_safe(buf);            /* safe — buf is a writable stack array */
+    return 0;
+}</code></pre>
+
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>to_upper_safe on arr="hello"</strong>
+
+s → arr[0]='h': 'h'&gt;='a' ✓ → 'h'-32='H', s++
+s → arr[1]='e': 'e'&gt;='a' ✓ → 'E', s++
+s → arr[2]='l': 'l'&gt;='a' ✓ → 'L', s++
+s → arr[3]='l': 'l'&gt;='a' ✓ → 'L', s++
+s → arr[4]='o': 'o'&gt;='a' ✓ → 'O', s++
+s → arr[5]='\0': *s==0 → exit loop
+
+arr is now "HELLO" ✓
+
+<strong>Edge case: empty string ""</strong>
+s → arr[0]='\0': *s==0 → exit immediately, no modifications ✓</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: modifying a char* pointing to a string literal</div>
+<pre><code class="language-c">/* WRONG: literal is in read-only memory */
+char *s = "hello";
+s[0] = 'H';   /* undefined behavior — segfault on Linux/macOS */</code></pre>
+    <p><strong>What breaks:</strong> The OS marks the pages containing string literals as read-only. A write attempt triggers a protection fault. GCC will sometimes warn: <em>"warning: writing to read-only location"</em> — but not always. The fix is always to use a char array.</p>
+<pre><code class="language-c">/* CORRECT: use char[] to get a writable copy */
+char s[] = "hello";
+s[0] = 'H';   /* fine — s is a stack array, not a literal */</code></pre>
+    <p><strong>Rule:</strong> If you need to modify the string, use <code>char[]</code>. If read-only is acceptable, <code>const char *</code> documents that intent and lets the compiler protect you.</p>
+  </div>
+
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. A function signature is <code>void reverse(char s[])</code>. Inside the function, what is the type of <code>s</code>? What does <code>sizeof(s)</code> return?</p>
+    <p>2. You write <code>char *p = "world"; char *q = "world";</code>. Are p and q guaranteed to point to the same memory location? Why or why not?</p>
+    <p>3. A function returns <code>char *</code> pointing to a local <code>char buf[]</code>. What happens when the caller uses the returned pointer?</p>
+  </div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>When you need to modify a string: use char[] not char* — char* to a literal is read-only; char[] gives a writable stack copy. Pass size separately since array parameters decay to pointers.</strong>
+    <br>Also fires for: "segfault when modifying a string" &middot; "sizeof in function gives pointer size" &middot; "dangling pointer from returning local char[]"
+  </div>
+</div>
+
+<!-- ================================================================ S03 -->
+<div class="card" id="s03">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 03</span>
+    <span class="pattern-name">Safe String Copy</span>
+  </div>
+
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p><code>strcpy(dst, src)</code> copies bytes from src into dst until it copies the null terminator. It does zero bounds checking. If src is longer than dst can hold, strcpy writes past the end of dst — a classic buffer overflow. In security contexts, this is a code execution vulnerability; in embedded systems, it silently corrupts adjacent variables on the stack.</p>
+    <p><code>strncpy(dst, src, n)</code> was designed to fix this, but it introduces its own hazard: if src has n or more bytes before its null terminator, strncpy copies exactly n bytes and does NOT append a null terminator to dst. Calling strlen or printf on dst then reads garbage. The idiom is to always follow strncpy with <code>dst[n-1] = '\0';</code> to guarantee termination.</p>
+    <p>The modern idiomatic safe copy in C is to use <code>snprintf(dst, size, "%s", src)</code> — it always null-terminates and returns the number of characters that would have been written, so you can detect truncation. Some codebases use <code>strlcpy</code> (BSD/macOS) which also always null-terminates, but it is not in the C standard library.</p>
+    <p>When you own both buffers and know the sizes, the cleanest pattern is: compute the copy length as <code>min(src_len, dst_size - 1)</code>, use <code>memcpy</code> for that many bytes, then write the null terminator manually. This avoids strncpy's quirks entirely.</p>
+  </div>
+
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">Any code calling strcpy with user input</span><span class="why">classic buffer overflow; CWE-120; must use bounded copy</span></li>
+    <li><span class="sit">Embedded config string parsing</span><span class="why">reading a string field from EEPROM into a fixed char[32] buffer</span></li>
+    <li><span class="sit">LeetCode string manipulation problems</span><span class="why">copying substrings into output buffers in C solutions</span></li>
+    <li><span class="sit">Network protocol field extraction</span><span class="why">extracting a hostname field from a packet into a local buffer with strncpy + force-null</span></li>
+    <li><span class="sit">File path construction</span><span class="why">building paths with snprintf to prevent truncated paths from writing to wrong locations</span></li>
+    <li><span class="sit">RTOS task name assignment</span><span class="why">task names are fixed-length char arrays; strncpy + null-terminate is standard pattern</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>What strcpy does (and why it is dangerous):</strong></p>
+<pre class="ascii">
+src = "hello world"   (11 chars + '\0' = 12 bytes)
+dst = char[6]         (only 6 bytes allocated)
+
+strcpy(dst, src):
+dst[0]='h' dst[1]='e' dst[2]='l' dst[3]='l' dst[4]='o' dst[5]=' '
+dst[6]='w' dst[7]='o' ...  ← past the end of dst! corrupts stack
+</pre>
+    <p><strong>Safe copy recipe:</strong></p>
+<pre class="ascii">
+dst_size = 6   (buffer capacity including null byte)
+src_len  = strlen(src) = 11
+copy_len = min(src_len, dst_size - 1) = min(11, 5) = 5
+
+memcpy(dst, src, 5);   copies 'h','e','l','l','o'
+dst[5] = '\0';         writes null terminator
+
+result: dst = "hello"  (safely truncated, always terminated)
+</pre>
+    <p class="aha">Aha moment: the "safe" in safe copy has two requirements — (1) never write past dst's end, and (2) always leave dst null-terminated. strncpy satisfies only the first. Every safe alternative must satisfy both.</p>
+  </div>
+
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">#include &lt;string.h&gt;
+#include &lt;stdio.h&gt;
+
+/* Safe copy: always null-terminates, never overflows dst. */
+void safe_strcpy(char *dst, const char *src, int dst_size) {
+    if (dst_size &lt;= 0) return;           /* nothing to write */
+    int i = 0;
+    while (i &lt; dst_size - 1 &amp;&amp; src[i]) { /* leave 1 slot for '\0' */
+        dst[i] = src[i];
+        i++;
+    }
+    dst[i] = '\0';                        /* always terminate */
+}
+
+/* Using snprintf — idiomatic modern C */
+void snprintf_copy(char *dst, int dst_size, const char *src) {
+    int written = snprintf(dst, dst_size, "%s", src);
+    if (written &gt;= dst_size) {
+        /* truncation occurred: written holds what would have been written */
+    }
+    /* dst is always null-terminated by snprintf */
+}
+
+/* The strncpy + force-null idiom (common in C89 codebases) */
+void strncpy_safe(char *dst, const char *src, int dst_size) {
+    strncpy(dst, src, dst_size - 1);   /* copy at most dst_size-1 bytes */
+    dst[dst_size - 1] = '\0';           /* force null terminator */
+}</code></pre>
+
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>safe_strcpy(dst, "hello", 4)  — dst has space for 3 chars + '\0'</strong>
+
+dst_size=4, i=0
+i=0: 0 &lt; 3 ✓, src[0]='h' → dst[0]='h', i=1
+i=1: 1 &lt; 3 ✓, src[1]='e' → dst[1]='e', i=2
+i=2: 2 &lt; 3 ✓, src[2]='l' → dst[2]='l', i=3
+i=3: 3 &lt; 3 ✗ → exit loop
+dst[3]='\0'
+dst = "hel\0"  (truncated safely) ✓
+
+<strong>safe_strcpy(dst, "hi", 10)  — src shorter than buffer</strong>
+
+i=0: src[0]='h' → dst[0]='h', i=1
+i=1: src[1]='i' → dst[1]='i', i=2
+i=2: src[2]='\0' → loop exits (src[i] is falsy)
+dst[2]='\0'
+dst = "hi\0"  (full copy, no truncation) ✓</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: strncpy without forcing the null terminator</div>
+<pre><code class="language-c">/* WRONG: if src &gt;= dst_size chars, strncpy does NOT null-terminate */
+char dst[5];
+strncpy(dst, "hello world", 5);
+/* dst = {'h','e','l','l','o'} — no '\0'! */
+printf("%s\n", dst);   /* reads past dst into garbage memory */</code></pre>
+    <p><strong>What breaks:</strong> strncpy copies exactly n bytes and pads with zeros only if src is shorter than n. When src is n or more bytes, the null terminator is never written. strlen and printf then walk past the buffer boundary.</p>
+<pre><code class="language-c">/* CORRECT: force the null terminator after strncpy */
+strncpy(dst, "hello world", sizeof(dst) - 1);
+dst[sizeof(dst) - 1] = '\0';   /* always safe — last byte forced to null */</code></pre>
+    <p><strong>Rule:</strong> After strncpy, always write <code>dst[n-1] = '\0'</code>. Better yet, use snprintf which handles this automatically.</p>
+  </div>
+
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. <code>strncpy(dst, src, n)</code> is called with a src that is exactly n characters long (not counting its null terminator). What does dst contain after the call?</p>
+    <p>2. <code>snprintf(dst, 10, "%s", src)</code> returns 15. What does this mean, and is dst safe to use with strlen after this call?</p>
+    <p>3. You want to copy only the first 5 characters of src into dst (which has size 8). Write the safest two-line implementation.</p>
+  </div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>When copying strings in C: prefer snprintf(dst, size, "%s", src) — it always null-terminates. If using strncpy, always follow with dst[size-1] = '\0'. Never use strcpy with external input.</strong>
+    <br>Also fires for: "buffer overflow from strcpy" &middot; "strncpy missing null terminator" &middot; "safe substring extraction"
+  </div>
+</div>
+
+<!-- ================================================================ S04 -->
+<div class="card" id="s04">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 04</span>
+    <span class="pattern-name">String Comparison (strcmp)</span>
+  </div>
+
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p><code>strcmp(a, b)</code> compares two C strings lexicographically — character by character using ASCII values. It returns a negative number if a comes before b, zero if they are equal, or a positive number if a comes after b. The exact magnitude of the non-zero return is implementation-defined; only the sign matters.</p>
+    <p>The most common beginner mistake is comparing strings with <code>==</code>: <code>if (s1 == s2)</code> compares the two pointer values (memory addresses), not the string contents. Two equal strings stored in different arrays have different addresses and will compare as not-equal. This bug is silent — the code compiles without warning and runs without crashing, but gives the wrong answer.</p>
+    <p>Lexicographic order follows ASCII values: uppercase letters come before lowercase ('A'=65, 'a'=97). "Apple" &lt; "apple" and "B" &lt; "a". For case-insensitive comparison, use <code>strcasecmp</code> (POSIX) or roll your own with <code>tolower</code> on each character before comparing.</p>
+    <p><code>strncmp(a, b, n)</code> compares at most n characters and is the bounded form — useful for checking a prefix or comparing fixed-length fields without requiring a null terminator in either string.</p>
+  </div>
+
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">qsort comparator for string arrays</span><span class="why">qsort passes void* pointers; cast to char** and call strcmp on the dereferenced values</span></li>
+    <li><span class="sit">Command-line argument parsing</span><span class="why">if (strcmp(argv[i], "--verbose") == 0) — checking flags by value not address</span></li>
+    <li><span class="sit">Config file key lookup</span><span class="why">strcmp to match keys against known strings in an if-else chain or switch-like dispatch table</span></li>
+    <li><span class="sit">LeetCode 242 — Valid Anagram</span><span class="why">one approach: sort both strings and strcmp; equal → anagram</span></li>
+    <li><span class="sit">Binary search on sorted string arrays</span><span class="why">use strcmp as the comparator to find if a word is in a dictionary</span></li>
+    <li><span class="sit">Protocol command dispatch</span><span class="why">embedded UART command parser: strncmp(buf, "AT+RST", 6) to match fixed-prefix commands</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>How strcmp works:</strong> walk both strings simultaneously, comparing ASCII values. Stop at the first difference or when both reach '\0'.</p>
+<pre class="ascii">
+strcmp("cat", "car"):
+  i=0: 'c'=='c' → continue
+  i=1: 'a'=='a' → continue
+  i=2: 't' vs 'r'  →  't'(116) - 'r'(114) = +2  → return positive
+  → "cat" comes AFTER "car" lexicographically
+
+strcmp("dog", "dog"):
+  i=0,1,2: all equal
+  i=3: both '\0' → equal → return 0
+
+strcmp("", "a"):
+  i=0: '\0' vs 'a' → '\0'(0) - 'a'(97) = -97 → return negative
+  → empty string comes BEFORE "a"
+</pre>
+    <p><strong>qsort comparator pattern:</strong></p>
+<pre class="ascii">
+int cmp_str(const void *a, const void *b) {
+    return strcmp(*(const char **)a, *(const char **)b);
+}
+/* Usage: qsort(arr, n, sizeof(char*), cmp_str); */
+
+Why *(const char **)a ?
+  qsort passes pointers to the array elements.
+  Each element is itself a char* (a string pointer).
+  So a is char** — dereference once to get the char*.
+</pre>
+    <p class="aha">Aha moment: strcmp returns the difference of the first differing characters (conceptually). The sign tells you the order; zero means equal. Never check <code>strcmp(a,b) == true</code> — that checks for return value 1, which is NOT what "equal" means. Always check <code>strcmp(a,b) == 0</code> for equality.</p>
+  </div>
+
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">#include &lt;string.h&gt;
+#include &lt;stdlib.h&gt;
+
+/* Manual strcmp implementation */
+int my_strcmp(const char *a, const char *b) {
+    while (*a &amp;&amp; *a == *b) {   /* advance while both match and not at end */
+        a++; b++;
+    }
+    return (unsigned char)*a - (unsigned char)*b;  /* cast to avoid sign issues */
+}
+
+/* qsort comparator for an array of char* */
+int cmp_strings(const void *x, const void *y) {
+    /* x and y are pointers to elements; each element is a char* */
+    return strcmp(*(const char **)x, *(const char **)y);
+}
+
+/* Case-insensitive comparison using tolower */
+int strcasecmp_manual(const char *a, const char *b) {
+    while (*a &amp;&amp; tolower((unsigned char)*a) == tolower((unsigned char)*b)) {
+        a++; b++;
+    }
+    return tolower((unsigned char)*a) - tolower((unsigned char)*b);
+}</code></pre>
+
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>my_strcmp("abc", "abd")</strong>
+
+a='a', b='a': equal, advance → a='b', b='b': equal → a='c', b='d': mismatch
+return (unsigned)'c' - (unsigned)'d' = 99 - 100 = -1  (negative → "abc" &lt; "abd") ✓
+
+<strong>my_strcmp("abc", "abc")</strong>
+
+a='a'='a', a='b'='b', a='c'='c', both advance to '\0'
+*a='\0' → exit while (*a)
+return (unsigned)'\0' - (unsigned)'\0' = 0 ✓
+
+<strong>strcmp used wrongly with ==:</strong>
+
+char s1[] = "hello";
+char s2[] = "hello";
+s1 == s2   →  compares addresses → FALSE (different arrays, different addresses)
+strcmp(s1, s2) == 0  →  compares contents → TRUE ✓</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: using == to compare strings — compares pointers not content</div>
+<pre><code class="language-c">/* WRONG: == compares pointer addresses */
+char s1[] = "hello";
+char s2[] = "hello";
+if (s1 == s2) printf("equal");   /* never prints — different addresses */
+
+/* Also wrong: checking strcmp for 'true' */
+if (strcmp(s1, s2)) printf("equal");  /* prints when NOT equal! 0 is false in C */</code></pre>
+    <p><strong>What breaks:</strong> <code>s1 == s2</code> is always false for separately declared arrays even with identical contents. The second bug is more subtle: <code>if (strcmp(a,b))</code> is true when they are DIFFERENT (non-zero return), not when they're equal.</p>
+<pre><code class="language-c">/* CORRECT: always use == 0 for equality */
+if (strcmp(s1, s2) == 0) printf("equal");   /* correct equality check */
+if (strcmp(s1, s2) &lt; 0)  printf("s1 before s2");  /* lexicographic order */</code></pre>
+    <p><strong>Rule:</strong> String equality in C is <code>strcmp(a, b) == 0</code>. Period.</p>
+  </div>
+
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. What does <code>strcmp("A", "a")</code> return — positive, negative, or zero? Which comes first in ASCII order?</p>
+    <p>2. You call <code>strncmp("prefix_data", "prefix_info", 7)</code>. What does it return, and what is it checking?</p>
+    <p>3. Write the qsort call and comparator to sort an array <code>char *words[10]</code> into alphabetical order.</p>
+  </div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>When comparing strings in C: always use strcmp(a,b)==0 for equality — never ==. Negative return means a before b; positive means a after b; zero means equal. Use strncmp for prefix checks or bounded comparison.</strong>
+    <br>Also fires for: "sorting string arrays with qsort" &middot; "case-insensitive comparison" &middot; "prefix matching in command parsers"
+  </div>
+</div>
+
+<!-- ================================================================ S05 -->
+<div class="card" id="s05">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 05</span>
+    <span class="pattern-name">String Search and Scan (strchr, strstr)</span>
+  </div>
+
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p><code>strchr(s, c)</code> scans s for the first occurrence of character c and returns a pointer to it, or NULL if not found. The character is passed as an int (the function predates char in C's type system) and compared against each byte. Using the returned pointer, you can find the position: <code>strchr(s, c) - s</code> gives the index.</p>
+    <p><code>strrchr(s, c)</code> is the right-to-left version — it finds the last occurrence. Together, strchr and strrchr cover "find first" and "find last" for single characters, which covers most practical needs: locating a delimiter, finding a path separator, checking if a character is present.</p>
+    <p><code>strstr(haystack, needle)</code> finds the first occurrence of the substring needle inside haystack. It returns a pointer to the start of the match, or NULL if needle is not found. Under the hood, most libc implementations use a variant of Boyer-Moore or similar; the worst case is still O(n*m) but average case is much better.</p>
+    <p>Manual scanning with a loop (checking each character against a set) is sometimes clearer than chaining multiple strchr calls. The pattern <code>while (*s &amp;&amp; !is_delim(*s)) s++;</code> is idiomatic C for advancing a pointer past non-delimiter characters. Combining scan-forward with strchr for the delimiter position is the basis for most C tokenizers.</p>
+  </div>
+
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">File path operations</span><span class="why">strrchr(path, '/') finds the last slash → everything after is the filename</span></li>
+    <li><span class="sit">CSV / delimiter parsing</span><span class="why">strchr(line, ',') to find the next comma; advance pointer past it for the next field</span></li>
+    <li><span class="sit">URL / header parsing in HTTP servers</span><span class="why">strstr(request, "Content-Type:") to locate a specific header</span></li>
+    <li><span class="sit">LeetCode 28 — Find the Index of the First Occurrence</span><span class="why">strstr equivalent; implement naive or KMP search</span></li>
+    <li><span class="sit">Log line filtering</span><span class="why">strstr(line, "ERROR") to detect error lines in a log stream</span></li>
+    <li><span class="sit">Embedded AT command parser</span><span class="why">strchr(response, '\r') to find end of line in UART buffer</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>strchr internals — single character search:</strong></p>
+<pre class="ascii">
+strchr("hello.world", '.')
+
+index: 0  1  2  3  4  5  6  7  8  9  10  11
+char:  h  e  l  l  o  .  w  o  r  l  d   \0
+                        ↑
+found at index 5 → returns pointer to s[5]
+
+Position: ptr - s = &s[5] - &s[0] = 5
+</pre>
+    <p><strong>strstr internals — substring search:</strong></p>
+<pre class="ascii">
+strstr("abcabcd", "bcd")
+
+Try at position 0: "abc" vs "bcd" → 'a'!='b' → no match
+Try at position 1: "bca" vs "bcd" → 'b'='b','c'='c','a'!='d' → no match
+Try at position 2: "cab" vs "bcd" → 'c'!='b' → no match
+Try at position 3: "abc" vs "bcd" → 'a'!='b' → no match
+Try at position 4: "bcd" vs "bcd" → match! → return &s[4]
+</pre>
+    <p class="aha">Aha moment: strstr returns a pointer INTO the original string, not a copy. You can use this pointer to slice out a substring or to continue parsing from that position without any allocation.</p>
+    <p><strong>Tokenizer pattern using strchr:</strong></p>
+<pre class="ascii">
+line = "alice,bob,carol"
+p = line
+
+Round 1: comma = strchr(p, ',') → points to first ','
+         token length = comma - p = 5 ("alice")
+         p = comma + 1  (advance past comma)
+
+Round 2: comma = strchr(p, ',') → points to second ','
+         token length = comma - p = 3 ("bob")
+         p = comma + 1
+
+Round 3: comma = strchr(p, ',') → NULL (no more commas)
+         remaining token: strlen(p) = 5 ("carol")
+</pre>
+  </div>
+
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">#include &lt;string.h&gt;
+#include &lt;stdio.h&gt;
+
+/* Find basename: everything after the last '/' in a path */
+const char *basename_manual(const char *path) {
+    const char *last = strrchr(path, '/');  /* find last slash */
+    return last ? last + 1 : path;          /* skip past it, or whole path if no slash */
+}
+
+/* Simple CSV tokenizer using strchr */
+void parse_csv(char *line) {                 /* line must be writable */
+    char *p = line;
+    char *comma;
+    while ((comma = strchr(p, ',')) != NULL) {
+        *comma = '\0';                       /* temporarily null-terminate at comma */
+        printf("token: [%s]\n", p);
+        p = comma + 1;                       /* advance past the former comma */
+    }
+    printf("token: [%s]\n", p);             /* last token (no trailing comma) */
+}
+
+/* Check if needle appears in haystack (boolean) */
+int contains(const char *haystack, const char *needle) {
+    return strstr(haystack, needle) != NULL;
+}</code></pre>
+
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>basename_manual("/usr/local/bin/gcc")</strong>
+
+strrchr("/usr/local/bin/gcc", '/') → points to last '/' → &s[14]
+return &s[14] + 1 = &s[15] → "gcc" ✓
+
+<strong>basename_manual("makefile")  — no slash</strong>
+
+strrchr("makefile", '/') → NULL
+return path → "makefile" ✓
+
+<strong>parse_csv("a,bb,ccc")</strong>
+
+p="a,bb,ccc"
+Round 1: comma=strchr(p,',')=&s[1], *comma='\0' → p="a\0bb,ccc"
+  print "a", p = &s[2] = "bb,ccc"
+Round 2: comma=strchr(p,',')=&s[4], *comma='\0'
+  print "bb", p = &s[5] = "ccc"
+Round 3: strchr(p,',')=NULL → exit while
+  print "ccc"</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: not checking NULL before using the returned pointer</div>
+<pre><code class="language-c">/* WRONG: strchr returns NULL if character not found */
+char *dot = strchr(filename, '.');
+int ext_len = strlen(dot + 1);   /* CRASH if no dot — dot is NULL, dot+1 is 0x1 */</code></pre>
+    <p><strong>What breaks:</strong> Dereferencing NULL is undefined behavior — a segfault on most platforms. strchr and strstr always return NULL on failure and every caller must check.</p>
+<pre><code class="language-c">/* CORRECT: check for NULL before using the result */
+char *dot = strchr(filename, '.');
+if (dot != NULL) {
+    int ext_len = strlen(dot + 1);   /* safe: dot points to a valid position */
+}</code></pre>
+    <p><strong>Rule:</strong> Every call to strchr, strrchr, or strstr must check the result for NULL before using it.</p>
+  </div>
+
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. <code>strchr("hello", 'l')</code> returns a pointer to the first 'l'. How would you find the second 'l'? Write the two-line code.</p>
+    <p>2. After <code>char *p = strstr(text, "error");</code>, what is <code>p - text</code>? What is <code>p + strlen("error")</code>?</p>
+    <p>3. The parse_csv function above modifies the input string (writes '\0' at commas). What happens if you pass a string literal to it? How would you fix this?</p>
+  </div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>When searching in a string: strchr for first char, strrchr for last char, strstr for substring — all return a pointer into the original string or NULL. Always check for NULL before using the result.</strong>
+    <br>Also fires for: "find basename from file path" &middot; "CSV tokenizer with comma splitting" &middot; "check if a keyword appears in a line"
+  </div>
+</div>
+
+
+
+<!-- ================================================================ S06 -->
+<div class="card" id="s06">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 06</span>
+    <span class="pattern-name">Frequency Array int[26]</span>
+  </div>
+
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>When a problem asks about letter frequencies in a string — how many 'a's, how many 'b's — the simplest and fastest data structure is a fixed-size integer array of length 26, one slot per lowercase letter. The mapping is <code>freq[c - 'a']</code>: subtract the ASCII value of 'a' (97) from the character to get an index between 0 and 25.</p>
+    <p>This is essentially a hash map with a perfect hash function for the English alphabet. There are no collisions, no dynamic allocation, no overhead — just a direct array index. Building the frequency table is O(n) and takes exactly 26*4 = 104 bytes regardless of string length.</p>
+    <p>For case-insensitive problems, convert to lowercase first with <code>tolower(c)</code> before indexing. For the full ASCII range (256 characters) or Unicode code points, increase the array size accordingly — int[256] covers all single-byte characters.</p>
+    <p>The frequency array shines in comparison problems: to check if two strings are anagrams, build freq tables for both and compare them (or build one, decrement for the second, check all zeros). This is O(n + m) time and O(1) space (the 26-slot array is constant size).</p>
+  </div>
+
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 242 — Valid Anagram</span><span class="why">freq[c-'a']++ for s, freq[c-'a']-- for t; check all zeros</span></li>
+    <li><span class="sit">LeetCode 383 — Ransom Note</span><span class="why">check if magazine has enough of each letter to construct the ransom note</span></li>
+    <li><span class="sit">LeetCode 387 — First Unique Character</span><span class="why">freq pass to count, second pass to find first with count==1</span></li>
+    <li><span class="sit">Sliding window: character count in window</span><span class="why">add on window-right advance, subtract on window-left shrink</span></li>
+    <li><span class="sit">Password strength checker</span><span class="why">verify at least one digit, one uppercase, etc. — classify with freq[c] &gt; 0</span></li>
+    <li><span class="sit">Embedded text processing</span><span class="why">letter frequency analysis for compression, encoding, or simple cipher detection</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Building the freq table:</strong></p>
+<pre class="ascii">
+s = "banana"
+
+For each char c: freq[c - 'a']++
+
+c='b': freq[1]++  → freq[1]=1
+c='a': freq[0]++  → freq[0]=1
+c='n': freq[13]++ → freq[13]=1
+c='a': freq[0]++  → freq[0]=2
+c='n': freq[13]++ → freq[13]=2
+c='a': freq[0]++  → freq[0]=3
+
+freq: [3,1,0,0,...,0,2,0,...,0]
+       a  b            n
+</pre>
+    <p><strong>Anagram check — build and decrement:</strong></p>
+<pre class="ascii">
+s="listen", t="silent"
+
+Build freq from s: l=1,i=1,s=1,t=1,e=1,n=1
+Decrement for t:   s=0,i=0,l=0,e=0,n=0,t=0
+All zeros → anagram ✓
+</pre>
+    <p class="aha">Aha moment: <code>c - 'a'</code> works because ASCII lowercase letters are consecutive (97–122). 'a'=97, 'b'=98, ..., 'z'=122. Subtracting 'a' maps them to 0–25. This trick only works for single contiguous ranges — digits use <code>c - '0'</code> for 0–9.</p>
+  </div>
+
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">#include &lt;string.h&gt;
+#include &lt;ctype.h&gt;
+
+/* Build frequency array for lowercase letters in s */
+void build_freq(const char *s, int freq[26]) {
+    memset(freq, 0, 26 * sizeof(int));  /* zero all 26 slots */
+    while (*s) {
+        if (*s &gt;= 'a' &amp;&amp; *s &lt;= 'z')    /* only count lowercase letters */
+            freq[*s - 'a']++;
+        s++;
+    }
+}
+
+/* Check if s and t are anagrams (same letters, same counts) */
+int is_anagram(const char *s, const char *t) {
+    if (strlen(s) != strlen(t)) return 0;  /* quick length check */
+    int freq[26] = {0};
+    while (*s) freq[*s++ - 'a']++;        /* increment for s */
+    while (*t) freq[*t++ - 'a']--;        /* decrement for t */
+    for (int i = 0; i &lt; 26; i++)
+        if (freq[i] != 0) return 0;       /* any mismatch → not anagram */
+    return 1;
+}
+
+/* Find first unique character (index), or -1 if none */
+int first_unique(const char *s) {
+    int freq[26] = {0};
+    int n = strlen(s);
+    for (int i = 0; i &lt; n; i++) freq[s[i] - 'a']++;   /* count all */
+    for (int i = 0; i &lt; n; i++)
+        if (freq[s[i] - 'a'] == 1) return i;            /* first with count 1 */
+    return -1;
+}</code></pre>
+
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>is_anagram("rat", "tar")</strong>
+
+strlen: 3==3 ✓
+Increment for "rat": r+=1,a+=1,t+=1  → freq[r]=1,freq[a]=1,freq[t]=1
+Decrement for "tar": t-=1,a-=1,r-=1  → freq[r]=0,freq[a]=0,freq[t]=0
+All zeros → return 1 (anagram) ✓
+
+<strong>first_unique("leetcode")</strong>
+
+Build freq: l=1,e=2,t=1,c=1,o=1,d=1
+Scan: s[0]='l' freq=1 → return 0 ✓  ("l" appears once, at index 0)
+
+<strong>first_unique("aabb")</strong>
+
+Build freq: a=2,b=2
+Scan: s[0]='a' freq=2, s[1]='a' freq=2, s[2]='b' freq=2, s[3]='b' freq=2
+No unique char → return -1 ✓</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: indexing with a char that might not be lowercase</div>
+<pre><code class="language-c">/* WRONG: uppercase 'A' gives freq['A'-'a'] = freq[-32] — out of bounds! */
+char c = 'A';
+freq[c - 'a']++;   /* -32 is a negative array index → undefined behavior */</code></pre>
+    <p><strong>What breaks:</strong> 'A' is ASCII 65, 'a' is 97. The subtraction gives -32, a negative index, which reads/writes memory before the array — silent corruption or crash.</p>
+<pre><code class="language-c">/* CORRECT: guard with bounds check or convert to lowercase first */
+if (c &gt;= 'a' &amp;&amp; c &lt;= 'z') freq[c - 'a']++;
+
+/* Or for case-insensitive: */
+c = tolower((unsigned char)c);
+if (c &gt;= 'a' &amp;&amp; c &lt;= 'z') freq[c - 'a']++;</code></pre>
+    <p><strong>Rule:</strong> Always guard the range before indexing. For full ASCII (digits, symbols, uppercase), use int freq[256] and index with <code>(unsigned char)c</code>.</p>
+  </div>
+
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. To count digit frequencies (0–9) in a string, what array size do you need and what is the index formula?</p>
+    <p>2. You want to check if string t is a permutation of a substring of string s. How would you adapt the freq array approach with a sliding window?</p>
+    <p>3. After <code>build_freq(s, freq)</code>, write the one-line expression that tells you how many distinct letters appear in s.</p>
+  </div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>When counting letter occurrences: int freq[26] = {0}; freq[c - 'a']++; — O(1) lookup, O(n) build. For anagram check: increment for s, decrement for t, all zeros means match. Guard: only index when c is a valid lowercase letter.</strong>
+    <br>Also fires for: "anagram detection" &middot; "permutation of substring" &middot; "character count in sliding window"
+  </div>
+</div>
+
+<!-- ================================================================ S07 -->
+<div class="card" id="s07">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 07</span>
+    <span class="pattern-name">Anagram Detection</span>
+  </div>
+
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Two strings are anagrams if they contain exactly the same characters with exactly the same frequencies. "listen" and "silent" are anagrams; "hello" and "world" are not. The problem appears as-is in many interview questions and also as a building block in more complex problems (group anagrams, permutation in string, minimum window).</p>
+    <p>There are three main approaches. The sort approach: sort both strings alphabetically and compare with strcmp — equal sorted forms means anagram. O(n log n) time, O(n) space for the sorted copies. Clean and simple but not the fastest.</p>
+    <p>The frequency array approach: build a freq[26] table for one string, decrement for the other, check all zeros. O(n) time, O(1) space (26 slots are constant). This is the standard interview-optimal solution.</p>
+    <p>The prime product approach (conceptual): assign each letter a unique prime, compute the product of all character primes — anagrams will have the same product. Works in theory but overflows for realistic string lengths, so it's not practical in C without big-integer arithmetic.</p>
+  </div>
+
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 242 — Valid Anagram</span><span class="why">direct application; freq array approach is O(n) optimal</span></li>
+    <li><span class="sit">LeetCode 49 — Group Anagrams</span><span class="why">sort each string as its key, group by key using a hash map</span></li>
+    <li><span class="sit">LeetCode 438 — Find All Anagrams in a String</span><span class="why">sliding window of fixed size p.len; check freq match at each position</span></li>
+    <li><span class="sit">LeetCode 567 — Permutation in String</span><span class="why">same as 438; check if any window is a permutation (anagram) of the pattern</span></li>
+    <li><span class="sit">Duplicate file detection</span><span class="why">file names that are anagrams of each other; sort-based dedup</span></li>
+    <li><span class="sit">Anagram game / word puzzle</span><span class="why">check valid rearrangements; freq comparison is the core check</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Approach 1 — Sort and compare:</strong> If both strings sorted alphabetically are identical, they're anagrams.</p>
+<pre class="ascii">
+s = "anagram"   sorted → "aaagmnr"
+t = "nagaram"   sorted → "aaagmnr"
+strcmp → equal → anagram ✓
+</pre>
+    <p><strong>Approach 2 — Frequency array (preferred):</strong></p>
+<pre class="ascii">
+s = "anagram",  t = "nagaram"
+
+Step 1 — increment for s:
+a:3, n:1, g:1, r:1, m:1
+
+Step 2 — decrement for t:
+n:-1→0, a:-1→2,-1→1,-1→0, g:-1→0, r:-1→0, m:-1→0
+
+freq after step 2: all zeros → anagram ✓
+
+If not anagram (e.g., t="nagarab"):
+After step 2: m stays +1, b goes to -1 → not all zeros → not anagram
+</pre>
+    <p class="aha">Aha moment: you only need ONE freq array. Increment for the first string, decrement for the second. Any mismatch leaves a non-zero slot. Scanning all 26 slots at the end costs O(1) (constant 26 comparisons).</p>
+  </div>
+
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">#include &lt;string.h&gt;
+#include &lt;stdlib.h&gt;
+
+/* Approach 1: sort and compare — simple but O(n log n) */
+int cmp_char(const void *a, const void *b) {
+    return *(char *)a - *(char *)b;
+}
+int is_anagram_sort(const char *s, const char *t) {
+    int ls = strlen(s), lt = strlen(t);
+    if (ls != lt) return 0;
+    char *sc = malloc(ls + 1), *tc = malloc(lt + 1);
+    strcpy(sc, s);  strcpy(tc, t);
+    qsort(sc, ls, 1, cmp_char);  qsort(tc, lt, 1, cmp_char);
+    int result = strcmp(sc, tc) == 0;
+    free(sc);  free(tc);
+    return result;
+}
+
+/* Approach 2: frequency array — O(n) time, O(1) space */
+int is_anagram(const char *s, const char *t) {
+    if (strlen(s) != strlen(t)) return 0;   /* length must match */
+    int freq[26] = {0};
+    while (*s) freq[*s++ - 'a']++;          /* +1 for each char in s */
+    while (*t) freq[*t++ - 'a']--;          /* -1 for each char in t */
+    for (int i = 0; i &lt; 26; i++)
+        if (freq[i] != 0) return 0;         /* any mismatch → false */
+    return 1;
+}</code></pre>
+
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>is_anagram("car", "arc")</strong>
+
+strlen: 3==3 ✓
+Increment "car": c=1, a=1, r=1
+Decrement "arc": a=0, r=0, c=0
+All zeros → return 1 ✓
+
+<strong>is_anagram("rat", "cat")</strong>
+
+strlen: 3==3 ✓
+Increment "rat": r=1, a=1, t=1
+Decrement "cat": c=-1, a=0, t=0
+freq[c-'a'] = -1 ≠ 0 → return 0 (not anagram) ✓
+
+<strong>is_anagram("a", "ab")</strong>
+
+strlen: 1 != 2 → return 0 immediately ✓</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: skipping the length check — misses "ab" vs "aab"</div>
+<pre><code class="language-c">/* WRONG: no length check */
+int is_anagram_bad(const char *s, const char *t) {
+    int freq[26] = {0};
+    while (*s) freq[*s++ - 'a']++;
+    while (*t) freq[*t++ - 'a']--;
+    for (int i = 0; i &lt; 26; i++)
+        if (freq[i] != 0) return 0;
+    return 1;
+}
+/* is_anagram_bad("ab", "aab") ?
+   Increment: a=1,b=1
+   Decrement: a=0,b=0,a=-1
+   freq[a]=-1 ≠ 0 → returns 0. Actually correct here, but... */
+
+/* The real issue: "a" vs "aa":
+   Increment "a": a=1
+   Decrement "aa": a=0, a=-1. freq[a]=-1. Returns 0 ✓
+   Still works! But the length check short-circuits early for O(1) in length-mismatch cases.
+   The real gotcha is using sort approach without copying first: qsort modifies in place. */
+
+char s[] = "abc";
+qsort(s, 3, 1, cmp_char);   /* modifies s — if s is a literal, segfault */</code></pre>
+    <p><strong>Rule:</strong> The sort approach requires writable copies. The freq approach handles all cases correctly; add the length check as an O(1) early-exit optimization.</p>
+  </div>
+
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. Adapt is_anagram to handle uppercase letters (case-insensitive anagram). What changes?</p>
+    <p>2. LeetCode 438 asks for all starting indices where a length-p anagram of pattern p appears in string s. How would you use a sliding window with the freq array to solve this in O(n) time?</p>
+    <p>3. Two strings of length 10,000 are being compared. Which approach (sort or freq array) is faster in practice? Which uses less memory? Justify your answer.</p>
+  </div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>When checking if two strings are anagrams: int freq[26]={0}; increment for s, decrement for t; check all zeros. O(n) time, O(1) space. Add length check first for early exit.</strong>
+    <br>Also fires for: "permutation of a string" &middot; "find anagram substrings with sliding window" &middot; "group anagrams by sorted key"
+  </div>
+</div>
+
+<!-- ================================================================ S08 -->
+<div class="card" id="s08">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 08</span>
+    <span class="pattern-name">First Non-Repeating Character</span>
+  </div>
+
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Find the first character in a string that appears exactly once. This is a two-pass problem: you cannot know if a character is unique until you have seen the whole string. The first pass builds a frequency count; the second pass scans left-to-right and returns the first position where the frequency is 1.</p>
+    <p>The freq[26] array makes both passes O(n). The total space is O(1) since 26 integers is a fixed constant regardless of string length. You could do this in one pass with a hash map (storing position of first occurrence), but the two-pass approach is simpler and has better cache behavior for the common case of lowercase English letters.</p>
+    <p>A subtle variant: "first unique character in a stream" where characters arrive one at a time and you must report the current first unique character after each arrival. This requires a more complex data structure (doubly linked list + hash map) to support O(1) updates. The static two-pass approach does not generalize to streaming.</p>
+  </div>
+
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 387 — First Unique Character in a String</span><span class="why">direct application; two-pass freq array</span></li>
+    <li><span class="sit">LeetCode 1496 — Path Crossing</span><span class="why">track visited positions; similar "did we see this before?" structure</span></li>
+    <li><span class="sit">Log deduplication</span><span class="why">find the first event type that appeared exactly once across a log batch</span></li>
+    <li><span class="sit">Input validation</span><span class="why">check if a PIN or code has any repeated digits</span></li>
+    <li><span class="sit">Symbol table uniqueness check</span><span class="why">find identifiers used exactly once (potential dead code)</span></li>
+    <li><span class="sit">Streaming character analysis</span><span class="why">embedded sensor data: first unique byte pattern in a sequence</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Two-pass approach:</strong></p>
+<pre class="ascii">
+s = "loveleetcode"
+
+Pass 1 — count frequencies:
+l:1, o:2, v:1, e:4, t:1, c:1, d:1
+
+Pass 2 — scan left to right, return first with freq==1:
+i=0: s[0]='l', freq[l]=1 → return 0 ✓
+
+s = "aabb"
+
+Pass 1: a:2, b:2
+Pass 2: a→2, a→2, b→2, b→2 → no unique → return -1
+</pre>
+    <p><strong>One-pass variant — store first-occurrence index:</strong></p>
+<pre class="ascii">
+Use int pos[26] initialized to -1.
+For each char c at index i:
+  if pos[c] == -1:  pos[c] = i     (first time)
+  else:             pos[c] = -2    (seen again — mark as duplicate)
+
+After full scan: find minimum non-(-2) value in pos[].
+That minimum is the index of the first unique character.
+</pre>
+    <p class="aha">Aha moment: the two-pass approach is correct because you NEED the full count before you can label any character as unique. The second pass left-to-right guarantees you find the FIRST unique (by position), not just any unique.</p>
+  </div>
+
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">#include &lt;string.h&gt;
+
+/* First unique character index. Returns -1 if none. O(n) two-pass. */
+int first_unique_char(const char *s) {
+    int freq[26] = {0};
+    int n = strlen(s);
+
+    /* Pass 1: count every character */
+    for (int i = 0; i &lt; n; i++)
+        freq[s[i] - 'a']++;
+
+    /* Pass 2: find leftmost with count == 1 */
+    for (int i = 0; i &lt; n; i++)
+        if (freq[s[i] - 'a'] == 1) return i;
+
+    return -1;   /* no unique character */
+}
+
+/* One-pass variant using first-occurrence positions */
+int first_unique_onepass(const char *s) {
+    int pos[26];
+    for (int i = 0; i &lt; 26; i++) pos[i] = -1;   /* -1 = unseen */
+
+    for (int i = 0; s[i]; i++) {
+        int c = s[i] - 'a';
+        if (pos[c] == -1) pos[c] = i;   /* first occurrence: record index */
+        else              pos[c] = -2;  /* seen again: mark as duplicate */
+    }
+
+    int result = INT_MAX;
+    for (int i = 0; i &lt; 26; i++)
+        if (pos[i] &gt;= 0 &amp;&amp; pos[i] &lt; result) result = pos[i];
+
+    return result == INT_MAX ? -1 : result;
+}</code></pre>
+
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>first_unique_char("leetcode")</strong>
+
+Pass 1: l=1, e=3, t=1, c=1, o=1, d=1
+(e appears at positions 1,2,5)
+
+Pass 2:
+i=0: s[0]='l', freq[l]=1 → return 0 ✓
+
+<strong>first_unique_char("cc")</strong>
+
+Pass 1: c=2
+Pass 2: i=0 freq[c]=2, i=1 freq[c]=2 → return -1 ✓
+
+<strong>first_unique_onepass("aab")</strong>
+
+i=0: 'a' unseen → pos[a]=0
+i=1: 'a' pos[a]!=-1 → pos[a]=-2 (duplicate)
+i=2: 'b' unseen → pos[b]=2
+
+Scan pos: pos[a]=-2 (skip), pos[b]=2 → result=2
+return 2 ✓  (s[2]='b' is first unique)</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: returning on first-seen instead of first-unique</div>
+<pre><code class="language-c">/* WRONG: returns index of first character encountered, not first unique */
+int wrong_first_unique(const char *s) {
+    int seen[26] = {0};
+    for (int i = 0; s[i]; i++) {
+        if (!seen[s[i]-'a']) return i;   /* returns FIRST occurrence, not first unique */
+        seen[s[i]-'a']++;
+    }
+    return -1;
+}
+/* For "aab": returns 0 (first 'a') — WRONG. Answer is 2 ('b'). */</code></pre>
+    <p><strong>What breaks:</strong> You cannot tell if a character is unique until you have read the entire string. A character that looks unique at position 0 may appear again at position 100. You must complete the full count first.</p>
+<pre><code class="language-c">/* CORRECT: always two passes — count first, then find */
+for (int i = 0; i &lt; n; i++) freq[s[i]-'a']++;
+for (int i = 0; i &lt; n; i++) if (freq[s[i]-'a'] == 1) return i;</code></pre>
+  </div>
+
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. What does <code>first_unique_char</code> return for the empty string ""? Trace through the code.</p>
+    <p>2. How would you find the first non-repeating character in a stream where characters arrive one at a time and you must answer after each arrival? What data structure would you use?</p>
+    <p>3. Modify <code>first_unique_char</code> to return the character itself (not its index), or '\0' if no unique character exists.</p>
+  </div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>When finding first unique character: two passes — pass 1 builds freq[26], pass 2 returns first index where freq==1. Cannot be done in one forward pass alone (need full count before labeling anything unique).</strong>
+    <br>Also fires for: "first character appearing once" &middot; "unique element in array" &middot; "find non-duplicate by frequency"
+  </div>
+</div>
+
+<!-- ================================================================ S09 -->
+<div class="card" id="s09">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 09</span>
+    <span class="pattern-name">Character Classification (isalpha, isdigit, tolower)</span>
+  </div>
+
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>C's <code>&lt;ctype.h&gt;</code> provides a family of character classification functions: <code>isalpha(c)</code> (letter), <code>isdigit(c)</code> (0-9), <code>isalnum(c)</code> (letter or digit), <code>isspace(c)</code> (whitespace), <code>isupper(c)</code>, <code>islower(c)</code>, <code>ispunct(c)</code>. Each returns a non-zero (true) or zero (false) int. They are locale-aware, which matters for international text but creates subtle bugs if you forget to cast the argument.</p>
+    <p>The critical casting rule: these functions expect an <code>int</code> with value in the range of <code>unsigned char</code> or the special value <code>EOF</code>. Passing a plain <code>char</code> when char is signed on the platform (GCC default on x86) means characters with values 128–255 (accented letters, etc.) become negative ints, which is undefined behavior. Always cast: <code>isalpha((unsigned char)c)</code>.</p>
+    <p><code>tolower(c)</code> and <code>toupper(c)</code> convert case. They return the converted character or the original unchanged if conversion does not apply. Same unsigned char casting rule applies. These functions are commonly used in two-pointer palindrome checks, case-insensitive comparisons, and filtering.</p>
+    <p>For ASCII-only code (common in competitive programming / embedded), the arithmetic approach is slightly faster: <code>c &gt;= 'a' &amp;&amp; c &lt;= 'z'</code> for lowercase, <code>c | 32</code> to force lowercase (works for ASCII letters only). The ctype.h functions are safer and more portable.</p>
+  </div>
+
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 125 — Valid Palindrome</span><span class="why">skip non-alphanumeric with isalnum; compare with tolower for case-insensitive</span></li>
+    <li><span class="sit">LeetCode 8 — String to Integer (atoi)</span><span class="why">isdigit to classify digits, isspace to skip leading whitespace</span></li>
+    <li><span class="sit">LeetCode 58 — Length of Last Word</span><span class="why">isspace to skip trailing spaces before counting the last word</span></li>
+    <li><span class="sit">Input sanitization</span><span class="why">strip non-alphanumeric chars before processing a user-provided token</span></li>
+    <li><span class="sit">UART/serial command parsing</span><span class="why">isprint to filter unprintable control bytes from a command stream</span></li>
+    <li><span class="sit">Password validation</span><span class="why">require at least one isupper, one isdigit, one ispunct using freq scan</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>ctype.h functions overview:</strong></p>
+<pre class="ascii">
+isalpha('a')  → non-zero (true)   isalpha('1')  → 0 (false)
+isdigit('7')  → non-zero          isdigit('a')  → 0
+isalnum('a')  → non-zero          isalnum('!')  → 0
+isspace(' ')  → non-zero          isspace('a')  → 0
+isupper('A')  → non-zero          isupper('a')  → 0
+islower('a')  → non-zero          islower('A')  → 0
+tolower('A')  → 'a'               tolower('a')  → 'a' (unchanged)
+toupper('a')  → 'A'               toupper('5')  → '5' (unchanged)
+</pre>
+    <p><strong>The unsigned char cast — why it matters:</strong></p>
+<pre class="ascii">
+On platforms where char is signed (GCC x86 default):
+  char c = '\xe9';   /* 'é' in Latin-1 — value 233 */
+  (int)c == -23      /* sign-extended negative int */
+  isalpha(-23)       /* undefined behavior! negative, not EOF */
+
+  (int)(unsigned char)c == 233  /* correct — in [0, 255] range */
+  isalpha(233)       /* defined: checks locale for letter-ness */
+
+Safe habit: always write isalpha((unsigned char)c)
+</pre>
+    <p class="aha">Aha moment: the ctype.h functions look like they take char but technically take int. Passing a signed char that holds a high-bit byte silently produces undefined behavior. One cast fixes it forever.</p>
+    <p><strong>Arithmetic vs ctype.h:</strong></p>
+<pre class="ascii">
+ASCII-only lowercase check:
+  c &gt;= 'a' &amp;&amp; c &lt;= 'z'          /* clear intent, portable for ASCII */
+  (c | 32) &gt;= 'a' &amp;&amp; ...         /* bit trick, harder to read */
+  islower((unsigned char)c)        /* locale-aware, always correct */
+</pre>
+  </div>
+
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">#include &lt;ctype.h&gt;
+#include &lt;string.h&gt;
+
+/* Count digits, letters, spaces in a string */
+void classify_chars(const char *s, int *digits, int *letters, int *spaces) {
+    *digits = *letters = *spaces = 0;
+    while (*s) {
+        unsigned char c = (unsigned char)*s;   /* safe cast */
+        if (isdigit(c))       (*digits)++;
+        else if (isalpha(c))  (*letters)++;
+        else if (isspace(c))  (*spaces)++;
+        s++;
+    }
+}
+
+/* Convert entire string to lowercase in-place */
+void str_tolower(char *s) {
+    while (*s) {
+        *s = (char)tolower((unsigned char)*s);   /* cast both ways */
+        s++;
+    }
+}
+
+/* Check if a string contains at least one digit */
+int has_digit(const char *s) {
+    while (*s)
+        if (isdigit((unsigned char)*s++)) return 1;
+    return 0;
+}</code></pre>
+
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>classify_chars("Hello, World! 42")</strong>
+
+'H':isalpha→letters=1, 'e':isalpha→letters=2, 'l':letters=3, 'l':letters=4
+'o':letters=5, ',':none, ' ':isspace→spaces=1, 'W':letters=6
+'o':letters=7, 'r':letters=8, 'l':letters=9, 'd':letters=10
+'!':none, ' ':spaces=2, '4':isdigit→digits=1, '2':digits=2
+
+Result: digits=2, letters=10, spaces=2 ✓
+
+<strong>str_tolower("Hello WORLD")</strong>
+
+'H'→tolower→'h', 'e'→'e', 'l'→'l', 'l'→'l', 'o'→'o'
+','→','  (tolower returns unchanged for non-letters)
+' '→' ', 'W'→'w', 'O'→'o', 'R'→'r', 'L'→'l', 'D'→'d'
+
+Result: "hello world" ✓</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: passing signed char to ctype functions without casting</div>
+<pre><code class="language-c">/* WRONG: signed char with high bit set → negative int → UB */
+char c = '\x80';             /* value 128, but sign-extended to -128 */
+if (isalpha(c)) { ... }     /* undefined behavior: -128 is not in [0,255] or EOF */
+
+/* WRONG: tolower without cast */
+*s = tolower(*s);           /* if *s has high bit, tolower receives negative int */</code></pre>
+    <p><strong>What breaks:</strong> The C standard says ctype.h functions are defined only for values representable as unsigned char or EOF (typically -1). Passing other negative values is undefined behavior and can corrupt lookup tables in some implementations.</p>
+<pre><code class="language-c">/* CORRECT: always cast to unsigned char */
+if (isalpha((unsigned char)c)) { ... }
+*s = (char)tolower((unsigned char)*s);</code></pre>
+    <p><strong>Rule:</strong> Wrap every ctype.h argument with <code>(unsigned char)</code>. Make it a habit, not a case-by-case decision.</p>
+  </div>
+
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. Write a one-line expression that returns true if character c is either a digit or uppercase letter, without using ctype.h.</p>
+    <p>2. What does <code>tolower('5')</code> return? What does <code>toupper('!')</code> return?</p>
+    <p>3. You need to count the number of words (runs of non-space characters) in a string. Write a loop using isspace that counts words correctly, handling multiple consecutive spaces.</p>
+  </div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>When classifying or converting characters: use ctype.h — isalpha, isdigit, isalnum, isspace, tolower, toupper. Always cast the argument: (unsigned char)c. These functions return 0 for false, non-zero for true.</strong>
+    <br>Also fires for: "skip non-alphanumeric in palindrome check" &middot; "case-insensitive string processing" &middot; "parse digits from a string"
+  </div>
+</div>
+
+<!-- ================================================================ S10 -->
+<div class="card" id="s10">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 10</span>
+    <span class="pattern-name">Reverse String In-Place (Two Pointer)</span>
+  </div>
+
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Reversing a string in-place is the foundational two-pointer operation on strings. Two indices start at opposite ends of the string and move toward each other, swapping characters at each step. When the pointers meet or cross, the reversal is complete. It uses O(1) extra space and O(n) time.</p>
+    <p>This exact same pattern — two pointers, start at ends, march inward — appears in palindrome checking (compare instead of swap), valid palindrome (skip non-alphanumeric), rotate array, and the "reverse words" problem (reverse the whole string, then reverse individual words). Mastering it mechanically frees you to focus on the logic of harder problems that use it as a subproblem.</p>
+    <p>In C, the function signature matters: you must pass a writable char array, not a pointer to a string literal. The function operates on indices (or pointer offsets) into the same buffer. No allocation is needed. The swap uses a temporary char variable — do not attempt to use the XOR swap trick on strings; it breaks when both pointers point to the same element (odd-length strings).</p>
+  </div>
+
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 344 — Reverse String</span><span class="why">direct application; two pointers on a char array</span></li>
+    <li><span class="sit">LeetCode 541 — Reverse String II</span><span class="why">reverse every k characters with skip; use reverse as a subroutine</span></li>
+    <li><span class="sit">LeetCode 151 — Reverse Words in a String</span><span class="why">reverse whole string, then reverse each word — two-pass using this primitive</span></li>
+    <li><span class="sit">Next permutation (arrays.html P46)</span><span class="why">step 3 reverses a suffix — same two-pointer swap logic</span></li>
+    <li><span class="sit">Rotate array by k (arrays.html P25)</span><span class="why">reverse whole, reverse first k, reverse rest — reverse as a subroutine</span></li>
+    <li><span class="sit">Embedded display buffer flip</span><span class="why">reverse a line buffer to flip text direction for an LCD with mirrored orientation</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Pointer movement and swap:</strong></p>
+<pre class="ascii">
+s = "hello"
+     01234
+
+left=0, right=4
+
+Step 1: swap s[0]↔s[4] → "oellh"   left=1, right=3
+Step 2: swap s[1]↔s[3] → "olleh"   left=2, right=2
+Step 3: left==right → stop (odd-length center stays in place)
+
+Result: "olleh" ✓
+
+Even-length: "abcd"  left=0, right=3
+Step 1: swap s[0]↔s[3] → "dbca"   left=1, right=2
+Step 2: swap s[1]↔s[2] → "dcba"   left=2, right=1
+Step 3: left&gt;right → stop
+
+Result: "dcba" ✓
+</pre>
+    <p class="aha">Aha moment: the loop condition is <code>left &lt; right</code>, not <code>left != right</code>. For odd-length strings, when they meet (left == right) the center element is already in place and should not be swapped with itself. Both conditions handle even-length correctly too.</p>
+    <p><strong>Reverse a subrange [lo, hi]:</strong> same code with parameters instead of 0 and n-1. This subrange version is the subroutine used in "reverse words" and "rotate array".</p>
+  </div>
+
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Reverse a subrange of a char array in-place. O(n). */
+void reverse_range(char *s, int lo, int hi) {
+    while (lo &lt; hi) {
+        char tmp = s[lo];    /* standard three-variable swap */
+        s[lo] = s[hi];
+        s[hi] = tmp;
+        lo++;
+        hi--;
+    }
+}
+
+/* Reverse entire string (null-terminated) in-place. */
+void reverse_string(char *s) {
+    int n = strlen(s);
+    reverse_range(s, 0, n - 1);
+}
+
+/* Reverse words in a sentence in-place.
+   "the sky is blue" → "blue is sky the"
+   Strategy: reverse entire string, then reverse each word. */
+void reverse_words(char *s) {
+    int n = strlen(s);
+    reverse_range(s, 0, n - 1);    /* "eulb si yks eht" */
+
+    int start = 0;
+    for (int i = 0; i &lt;= n; i++) {
+        if (i == n || s[i] == ' ') {          /* end of a word */
+            reverse_range(s, start, i - 1);   /* reverse the word */
+            start = i + 1;
+        }
+    }
+}</code></pre>
+
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>reverse_string("abcde")</strong>
+
+n=5, lo=0, hi=4
+swap s[0]↔s[4]: 'a'↔'e' → "ebcda",  lo=1,hi=3
+swap s[1]↔s[3]: 'b'↔'d' → "edcba",  lo=2,hi=2
+lo==hi → exit
+Result: "edcba" ✓
+
+<strong>reverse_words("cat bat")</strong>
+
+Step 1 — reverse all:
+reverse_range(0,6): "tab tac"
+
+Step 2 — reverse each word:
+i=0..2: s[3]=' ' → reverse_range(0,2): "bat tac"
+i=4..6: i==n=7 → reverse_range(4,6): "bat cat"
+
+Result: "bat cat" ✓</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: using XOR swap — corrupts when lo==hi</div>
+<pre><code class="language-c">/* WRONG: XOR swap breaks when swapping an element with itself */
+void reverse_xor(char *s, int lo, int hi) {
+    while (lo &lt; hi) {
+        s[lo] ^= s[hi];   /* if lo==hi, this zeroes the byte! */
+        s[hi] ^= s[lo];
+        s[lo] ^= s[hi];
+        lo++; hi--;
+    }
+}
+/* For "abc" reversed to "cba": lo=0,hi=2 works.
+   But if called with lo==hi (e.g. range of 1 element):
+   s[lo]^=s[lo] → 0; s[lo]^=0 → 0; s[lo]^=0 → 0. Element destroyed. */</code></pre>
+    <p><strong>What breaks:</strong> XOR swap with the same variable (same address) zeros the value. The temp-variable swap is safe in all cases and clearer to read.</p>
+<pre><code class="language-c">/* CORRECT: temp-variable swap — safe, clear, and optimal */
+char tmp = s[lo]; s[lo] = s[hi]; s[hi] = tmp;</code></pre>
+    <p><strong>Rule:</strong> Always use a temp variable for swaps in string reversal. XOR swap is a micro-optimization that creates subtle bugs and is never worth it.</p>
+  </div>
+
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. <code>reverse_string("")</code> is called with an empty string. What is <code>n</code>? What does <code>reverse_range(s, 0, -1)</code> do? Is it safe?</p>
+    <p>2. You want to reverse only the characters at even indices of a string. Write a loop using the reverse_range primitive.</p>
+    <p>3. Explain why the "reverse entire string, then reverse each word" strategy produces the correct result for reverse_words. Draw the two-step ASCII transformation for "hello world".</p>
+  </div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>When reversing a string or subrange: two pointers lo and hi, march inward with swap, stop when lo &ge; hi. Use temp-variable swap. Make reverse_range a subroutine — it's reused in reverse_words, rotate_array, and next_permutation.</strong>
+    <br>Also fires for: "reverse words in place" &middot; "rotate array using reversal" &middot; "palindrome verification by reversing"
+  </div>
+</div>
+
 <!-- CARDS_END -->
 <script>hljs.highlightAll();</script>
 </body>
