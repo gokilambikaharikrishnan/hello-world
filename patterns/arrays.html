@@ -4761,62 +4761,129 @@ if (left &lt;= right) {
     <span class="pattern-name">Matrix: Set Row and Column to Zero</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    If any cell in a matrix is zero, set its entire row and column to zero.
-    The naive approach reads a cell, sees zero, sets the row/column, but now new zeros might be seen in later passes — wrong!
-    The fix: first make note of WHICH rows and columns contain zeros (using the first row/column as flags), THEN do the zeroing.
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Given an m×n matrix, if any element is 0, set its entire row and column to 0. The operation must reflect the <em>original</em> zeros, not any zeros introduced by the operation itself.</p>
+    <p>The naive single-pass approach fails because writing zeros as you go creates new zeros that look like original zeros on subsequent reads. This "cascade" effect turns many more rows and columns to zero than intended. The fix is to separate detection from application: first record which rows and columns originally contain zeros, then apply the zeroing using only that recorded information.</p>
+    <p>The O(m+n) space version uses two boolean arrays. The O(1) space version is more subtle: use the first row and first column of the matrix itself as the flag storage, but you must separately track whether the first row and first column themselves originally contained zeros before you repurpose them as flags — otherwise you'll corrupt the answer for row 0 and column 0.</p>
+    <p>This "mark-then-apply" pattern appears everywhere data must be transformed based on its original state: image morphological operations (erosion/dilation), cellular automaton updates (Conway's Game of Life), adjacency matrix transformations, and network connectivity updates where simultaneous state changes are required.</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    Two-pass approach: pass 1 marks which rows and columns need zeroing (using a separate boolean array, or the first row/column as an O(1) in-place flag). Pass 2 applies the zeros.
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 73 — Set Matrix Zeroes</span><span class="why">canonical form; O(1) space variant uses first row/col as flags</span></li>
+    <li><span class="sit">LeetCode 289 — Game of Life</span><span class="why">same mark-then-apply discipline; encode next state in same cell without losing current state</span></li>
+    <li><span class="sit">Image erosion/dilation</span><span class="why">new pixel value depends on original neighbors — must not read modified values during the pass</span></li>
+    <li><span class="sit">Graph adjacency matrix update</span><span class="why">propagating reachability: mark reachable nodes first, then update edges simultaneously</span></li>
+    <li><span class="sit">Cellular automaton step</span><span class="why">each cell's next state depends on its original neighbors — single-pass modification causes incorrect cascades</span></li>
+    <li><span class="sit">Sensor fault masking</span><span class="why">zero out entire row/column of a reading matrix when a fault sensor is detected — detection pass first</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Why single-pass fails:</strong> Suppose matrix[1][1] = 0. You zero row 1. Now matrix[1][0] = 0. In the next iteration you see that new zero and zero row 1 and column 0 — but column 0 had no original zero. Cascade.</p>
+<pre class="ascii">
+matrix = [[1, 2, 3],
+          [4, 0, 6],
+          [7, 8, 9]]
+
+WRONG (single pass):
+  See (1,1)=0 → zero row 1: [[1,2,3],[0,0,0],[7,8,9]]
+  See (1,0)=0 (new!) → zero col 0: [[0,2,3],[0,0,0],[0,8,9]]  ← WRONG
+
+CORRECT (mark first):
+  Pass 1: see (1,1)=0 → mark row_flag[1]=1, col_flag[1]=1
+  Pass 2: zero row 1  → [[1,2,3],[0,0,0],[7,8,9]]
+  Pass 3: zero col 1  → [[1,0,3],[0,0,0],[7,0,9]] ✓
+</pre>
+    <p class="aha">Aha moment: the two-pass structure isn't about performance — it's about correctness. You can't trust values you've written yourself during detection.</p>
+    <p><strong>Pseudocode:</strong></p>
+<pre class="ascii">
+row_flags[rows] = all 0
+col_flags[cols] = all 0
+
+for r, c: if matrix[r][c] == 0: row_flags[r]=1, col_flags[c]=1
+for r: if row_flags[r]: zero entire row r
+for c: if col_flags[c]: zero entire col c
+</pre>
   </div>
 
-  <div class="section-label">&#9316; Annotated Code</div>
-<pre><code class="language-c">/* Set entire row and column to 0 for every cell that contains 0.
-   O(m*n) time, O(m+n) space for the flag arrays. */
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Set row and col to 0 for every original 0 cell. O(m+n) space. */
 void set_zeros(int matrix[][100], int rows, int cols) {
-    int zero_rows[100] = {0};   /* zero_rows[i]=1 means row i should be zeroed */
-    int zero_cols[100] = {0};   /* zero_cols[j]=1 means col j should be zeroed */
+    int row_flag[100] = {0};
+    int col_flag[100] = {0};
 
-    /* pass 1: find which rows and columns contain zeros */
-    for (int r = 0; r &lt; rows; r++)
+    for (int r = 0; r &lt; rows; r++)       /* pass 1: detect original zeros */
         for (int c = 0; c &lt; cols; c++)
             if (matrix[r][c] == 0) {
-                zero_rows[r] = 1;   /* mark this row */
-                zero_cols[c] = 1;   /* mark this column */
+                row_flag[r] = 1;
+                col_flag[c] = 1;
             }
 
-    /* pass 2: zero out marked rows */
-    for (int r = 0; r &lt; rows; r++)
-        if (zero_rows[r])
+    for (int r = 0; r &lt; rows; r++)       /* pass 2: apply row zeroing */
+        if (row_flag[r])
             for (int c = 0; c &lt; cols; c++) matrix[r][c] = 0;
 
-    /* pass 3: zero out marked columns */
-    for (int c = 0; c &lt; cols; c++)
-        if (zero_cols[c])
+    for (int c = 0; c &lt; cols; c++)       /* pass 3: apply column zeroing */
+        if (col_flag[c])
             for (int r = 0; r &lt; rows; r++) matrix[r][c] = 0;
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
-  <div class="dry-run">matrix = [[1,1,1],[1,0,1],[1,1,1]]
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>matrix = [[1,1,1],[1,0,1],[1,1,1]]</strong>
 
-Pass 1: matrix[1][1]=0 → zero_rows[1]=1, zero_cols[1]=1
-Pass 2: zero row 1     → [[1,1,1],[0,0,0],[1,1,1]]
-Pass 3: zero col 1     → [[1,0,1],[0,0,0],[1,0,1]] ✓</div>
+Pass 1: (1,1)=0 → row_flag[1]=1, col_flag[1]=1
+Pass 2: row 1 → [[1,1,1],[0,0,0],[1,1,1]]
+Pass 3: col 1 → [[1,0,1],[0,0,0],[1,0,1]] ✓
 
+<strong>Multiple zeros: [[0,1,2],[3,4,0],[5,6,7]]</strong>
+
+Pass 1: (0,0)=0 → row_flag[0]=1, col_flag[0]=1
+        (1,2)=0 → row_flag[1]=1, col_flag[2]=1
+Pass 2: zero rows 0,1
+        → [[0,0,0],[0,0,0],[5,6,7]]
+Pass 3: zero cols 0,2
+        → [[0,0,0],[0,0,0],[0,6,0]] ✓</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Zeroing in a single pass (causes cascade)</div>
-    <p>If you zero a cell's row/column immediately when you find a 0, the newly written zeros will be found in later iterations and cascade — zeroing rows/columns that originally had no zeros. Always separate the "detection" pass from the "zeroing" pass.</p>
+    <div class="gotcha-title">&#9888; Wrong: zeroing during the detection pass (cascade)</div>
+<pre><code class="language-c">/* WRONG: single-pass zeroing */
+for (int r = 0; r &lt; rows; r++)
+    for (int c = 0; c &lt; cols; c++)
+        if (matrix[r][c] == 0) {
+            for (int k = 0; k &lt; cols; k++) matrix[r][k] = 0;  /* WRONG */
+            for (int k = 0; k &lt; rows; k++) matrix[k][c] = 0;  /* WRONG */
+        }</code></pre>
+    <p><strong>What breaks:</strong> Zeros written during the first iteration are read as original zeros in later iterations, cascading the zeroing to rows and columns that had no original zeros.</p>
+<pre><code class="language-c">/* CORRECT: separate detection from application */
+/* pass 1: record flags only */
+if (matrix[r][c] == 0) { row_flag[r] = 1; col_flag[c] = 1; }
+/* pass 2+3: apply flags */</code></pre>
+    <p><strong>Rule:</strong> Never read a value you've already written in a transformation that depends on original values — mark first, apply second.</p>
   </div>
 
-  <div class="leetcode">
-    <span>73 &middot; Set Matrix Zeroes</span>
-    <span>2033 &middot; Minimum Operations to Make a Uni-Value Grid</span>
-    <span>1572 &middot; Matrix Diagonal Sum</span>
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. Why can't you combine passes 2 and 3 into a single pass that zeroes both the row and column for each flagged cell?</p>
+    <p>2. The O(1) space variant uses the first row and column as flag storage. What extra state do you need to track, and why?</p>
+    <p>3. If two original zeros share the same row, does the algorithm zero that row twice? Is that a problem?</p>
   </div>
-  <div class="trigger">When you see: matrix in-place transformation that depends on original values &#8594; think: mark first, apply second — never modify and read in the same pass</div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>When you see "transform a matrix based on its original values" → never read and write in the same pass; mark which rows/columns to transform in a first pass, apply in a second.</strong>
+    <br>Also fires for: "Game of Life / cellular automaton step" · "image erosion or dilation" · "cascade-free bulk updates to a 2D structure"
+  </div>
 </div>
 
 <!-- ================================================================ P36 -->
@@ -4826,59 +4893,132 @@ Pass 3: zero col 1     → [[1,0,1],[0,0,0],[1,0,1]] ✓</div>
     <span class="pattern-name">Matrix: Rotate 90 Degrees In-Place</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    Rotate an n&times;n matrix 90 degrees clockwise. No extra matrix allowed.
-    The trick is a two-step process: first transpose the matrix (flip along the diagonal), then reverse each row. These two operations together produce a 90-degree clockwise rotation.
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Rotate an n×n matrix 90 degrees clockwise without using an extra matrix. The naive approach copies elements to a fresh array — O(n²) extra space. The in-place trick decomposes the rotation into two simpler operations that each run in-place: transpose, then reverse each row.</p>
+    <p>Why does this work? A 90° clockwise rotation maps element at (r, c) to position (c, n-1-r). Transposing maps (r, c) → (c, r). Then reversing each row maps (c, r) → (c, n-1-r). Combining: (r, c) → (c, n-1-r). Exactly correct.</p>
+    <p>Counter-clockwise 90° is: transpose then reverse each <em>column</em> (or equivalently: reverse each row first, then transpose). 180° is: reverse each row and each column independently. These identities are worth memorizing — they collapse an apparently complex geometric operation to two linear passes.</p>
+    <p>In-place matrix rotation appears in image processing (rotating a frame buffer without allocating a second buffer), display drivers (portrait/landscape mode flip on memory-constrained hardware), and game engines that rotate tile maps or sprite sheets in place during asset loading.</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    Clockwise 90&deg; = transpose + reverse each row. Counter-clockwise 90&deg; = transpose + reverse each column. Memorize this: it appears constantly in interview problems.
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 48 — Rotate Image</span><span class="why">canonical form; clockwise 90° in-place on an n×n matrix</span></li>
+    <li><span class="sit">LeetCode 1886 — Matrix Rotation Check</span><span class="why">apply rotation and compare; uses this decomposition as a subroutine</span></li>
+    <li><span class="sit">Display driver portrait/landscape flip</span><span class="why">rotate framebuffer in place when changing orientation on embedded hardware</span></li>
+    <li><span class="sit">Game engine tile map rotation</span><span class="why">rotate a 2D tile grid in place during level load without a second buffer</span></li>
+    <li><span class="sit">Image processing kernel rotation</span><span class="why">rotate a convolution kernel in place for oriented-filter banks</span></li>
+    <li><span class="sit">Cryptographic permutation layers</span><span class="why">some block ciphers apply transposition + row-permutation as a diffusion step</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Decompose the transformation:</strong> Rather than computing the destination of every element directly (error-prone), apply two invertible operations in sequence.</p>
+<pre class="ascii">
+Original:        After transpose:   After reverse each row:
+1  2  3          1  4  7            7  4  1
+4  5  6    →     2  5  8    →       8  5  2
+7  8  9          3  6  9            9  6  3
+
+Transpose: m[i][j] ↔ m[j][i]  (only upper triangle: j starts at i+1)
+Reverse row i: swap m[i][lo] ↔ m[i][hi], advance lo, retreat hi
+
+Verify corner: (0,0)=1 should end at (0,2) after 90° CW.
+After transpose: 1 moves to (0,0). After row-reverse: row 0 = [7,4,1], so 1 is at (0,2). ✓
+</pre>
+    <p class="aha">Aha moment: start the inner transpose loop at <code>j = i + 1</code>, not 0. If you start at 0 you swap every pair twice and the matrix returns to its original state.</p>
+    <p><strong>Pseudocode:</strong></p>
+<pre class="ascii">
+// Transpose
+for i in 0..n-1:
+    for j in i+1..n-1:
+        swap(m[i][j], m[j][i])
+
+// Reverse each row
+for i in 0..n-1:
+    lo=0, hi=n-1
+    while lo &lt; hi: swap(m[i][lo], m[i][hi]); lo++; hi--
+</pre>
   </div>
 
-  <div class="section-label">&#9316; Annotated Code</div>
-<pre><code class="language-c">/* Rotate n x n matrix 90 degrees clockwise in-place. */
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Rotate n×n matrix 90 degrees clockwise in-place. */
 void rotate_90(int m[][100], int n) {
-    /* Step 1: Transpose — swap m[i][j] with m[j][i] */
+    /* step 1: transpose — reflect across the main diagonal */
     for (int i = 0; i &lt; n; i++) {
-        for (int j = i + 1; j &lt; n; j++) {   /* j starts at i+1 to avoid double-swapping */
+        for (int j = i + 1; j &lt; n; j++) {   /* j starts at i+1: each pair visited once */
             int tmp = m[i][j];
             m[i][j] = m[j][i];
             m[j][i] = tmp;
         }
     }
 
-    /* Step 2: Reverse each row */
+    /* step 2: reverse each row — completes the 90° CW rotation */
     for (int i = 0; i &lt; n; i++) {
         int lo = 0, hi = n - 1;
         while (lo &lt; hi) {
-            int tmp = m[i][lo]; m[i][lo] = m[i][hi]; m[i][hi] = tmp;
+            int tmp = m[i][lo];
+            m[i][lo] = m[i][hi];
+            m[i][hi] = tmp;
             lo++; hi--;
         }
     }
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
-  <div class="dry-run">matrix = [[1,2,3],[4,5,6],[7,8,9]]
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>n=3: [[1,2,3],[4,5,6],[7,8,9]]</strong>
 
-After transpose:
-  [[1,4,7],[2,5,8],[3,6,9]]
+Transpose (swap upper triangle with lower):
+  (0,1)↔(1,0): 2↔4   (0,2)↔(2,0): 3↔7   (1,2)↔(2,1): 6↔8
+  → [[1,4,7],[2,5,8],[3,6,9]]
 
-After reverse each row:
-  [[7,4,1],[8,5,2],[9,6,3]] ✓ (90° clockwise)</div>
+Reverse each row:
+  row 0: [1,4,7] → [7,4,1]
+  row 1: [2,5,8] → [8,5,2]
+  row 2: [3,6,9] → [9,6,3]
+  → [[7,4,1],[8,5,2],[9,6,3]] ✓
 
+<strong>n=2: [[1,2],[3,4]]</strong>
+
+Transpose: (0,1)↔(1,0): 2↔3 → [[1,3],[2,4]]
+Reverse rows: [1,3]→[3,1], [2,4]→[4,2]
+→ [[3,1],[4,2]] ✓ (90° CW: 1→top-right, 3→top-left, 2→bot-right, 4→bot-left)</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Starting inner loop at j=0 instead of j=i+1 in transpose</div>
-    <p>Transposing means swapping m[i][j] with m[j][i]. If you start j at 0, you swap every pair twice — the matrix ends up unchanged. Start j at i+1 to visit each off-diagonal pair exactly once.</p>
+    <div class="gotcha-title">&#9888; Wrong: starting the transpose inner loop at j=0</div>
+<pre><code class="language-c">/* WRONG */
+for (int i = 0; i &lt; n; i++)
+    for (int j = 0; j &lt; n; j++)   /* j starts at 0, not i+1 */
+        swap(m[i][j], m[j][i]);   /* swaps every pair TWICE → net effect: nothing */</code></pre>
+    <p><strong>What breaks:</strong> Element (0,1) is swapped with (1,0) when i=0,j=1, then swapped back when i=1,j=0. The matrix is unchanged after the loop.</p>
+<pre><code class="language-c">/* CORRECT */
+for (int i = 0; i &lt; n; i++)
+    for (int j = i + 1; j &lt; n; j++)   /* only the upper triangle — each pair once */
+        swap(m[i][j], m[j][i]);</code></pre>
+    <p><strong>Rule:</strong> Transpose by visiting each off-diagonal pair exactly once — inner loop starts at <code>j = i + 1</code>.</p>
   </div>
 
-  <div class="leetcode">
-    <span>48 &middot; Rotate Image</span>
-    <span>1886 &middot; Determine Whether Matrix Can Be Obtained By Rotation</span>
-    <span>54 &middot; Spiral Matrix</span>
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. How would you modify the two steps to achieve a 90° counter-clockwise rotation instead of clockwise?</p>
+    <p>2. After the transpose step, does the diagonal (m[i][i]) change? Why or why not?</p>
+    <p>3. Why does this algorithm only work for square (n×n) matrices and not rectangular (m×n) ones?</p>
   </div>
-  <div class="trigger">When you see: rotate matrix 90° in-place &#8594; think: transpose (swap m[i][j] ↔ m[j][i]) then reverse each row</div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>When you see "rotate a square matrix 90° in-place" → transpose (j starts at i+1) then reverse each row for clockwise; reverse each column instead for counter-clockwise.</strong>
+    <br>Also fires for: "rotate image / frame buffer in place" · "flip a 2D grid without allocating a second grid"
+  </div>
 </div>
 
 <!-- ================================================================ P37 -->
@@ -4888,64 +5028,150 @@ After reverse each row:
     <span class="pattern-name">Matrix: Word Search (DFS on Grid)</span>
   </div>
 
-  <div class="section-label">&#9312; Story First</div>
-  <div class="story">
-    Search a grid for a word that can be spelled by moving to adjacent (up/down/left/right) cells, without revisiting a cell.
-    Try each cell as a starting point. From there, do a depth-first search: mark the current cell as visited, recurse into neighbors matching the next letter, then unmark (backtrack) when done.
+  <!-- 1. BACKGROUND -->
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Given an m×n grid of characters and a target word, determine whether the word can be spelled by starting at any cell and moving to adjacent (up/down/left/right) cells — each cell used at most once per path. The key requirement "each cell at most once" means simple BFS won't work; you need DFS with backtracking to track the path taken so far.</p>
+    <p>The in-place visited marking trick avoids allocating a separate boolean grid: temporarily replace the current cell's character with a sentinel (e.g., <code>'#'</code>) before recursing, then restore it after. This works because <code>'#'</code> can never match any letter in the target word, so revisiting a cell on the same path is automatically blocked. After the DFS returns (success or failure), the cell is restored for other starting paths.</p>
+    <p>Correctness of backtracking depends critically on restoring the cell <em>unconditionally</em> after the recursive call — whether the path succeeded or failed. If you only restore on failure, a successful branch leaves cells permanently marked, and other starting positions that share those cells will incorrectly see them as unavailable.</p>
+    <p>Grid DFS with backtracking is one of the most common patterns in combinatorial search: maze solving, island counting, sudoku solving, knight's tour, and constraint satisfaction on 2D layouts all follow the same template — try, mark, recurse, unmark.</p>
   </div>
 
-  <div class="section-label">&#9313; The Insight</div>
-  <div class="insight">
-    DFS + backtracking on a grid. Mark a cell visited by temporarily changing its value (e.g., to '#'), recurse, then restore it. This avoids needing a separate visited array.
+  <!-- 2. WHERE YOU SEE THIS -->
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 79 — Word Search</span><span class="why">canonical form; DFS with in-place visited marking</span></li>
+    <li><span class="sit">LeetCode 212 — Word Search II</span><span class="why">same DFS, extended with a Trie to search multiple words simultaneously</span></li>
+    <li><span class="sit">LeetCode 980 — Unique Paths III</span><span class="why">DFS + backtracking to count all paths visiting every non-obstacle cell</span></li>
+    <li><span class="sit">Maze / path existence checker</span><span class="why">navigate a grid from start to end without revisiting — same mark/unmark template</span></li>
+    <li><span class="sit">PCB routing validation</span><span class="why">verify a trace route can connect two pads through a grid without crossing itself</span></li>
+    <li><span class="sit">Game map reachability</span><span class="why">flood-fill or DFS to check if a game entity can reach a target cell given movement rules</span></li>
+  </ul>
+
+  <!-- 3. BUILDING THE LOGIC FROM SCRATCH -->
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Template:</strong> Try every cell as the starting position for the first character. From any matching cell, recursively match the next character in each of the 4 directions, skipping out-of-bounds and already-visited cells.</p>
+<pre class="ascii">
+board = [['A','B','C'],
+         ['S','F','C'],
+         ['A','D','E']]   word = "ABCCED"
+
+Start at (0,0)='A' = word[0] ✓
+  Mark (0,0)='#'
+  Try up(−1,0): OOB. Try down(1,0)='S'≠'B'. Try left(0,−1): OOB.
+  Try right(0,1)='B' = word[1] ✓
+    Mark (0,1)='#'
+    Try right(0,2)='C' = word[2] ✓
+      Mark (0,2)='#'
+      Try down(1,2)='C' = word[3] ✓
+        Mark (1,2)='#'
+        Try down(2,2)='E' = word[4] ✓
+          Mark (2,2)='#'
+          Try left(2,1)='D' = word[5] ✓
+            word[6]='\0' → return 1 ✓
+</pre>
+    <p class="aha">Aha moment: the restore step happens <em>after</em> the recursive call returns — win or lose. This is what makes backtracking safe: every path you try leaves the board exactly as you found it.</p>
+    <p><strong>Pseudocode:</strong></p>
+<pre class="ascii">
+dfs(board, word, idx, r, c):
+    if idx == len(word): return TRUE
+    if out of bounds or board[r][c] != word[idx]: return FALSE
+    saved = board[r][c]
+    board[r][c] = '#'
+    found = dfs(...idx+1, r-1,c) or dfs(...idx+1, r+1,c) or
+            dfs(...idx+1, r,c-1) or dfs(...idx+1, r,c+1)
+    board[r][c] = saved          ← always restore
+    return found
+
+main: for each (r,c): if dfs(board, word, 0, r, c): return TRUE
+</pre>
   </div>
 
-  <div class="section-label">&#9316; Annotated Code</div>
-<pre><code class="language-c">/* DFS helper: returns 1 if word[idx..] can be spelled starting at (r,c). */
-int dfs(char board[][8], int rows, int cols, char *word, int idx, int r, int c) {
-    if (word[idx] == '\0') return 1;   /* all characters matched — word found */
-    if (r &lt; 0 || r &gt;= rows || c &lt; 0 || c &gt;= cols) return 0;  /* out of bounds */
-    if (board[r][c] != word[idx]) return 0;    /* current cell doesn't match */
+  <!-- 4. FULL CODE WALKTHROUGH -->
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">int dfs(char board[][8], int rows, int cols,
+        const char *word, int idx, int r, int c) {
+    if (word[idx] == '\0') return 1;               /* matched all characters */
+    if (r &lt; 0 || r &gt;= rows || c &lt; 0 || c &gt;= cols) return 0;
+    if (board[r][c] != word[idx]) return 0;
 
     char saved = board[r][c];
-    board[r][c] = '#';    /* mark as visited: prevents revisiting this cell */
+    board[r][c] = '#';   /* block this cell from being reused on this path */
 
-    /* try all 4 directions for the next character */
     int found = dfs(board, rows, cols, word, idx+1, r-1, c) ||
                 dfs(board, rows, cols, word, idx+1, r+1, c) ||
-                dfs(board, rows, cols, word, idx+1, r, c-1) ||
-                dfs(board, rows, cols, word, idx+1, r, c+1);
+                dfs(board, rows, cols, word, idx+1, r,   c-1) ||
+                dfs(board, rows, cols, word, idx+1, r,   c+1);
 
-    board[r][c] = saved;  /* backtrack: restore cell so other paths can use it */
+    board[r][c] = saved;   /* restore — allow other paths to use this cell */
     return found;
 }
 
-int word_search(char board[][8], int rows, int cols, char *word) {
+int word_search(char board[][8], int rows, int cols, const char *word) {
     for (int r = 0; r &lt; rows; r++)
         for (int c = 0; c &lt; cols; c++)
             if (dfs(board, rows, cols, word, 0, r, c)) return 1;
     return 0;
 }</code></pre>
 
-  <div class="section-label">&#9317; Dry Run</div>
-  <div class="dry-run">board = [['A','B','C'],['S','F','C'],['A','D','E']],  word="ABCCED"
+  <!-- 5. DRY RUN -->
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>word = "AB", board = [['A','B'],['C','D']]</strong>
 
-Start dfs at (0,0)='A' matches word[0]
-  Mark (0,0)='#', try neighbors for word[1]='B'
-  (0,1)='B' matches → mark (0,1)='#', try for word[2]='C'
-    (0,2)='C' matches → ... eventually spells ABCCED ✓
-  Restore all cells after finding</div>
+Start (0,0)='A'=word[0]: mark '#'
+  right(0,1)='B'=word[1]: mark '#'
+    word[2]='\0' → return 1
+  restore (0,1)='B'
+restore (0,0)='A'
+→ return 1 ✓
 
+<strong>word = "AC", board = [['A','B'],['C','D']]</strong>
+
+Start (0,0)='A'=word[0]: mark '#'
+  up: OOB. down(1,0)='C'=word[1]: mark '#'
+    word[2]='\0' → return 1
+  restore (1,0)='C'
+restore (0,0)='A'
+→ return 1 ✓
+
+<strong>word = "AA", board = [['A','A'],['A','A']]</strong>
+
+Start (0,0)='A'=word[0]: mark '#'
+  right(0,1)='A'=word[1]: word[2]='\0' → 1
+  (single-cell reuse is correctly blocked by '#')
+→ return 1 ✓</div>
+
+  <!-- 6. GOTCHA BOX -->
+  <div class="section-label">&#9317; Gotcha</div>
   <div class="gotcha">
-    <div class="gotcha-title">&#9888; Gotcha: Forgetting to restore the cell after backtracking</div>
-    <p>If you mark a cell visited but never restore it, a successful path in one branch will block other branches from using that cell. The restore step (<code>board[r][c] = saved</code>) after the recursive calls is mandatory. Without it, the first path explored "eats up" cells permanently.</p>
+    <div class="gotcha-title">&#9888; Wrong: only restoring the cell on failure</div>
+<pre><code class="language-c">/* WRONG */
+int found = dfs(...);
+if (!found) board[r][c] = saved;   /* only restore if failed */
+return found;</code></pre>
+    <p><strong>What breaks:</strong> When a path succeeds, the cell stays marked as '#'. The outer loop tries additional starting positions; those starting positions may need cells from the successful path, but they're all '#' and will fail even though valid paths exist.</p>
+<pre><code class="language-c">/* CORRECT */
+int found = dfs(...);
+board[r][c] = saved;   /* always restore — unconditionally */
+return found;</code></pre>
+    <p><strong>Rule:</strong> Backtracking always restores state after recursion, regardless of whether the recursive call succeeded or failed.</p>
   </div>
 
-  <div class="leetcode">
-    <span>79 &middot; Word Search</span>
-    <span>212 &middot; Word Search II</span>
-    <span>980 &middot; Unique Paths III</span>
+  <!-- 7. CONFIDENCE CHECK -->
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. Why does the base case check <code>word[idx] == '\0'</code> come <em>before</em> the bounds check, and what would break if the order were reversed?</p>
+    <p>2. The short-circuit <code>||</code> in the four recursive calls means that once one direction succeeds, the others are skipped. Does skipping the other branches cause the board to be in an incorrect state when the function returns?</p>
+    <p>3. If the same letter appears many times in the board and the word is long, what is the worst-case time complexity of this algorithm?</p>
   </div>
-  <div class="trigger">When you see: find path spelling a word in a grid &#8594; think: DFS from each cell, mark visited with '#', restore on backtrack</div>
+
+  <!-- 8. TRIGGER LINE -->
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>When you see "find a path in a grid where each cell is used at most once" → DFS from each candidate start; mark visited with a sentinel; recurse; always restore unconditionally on return.</strong>
+    <br>Also fires for: "maze path existence" · "spell a word through adjacent cells" · "visit every cell exactly once (backtracking count)"
+  </div>
 </div>
 
 <!-- ================================================================ P38 -->
