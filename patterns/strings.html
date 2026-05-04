@@ -5015,6 +5015,313 @@ all match -> 1
           </div>
         </div>
 
+
+        <!-- ========================================================= -->
+        <!-- S38 · Word Pattern Matching                                 -->
+        <!-- ========================================================= -->
+        <div class="card" id="s38">
+          <h2>S38 · Word Pattern Matching</h2>
+
+          <div class="background">
+            <strong>Background</strong>
+            Given a pattern like "abba" and a string "dog cat cat dog", determine
+            if there is a bijection between pattern characters and words.
+            This is the word-level analogue of isomorphic strings.
+          </div>
+
+          <div class="situations">
+            <span class="sit">pattern="abba", s="dog cat cat dog" -- true. pattern="abba", s="dog cat cat fish" -- false.</span>
+            <span class="why">Two direction maps: char->word and word->char, checked at each position.</span>
+          </div>
+
+          <div class="logic-build">
+            <strong>Building the Logic from Scratch</strong>
+            <div class="aha">Split s into words by spaces. Count must equal pattern length.</div>
+            <div class="aha">map_cw[pattern[i]] = words[i]; map_wc[word] = pattern[i]. On conflict return false.</div>
+            <div class="ascii">
+pattern="abba"  words=["dog","cat","cat","dog"]
+i=0: a->dog, dog->a
+i=1: b->cat, cat->b
+i=2: b->cat (match), cat->b (match) OK
+i=3: a->dog (match), dog->a (match) OK
+--> true
+            </div>
+          </div>
+
+          <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+#define MAXWORDS 128
+#define MAXWLEN  64
+
+int word_pattern(const char *pattern, const char *s) {
+    /* split s into words */
+    char buf[512];
+    strncpy(buf, s, 511); buf[511] = '\0';
+    char *words[MAXWORDS];
+    int  wc = 0;
+    char *tok = strtok(buf, " ");
+    while (tok &amp;&amp; wc &lt; MAXWORDS) { words[wc++] = tok; tok = strtok(NULL, " "); }
+
+    int plen = (int)strlen(pattern);
+    if (wc != plen) return 0;
+
+    char map_cw[128][MAXWLEN];   /* char -> word */
+    char map_wc[MAXWORDS];       /* word index -> pattern char (simple scan) */
+    memset(map_cw, 0, sizeof(map_cw));
+    /* For word->char we do a linear scan since word set is small */
+
+    for (int i = 0; i &lt; plen; i++) {
+        unsigned char pc = (unsigned char)pattern[i];
+        /* char->word */
+        if (map_cw[pc][0] == '\0') {
+            /* check no other char already maps to this word */
+            for (int j = 0; j &lt; i; j++) {
+                unsigned char qc = (unsigned char)pattern[j];
+                if (qc != pc &amp;&amp; strcmp(map_cw[qc], words[i]) == 0) return 0;
+            }
+            strncpy(map_cw[pc], words[i], MAXWLEN - 1);
+        } else if (strcmp(map_cw[pc], words[i]) != 0) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int main(void) {
+    printf("%d\n", word_pattern("abba", "dog cat cat dog"));   /* 1 */
+    printf("%d\n", word_pattern("abba", "dog cat cat fish"));  /* 0 */
+    printf("%d\n", word_pattern("aaaa", "dog cat cat dog"));   /* 0 */
+    printf("%d\n", word_pattern("abba", "dog dog dog dog"));   /* 0 */
+    return 0;
+}
+          </code></pre>
+
+          <div class="dry-run">
+            <strong>Dry Run -- "aaaa" / "dog cat cat dog"</strong>
+            <pre>
+i=0: a->dog (store)
+i=1: a->dog? no, words[1]="cat" != "dog" -> return 0
+            </pre>
+          </div>
+
+          <div class="gotcha">
+            <div class="gotcha-title">Gotcha</div>
+            "abba" / "dog dog dog dog": a maps to dog, b also tries to map to dog
+            -- but a different char can't reuse the same word. The inner loop
+            that checks for duplicate word mappings catches this case.
+          </div>
+
+          <div class="confidence">
+            <strong>Confidence Check</strong>
+            Why must we check both directions of the mapping?<br>
+            Without the reverse check, "abba"/"dog dog dog dog" would pass because
+            both a and b would map to dog individually without contradiction.
+          </div>
+
+          <div class="trigger">
+            <strong>Trigger Line</strong>
+            "Word pattern" -- split string, char->word map + reverse uniqueness check.
+          </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- S39 · Edit Distance (Levenshtein DP)                        -->
+        <!-- ========================================================= -->
+        <div class="card" id="s39">
+          <h2>S39 · Edit Distance (Levenshtein DP)</h2>
+
+          <div class="background">
+            <strong>Background</strong>
+            Edit distance is the minimum number of single-character insertions,
+            deletions, or substitutions needed to transform string s into string t.
+            Classic 2-D DP: dp[i][j] = edit distance between s[0..i-1] and t[0..j-1].
+          </div>
+
+          <div class="situations">
+            <span class="sit">editDist("horse","ros")=3, editDist("intention","execution")=5.</span>
+            <span class="why">Bottom-up DP fills an (m+1)x(n+1) table in O(mn) time and O(mn) space (reducible to O(n)).</span>
+          </div>
+
+          <div class="logic-build">
+            <strong>Building the Logic from Scratch</strong>
+            <div class="aha">Base: dp[i][0]=i (delete i chars), dp[0][j]=j (insert j chars).</div>
+            <div class="aha">If s[i-1]==t[j-1]: dp[i][j]=dp[i-1][j-1] (free). Else: 1 + min(replace, delete, insert).</div>
+            <div class="ascii">
+     ""  r  o  s
+""    0  1  2  3
+h     1  1  2  3
+o     2  2  1  2
+r     3  2  2  2
+s     4  3  3  2   &lt;-- dp[4][3] = 3
+e     5  4  4  3
+            </div>
+          </div>
+
+          <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+static int min3(int a, int b, int c) {
+    return a &lt; b ? (a &lt; c ? a : c) : (b &lt; c ? b : c);
+}
+
+int edit_distance(const char *s, const char *t) {
+    int m = strlen(s), n = strlen(t);
+    /* space-optimised: two rows */
+    int prev[n + 1], curr[n + 1];
+    for (int j = 0; j &lt;= n; j++) prev[j] = j;
+
+    for (int i = 1; i &lt;= m; i++) {
+        curr[0] = i;
+        for (int j = 1; j &lt;= n; j++) {
+            if (s[i-1] == t[j-1]) {
+                curr[j] = prev[j-1];
+            } else {
+                curr[j] = 1 + min3(prev[j-1],   /* replace  */
+                                   prev[j],      /* delete   */
+                                   curr[j-1]);   /* insert   */
+            }
+        }
+        int *tmp = prev; /* not valid C -- use memcpy */
+        memcpy(prev, curr, (n + 1) * sizeof(int));
+    }
+    return prev[n];
+}
+
+int main(void) {
+    printf("%d\n", edit_distance("horse",     "ros"));       /* 3 */
+    printf("%d\n", edit_distance("intention", "execution")); /* 5 */
+    return 0;
+}
+          </code></pre>
+
+          <div class="dry-run">
+            <strong>Dry Run -- "horse" / "ros" (first two rows)</strong>
+            <pre>
+prev=[0,1,2,3]
+i=1 (h): curr[0]=1
+  j=1 r: h!=r -> 1+min(prev[0],prev[1],curr[0])=1+min(0,1,1)=1
+  j=2 o: h!=o -> 1+min(prev[1],prev[2],curr[1])=1+min(1,2,1)=2
+  j=3 s: h!=s -> 1+min(1,2,2)... = 3  prev=[1,1,2,3]
+final prev[3] = 3
+            </pre>
+          </div>
+
+          <div class="gotcha">
+            <div class="gotcha-title">Gotcha</div>
+            The three operations map to three table cells: replace=diagonal,
+            delete=above (prev[j]), insert=left (curr[j-1]).
+            The space-optimised version uses two rows and <code>memcpy</code>
+            to swap them -- do not try pointer swap on VLAs.
+          </div>
+
+          <div class="confidence">
+            <strong>Confidence Check</strong>
+            What does dp[i][0]=i represent?<br>
+            It takes i deletions to reduce s[0..i-1] to the empty string.
+          </div>
+
+          <div class="trigger">
+            <strong>Trigger Line</strong>
+            "Edit distance / minimum operations" -- 2-row DP, prev[j-1]/prev[j]/curr[j-1], base i/j.
+          </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- S40 · Wildcard Matching (* and ?)                           -->
+        <!-- ========================================================= -->
+        <div class="card" id="s40">
+          <h2>S40 · Wildcard Matching (* and ?)</h2>
+
+          <div class="background">
+            <strong>Background</strong>
+            '?' matches any single character; '*' matches any sequence of
+            characters (including empty). DP table dp[i][j]: does pattern[0..i-1]
+            match string[0..j-1]?
+          </div>
+
+          <div class="situations">
+            <span class="sit">isMatch("aa","*")=true, isMatch("cb","?a")=false, isMatch("adceb","*a*b")=true.</span>
+            <span class="why">DP avoids exponential backtracking. Can also use a greedy star-tracking approach in O(n) space.</span>
+          </div>
+
+          <div class="logic-build">
+            <strong>Building the Logic from Scratch</strong>
+            <div class="aha">Base: dp[0][0]=true (both empty match). dp[i][0]=true only if p[0..i-1] is all '*'.</div>
+            <div class="aha">If p[i-1]=='*': dp[i][j] = dp[i-1][j] (star matches empty) OR dp[i][j-1] (star eats one more char).</div>
+            <div class="aha">If p[i-1]=='?' or p[i-1]==s[j-1]: dp[i][j] = dp[i-1][j-1].</div>
+          </div>
+
+          <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#include &lt;stdlib.h&gt;
+
+int wildcard_match(const char *s, const char *p) {
+    int m = strlen(p), n = strlen(s);
+    /* dp[i][j]: p[0..i-1] matches s[0..j-1] */
+    int (*dp)[n + 1] = calloc((m + 1), sizeof(*dp));
+    dp[0][0] = 1;
+    for (int i = 1; i &lt;= m; i++)
+        dp[i][0] = dp[i-1][0] &amp;&amp; (p[i-1] == '*');
+
+    for (int i = 1; i &lt;= m; i++) {
+        for (int j = 1; j &lt;= n; j++) {
+            if (p[i-1] == '*') {
+                dp[i][j] = dp[i-1][j] || dp[i][j-1];
+            } else if (p[i-1] == '?' || p[i-1] == s[j-1]) {
+                dp[i][j] = dp[i-1][j-1];
+            }
+        }
+    }
+    int res = dp[m][n];
+    free(dp);
+    return res;
+}
+
+int main(void) {
+    printf("%d\n", wildcard_match("aa",    "*"));      /* 1 */
+    printf("%d\n", wildcard_match("cb",    "?a"));     /* 0 */
+    printf("%d\n", wildcard_match("adceb", "*a*b"));   /* 1 */
+    printf("%d\n", wildcard_match("acdcb", "a*c?b"));  /* 0 */
+    return 0;
+}
+          </code></pre>
+
+          <div class="dry-run">
+            <strong>Dry Run -- s="aa", p="*"</strong>
+            <pre>
+dp[0][0]=1
+dp[1][0]=1 (p[0]=='*')
+i=1 j=1: p[0]='*' -> dp[0][1] || dp[1][0] = 0||1 = 1
+i=1 j=2: p[0]='*' -> dp[0][2] || dp[1][1] = 0||1 = 1
+dp[1][2] = 1 -> match
+            </pre>
+          </div>
+
+          <div class="gotcha">
+            <div class="gotcha-title">Gotcha</div>
+            For '*': dp[i-1][j] means the star matches empty (pattern advances,
+            string stays); dp[i][j-1] means the star eats one more character
+            (pattern stays, string advances). Both must be OR-ed.
+          </div>
+
+          <div class="confidence">
+            <strong>Confidence Check</strong>
+            What does dp[i][0]=dp[i-1][0] &amp;&amp; (p[i-1]=='*') express?<br>
+            A prefix of the pattern matches the empty string only if every
+            character in that prefix is '*'.
+          </div>
+
+          <div class="trigger">
+            <strong>Trigger Line</strong>
+            "Wildcard * and ?" -- DP: '*' = dp[i-1][j]||dp[i][j-1]; '?'/match = dp[i-1][j-1].
+          </div>
+        </div>
+
 <!-- CARDS_END -->
 <script>hljs.highlightAll();</script>
 </body>
