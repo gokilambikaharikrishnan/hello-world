@@ -4229,6 +4229,504 @@ hash_t = (hash_t - text[i] * h % MOD) % MOD;
   </div>
 </div>
 
+
+<!-- ================================================================ S31 -->
+<div class="card" id="s31">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 31</span>
+    <span class="pattern-name">Longest Common Prefix</span>
+  </div>
+
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Find the longest string that is a prefix of all strings in an array. ["flower","flow","flight"] → "fl". The simplest approach is vertical scanning: pick any string as the reference (commonly the first), then compare its characters column by column against all other strings. Stop at the first mismatch or the end of any string.</p>
+    <p>The sort-and-compare approach is elegant: sort the array lexicographically, then compare only the first and last strings. Because sorting brings the most dissimilar strings to the extremes, the longest common prefix of the entire array equals the longest common prefix of just the first and last sorted strings. This costs O(n log n) for the sort but only O(m) for the comparison.</p>
+    <p>Both approaches are O(S) in the worst case where S is the total number of characters across all strings, and O(m) in the comparison step where m is the length of the shortest string. For small arrays, vertical scanning is clearest. For large arrays where sort overhead is acceptable, the sort approach is concise.</p>
+  </div>
+
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 14 — Longest Common Prefix</span><span class="why">direct application; vertical scan is the cleanest O(S) solution</span></li>
+    <li><span class="sit">Autocomplete / trie prefix queries</span><span class="why">the common prefix of all words in a trie subtree is the shared path to that node</span></li>
+    <li><span class="sit">File path compression</span><span class="why">extract shared directory prefix across a list of file paths</span></li>
+    <li><span class="sit">DNS suffix matching</span><span class="why">find the shared domain suffix (common suffix ≡ common prefix of reversed strings)</span></li>
+    <li><span class="sit">Version string comparison</span><span class="why">find the shared version prefix across a set of package version strings</span></li>
+    <li><span class="sit">Command-line tab completion</span><span class="why">show the longest common prefix of all matching completions</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Vertical scan approach:</strong></p>
+<pre class="ascii">
+words = ["flower", "flow", "flight"]
+
+Column 0: 'f','f','f' — all match ✓
+Column 1: 'l','l','l' — all match ✓
+Column 2: 'o','o','i' — MISMATCH → stop
+
+LCP = words[0][0..1] = "fl" ✓
+</pre>
+    <p><strong>Sort-and-compare approach:</strong></p>
+<pre class="ascii">
+Sorted: ["flight", "flow", "flower"]
+Compare first="flight" and last="flower":
+  'f'=='f' ✓
+  'l'=='l' ✓
+  'i'!='o' → LCP = "fl" ✓
+</pre>
+    <p class="aha">Aha moment: in a sorted array, the lexicographically smallest and largest strings differ the most. Any mismatch between them is also a mismatch in the overall array. You don't need to compare all pairs — just the extremes.</p>
+  </div>
+
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">#include &lt;string.h&gt;
+#include &lt;stdlib.h&gt;
+
+/* Vertical scan: compare column by column against words[0]. O(S). */
+int longest_common_prefix(char **words, int n, char *out) {
+    if (n == 0) { out[0] = '\0'; return 0; }
+    int len = 0;
+    /* iterate over character positions */
+    for (int col = 0; words[0][col] != '\0'; col++) {
+        char c = words[0][col];
+        for (int i = 1; i &lt; n; i++) {
+            if (words[i][col] != c) {   /* mismatch or end of a shorter string */
+                out[len] = '\0';
+                return len;
+            }
+        }
+        out[len++] = c;   /* all strings match at this column */
+    }
+    out[len] = '\0';
+    return len;
+}
+
+/* Sort-based approach: compare first and last after sorting. O(n log n + m). */
+static int cmp(const void *a, const void *b) {
+    return strcmp(*(const char **)a, *(const char **)b);
+}
+int lcp_sort(char **words, int n, char *out) {
+    if (n == 0) { out[0] = '\0'; return 0; }
+    qsort(words, n, sizeof(char *), cmp);
+    char *first = words[0], *last = words[n-1];
+    int len = 0;
+    while (*first && *first == *last) { out[len++] = *first++; last++; }
+    out[len] = '\0';
+    return len;
+}</code></pre>
+
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>longest_common_prefix(["ab","a","abc"], out)</strong>
+
+col=0: c='a'. words[1][0]='a' ✓, words[2][0]='a' ✓ → out[0]='a', len=1
+col=1: c='b'. words[1][1]='\0' != 'b' → MISMATCH → out[1]='\0', return 1
+
+out="a" ✓
+
+<strong>longest_common_prefix(["abc","abc","abc"], out)</strong>
+
+col=0:'a' all ✓, col=1:'b' all ✓, col=2:'c' all ✓
+col=3: words[0][3]='\0' → outer loop exits
+out="abc", return 3 ✓</div>
+
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: not checking words[i][col] != '\0' — reads past end of shorter strings</div>
+<pre><code class="language-c">/* WRONG: words[i][col] can be '\0' for shorter strings */
+if (words[i][col] != words[0][col]) break;
+/* If words[i]="fl" and col=2: words[i][2]='\0', words[0][2]='o'.
+   '\0' != 'o' → correctly breaks. Actually safe here because '\0' != 'o'.
+   The real bug: if words[0]="fl" and words[i]="flower" — the outer loop
+   exits when words[0][col]=='\0', so no overread. The vertical scan IS safe
+   as written — but the sort approach must guard *first != '\0'. */</code></pre>
+    <p><strong>Rule for sort approach:</strong> the while condition must check <code>*first != '\0'</code> (or equivalently <code>*last != '\0'</code>) to stop at the end of the shorter string.</p>
+  </div>
+
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. What does longest_common_prefix return for an array with a single string ["hello"]?</p>
+    <p>2. For ["a", ""], what is the longest common prefix? Trace the vertical scan through the outer loop condition.</p>
+    <p>3. How would you find the longest COMMON SUFFIX instead of prefix? What transformation do you apply to the strings first?</p>
+  </div>
+
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>Longest common prefix: vertical scan — for each column, compare all strings against words[0]; stop at first mismatch or '\0'. Sort variant: sort, compare only first and last. O(S) time where S = total characters.</strong>
+    <br>Also fires for: "shared path prefix" &middot; "tab-completion common prefix" &middot; "trie root path compression"
+  </div>
+</div>
+
+<!-- ================================================================ S32 -->
+<div class="card" id="s32">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 32</span>
+    <span class="pattern-name">Add Two Binary Strings</span>
+  </div>
+
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Add two binary strings ("1011" + "110" = "10001") without converting to integers. The same grade-school addition algorithm applies: start from the rightmost digit of each string, add the two bits plus any carry, write the result bit, propagate the carry. When one string is exhausted, continue with the other and the carry.</p>
+    <p>The result is built right-to-left in a buffer (or by prepending to a string), then reversed at the end. The carry after processing all digits may itself be 1, requiring one more output bit. This pattern is exactly the same as adding two numbers represented as digit arrays — the only difference is the base (2 vs 10) and the carry threshold (2 vs 10).</p>
+    <p>This technique generalizes to arbitrary-precision arithmetic: add two decimal strings, multiply strings, subtract strings. The key invariant is always processing from the least significant digit (right end) to the most significant, carrying into the next position.</p>
+  </div>
+
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 67 — Add Binary</span><span class="why">direct application; right-to-left carry propagation</span></li>
+    <li><span class="sit">LeetCode 415 — Add Strings (decimal)</span><span class="why">same algorithm; base 10 instead of base 2</span></li>
+    <li><span class="sit">LeetCode 989 — Add to Array-Form of Integer</span><span class="why">add an integer to a digit array; same carry loop</span></li>
+    <li><span class="sit">Big integer library implementation</span><span class="why">add arbitrary-precision numbers stored as digit strings</span></li>
+    <li><span class="sit">CRC / checksum computation</span><span class="why">XOR-based binary addition without carry (mod-2 addition)</span></li>
+    <li><span class="sit">Embedded fixed-point arithmetic</span><span class="why">add binary fractional values stored as bit strings</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Right-to-left carry addition:</strong></p>
+<pre class="ascii">
+a = "1011"  (11)
+b = "110"   (6)
+expected: "10001" (17)
+
+Align from right:
+  a: 1 0 1 1
+  b:   1 1 0
+         ↑ start here
+
+Step 1: 1+0+carry(0) = 1 → bit=1, carry=0
+Step 2: 1+1+0 = 2 → bit=0, carry=1
+Step 3: 0+1+1 = 2 → bit=0, carry=1
+Step 4: 1+0+1 = 2 → bit=0, carry=1  (b exhausted, treat b digit as 0)
+Final carry=1 → bit=1
+
+Collected right-to-left: "10001"  → reverse → "10001" ✓
+</pre>
+    <p class="aha">Aha moment: when one string is shorter, treat its missing digits as '0'. The loop runs until BOTH pointers are exhausted AND carry is 0. A final carry of 1 adds one more bit at the most significant position.</p>
+  </div>
+
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Add two binary strings. Result written to out (must be large enough). */
+int add_binary(const char *a, const char *b, char *out) {
+    int i = strlen(a) - 1;   /* right end of a */
+    int j = strlen(b) - 1;   /* right end of b */
+    int carry = 0, w = 0;
+
+    while (i &gt;= 0 || j &gt;= 0 || carry) {
+        int sum = carry;
+        if (i &gt;= 0) sum += a[i--] - '0';   /* add bit from a (or 0 if exhausted) */
+        if (j &gt;= 0) sum += b[j--] - '0';   /* add bit from b (or 0 if exhausted) */
+        out[w++] = '0' + (sum % 2);          /* current result bit */
+        carry    = sum / 2;                   /* carry into next position */
+    }
+    out[w] = '\0';
+
+    /* Result is in reverse order — reverse in-place */
+    for (int lo = 0, hi = w - 1; lo &lt; hi; lo++, hi--) {
+        char t = out[lo]; out[lo] = out[hi]; out[hi] = t;
+    }
+    return w;   /* length of result */
+}
+
+/* Add two decimal strings — same algorithm, base 10 */
+int add_decimal(const char *a, const char *b, char *out) {
+    int i = strlen(a)-1, j = strlen(b)-1, carry = 0, w = 0;
+    while (i &gt;= 0 || j &gt;= 0 || carry) {
+        int sum = carry;
+        if (i &gt;= 0) sum += a[i--] - '0';
+        if (j &gt;= 0) sum += b[j--] - '0';
+        out[w++] = '0' + sum % 10;
+        carry    = sum / 10;
+    }
+    out[w] = '\0';
+    for (int lo=0, hi=w-1; lo&lt;hi; lo++, hi--) { char t=out[lo]; out[lo]=out[hi]; out[hi]=t; }
+    return w;
+}</code></pre>
+
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>add_binary("11", "1")</strong>
+
+i=1, j=0, carry=0
+Loop 1: sum=0+1+1=2. out[0]='0', carry=1. i=0,j=-1
+Loop 2: sum=1+1+0=2. out[1]='0', carry=1. i=-1
+Loop 3: sum=1+0+0=1. out[2]='1', carry=0.
+out="001" → reverse → "100" ✓  (3 + 1 = 4 = 0b100)
+
+<strong>add_binary("0", "0")</strong>
+
+i=0, j=0, carry=0
+Loop 1: sum=0+0+0=0. out[0]='0', carry=0. i=-1,j=-1
+Loop exits (no carry, both exhausted)
+out="0" → reverse → "0" ✓</div>
+
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: stopping when both pointers are exhausted — misses final carry</div>
+<pre><code class="language-c">/* WRONG: loop condition misses the final carry */
+while (i &gt;= 0 || j &gt;= 0) {
+    /* ... */
+}
+/* For a="1", b="1": sum=2, carry=1.
+   After loop: carry=1 is never written. Result is "0" instead of "10". */</code></pre>
+    <p><strong>Fix:</strong> include <code>|| carry</code> in the while condition. The loop must continue as long as there is a pending carry, even after both input strings are exhausted.</p>
+<pre><code class="language-c">while (i &gt;= 0 || j &gt;= 0 || carry) { /* carry must be drained */ }</code></pre>
+  </div>
+
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. What buffer size does out[] need to safely hold the result of adding two binary strings of length m and n?</p>
+    <p>2. Adapt add_binary to perform binary XOR instead of binary addition (mod-2 addition, no carry). How does the loop simplify?</p>
+    <p>3. Implement add_decimal and verify it handles "999" + "1" correctly. What is the maximum result length?</p>
+  </div>
+
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>Add binary/decimal strings: right-to-left with carry; while(i&ge;0 || j&ge;0 || carry); digit = a[i--]-'0' + b[j--]-'0' + carry; bit = digit%base; carry = digit/base; reverse result at end.</strong>
+    <br>Also fires for: "add decimal strings without overflow" &middot; "big integer addition" &middot; "carry propagation in arbitrary base"
+  </div>
+</div>
+
+<!-- ================================================================ S33 -->
+<div class="card" id="s33">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 33</span>
+    <span class="pattern-name">Multiply Strings</span>
+  </div>
+
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Multiply two non-negative integers represented as strings ("123" × "456" = "56088") without converting to int or long long. The approach is grade-school long multiplication: for each digit in b (right to left), multiply it against every digit of a (right to left), accumulating products into a result array. Each product of a[i] and b[j] contributes to positions [i+j] and [i+j+1] in the result.</p>
+    <p>The result array has at most m+n digits (where m = len(a), n = len(b)). Initialize it to all zeros, then accumulate products. A second pass resolves carries from right to left. Finally, skip leading zeros and convert the result array to a string.</p>
+    <p>This is the same algorithm you learned in school — just implemented on arrays of digits instead of on paper. Time complexity is O(m*n). It handles arbitrarily large numbers that would overflow any machine integer type.</p>
+  </div>
+
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 43 — Multiply Strings</span><span class="why">direct application; positional product accumulation</span></li>
+    <li><span class="sit">LeetCode 415 — Add Strings</span><span class="why">simpler building block; same digit-array approach</span></li>
+    <li><span class="sit">Big integer library</span><span class="why">arbitrary-precision multiplication; Karatsuba or FFT for larger inputs</span></li>
+    <li><span class="sit">RSA key generation</span><span class="why">multiply large primes; string-based for numbers beyond 64-bit</span></li>
+    <li><span class="sit">Factorial computation</span><span class="why">multiply result string by each new integer; avoids overflow</span></li>
+    <li><span class="sit">Scientific computing without bigint library</span><span class="why">exact integer arithmetic for combinatorics in C where __int128 is insufficient</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Positional product array:</strong></p>
+<pre class="ascii">
+a = "12"  (m=2)
+b = "34"  (n=2)
+pos[m+n] = [0,0,0,0]   (4 digits max)
+
+a reversed: a[0]='1'=1, a[1]='2'=2
+b reversed: b[0]='3'=3, b[1]='4'=4  (using original indices from right)
+
+i=1(a[1]='2'), j=1(b[1]='4'): product=8. pos[i+j+1=3]+=8 → pos=[0,0,0,8]
+i=1,        j=0(b[0]='3'): product=6. pos[i+j+1=2]+=6 → pos=[0,0,6,8]
+i=0(a[0]='1'), j=1:         product=4. pos[0+1+1=2]+=4 → pos=[0,0,10,8]
+i=0,        j=0:            product=3. pos[0+0+1=1]+=3 → pos=[0,3,10,8]
+
+Resolve carries (right to left):
+pos[3]=8: 8/10=0 carry, pos[3]=8
+pos[2]=10: carry=1, pos[2]=0 → pos=[0,3+1,0,8]=[0,4,0,8]
+pos[1]=4: carry=0, pos[1]=4
+pos[0]=0
+
+Result digits: 0,4,0,8 → skip leading 0 → "408" ✓  (12×34=408)
+</pre>
+    <p class="aha">Aha moment: digit a[i] (from right, 0-indexed) times digit b[j] contributes to output positions i+j (carry) and i+j+1 (units). Using right-to-left indexing maps naturally to these positions without needing to reverse the strings first.</p>
+  </div>
+
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Multiply two non-negative integer strings. Result in out[]. */
+void multiply_strings(const char *a, const char *b, char *out) {
+    int m = strlen(a), n = strlen(b);
+    int pos[m + n];
+    memset(pos, 0, sizeof(pos));
+
+    /* Accumulate digit products into pos[] */
+    for (int i = m - 1; i &gt;= 0; i--) {
+        for (int j = n - 1; j &gt;= 0; j--) {
+            int mul = (a[i]-'0') * (b[j]-'0');
+            int p1 = i + j, p2 = i + j + 1;  /* p2 is the units place */
+            int sum = mul + pos[p2];
+            pos[p2] = sum % 10;
+            pos[p1] += sum / 10;              /* carry goes to p1 */
+        }
+    }
+
+    /* Convert pos[] to string, skipping leading zeros */
+    int w = 0, started = 0;
+    for (int i = 0; i &lt; m + n; i++) {
+        if (pos[i] != 0) started = 1;
+        if (started) out[w++] = '0' + pos[i];
+    }
+    if (w == 0) out[w++] = '0';   /* "0" * anything = "0" */
+    out[w] = '\0';
+}</code></pre>
+
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>multiply_strings("3","4")</strong>
+
+m=1, n=1, pos[2]={0,0}
+i=0,j=0: mul=3*4=12. p1=0,p2=1. sum=12+0=12. pos[1]=2, pos[0]+=1 → pos={1,2}
+Carry resolved during accumulation.
+Output: pos[0]=1,pos[1]=2 → "12" ✓
+
+<strong>multiply_strings("0","999")</strong>
+
+All products = 0*9 = 0 → pos all zero
+started never set → w=0 → out[0]='0', w=1
+out = "0" ✓</div>
+
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: confusing which position is units vs carry</div>
+<pre><code class="language-c">/* WRONG: swapped p1 and p2 */
+int p1 = i + j + 1;   /* should be carry position */
+int p2 = i + j;       /* should be units position */
+pos[p1] = sum % 10;   /* puts units in carry slot */
+pos[p2] += sum / 10;  /* puts carry in units slot */
+/* For 9*9=81: units digit 1 goes to wrong position → scrambled result */</code></pre>
+    <p><strong>Rule:</strong> <code>p2 = i+j+1</code> is the units place (rightmost contribution). <code>p1 = i+j</code> is where the carry goes. p1 is always one position to the LEFT of p2 — higher significance.</p>
+  </div>
+
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. Why is the maximum result length m+n digits? Give an example that achieves this maximum.</p>
+    <p>2. The carry handling in multiply_strings happens during accumulation (pos[p1] += carry) rather than in a separate pass. Why is this correct even when pos[p1] exceeds 9 temporarily?</p>
+    <p>3. How would you handle negative inputs? What preprocessing step is needed?</p>
+  </div>
+
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>Multiply strings: pos[m+n]={0}; for each i,j: mul=a[i]*b[j]; p2=i+j+1 (units), p1=i+j (carry); pos[p2]+=mul%10... use sum=mul+pos[p2], pos[p2]=sum%10, pos[p1]+=sum/10; skip leading zeros in output.</strong>
+    <br>Also fires for: "big integer multiplication" &middot; "factorial as string" &middot; "arbitrary precision product"
+  </div>
+</div>
+
+<!-- ================================================================ S34 -->
+<div class="card" id="s34">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 34</span>
+    <span class="pattern-name">Valid Number Detection</span>
+  </div>
+
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Determine if a string represents a valid number. Valid forms include integers ("42", "-3"), decimals ("3.14", ".5", "2."), and scientific notation ("3e10", "1.5E-2"). Invalid: "abc", "1e", ".", "1e2.3". This is a finite state machine (FSM) problem — characters are processed left to right, transitioning between states, and the string is valid if the final state is an accepting state.</p>
+    <p>The states track: whether we have seen digits before the decimal point, the decimal point itself, digits after the decimal, the 'e'/'E' exponent marker, the exponent sign, and digits after the exponent. An explicit flag approach works: maintain boolean flags <code>has_num</code> (seen a digit in the current section) and <code>has_dot</code>/<code>has_exp</code>. Validate each character against the current context.</p>
+    <p>This problem is notorious for having many edge cases. The cleanest approach on paper is the FSM; the practical interview approach is a careful flag-based scan. Common edge cases: leading/trailing spaces (allowed or not?), "+3.14" (plus sign), "1." (trailing dot — valid in some definitions), ".e1" (invalid — nothing before the dot).</p>
+  </div>
+
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 65 — Valid Number</span><span class="why">the hardest string validation problem; FSM or careful flag approach</span></li>
+    <li><span class="sit">Config file parser</span><span class="why">validate numeric fields before calling atof/strtod</span></li>
+    <li><span class="sit">User input validation</span><span class="why">accept/reject a price field, GPS coordinate, or sensor reading before parsing</span></li>
+    <li><span class="sit">CSV/JSON parser</span><span class="why">validate numeric tokens in a data stream before converting</span></li>
+    <li><span class="sit">NMEA GPS sentence parser</span><span class="why">validate lat/lon fields which may be decimal or integer with optional sign</span></li>
+    <li><span class="sit">Expression tokenizer</span><span class="why">classify a token as a numeric literal vs identifier before evaluation</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Flag-based scan — what each flag tracks:</strong></p>
+<pre class="ascii">
+Scan "1.5e-2":
+
+has_num=0, has_dot=0, has_exp=0, i=0
+
+'1': digit → has_num=1
+'.': dot → has_dot=1
+'5': digit → has_num=1 (already)
+'e': exponent → need has_num=1 ✓. has_exp=1, has_num=0 (reset for exp digits)
+'-': sign → only valid right after 'e'/'E'. ok.
+'2': digit → has_num=1
+
+End: has_num=1 → VALID ✓
+
+"1e": '1' has_num=1. 'e' → has_exp=1, has_num=0. End: has_num=0 → INVALID ✓
+".":  '.' has_dot=1. End: has_num=0 → INVALID ✓
+".5": '.' has_dot=1. '5' has_num=1. End: has_num=1 → VALID ✓
+</pre>
+    <p class="aha">Aha moment: reset has_num to 0 when you see 'e'/'E'. This forces the requirement that at least one digit must follow the exponent marker. If the string ends with has_num=0, it's invalid regardless of what came before the 'e'.</p>
+  </div>
+
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Returns 1 if s is a valid number per LeetCode 65 rules. */
+int is_valid_number(const char *s) {
+    int has_num = 0, has_dot = 0, has_exp = 0;
+    int i = 0;
+
+    /* Optional leading sign */
+    if (s[i] == '+' || s[i] == '-') i++;
+
+    for (; s[i]; i++) {
+        char c = s[i];
+        if (c &gt;= '0' &amp;&amp; c &lt;= '9') {
+            has_num = 1;
+        } else if (c == '.') {
+            if (has_dot || has_exp) return 0;  /* two dots, or dot after 'e' */
+            has_dot = 1;
+        } else if (c == 'e' || c == 'E') {
+            if (!has_num || has_exp) return 0;  /* need digits before e; only one e */
+            has_exp = 1;
+            has_num = 0;    /* reset: need at least one digit after e */
+            /* allow optional sign after e */
+            if (s[i+1] == '+' || s[i+1] == '-') i++;
+        } else {
+            return 0;   /* any other character is invalid */
+        }
+    }
+    return has_num;   /* must end with at least one digit */
+}</code></pre>
+
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>is_valid_number("2e10")</strong>
+
+i=0:'2' digit → has_num=1
+i=1:'e' → has_num=1 ✓, has_exp=1, has_num=0
+i=2:'1' digit → has_num=1
+i=3:'0' digit → has_num=1
+End: return has_num=1 → VALID ✓
+
+<strong>is_valid_number("1e2.3")</strong>
+
+i=0:'1' → has_num=1
+i=1:'e' → has_exp=1, has_num=0
+i=2:'2' → has_num=1
+i=3:'.' → has_exp=1 → return 0 (dot after exponent) ✓
+
+<strong>is_valid_number("  ")</strong>
+
+Leading '+'/'-': no. Loop: s[0]=' ' → not digit/dot/e → return 0 ✓</div>
+
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: not resetting has_num after seeing 'e'</div>
+<pre><code class="language-c">/* WRONG: has_num stays 1 after 'e', so "1e" passes */
+} else if (c == 'e' || c == 'E') {
+    if (!has_num || has_exp) return 0;
+    has_exp = 1;
+    /* missing: has_num = 0; */
+}
+/* "1e" → has_num stays 1 → returns 1 (valid). WRONG — no digits after e. */</code></pre>
+    <p><strong>Rule:</strong> After seeing 'e'/'E', reset <code>has_num = 0</code>. The final <code>return has_num</code> then correctly rejects strings where nothing follows the exponent marker.</p>
+  </div>
+
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. Is "." a valid number by this implementation? Is ".5"? Is "5."? Trace each through the code.</p>
+    <p>2. Is "+." valid? Is "+.5"? Trace through — does the leading sign handling interact correctly with the dot?</p>
+    <p>3. Extend is_valid_number to also accept hex notation ("0x1A", "0xFF"). What additional state and character checks do you need?</p>
+  </div>
+
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>Valid number: has_num/has_dot/has_exp flags; digit sets has_num; dot invalid if has_dot||has_exp; 'e' requires has_num and resets has_num=0; any other char → invalid; return has_num at end.</strong>
+    <br>Also fires for: "validate numeric input before parsing" &middot; "scientific notation detection" &middot; "token classification in expression parser"
+  </div>
+</div>
+
 <!-- CARDS_END -->
 <script>hljs.highlightAll();</script>
 </body>
