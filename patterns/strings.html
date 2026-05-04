@@ -3465,6 +3465,401 @@ s[w++] = '0' + count;  /* "abc" → "a1b1c1" — 6 chars from 3! */</code></pre>
   </div>
 </div>
 
+
+<!-- ================================================================ S25 -->
+<div class="card" id="s25">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 25</span>
+    <span class="pattern-name">Decode String (Stack)</span>
+  </div>
+
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>"3[ab]2[c]" decodes to "ababab cc". The rule: a number k followed by a bracketed string means repeat that string k times. Brackets can nest: "2[3[a]b]" → "aaab aaab". The stack-based approach handles nesting naturally — push the current state when an opening bracket is encountered, and restore it when the closing bracket is encountered.</p>
+    <p>Two stacks are needed: one for repeat counts and one for the string built so far before the current bracket. When '[' is seen, push the current count and the current string onto their respective stacks, then reset both for the inner level. When ']' is seen, pop the count and previous string, repeat the current string count times, and append it to the previous string.</p>
+    <p>This is a classic stack simulation problem. The stack eliminates explicit recursion — each push/pop corresponds to entering/exiting a nesting level. The approach is O(n) where n is the length of the decoded output, since every character of the output is written exactly once.</p>
+  </div>
+
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 394 — Decode String</span><span class="why">direct application; two stacks for counts and partial strings</span></li>
+    <li><span class="sit">LeetCode 726 — Number of Atoms</span><span class="why">similar stack-based chemical formula parsing with nested groups</span></li>
+    <li><span class="sit">HTML/XML tag depth tracking</span><span class="why">stack tracks nesting depth; push on open tag, pop on close tag</span></li>
+    <li><span class="sit">Expression evaluator with parentheses</span><span class="why">push on '(', evaluate and pop on ')'; same stack structure</span></li>
+    <li><span class="sit">Compression format decoders</span><span class="why">LZ-style repeated-block references require a stack for nested repeat scopes</span></li>
+    <li><span class="sit">Template engine expansion</span><span class="why">{{ repeat 3 }} ... {{ end }} style nested templates decoded with a stack</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Stack trace for "3[a2[b]]":</strong></p>
+<pre class="ascii">
+current_str = ""   current_count = 0
+count_stack = []   str_stack = []
+
+'3': current_count = 3
+'[': push(str_stack, ""), push(count_stack, 3)
+     reset: current_str="", current_count=0
+'a': current_str = "a"
+'2': current_count = 2
+'[': push(str_stack, "a"), push(count_stack, 2)
+     reset: current_str="", current_count=0
+'b': current_str = "b"
+']': pop count=2, pop prev="a"
+     current_str = prev + repeat(current_str, count) = "a" + "bb" = "abb"
+']': pop count=3, pop prev=""
+     current_str = "" + repeat("abb", 3) = "abbabbabb"
+
+Result: "abbabbabb" ✓
+</pre>
+    <p class="aha">Aha moment: the str_stack saves the string built BEFORE the '[', so you always know what to prepend. The count_stack saves how many times to repeat the inner block. Closing ']' triggers the repeat-and-concatenate operation.</p>
+  </div>
+
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">#include &lt;string.h&gt;
+#include &lt;stdlib.h&gt;
+
+#define MAX_DEPTH 32
+#define MAX_LEN   4096
+
+/* Decode "3[a2[b]]" → "abbabbabb". Returns decoded string (heap-allocated). */
+char *decode_string(const char *s) {
+    char  str_stack[MAX_DEPTH][MAX_LEN];  /* saved partial strings */
+    int   cnt_stack[MAX_DEPTH];           /* saved repeat counts   */
+    int   top = 0;
+
+    char  cur[MAX_LEN]; cur[0] = '\0';    /* current working string */
+    int   cur_len = 0;
+    int   k = 0;                          /* current number accumulator */
+
+    for (int i = 0; s[i]; i++) {
+        char c = s[i];
+        if (c &gt;= '0' &amp;&amp; c &lt;= '9') {
+            k = k * 10 + (c - '0');       /* build multi-digit number */
+        } else if (c == '[') {
+            cnt_stack[top] = k;            /* save repeat count */
+            strcpy(str_stack[top], cur);   /* save current string */
+            top++;
+            cur[0] = '\0'; cur_len = 0;   /* reset for inner block */
+            k = 0;
+        } else if (c == ']') {
+            top--;
+            int repeat = cnt_stack[top];
+            char prev[MAX_LEN];
+            strcpy(prev, str_stack[top]);
+            int prev_len = strlen(prev);
+            /* append cur repeated 'repeat' times onto prev */
+            for (int r = 0; r &lt; repeat; r++) {
+                strcpy(prev + prev_len + r * cur_len, cur);
+            }
+            prev_len += repeat * cur_len;
+            prev[prev_len] = '\0';
+            strcpy(cur, prev);
+            cur_len = prev_len;
+        } else {
+            cur[cur_len++] = c;            /* plain character: append */
+            cur[cur_len]   = '\0';
+        }
+    }
+
+    char *result = malloc(cur_len + 1);
+    strcpy(result, cur);
+    return result;
+}</code></pre>
+
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>"2[ab]"</strong>
+
+'2': k=2
+'[': cnt_stack[0]=2, str_stack[0]="", top=1, cur="", k=0
+'a': cur="a", cur_len=1
+'b': cur="ab", cur_len=2
+']': top=0, repeat=2, prev=""
+     prev = "" + "ab" + "ab" = "abab", cur="abab", cur_len=4
+
+Result: "abab" ✓
+
+<strong>"3[a]2[b]"</strong>
+
+After '3[a]': cur="aaa"
+'2': k=2
+'[': cnt_stack[0]=2, str_stack[0]="aaa", cur="", top=1
+'b': cur="b"
+']': top=0, prev="aaa", repeat=2 → cur = "aaa"+"b"+"b" = "aaabb"
+
+Result: "aaabb" ✓</div>
+
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: not handling multi-digit numbers before '['</div>
+<pre><code class="language-c">/* WRONG: reads only one digit */
+if (c &gt;= '0' &amp;&amp; c &lt;= '9') k = c - '0';  /* resets k on each digit */
+/* "12[a]" → k=2 on '[', not 12. Produces "aa" instead of 12 'a's. */</code></pre>
+    <p><strong>Fix:</strong> accumulate digits with <code>k = k * 10 + (c - '0')</code>. Reset k to 0 only after pushing it onto cnt_stack (inside the '[' branch).</p>
+  </div>
+
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. Trace "10[a]" through the algorithm. How does the multi-digit number handling work?</p>
+    <p>2. What is the maximum nesting depth supported by this implementation? How would you handle deeper nesting?</p>
+    <p>3. Modify decode_string to count the total length of the decoded string without actually building it (useful for pre-allocating the right buffer size).</p>
+  </div>
+
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>Decode "k[str]" with nesting: two stacks (counts, partial strings); on '[' push and reset; on ']' pop, repeat current string k times, prepend saved string. Multi-digit numbers: k = k*10 + digit.</strong>
+    <br>Also fires for: "nested bracket evaluation" &middot; "expression with grouped repeats" &middot; "LZ decompression block repeat"
+  </div>
+</div>
+
+<!-- ================================================================ S26 -->
+<div class="card" id="s26">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 26</span>
+    <span class="pattern-name">Roman Numerals to Integer</span>
+  </div>
+
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Roman numerals use seven symbols: I(1), V(5), X(10), L(50), C(100), D(500), M(1000). Normally symbols are additive left to right. But when a smaller symbol precedes a larger one, it is subtractive: IV=4, IX=9, XL=40, XC=90, CD=400, CM=900. The rule is simple: if the current symbol's value is less than the next symbol's value, subtract it; otherwise add it.</p>
+    <p>This single rule handles all Roman numeral conversion in one left-to-right pass. You never need to look back — just peek one position ahead. The right-to-left variant is equally clean: accumulate right to left, and if the current value is less than the running max, subtract it.</p>
+    <p>The inverse problem — integer to Roman — uses a greedy approach: from the largest symbol down, subtract as many times as possible and append the symbol each time. A lookup table of (value, symbol) pairs in descending order makes this mechanical.</p>
+  </div>
+
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 13 — Roman to Integer</span><span class="why">direct application; peek-ahead or right-to-left subtraction rule</span></li>
+    <li><span class="sit">LeetCode 12 — Integer to Roman</span><span class="why">greedy: subtract largest possible value repeatedly; append symbol each time</span></li>
+    <li><span class="sit">Historical document digitization</span><span class="why">parse chapter/section numbers in scanned old texts</span></li>
+    <li><span class="sit">Clock face rendering</span><span class="why">convert hour number to Roman numeral for analog clock display</span></li>
+    <li><span class="sit">Outline numbering systems</span><span class="why">legal documents, academic papers use Roman numerals for section levels</span></li>
+    <li><span class="sit">Movie/year encoding</span><span class="why">parse "MMXXIV" in movie titles to extract the production year</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Peek-ahead rule:</strong> if value(s[i]) &lt; value(s[i+1]) → subtract; else → add.</p>
+<pre class="ascii">
+"MCMXCIV" = 1994
+
+M  = 1000: next=C(100), 1000 &gt; 100 → ADD  1000. total=1000
+C  =  100: next=M(1000),  100 &lt; 1000 → SUB  -100. total=900
+M  = 1000: next=X(10),  1000 &gt; 10 → ADD  1000. total=1900
+X  =   10: next=C(100),   10 &lt; 100 → SUB   -10. total=1890
+C  =  100: next=I(1),   100 &gt; 1 → ADD   100. total=1990
+I  =    1: next=V(5),     1 &lt; 5 → SUB    -1. total=1989
+V  =    5: no next → ADD     5. total=1994 ✓
+</pre>
+    <p><strong>Integer to Roman — greedy lookup table:</strong></p>
+<pre class="ascii">
+n = 58
+
+vals[] = {1000,900,500,400,100,90,50,40,10,9,5,4,1}
+syms[] = {"M","CM","D","CD","C","XC","L","XL","X","IX","V","IV","I"}
+
+58 &lt; 1000..50: skip. 58 &ge; 50: append "L", n=8
+8 &lt; 40,10,9: skip. 8 &ge; 5: append "V", n=3
+3 &lt; 4: skip. 3 &ge; 1: append "I", n=2 → "I", n=1 → "I", n=0
+
+Result: "LVIII" ✓
+</pre>
+    <p class="aha">Aha moment: the peek-ahead rule is just one comparison: <code>val[i] &lt; val[i+1]</code>. No special cases for IV, IX, etc. — they all follow the same rule.</p>
+  </div>
+
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Roman to integer: peek-ahead subtraction rule. O(n). */
+int roman_to_int(const char *s) {
+    int val[128] = {0};
+    val['I']=1; val['V']=5; val['X']=10; val['L']=50;
+    val['C']=100; val['D']=500; val['M']=1000;
+
+    int total = 0, n = strlen(s);
+    for (int i = 0; i &lt; n; i++) {
+        int cur  = val[(unsigned char)s[i]];
+        int next = (i + 1 &lt; n) ? val[(unsigned char)s[i+1]] : 0;
+        total += (cur &lt; next) ? -cur : cur;   /* subtract if cur &lt; next */
+    }
+    return total;
+}
+
+/* Integer to Roman: greedy lookup table. */
+void int_to_roman(int n, char *out) {
+    static const int   vals[] = {1000,900,500,400,100,90,50,40,10,9,5,4,1};
+    static const char *syms[] = {"M","CM","D","CD","C","XC","L","XL","X","IX","V","IV","I"};
+    int w = 0;
+    for (int i = 0; i &lt; 13; i++) {
+        while (n &gt;= vals[i]) {
+            int slen = strlen(syms[i]);
+            memcpy(out + w, syms[i], slen);
+            w += slen;
+            n -= vals[i];
+        }
+    }
+    out[w] = '\0';
+}</code></pre>
+
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>roman_to_int("IV")</strong>
+
+i=0: cur=val['I']=1, next=val['V']=5. 1&lt;5 → total += -1 = -1
+i=1: cur=val['V']=5, next=0. 5&ge;0 → total += 5 = 4
+return 4 ✓
+
+<strong>int_to_roman(3749, out)</strong>
+
+3749 &ge; 1000: "M", n=2749 → "MM", n=1749 → "MMM", n=749
+749 &ge; 500: "D", n=249
+249 &ge; 100: "C", n=149 → "CC", n=49
+49 &ge; 40: "XL", n=9
+9 &ge; 9: "IX", n=0
+out = "MMMDCCXLIX" ... wait 3749:
+  MMM=3000, D=500, CC=200, XL=40, IX=9 → total=3749 ✓
+Result: "MMMDCCXLIX"</div>
+
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: checking s[i+1] without bounds guard</div>
+<pre><code class="language-c">/* WRONG: accesses s[n] when i == n-1 (last character) */
+int next = val[(unsigned char)s[i+1]];  /* s[n] is '\0' — val['\0']=0, happens to work */
+/* BUT: if val[] is uninitialized, val['\0'] is garbage. Always guard explicitly. */</code></pre>
+    <p><strong>Safe habit:</strong> always check bounds: <code>int next = (i+1 &lt; n) ? val[s[i+1]] : 0;</code>. This makes the intent clear and is safe regardless of val initialization.</p>
+  </div>
+
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. What does roman_to_int("III") return? What does roman_to_int("IIII") return? (Note: IIII is non-standard but the algorithm handles it.)</p>
+    <p>2. In int_to_roman, why are CM(900), CD(400), XC(90), XL(40), IX(9), IV(4) included in the lookup table instead of just {M,D,C,L,X,V,I}?</p>
+    <p>3. Modify roman_to_int to detect invalid Roman numeral strings (e.g., "IIII" or "VV") and return -1. What additional tracking do you need?</p>
+  </div>
+
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>Roman to integer: peek-ahead — if val[s[i]] &lt; val[s[i+1]] subtract, else add. Integer to Roman: greedy lookup table descending — while n&ge;vals[i]: append syms[i], subtract. Include subtractive pairs (CM,CD,XC,XL,IX,IV) in the table.</strong>
+    <br>Also fires for: "parse legacy numbering systems" &middot; "greedy symbol assignment" &middot; "clock face Roman numeral display"
+  </div>
+</div>
+
+<!-- ================================================================ S27 -->
+<div class="card" id="s27">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 27</span>
+    <span class="pattern-name">Naive String Search O(nm)</span>
+  </div>
+
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Find the first (or all) occurrence(s) of a pattern string p inside a text string t. The naive approach: for each starting position i in t, check if t[i..i+m-1] matches p character by character. If every character matches, record a hit. If any character mismatches, move to position i+1 and try again.</p>
+    <p>The worst case is O(n*m) — for example, searching for "aaab" in "aaaaaaa…" — but for typical English text with short patterns, the average case is much better because mismatches are found after just 1–2 character comparisons. For most practical purposes (log search, command parsing, small pattern matching), the naive approach is fast enough and much simpler to implement and debug than KMP or Boyer-Moore.</p>
+    <p>The C standard library's <code>strstr</code> implements this (or a better algorithm internally). Use strstr when available. Roll your own naive search when you need to match against a pattern that is not a C string (e.g., a byte sequence with embedded nulls) or when you need to return all match positions rather than just the first.</p>
+  </div>
+
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 28 — Find the Index of the First Occurrence</span><span class="why">implement strstr; naive O(nm) or KMP O(n+m)</span></li>
+    <li><span class="sit">Log file grep</span><span class="why">scan each line for a keyword; naive search per line is fine for single-keyword queries</span></li>
+    <li><span class="sit">Binary protocol parsing</span><span class="why">find a sync byte sequence in a byte stream; naive scan with memcmp</span></li>
+    <li><span class="sit">Embedded firmware pattern detection</span><span class="why">scan a flash memory region for a magic number sequence</span></li>
+    <li><span class="sit">DNA motif scanning</span><span class="why">find all occurrences of a short motif in a genome (when KMP is overkill)</span></li>
+    <li><span class="sit">Text editor "find" feature</span><span class="why">user searches for a word; naive is fast enough for interactive use on small documents</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Sliding window comparison:</strong></p>
+<pre class="ascii">
+text    = "abcabcabc"
+pattern = "abc"   (m=3)
+
+i=0: compare t[0..2]="abc" vs p="abc" → MATCH at 0
+i=1: compare t[1..3]="bca" vs p="abc" → 'b'!='a' MISS
+i=2: t[2..4]="cab" → 'c'!='a' MISS
+i=3: t[3..5]="abc" → MATCH at 3
+i=4: t[4..6]="bca" → MISS
+i=5: t[5..7]="cab" → MISS
+i=6: t[6..8]="abc" → MATCH at 6
+i=7: t[7..8]="bc" — only 2 chars left, m=3 → stop
+
+Matches at: 0, 3, 6
+</pre>
+    <p class="aha">Aha moment: the outer loop runs from i=0 to i=n-m (inclusive). Checking i &le; n-m avoids looking for a pattern that can't fit in the remaining text. The inner loop breaks as soon as one character mismatches — no need to compare further.</p>
+  </div>
+
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">#include &lt;string.h&gt;
+
+/* Naive search: return index of first match, or -1. O(n*m). */
+int naive_search(const char *text, const char *pat) {
+    int n = strlen(text), m = strlen(pat);
+    if (m == 0) return 0;        /* empty pattern matches at 0 */
+    if (m &gt; n) return -1;        /* pattern longer than text: no match */
+
+    for (int i = 0; i &lt;= n - m; i++) {
+        int j;
+        for (j = 0; j &lt; m; j++) {
+            if (text[i + j] != pat[j]) break;   /* mismatch: try next position */
+        }
+        if (j == m) return i;    /* all m chars matched */
+    }
+    return -1;
+}
+
+/* Find all matches — returns count and fills positions[]. */
+int naive_search_all(const char *text, const char *pat, int *positions, int max_pos) {
+    int n = strlen(text), m = strlen(pat), count = 0;
+    if (m == 0 || m &gt; n) return 0;
+
+    for (int i = 0; i &lt;= n - m &amp;&amp; count &lt; max_pos; i++) {
+        if (memcmp(text + i, pat, m) == 0) {  /* memcmp: fast block compare */
+            positions[count++] = i;
+        }
+    }
+    return count;
+}</code></pre>
+
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>naive_search("hello", "ll")</strong>
+
+n=5, m=2
+i=0: text[0]='h' vs pat[0]='l' → break (j=0)
+i=1: text[1]='e' vs pat[0]='l' → break
+i=2: text[2]='l'=='l' ✓, text[3]='l'=='l' ✓ → j=2==m → return 2 ✓
+
+<strong>naive_search("aaa", "aaaa")  — pattern longer than text</strong>
+
+m=4 &gt; n=3 → return -1 immediately ✓
+
+<strong>naive_search("abc", "")  — empty pattern</strong>
+
+m=0 → return 0 ✓</div>
+
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: outer loop runs to i &lt; n instead of i &le; n-m</div>
+<pre><code class="language-c">/* WRONG: accesses text[i + j] where i+j can reach n+m-1 (out of bounds) */
+for (int i = 0; i &lt; n; i++) {
+    for (int j = 0; j &lt; m; j++) {
+        if (text[i + j] != pat[j]) break;   /* i+j can exceed n-1 */
+    }
+}
+/* For text="ab"(n=2), pat="abc"(m=3): i=0, j=2: text[0+2]=text[2]='\0'
+   Technically safe here (reads '\0') but logically wrong — should have returned -1 early. */</code></pre>
+    <p><strong>Fix:</strong> loop to <code>i &le; n - m</code>. If m &gt; n, return -1 before the loop. This eliminates out-of-bounds access and avoids futile comparisons.</p>
+  </div>
+
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. What is the worst-case input for naive search? Give a concrete example of a text and pattern that cause O(n*m) comparisons.</p>
+    <p>2. memcmp(text+i, pat, m) returns 0 on match. How does this differ from strncmp? Which is more appropriate for byte-sequence matching with possible null bytes?</p>
+    <p>3. How would you modify naive_search to be case-insensitive? What is the cost of the modification?</p>
+  </div>
+
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>Naive string search: outer loop i=0 to n-m; inner loop j=0 to m-1; break on mismatch; if j==m: match at i. Use memcmp for block comparison. Guard m&gt;n with early return -1.</strong>
+    <br>Also fires for: "implement strstr" &middot; "find all occurrences of pattern" &middot; "byte sequence scan in binary data"
+  </div>
+</div>
+
 <!-- CARDS_END -->
 <script>hljs.highlightAll();</script>
 </body>
