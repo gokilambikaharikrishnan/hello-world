@@ -6,7 +6,7 @@
 |------|----------|--------|--------------|
 | index.html | nav | ✅ Done | 2026-04-24 |
 | arrays.html | 54 | ✅ Done | 2026-05-01 |
-| pointers.html | 30 | ✅ Done | 2026-04-24 |
+| pointers.html | 30 | 🔄 Rework In Progress | 2026-05-04 |
 | strings.html | 44 | ✅ Done | 2026-05-04 |
 | linkedlist.html | 35 | ✅ Done | 2026-04-29 |
 | stacks.html | 32 | ✅ Done | 2026-04-29 |
@@ -190,3 +190,57 @@
 | Batch 5 | S41–S44 | ✅ Done |
 
 **All 44 cards complete. Rework complete 2026-05-04.**
+
+---
+
+## pointers.html — Rework Audit (All 30 Cards)
+
+### Pointer Mechanics (Q01–Q09)
+- [ ] Q01 · Address vs Value — What a Pointer Actually Is
+- [ ] Q02 · Dereferencing — Reading and Writing Through a Pointer
+- [ ] Q03 · Pointer Arithmetic — Why ptr+1 Moves by sizeof(*ptr)
+- [ ] Q04 · Array Decay to Pointer — arr[i] == *(arr+i)
+- [ ] Q05 · Double Pointer — Modifying a Pointer from a Function
+- [ ] Q06 · Function Pointers — Storing and Calling Functions by Address
+- [ ] Q07 · void* — The Generic Pointer and memcpy
+- [ ] Q08 · const Pointer Variations — const int* vs int* const vs const int* const
+- [ ] Q09 · Pointer Subtraction — Counting Elements Between Two Pointers
+
+### Two Pointer Algorithms (Q10–Q14)
+- [ ] Q10 · Fast/Slow — Cycle Detection (Floyd's Algorithm)
+- [ ] Q11 · Fast/Slow — Find Cycle Entry Point (Floyd Phase 2)
+- [ ] Q12 · Fast/Slow — Find Midpoint of a Sequence
+- [ ] Q13 · Read/Write Pointers — In-Place Compaction
+- [ ] Q14 · Runner Technique — K-Gap Between Two Pointers
+
+### Embedded C Pointer Patterns (Q15–Q22)
+- [ ] Q15 · Pointer to Hardware Register — volatile uint32_t* at Fixed Address
+- [ ] Q16 · Struct Pointer for Memory-Mapped IO — Cast Base Address to Struct*
+- [ ] Q17 · Circular Buffer with Head/Tail Pointer Wrap
+- [ ] Q18 · memcpy/memmove — How They Walk src and dst Pointers
+- [ ] Q19 · Byte-Level Access via uint8_t* Cast
+- [ ] Q20 · Function Pointer Dispatch Table — Indexed State Machine
+- [ ] Q21 · const Pointer for Read-Only Buffer Passing
+- [ ] Q22 · restrict Keyword — Promising No Aliasing to the Compiler
+
+### Pointer Pitfalls (Q23–Q30)
+- [ ] Q23 · Dangling Pointer — Pointer to Freed or Stack Memory
+- [ ] Q24 · NULL Dereference — and What HardFault Looks Like in Embedded
+- [ ] Q25 · Strict Aliasing — What the Optimizer Assumes About Pointer Types
+- [ ] Q26 · sizeof(ptr) vs sizeof(array) — Size Info Loss on Decay
+- [ ] Q27 · Off-by-One in Pointer Walk — Walking Past End of Array
+- [ ] Q28 · Returning Pointer to Local Variable
+- [ ] Q29 · Uninitialized Pointer — Wild Pointer
+- [ ] Q30 · memcpy vs memmove — Overlapping Regions
+
+---
+
+## pointers.html Rework Progress Log
+
+| Batch | Cards | Status |
+|-------|-------|--------|
+| Batch 1 | Q01–Q10 | ⏳ Next |
+| Batch 2 | Q11–Q20 | |
+| Batch 3 | Q21–Q30 | |
+
+**Currently reworking:** Q01 — Address vs Value
