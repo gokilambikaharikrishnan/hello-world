@@ -3860,6 +3860,375 @@ for (int i = 0; i &lt; n; i++) {
   </div>
 </div>
 
+
+<!-- ================================================================ S28 -->
+<div class="card" id="s28">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 28</span>
+    <span class="pattern-name">KMP: Failure Function Construction</span>
+  </div>
+
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>The Knuth-Morris-Pratt (KMP) algorithm finds all occurrences of a pattern p in text t in O(n+m) time — no backtracking. Its power comes from the failure function (also called the "prefix function" or "lps array"): <code>fail[i]</code> stores the length of the longest proper prefix of p[0..i] that is also a suffix. When a mismatch occurs during search at position j in the pattern, instead of restarting from p[0], we jump to p[fail[j-1]] and continue — reusing the already-matched characters.</p>
+    <p>Building the failure function is itself a KMP-like process applied to the pattern against itself. A pointer <code>len</code> tracks the length of the current matching prefix-suffix. It advances when characters match, and falls back via the failure function when they don't — but never goes negative. The result is an O(m) construction with O(m) space.</p>
+    <p>Understanding the failure function deeply matters beyond KMP: it appears in string periodicity (if fail[m-1] &gt; 0, the pattern has a repeating structure), in the Z-function, and as the basis for the Aho-Corasick multi-pattern matcher. The lps array is the core insight that makes all these O(n) algorithms work.</p>
+  </div>
+
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 28 — Find First Occurrence (KMP solution)</span><span class="why">build fail[] for pattern, then run KMP search on text</span></li>
+    <li><span class="sit">LeetCode 459 — Repeated Substring Pattern</span><span class="why">if fail[m-1] &gt; 0 and m % (m - fail[m-1]) == 0, the pattern is a repetition</span></li>
+    <li><span class="sit">LeetCode 214 — Shortest Palindrome</span><span class="why">build fail[] on s + '#' + reverse(s) to find longest palindromic prefix</span></li>
+    <li><span class="sit">Network intrusion detection</span><span class="why">scan packet payloads for attack signatures using KMP-based matching</span></li>
+    <li><span class="sit">Firmware update validation</span><span class="why">search for a magic header sequence in a binary image stream</span></li>
+    <li><span class="sit">DNA sequence alignment</span><span class="why">find all exact matches of a short read in a reference genome</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>What fail[i] means:</strong> the longest prefix of p that is also a suffix of p[0..i], but shorter than i+1 (proper prefix/suffix).</p>
+<pre class="ascii">
+p = "ababc"
+
+i=0: 'a' — no proper prefix/suffix possible. fail[0] = 0
+i=1: 'b' — prefixes: "a". suffixes of "ab": "b". No match. fail[1] = 0
+i=2: 'a' — prefixes: "a","ab". suffixes of "aba": "a","ba". "a" matches! fail[2] = 1
+i=3: 'b' — prev fail=1, so p[1]='b'==p[3]='b' → extend! fail[3] = fail[2]+1 = 2
+i=4: 'c' — prev fail=2, p[2]='a' != p[4]='c' → fall back: len=fail[1]=0
+              p[0]='a' != 'c' → len=0, no match. fail[4] = 0
+
+fail = [0, 0, 1, 2, 0]
+</pre>
+    <p><strong>Construction algorithm:</strong></p>
+<pre class="ascii">
+len = 0   (length of previous longest prefix-suffix)
+fail[0] = 0   (always — no proper prefix/suffix for single char)
+i = 1
+
+while i &lt; m:
+  if p[i] == p[len]:  len++; fail[i] = len; i++
+  elif len &gt; 0:       len = fail[len-1]   (fall back, don't advance i)
+  else:               fail[i] = 0; i++
+</pre>
+    <p class="aha">Aha moment: when p[i] != p[len] and len &gt; 0, we do NOT reset len to 0. Instead we try the next shorter prefix-suffix: len = fail[len-1]. This is the same non-backtracking trick used in the search phase.</p>
+  </div>
+
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* Build KMP failure (prefix) function for pattern p of length m.
+   fail[i] = length of longest proper prefix of p[0..i] that is also a suffix. */
+void build_fail(const char *p, int m, int *fail) {
+    fail[0] = 0;      /* no proper prefix for single character */
+    int len = 0;      /* length of the current matching prefix-suffix */
+    int i = 1;
+
+    while (i &lt; m) {
+        if (p[i] == p[len]) {
+            len++;          /* prefix and suffix extended by one */
+            fail[i] = len;
+            i++;
+        } else if (len &gt; 0) {
+            len = fail[len - 1];  /* fall back: try shorter prefix-suffix */
+            /* do NOT increment i — try again at this position with shorter len */
+        } else {
+            fail[i] = 0;    /* no matching prefix-suffix at all */
+            i++;
+        }
+    }
+}</code></pre>
+
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>build_fail("aabaa", fail)</strong>
+
+fail[0]=0, len=0, i=1
+
+i=1: p[1]='a'==p[0]='a' → len=1, fail[1]=1, i=2
+i=2: p[2]='b' != p[1]='a' → len&gt;0: len=fail[0]=0
+i=2: p[2]='b' != p[0]='a' → len==0: fail[2]=0, i=3
+i=3: p[3]='a'==p[0]='a' → len=1, fail[3]=1, i=4
+i=4: p[4]='a'==p[1]='a' → len=2, fail[4]=2, i=5
+
+fail = [0, 1, 0, 1, 2] ✓
+
+Meaning: fail[4]=2 → "aa" is both a prefix and suffix of "aabaa"</div>
+
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: resetting len to 0 instead of falling back via fail[len-1]</div>
+<pre><code class="language-c">/* WRONG: resets to 0 on every mismatch — misses valid shorter matches */
+} else {
+    len = 0;   /* should be: len = fail[len-1] when len &gt; 0 */
+    fail[i] = 0; i++;
+}
+/* For "aabaa": at i=2 ('b' vs 'a'), len was 1.
+   Correct: fall back to fail[0]=0, try again at i=2.
+   Wrong:   set fail[2]=0, advance i=3. (Same result here by coincidence.)
+   Breaks for patterns like "aabaac": at 'c' vs 'a', len=2,
+   correct fallback finds len=fail[1]=1, then checks p[1] vs p[5]. */</code></pre>
+    <p><strong>Rule:</strong> on mismatch with len&gt;0, fall back with <code>len = fail[len-1]</code> and do NOT advance i. Only set fail[i]=0 and advance i when len is already 0.</p>
+  </div>
+
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. What does fail[m-1] &gt; 0 tell you about the pattern? For "abab", fail[3]=2 — what does this mean structurally?</p>
+    <p>2. Build the failure function for "aaaaaa" (6 'a's). What is fail[5]?</p>
+    <p>3. Why does i never decrease in build_fail? (Hint: len can decrease, but i only stays put or advances.)</p>
+  </div>
+
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>KMP failure function: fail[0]=0; len=0, i=1; if p[i]==p[len]: len++,fail[i]=len,i++; elif len&gt;0: len=fail[len-1] (don't advance i); else: fail[i]=0,i++. O(m) time and space.</strong>
+    <br>Also fires for: "longest prefix that is also a suffix" &middot; "check if string has repeating pattern" &middot; "shortest palindrome via KMP on concatenated string"
+  </div>
+</div>
+
+<!-- ================================================================ S29 -->
+<div class="card" id="s29">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 29</span>
+    <span class="pattern-name">KMP: Search Phase</span>
+  </div>
+
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>With the failure function built, the KMP search phase scans the text with two pointers: <code>i</code> advances through the text, and <code>j</code> tracks how far into the pattern we have matched. When text[i] == pattern[j], both advance. When they mismatch and j &gt; 0, fall back via the failure function: j = fail[j-1]. When j reaches m (the pattern length), a match is found at text position i-m.</p>
+    <p>The key property: i never decreases. Every character in the text is examined at most once by the outer pointer. The j pointer can move backward (via fail[j-1]) but each backward step was preceded by a forward step, so the total number of j movements is O(n). Combined with O(m) preprocessing, total time is O(n+m) — optimal for string search.</p>
+    <p>After finding a match at i-m, set j = fail[j-1] to continue searching for overlapping matches without restarting from the beginning of the pattern.</p>
+  </div>
+
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 28 — Find First Occurrence in a String</span><span class="why">KMP gives O(n+m); naive is O(nm) but accepted for small inputs</span></li>
+    <li><span class="sit">LeetCode 1392 — Longest Happy Prefix</span><span class="why">the fail[m-1] value from the prefix function directly gives the answer</span></li>
+    <li><span class="sit">Multi-pattern search (Aho-Corasick)</span><span class="why">KMP on a trie — same failure-link concept generalized to multiple patterns</span></li>
+    <li><span class="sit">Virus signature scanning</span><span class="why">scan file byte-by-byte against a known malware signature pattern</span></li>
+    <li><span class="sit">Network packet inspection</span><span class="why">find attack payload strings in streaming packet data without buffering the whole packet</span></li>
+    <li><span class="sit">UART framing byte detection</span><span class="why">find a multi-byte start-of-frame sequence in a byte stream without backtracking</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Search trace:</strong></p>
+<pre class="ascii">
+text    = "aabaabaaa"   (n=9)
+pattern = "aabaaa"      (m=6)
+fail    = [0,1,0,1,2,2]
+
+i=0,j=0: t[0]='a'==p[0]='a' → i=1,j=1
+i=1,j=1: t[1]='a'==p[1]='a' → i=2,j=2
+i=2,j=2: t[2]='b'==p[2]='b' → i=3,j=3
+i=3,j=3: t[3]='a'==p[3]='a' → i=4,j=4
+i=4,j=4: t[4]='a'==p[4]='a' → i=5,j=5
+i=5,j=5: t[5]='b' != p[5]='a' → j=fail[4]=2  (don't advance i)
+i=5,j=2: t[5]='b'==p[2]='b' → i=6,j=3
+i=6,j=3: t[6]='a'==p[3]='a' → i=7,j=4
+i=7,j=4: t[7]='a'==p[4]='a' → i=8,j=5
+i=8,j=5: t[8]='a'==p[5]='a' → i=9,j=6
+j==m=6 → MATCH at i-m = 9-6 = 3 ✓
+After match: j=fail[5]=2 (continue for overlapping matches)
+</pre>
+    <p class="aha">Aha moment: when a mismatch occurs, i stays put while j jumps back. The text character at i is re-compared against p[fail[j-1]]. This is never "re-reading" because i already moved past those characters — we are just re-using the partial match information stored in fail[].</p>
+  </div>
+
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">/* KMP search: find all occurrences of pat in text. O(n+m). */
+int kmp_search(const char *text, const char *pat, int *matches, int max_matches) {
+    int n = strlen(text), m = strlen(pat);
+    if (m == 0) return 0;
+
+    int fail[m];
+    build_fail(pat, m, fail);   /* O(m) preprocessing */
+
+    int count = 0, j = 0;      /* j = matched length into pattern */
+
+    for (int i = 0; i &lt; n; i++) {
+        /* Fall back until match or pattern start */
+        while (j &gt; 0 &amp;&amp; text[i] != pat[j])
+            j = fail[j - 1];
+
+        if (text[i] == pat[j]) j++;  /* characters match: extend */
+
+        if (j == m) {                /* full pattern matched */
+            if (count &lt; max_matches)
+                matches[count++] = i - m + 1;   /* match start index */
+            j = fail[j - 1];         /* reset for overlapping matches */
+        }
+    }
+    return count;
+}
+
+/* Return first match index only, or -1. */
+int kmp_find(const char *text, const char *pat) {
+    int matches[1];
+    return kmp_search(text, pat, matches, 1) ? matches[0] : -1;
+}</code></pre>
+
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>kmp_find("abcabc", "abc")</strong>
+
+fail for "abc": [0,0,0]
+i=0:'a'==p[0]:'a' → j=1
+i=1:'b'==p[1]:'b' → j=2
+i=2:'c'==p[2]:'c' → j=3==m → MATCH at 0. j=fail[2]=0
+i=3:'a'==p[0]:'a' → j=1
+i=4:'b'==p[1]:'b' → j=2
+i=5:'c'==p[2]:'c' → j=3==m → MATCH at 3. j=0
+
+matches=[0,3], count=2 ✓ (kmp_find returns 0)
+
+<strong>kmp_find("aaa", "aaaa")  — pattern longer than text</strong>
+
+n=3, m=4. Loop i=0..2: j reaches 3 but never 4.
+return -1 ✓</div>
+
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: advancing i inside the fallback while-loop</div>
+<pre><code class="language-c">/* WRONG: advances i during fallback — skips text characters */
+while (j &gt; 0 &amp;&amp; text[i] != pat[j]) {
+    j = fail[j - 1];
+    i++;   /* ERROR: skips text[i+1] without comparing it */
+}</code></pre>
+    <p><strong>What breaks:</strong> The fallback while-loop re-tries the SAME text character <code>text[i]</code> against a shorter prefix. Moving i forward skips that character — matches get missed. Only the outer for-loop should advance i.</p>
+<pre><code class="language-c">/* CORRECT: i is fixed during the while; only j moves */
+while (j &gt; 0 &amp;&amp; text[i] != pat[j])
+    j = fail[j - 1];   /* i unchanged */</code></pre>
+  </div>
+
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. For overlapping matches: kmp_search("aaa", "aa") should return 2 (at indices 0 and 1). Trace through: what is j after the first match, and why does the second match get found?</p>
+    <p>2. What is the total number of times j can decrease across the entire search? Why does this bound the algorithm to O(n)?</p>
+    <p>3. Compare kmp_find vs strstr for correctness and performance. When would you prefer one over the other?</p>
+  </div>
+
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>KMP search: i scans text, j tracks pattern position; on match: j++; on mismatch: j=fail[j-1] (i stays); when j==m: record match, j=fail[j-1] for overlaps. i never decreases. O(n+m) total with preprocessing.</strong>
+    <br>Also fires for: "find all pattern occurrences" &middot; "overlapping pattern matches" &middot; "streaming pattern search without backtracking"
+  </div>
+</div>
+
+<!-- ================================================================ S30 -->
+<div class="card" id="s30">
+  <div class="pattern-header">
+    <span class="pattern-num">Pattern 30</span>
+    <span class="pattern-name">Rolling Hash (Rabin-Karp)</span>
+  </div>
+
+  <div class="section-label">&#9312; Background</div>
+  <div class="background">
+    <p>Rabin-Karp computes a hash for the pattern and then slides a same-size window across the text, maintaining a rolling hash. On each step, the old leftmost character is subtracted from the hash and the new rightmost character is added — an O(1) update. When the rolling hash equals the pattern hash, do a full character comparison to confirm (to handle hash collisions).</p>
+    <p>The hash function is a polynomial: <code>hash = (c[0]*BASE^(m-1) + c[1]*BASE^(m-2) + ... + c[m-1]) % MOD</code>. Rolling update: <code>new_hash = (old_hash - c[left]*BASE^(m-1)) * BASE + c[right+1]) % MOD</code>. The key precomputed value is <code>h = BASE^(m-1) % MOD</code>, used to remove the leftmost character's contribution.</p>
+    <p>Average-case O(n+m). Worst case O(nm) if all hashes collide. Using a large prime MOD and a good BASE makes collisions extremely rare. Rabin-Karp shines for multi-pattern search (hash all patterns, check each text window against a hash set) and for 2D pattern matching.</p>
+  </div>
+
+  <div class="section-label">&#9313; Where You See This</div>
+  <ul class="situations">
+    <li><span class="sit">LeetCode 28 — Find First Occurrence (Rabin-Karp solution)</span><span class="why">rolling hash approach; average O(n+m)</span></li>
+    <li><span class="sit">LeetCode 1044 — Longest Duplicate Substring</span><span class="why">binary search on length + rolling hash to check if duplicate exists</span></li>
+    <li><span class="sit">LeetCode 1316 — Distinct Echo Substrings</span><span class="why">rolling hash to identify and deduplicate substrings efficiently</span></li>
+    <li><span class="sit">Plagiarism detection</span><span class="why">hash all n-grams of a document; compare hash sets across documents</span></li>
+    <li><span class="sit">File deduplication (rsync algorithm)</span><span class="why">rolling checksum to find matching blocks in different file versions</span></li>
+    <li><span class="sit">Network traffic fingerprinting</span><span class="why">rolling hash over packet payloads to detect known signatures without full KMP</span></li>
+  </ul>
+
+  <div class="section-label">&#9314; Building the Logic from Scratch</div>
+  <div class="logic-build">
+    <p><strong>Polynomial hash and rolling update:</strong></p>
+<pre class="ascii">
+BASE=31, MOD=1e9+7, m=3
+
+pattern "abc":
+  hash_p = ('a'*31^2 + 'b'*31 + 'c') % MOD
+
+text "xabcy":
+  window "xab": hash_0 = ('x'*31^2 + 'a'*31 + 'b') % MOD
+  Slide right by 1:
+    remove 'x': hash_0 - 'x' * h  (h = 31^2 % MOD)
+    shift left: * 31
+    add 'c':    + 'c'
+    new_hash = ((hash_0 - 'x'*h)*31 + 'c') % MOD
+  → window "abc": if new_hash == hash_p → compare chars to confirm
+</pre>
+    <p class="aha">Aha moment: the rolling update is purely additive/multiplicative — no re-scan of the window. The precomputed <code>h = BASE^(m-1) % MOD</code> is the weight of the leftmost character; subtracting it removes it from the hash in O(1).</p>
+    <p><strong>Why confirm after hash match:</strong> two different strings can have the same hash (collision). The full character comparison eliminates false positives. For most problems, collisions are so rare that the algorithm is effectively O(n+m).</p>
+  </div>
+
+  <div class="section-label">&#9315; Full Code Walkthrough</div>
+<pre><code class="language-c">#define BASE 31LL
+#define MOD  1000000007LL
+
+/* Rabin-Karp: find first occurrence of pat in text. Average O(n+m). */
+int rabin_karp(const char *text, const char *pat) {
+    int n = strlen(text), m = strlen(pat);
+    if (m &gt; n) return -1;
+
+    /* Precompute h = BASE^(m-1) % MOD */
+    long long h = 1;
+    for (int i = 0; i &lt; m - 1; i++) h = h * BASE % MOD;
+
+    /* Compute initial hashes for pattern and first window */
+    long long hash_p = 0, hash_t = 0;
+    for (int i = 0; i &lt; m; i++) {
+        hash_p = (hash_p * BASE + pat[i])  % MOD;
+        hash_t = (hash_t * BASE + text[i]) % MOD;
+    }
+
+    for (int i = 0; i &lt;= n - m; i++) {
+        if (hash_t == hash_p) {
+            /* Hash match: verify character by character */
+            if (memcmp(text + i, pat, m) == 0) return i;
+        }
+        if (i &lt; n - m) {
+            /* Roll the hash: remove text[i], add text[i+m] */
+            hash_t = (hash_t - text[i] * h % MOD + MOD) % MOD;
+            hash_t = (hash_t * BASE + text[i + m]) % MOD;
+        }
+    }
+    return -1;
+}</code></pre>
+
+  <div class="section-label">&#9316; Dry Run</div>
+  <div class="dry-run"><strong>rabin_karp("abcd", "bc")  — m=2, BASE=31</strong>
+
+h = 31^1 = 31
+hash_p = ('b'*31 + 'c') % MOD = (98*31+99) % MOD = 3137
+hash_t = ('a'*31 + 'b') % MOD = (97*31+98) % MOD = 3105
+
+i=0: hash_t=3105 != hash_p=3137
+  Roll: remove 'a'(97): hash_t = (3105 - 97*31 + MOD) % MOD = (3105-3007) = 98
+        shift+add 'c'(99): hash_t = (98*31 + 99) % MOD = 3137
+
+i=1: hash_t=3137 == hash_p=3137 → memcmp("bc","bc",2)=0 → return 1 ✓</div>
+
+  <div class="section-label">&#9317; Gotcha</div>
+  <div class="gotcha">
+    <div class="gotcha-title">&#9888; Wrong: negative hash after subtraction without adding MOD</div>
+<pre><code class="language-c">/* WRONG: can produce negative value after subtraction */
+hash_t = (hash_t - text[i] * h % MOD) % MOD;
+/* If hash_t &lt; text[i]*h%MOD, the result is negative.
+   In C, (-5) % MOD == -5, not MOD-5. Subsequent hashes are wrong. */</code></pre>
+    <p><strong>Fix:</strong> always add MOD before taking modulo after any subtraction:</p>
+<pre><code class="language-c">hash_t = (hash_t - text[i] * h % MOD + MOD) % MOD;
+/*                                    ^^^^^ prevents negative result */</code></pre>
+    <p><strong>Rule:</strong> in modular arithmetic with subtraction, always add MOD before the final % to keep the result non-negative.</p>
+  </div>
+
+  <div class="section-label">&#9318; Confidence Check</div>
+  <div class="confidence">
+    <p>1. What is a hash collision in this context? Give a concrete example of two different 2-character strings that might have the same Rabin-Karp hash for some BASE and MOD.</p>
+    <p>2. The algorithm uses memcmp on every hash match. In the worst case (all characters identical, pattern of length 1), how many memcmp calls happen? What is the total time?</p>
+    <p>3. For multi-pattern search (find any of k patterns in text), how would you adapt Rabin-Karp? What data structure holds the pattern hashes?</p>
+  </div>
+
+  <div class="section-label">&#9319; Trigger</div>
+  <div class="trigger">
+    <strong>Rabin-Karp rolling hash: precompute h=BASE^(m-1)%MOD; initial hashes for pattern and first window; slide: remove left char (subtract text[i]*h), shift (*BASE), add right char; confirm hash match with memcmp. Add MOD before % after subtraction.</strong>
+    <br>Also fires for: "longest duplicate substring via binary search + hash" &middot; "multi-pattern search with hash set" &middot; "2D pattern matching"
+  </div>
+</div>
+
 <!-- CARDS_END -->
 <script>hljs.highlightAll();</script>
 </body>
