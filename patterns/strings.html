@@ -4727,6 +4727,294 @@ Leading '+'/'-': no. Loop: s[0]=' ' → not digit/dot/e → return 0 ✓</div>
   </div>
 </div>
 
+
+        <!-- ========================================================= -->
+        <!-- S35 · Integer to Roman                                      -->
+        <!-- ========================================================= -->
+        <div class="card" id="s35">
+          <h2>S35 · Integer to Roman</h2>
+
+          <div class="background">
+            <strong>Background</strong>
+            Roman numerals use a greedy decreasing table that includes the six
+            subtractive pairs (IV=4, IX=9, XL=40, XC=90, CD=400, CM=900).
+            Repeatedly subtract the largest value that fits.
+          </div>
+
+          <div class="situations">
+            <strong>Where You See This</strong>
+            <span class="sit">Convert an integer 1-3999 to its Roman numeral string.</span>
+            <span class="why">Greedy with a fixed value table; no division or modulo tricks needed.</span>
+          </div>
+
+          <div class="logic-build">
+            <strong>Building the Logic from Scratch</strong>
+            <div class="aha">Build a table of (value, symbol) pairs in descending order including subtractive forms.</div>
+            <div class="aha">While num &gt; 0: find the largest value that fits, append symbol, subtract value, repeat.</div>
+            <div class="ascii">
+val  = {1000,900,500,400,100,90,50,40,10,9,5,4,1}
+sym  = {"M","CM","D","CD","C","XC","L","XL","X","IX","V","IV","I"}
+num=1994: M(1000)->994, CM(900)->94, XC(90)->4, IV(4)->0
+result: "MCMXCIV"
+            </div>
+          </div>
+
+          <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+void int_to_roman(int num, char *out) {
+    static const int    val[] = {1000,900,500,400,100,90,50,40,10,9,5,4,1};
+    static const char *sym[]  = {"M","CM","D","CD","C","XC","L","XL","X","IX","V","IV","I"};
+    int n = sizeof(val) / sizeof(val[0]);
+    out[0] = '\0';
+    for (int i = 0; i &lt; n; i++) {
+        while (num &gt;= val[i]) {
+            strcat(out, sym[i]);
+            num -= val[i];
+        }
+    }
+}
+
+int main(void) {
+    char buf[32];
+    int_to_roman(1994, buf);
+    printf("%s\n", buf);   /* MCMXCIV */
+    int_to_roman(58, buf);
+    printf("%s\n", buf);   /* LVIII  */
+    return 0;
+}
+          </code></pre>
+
+          <div class="dry-run">
+            <strong>Dry Run -- num = 1994</strong>
+            <pre>
+i=0 val=1000: M   num=994
+i=1 val=900:  CM  num=94
+i=5 val=90:   XC  num=4
+i=11 val=4:   IV  num=0
+result: "MCMXCIV"
+            </pre>
+          </div>
+
+          <div class="gotcha">
+            <div class="gotcha-title">Gotcha</div>
+            Subtractive pairs MUST be in the table -- do not try to derive them
+            at runtime. The inner <code>while</code> (not <code>if</code>)
+            handles repeated symbols like "MMM" for 3000.
+          </div>
+
+          <div class="confidence">
+            <strong>Confidence Check</strong>
+            Why is <code>while</code> used instead of <code>if</code>?<br>
+            Because the same value may need to be appended multiple times
+            (e.g., 3000 "MMM" requires three passes at val=1000).
+          </div>
+
+          <div class="trigger">
+            <strong>Trigger Line</strong>
+            "Convert integer to Roman" -- greedy static table, while num &gt;= val[i] append+subtract.
+          </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- S36 · Group Anagrams by Sorted Key                         -->
+        <!-- ========================================================= -->
+        <div class="card" id="s36">
+          <h2>S36 · Group Anagrams by Sorted Key</h2>
+
+          <div class="background">
+            <strong>Background</strong>
+            Two strings are anagrams iff they have the same multiset of characters.
+            A canonical key is the sorted form of the string. In C without a hash
+            map, sort all words, build (sorted_key, original_index) pairs,
+            then sort those pairs to group anagrams together.
+          </div>
+
+          <div class="situations">
+            <span class="sit">Given an array of strings, group the anagrams together.</span>
+            <span class="why">Sort-by-key is O(N*K log K + N log N); works without a hash map in C.</span>
+          </div>
+
+          <div class="logic-build">
+            <strong>Building the Logic from Scratch</strong>
+            <div class="aha">For each word copy it, sort the copy -- that is the canonical key.</div>
+            <div class="aha">Sort all (key, original_index) records by key using strcmp; equal keys land adjacent = same group.</div>
+            <div class="ascii">
+words: ["eat","tea","tan","ate","nat","bat"]
+keys:  ["aet","aet","ant","aet","ant","abt"]
+after sort by key:
+  "abt"->bat  |  "aet"->eat,tea,ate  |  "ant"->tan,nat
+            </div>
+          </div>
+
+          <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+#define MAXW 64
+
+typedef struct { char key[MAXW]; int idx; } Entry;
+
+static int cmp_char(const void *a, const void *b)
+    { return *(char*)a - *(char*)b; }
+static int cmp_entry(const void *a, const void *b)
+    { return strcmp(((Entry*)a)->key, ((Entry*)b)->key); }
+
+void group_anagrams(const char **words, int n) {
+    Entry *ent = malloc(n * sizeof(Entry));
+    for (int i = 0; i &lt; n; i++) {
+        strncpy(ent[i].key, words[i], MAXW - 1);
+        ent[i].key[MAXW - 1] = '\0';
+        ent[i].idx = i;
+        qsort(ent[i].key, strlen(ent[i].key), 1, cmp_char);
+    }
+    qsort(ent, n, sizeof(Entry), cmp_entry);
+
+    for (int i = 0; i &lt; n; ) {
+        int j = i;
+        while (j &lt; n &amp;&amp; strcmp(ent[j].key, ent[i].key) == 0) j++;
+        printf("[ ");
+        for (int k = i; k &lt; j; k++) printf("%s ", words[ent[k].idx]);
+        printf("]\n");
+        i = j;
+    }
+    free(ent);
+}
+
+int main(void) {
+    const char *w[] = {"eat","tea","tan","ate","nat","bat"};
+    group_anagrams(w, 6);
+    return 0;
+}
+          </code></pre>
+
+          <div class="dry-run">
+            <strong>Dry Run</strong>
+            <pre>
+sorted keys: eat->aet, tea->aet, tan->ant, ate->aet, nat->ant, bat->abt
+after sort by key:
+  (abt,5) (aet,0) (aet,1) (aet,3) (ant,2) (ant,4)
+groups: [bat] [eat tea ate] [tan nat]
+            </pre>
+          </div>
+
+          <div class="gotcha">
+            <div class="gotcha-title">Gotcha</div>
+            <code>qsort</code> with element size 1 on a <code>char</code> array
+            sorts individual bytes -- that is how we sort characters inside a string.
+            Do not pass <code>sizeof(char*)</code> there.
+          </div>
+
+          <div class="confidence">
+            <strong>Confidence Check</strong>
+            What makes the sorted string a valid canonical key?<br>
+            Anagrams share the same characters; sorting puts them in the same
+            order regardless of original arrangement.
+          </div>
+
+          <div class="trigger">
+            <strong>Trigger Line</strong>
+            "Group anagrams" -- sort each word -> qsort entries by key -> scan adjacent equal keys.
+          </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- S37 · Isomorphic Strings                                   -->
+        <!-- ========================================================= -->
+        <div class="card" id="s37">
+          <h2>S37 · Isomorphic Strings</h2>
+
+          <div class="background">
+            <strong>Background</strong>
+            Two strings s and t are isomorphic if each character in s can be
+            replaced by exactly one character in t and vice versa -- a
+            one-to-one character mapping in both directions.
+          </div>
+
+          <div class="situations">
+            <span class="sit">Determine if "egg" and "add" are isomorphic (e->a, g->d). "foo" and "bar" are not.</span>
+            <span class="why">Two direction arrays of size 128 check the bijection in O(n) time.</span>
+          </div>
+
+          <div class="logic-build">
+            <strong>Building the Logic from Scratch</strong>
+            <div class="aha">map_st[c] = which t-char c mapped to; map_ts[c] = which s-char c mapped to.</div>
+            <div class="aha">At each position: if map_st[s[i]]==0 assign it; else if it does not match current t[i] -- not isomorphic. Same check in reverse.</div>
+            <div class="ascii">
+s="egg"  t="add"
+i=0: e->a, a->e  (store)
+i=1: g->d, d->g  (store)
+i=2: g->d (match), d->g (match) OK
+
+s="foo"  t="bar"
+i=0: f->b
+i=1: o->a
+i=2: o->r  -- o already mapped to 'a' FAIL
+            </div>
+          </div>
+
+          <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+int is_isomorphic(const char *s, const char *t) {
+    unsigned char map_st[128] = {0};  /* s-char to t-char */
+    unsigned char map_ts[128] = {0};  /* t-char to s-char */
+    for (int i = 0; s[i]; i++) {
+        unsigned char sc = (unsigned char)s[i];
+        unsigned char tc = (unsigned char)t[i];
+        if (map_st[sc] == 0 &amp;&amp; map_ts[tc] == 0) {
+            map_st[sc] = tc;
+            map_ts[tc] = sc;
+        } else if (map_st[sc] != tc || map_ts[tc] != sc) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int main(void) {
+    printf("%d\n", is_isomorphic("egg",   "add"));   /* 1 */
+    printf("%d\n", is_isomorphic("foo",   "bar"));   /* 0 */
+    printf("%d\n", is_isomorphic("paper", "title")); /* 1 */
+    return 0;
+}
+          </code></pre>
+
+          <div class="dry-run">
+            <strong>Dry Run -- "paper" / "title"</strong>
+            <pre>
+i=0 p->t, t->p
+i=1 a->i, i->a
+i=2 p->t (match), t->p (match) OK
+i=3 e->l, l->e
+i=4 r->e, e->r
+all match -> 1
+            </pre>
+          </div>
+
+          <div class="gotcha">
+            <div class="gotcha-title">Gotcha</div>
+            Zero (0) is used as "unmapped". Null terminators (ASCII 0) never
+            appear inside valid strings, so this is safe. If you used -1 you
+            would need a signed char or int array.
+          </div>
+
+          <div class="confidence">
+            <strong>Confidence Check</strong>
+            Why do we need both map_st and map_ts?<br>
+            Without map_ts, "ab"-->"aa" would pass (both a and b map to a)
+            even though it violates the one-to-one requirement.
+          </div>
+
+          <div class="trigger">
+            <strong>Trigger Line</strong>
+            "Isomorphic strings" -- two 128-entry maps, check bijection at each position.
+          </div>
+        </div>
+
 <!-- CARDS_END -->
 <script>hljs.highlightAll();</script>
 </body>
