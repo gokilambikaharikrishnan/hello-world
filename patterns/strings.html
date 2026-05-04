@@ -5322,6 +5322,422 @@ dp[1][2] = 1 -> match
           </div>
         </div>
 
+
+        <!-- ========================================================= -->
+        <!-- S41 · Longest Palindromic Subsequence (DP)                  -->
+        <!-- ========================================================= -->
+        <div class="card" id="s41">
+          <h2>S41 · Longest Palindromic Subsequence (DP)</h2>
+
+          <div class="background">
+            <strong>Background</strong>
+            A subsequence is palindromic if it reads the same forwards and backwards
+            (characters need not be contiguous). dp[i][j] = length of the longest
+            palindromic subsequence in s[i..j].
+          </div>
+
+          <div class="situations">
+            <span class="sit">LPS("bbbab")=4 ("bbbb"), LPS("cbbd")=2 ("bb").</span>
+            <span class="why">O(n^2) DP fills the table diagonally; the answer is dp[0][n-1].</span>
+          </div>
+
+          <div class="logic-build">
+            <strong>Building the Logic from Scratch</strong>
+            <div class="aha">Base: dp[i][i]=1 (every single character is a palindrome of length 1).</div>
+            <div class="aha">If s[i]==s[j]: dp[i][j] = 2 + dp[i+1][j-1]. Else: dp[i][j] = max(dp[i+1][j], dp[i][j-1]).</div>
+            <div class="ascii">
+s = "bbbab"
+      b  b  b  a  b
+b     1  2  3  3  4
+b        1  2  2  3
+b           1  1  3
+a              1  1
+b                 1
+dp[0][4] = 4  ("bbbb")
+            </div>
+          </div>
+
+          <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+static int max2(int a, int b) { return a &gt; b ? a : b; }
+
+int lps(const char *s) {
+    int n = (int)strlen(s);
+    int dp[n][n];
+    memset(dp, 0, sizeof(dp));
+
+    for (int i = 0; i &lt; n; i++) dp[i][i] = 1;
+
+    /* fill by increasing length */
+    for (int len = 2; len &lt;= n; len++) {
+        for (int i = 0; i &lt;= n - len; i++) {
+            int j = i + len - 1;
+            if (s[i] == s[j]) {
+                dp[i][j] = 2 + (len == 2 ? 0 : dp[i+1][j-1]);
+            } else {
+                dp[i][j] = max2(dp[i+1][j], dp[i][j-1]);
+            }
+        }
+    }
+    return dp[0][n-1];
+}
+
+int main(void) {
+    printf("%d\n", lps("bbbab")); /* 4 */
+    printf("%d\n", lps("cbbd"));  /* 2 */
+    printf("%d\n", lps("abcba")); /* 5 */
+    return 0;
+}
+          </code></pre>
+
+          <div class="dry-run">
+            <strong>Dry Run -- "cbbd" (n=4)</strong>
+            <pre>
+len=1: dp[0][0]=1 dp[1][1]=1 dp[2][2]=1 dp[3][3]=1
+len=2:
+  i=0,j=1: c!=b -> max(dp[1][1],dp[0][0])=1
+  i=1,j=2: b==b -> 2+0=2
+  i=2,j=3: b!=d -> max(dp[3][3],dp[2][2])=1
+len=3:
+  i=0,j=2: c!=b -> max(dp[1][2],dp[0][1])=max(2,1)=2
+  i=1,j=3: b!=d -> max(dp[2][3],dp[1][2])=max(1,2)=2
+len=4:
+  i=0,j=3: c!=d -> max(dp[1][3],dp[0][2])=max(2,2)=2
+answer = dp[0][3] = 2
+            </pre>
+          </div>
+
+          <div class="gotcha">
+            <div class="gotcha-title">Gotcha</div>
+            When len==2 and s[i]==s[j], dp[i+1][j-1] = dp[i+1][i] which is
+            out-of-bounds or meaningless. Guard with <code>len == 2 ? 0 : dp[i+1][j-1]</code>.
+          </div>
+
+          <div class="confidence">
+            <strong>Confidence Check</strong>
+            Why fill diagonals by increasing length?<br>
+            dp[i][j] depends on dp[i+1][j-1] (shorter subproblem), which must
+            already be computed before we compute the longer interval.
+          </div>
+
+          <div class="trigger">
+            <strong>Trigger Line</strong>
+            "Longest palindromic subsequence" -- diagonal DP: match=2+inner, mismatch=max(left,down).
+          </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- S42 · Zigzag String Conversion                              -->
+        <!-- ========================================================= -->
+        <div class="card" id="s42">
+          <h2>S42 · Zigzag String Conversion</h2>
+
+          <div class="background">
+            <strong>Background</strong>
+            Write the string in a zigzag pattern on numRows rows, then read off
+            each row left to right. "PAYPALISHIRING" on 3 rows becomes
+            "PAHNAPLSIIGYIR". Simulate by tracking which row each character
+            belongs to and the current direction.
+          </div>
+
+          <div class="situations">
+            <span class="sit">Typical coding interview "simulation" question. No DP or fancy data structure -- just row assignment.</span>
+            <span class="why">O(n) time and space. Each character is placed in exactly one row buffer.</span>
+          </div>
+
+          <div class="logic-build">
+            <strong>Building the Logic from Scratch</strong>
+            <div class="aha">Maintain cur_row (0..numRows-1) and direction (+1 or -1).</div>
+            <div class="aha">Flip direction when cur_row hits 0 or numRows-1. Append each char to rows[cur_row].</div>
+            <div class="ascii">
+"PAYPALISHIRING"  numRows=3
+row0: P   A   H   N      -> "PAHN"
+row1: A P L S I I G      -> "APLSIIG"
+row2: Y   I   R          -> "YIR"
+result: "PAHNAPLSIIGYIR"
+            </div>
+          </div>
+
+          <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#include &lt;stdlib.h&gt;
+
+void zigzag(const char *s, int num_rows, char *out) {
+    if (num_rows == 1) { strcpy(out, s); return; }
+
+    int n = (int)strlen(s);
+    char **rows = calloc(num_rows, sizeof(char *));
+    for (int r = 0; r &lt; num_rows; r++) rows[r] = calloc(n + 1, 1);
+
+    int cur = 0, dir = 1;
+    int row_len[num_rows];
+    memset(row_len, 0, sizeof(row_len));
+
+    for (int i = 0; i &lt; n; i++) {
+        rows[cur][row_len[cur]++] = s[i];
+        if (cur == 0)            dir = 1;
+        if (cur == num_rows - 1) dir = -1;
+        cur += dir;
+    }
+
+    int pos = 0;
+    for (int r = 0; r &lt; num_rows; r++) {
+        memcpy(out + pos, rows[r], row_len[r]);
+        pos += row_len[r];
+        free(rows[r]);
+    }
+    out[pos] = '\0';
+    free(rows);
+}
+
+int main(void) {
+    char buf[64];
+    zigzag("PAYPALISHIRING", 3, buf); printf("%s\n", buf); /* PAHNAPLSIIGYIR */
+    zigzag("PAYPALISHIRING", 4, buf); printf("%s\n", buf); /* PINALSIGYAHRPI */
+    zigzag("A", 1, buf);             printf("%s\n", buf); /* A              */
+    return 0;
+}
+          </code></pre>
+
+          <div class="dry-run">
+            <strong>Dry Run -- "PAYPALISHIRING", numRows=3</strong>
+            <pre>
+i=0 P: cur=0 dir->1, cur=1
+i=1 A: cur=1 cur=2
+i=2 Y: cur=2 dir->-1, cur=1
+i=3 P: cur=1 cur=0
+i=4 A: cur=0 dir->+1, cur=1
+...
+rows[0]="PAHN" rows[1]="APLSIIG" rows[2]="YIR"
+concat -> "PAHNAPLSIIGYIR"
+            </pre>
+          </div>
+
+          <div class="gotcha">
+            <div class="gotcha-title">Gotcha</div>
+            Flip direction BEFORE advancing: check cur==0 and cur==num_rows-1
+            first, then add dir. If you flip after advancing you will visit
+            row -1 or row num_rows.
+          </div>
+
+          <div class="confidence">
+            <strong>Confidence Check</strong>
+            What happens when numRows==1?<br>
+            There is no zigzag; every character is in row 0. Return the string
+            unchanged to avoid division-by-zero in direction logic.
+          </div>
+
+          <div class="trigger">
+            <strong>Trigger Line</strong>
+            "Zigzag / wave pattern" -- row buffers + direction variable, flip at 0 and numRows-1.
+          </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- S43 · Longest Common Subsequence (DP)                       -->
+        <!-- ========================================================= -->
+        <div class="card" id="s43">
+          <h2>S43 · Longest Common Subsequence (DP)</h2>
+
+          <div class="background">
+            <strong>Background</strong>
+            LCS finds the longest sequence of characters that appears (in order,
+            not necessarily contiguous) in both strings. dp[i][j] = LCS of
+            s[0..i-1] and t[0..j-1].  Foundation of diff tools and DNA alignment.
+          </div>
+
+          <div class="situations">
+            <span class="sit">LCS("abcde","ace")=3, LCS("abc","abc")=3, LCS("abc","def")=0.</span>
+            <span class="why">O(mn) DP; space-reducible to O(n) with two-row technique.</span>
+          </div>
+
+          <div class="logic-build">
+            <strong>Building the Logic from Scratch</strong>
+            <div class="aha">Base: dp[0][j]=0 and dp[i][0]=0 (empty string has no common subsequence).</div>
+            <div class="aha">If s[i-1]==t[j-1]: dp[i][j]=1+dp[i-1][j-1]. Else: dp[i][j]=max(dp[i-1][j], dp[i][j-1]).</div>
+            <div class="ascii">
+s="abcde"  t="ace"
+     ""  a  c  e
+""    0  0  0  0
+a     0  1  1  1
+b     0  1  1  1
+c     0  1  2  2
+d     0  1  2  2
+e     0  1  2  3   &lt;-- dp[5][3]=3
+            </div>
+          </div>
+
+          <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+static int max2(int a, int b) { return a &gt; b ? a : b; }
+
+int lcs(const char *s, const char *t) {
+    int m = strlen(s), n = strlen(t);
+    int prev[n + 1], curr[n + 1];
+    memset(prev, 0, (n + 1) * sizeof(int));
+
+    for (int i = 1; i &lt;= m; i++) {
+        curr[0] = 0;
+        for (int j = 1; j &lt;= n; j++) {
+            if (s[i-1] == t[j-1])
+                curr[j] = 1 + prev[j-1];
+            else
+                curr[j] = max2(prev[j], curr[j-1]);
+        }
+        memcpy(prev, curr, (n + 1) * sizeof(int));
+    }
+    return prev[n];
+}
+
+int main(void) {
+    printf("%d\n", lcs("abcde", "ace"));  /* 3 */
+    printf("%d\n", lcs("abc",   "abc"));  /* 3 */
+    printf("%d\n", lcs("abc",   "def"));  /* 0 */
+    return 0;
+}
+          </code></pre>
+
+          <div class="dry-run">
+            <strong>Dry Run -- "abcde" / "ace" (row i=3, s[2]='c')</strong>
+            <pre>
+prev=[0,1,1,1]  (after rows a,b)
+i=3 s[2]='c':
+  j=1 t[0]='a': c!=a -> max(prev[1],curr[0])=max(1,0)=1
+  j=2 t[1]='c': c==c -> 1+prev[1]=1+1=2
+  j=3 t[2]='e': c!=e -> max(prev[3],curr[2])=max(1,2)=2
+curr=[0,1,2,2]  -> becomes prev
+            </pre>
+          </div>
+
+          <div class="gotcha">
+            <div class="gotcha-title">Gotcha</div>
+            LCS is NOT the same as longest common substring. Substring requires
+            contiguous characters (use a sliding-window or dp[i][j]=dp[i-1][j-1]+1
+            only when matching, reset to 0 on mismatch).
+          </div>
+
+          <div class="confidence">
+            <strong>Confidence Check</strong>
+            What does the recurrence dp[i][j]=max(dp[i-1][j], dp[i][j-1]) represent?<br>
+            Skip one character from either s or t, taking the better result.
+          </div>
+
+          <div class="trigger">
+            <strong>Trigger Line</strong>
+            "Longest common subsequence" -- match=1+diagonal, mismatch=max(up, left). Two-row DP.
+          </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- S44 · String Hashing (Polynomial Rolling Hash)              -->
+        <!-- ========================================================= -->
+        <div class="card" id="s44">
+          <h2>S44 · String Hashing (Polynomial Rolling Hash)</h2>
+
+          <div class="background">
+            <strong>Background</strong>
+            A polynomial rolling hash maps a string to an integer in O(n), then
+            compares substrings in O(1) using prefix hashes. The formula is
+            H(s[l..r]) = (prefix[r+1] - prefix[l] * pow[r-l+1]) % MOD.
+            Used in Rabin-Karp and substring equality checks.
+          </div>
+
+          <div class="situations">
+            <span class="sit">Fast repeated substring comparison, detecting duplicate substrings, multi-pattern search.</span>
+            <span class="why">O(n) preprocessing, O(1) per substring hash query vs O(k) for memcmp.</span>
+          </div>
+
+          <div class="logic-build">
+            <strong>Building the Logic from Scratch</strong>
+            <div class="aha">prefix[i] = H(s[0..i-1]) = (prefix[i-1]*BASE + s[i-1]) % MOD.</div>
+            <div class="aha">pow[k] = BASE^k % MOD (precomputed). Substring hash = (prefix[r+1] - prefix[l]*pow[r-l+1] % MOD + MOD) % MOD.</div>
+            <div class="ascii">
+s = "abcabc"  BASE=131, MOD=1e9+7
+prefix[0]=0
+prefix[1]=97            (a=97)
+prefix[2]=97*131+98     (b=98)
+prefix[3]=prefix[2]*131+99  (c=99)
+hash(s[0..2]) = hash(s[3..5]) -> duplicate detection
+            </div>
+          </div>
+
+          <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+#define BASE 131ULL
+#define MOD  1000000007ULL
+
+typedef unsigned long long ull;
+
+void build_hash(const char *s, int n, ull *prefix, ull *pw) {
+    pw[0] = 1;
+    prefix[0] = 0;
+    for (int i = 0; i &lt; n; i++) {
+        prefix[i+1] = (prefix[i] * BASE + (unsigned char)s[i]) % MOD;
+        pw[i+1]     = pw[i] * BASE % MOD;
+    }
+}
+
+/* hash of s[l..r] inclusive (0-indexed) */
+ull substr_hash(const ull *prefix, const ull *pw, int l, int r) {
+    return (prefix[r+1] - prefix[l] * pw[r - l + 1] % MOD + MOD) % MOD;
+}
+
+int main(void) {
+    const char *s = "abcabc";
+    int n = strlen(s);
+    ull prefix[n+1], pw[n+1];
+    build_hash(s, n, prefix, pw);
+
+    ull h1 = substr_hash(prefix, pw, 0, 2);  /* "abc" */
+    ull h2 = substr_hash(prefix, pw, 3, 5);  /* "abc" */
+    ull h3 = substr_hash(prefix, pw, 0, 1);  /* "ab"  */
+    printf("h1==h2: %d\n", h1 == h2); /* 1 */
+    printf("h1==h3: %d\n", h1 == h3); /* 0 */
+    return 0;
+}
+          </code></pre>
+
+          <div class="dry-run">
+            <strong>Dry Run -- substr_hash for s[0..2]="abc"</strong>
+            <pre>
+prefix[3] = H("abc")
+prefix[0] = 0
+substr = (prefix[3] - prefix[0]*pow[3] % MOD + MOD) % MOD
+       = (prefix[3] - 0 + MOD) % MOD
+       = H("abc")   -- correct
+            </pre>
+          </div>
+
+          <div class="gotcha">
+            <div class="gotcha-title">Gotcha</div>
+            Always add MOD before the final % when subtracting:
+            <code>(a - b % MOD + MOD) % MOD</code>. Without +MOD the result
+            can wrap to a huge positive number in unsigned arithmetic (or go
+            negative in signed). Double hashing (two different MODs) reduces
+            collision probability to near zero.
+          </div>
+
+          <div class="confidence">
+            <strong>Confidence Check</strong>
+            Why multiply by BASE^(r-l+1) when subtracting prefix[l]?<br>
+            prefix[l] encodes characters before position l; they were multiplied
+            into prefix[r+1] exactly (r-l+1) times, so we must scale them back
+            out by the same factor.
+          </div>
+
+          <div class="trigger">
+            <strong>Trigger Line</strong>
+            "Fast substring comparison / duplicate substrings" -- prefix hash array + pow array, O(1) query with +MOD before %.
+          </div>
+        </div>
+
 <!-- CARDS_END -->
 <script>hljs.highlightAll();</script>
 </body>
