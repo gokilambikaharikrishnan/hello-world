@@ -271,25 +271,25 @@
 - [x] L15 · Kth Node from End — Runner Technique
 
 ### Merge and Sort (L16–L19)
-- [ ] L16 · Merge Two Sorted Lists
-- [ ] L17 · Merge K Sorted Lists
-- [ ] L18 · Sort Linked List — Merge Sort
-- [ ] L19 · Partition List Around a Value
+- [x] L16 · Merge Two Sorted Lists
+- [x] L17 · Merge K Sorted Lists
+- [x] L18 · Sort Linked List — Merge Sort
+- [x] L19 · Partition List Around a Value
 
 ### Structural Patterns (L20–L32)
-- [ ] L20 · Palindrome Check — Find Mid, Reverse Half, Compare
-- [ ] L21 · Reorder List — L0→Ln→L1→Ln-1
-- [ ] L22 · Intersection of Two Lists
-- [ ] L23 · Remove Duplicates from Sorted List
-- [ ] L24 · Remove All Occurrences of a Value
-- [ ] L25 · Add Two Numbers as Linked Lists
-- [ ] L26 · Rotate List by K
-- [ ] L27 · Copy List with Random Pointer
-- [ ] L28 · Flatten Multilevel Linked List
-- [ ] L29 · Odd-Even Node Grouping
-- [ ] L30 · Swap Adjacent Pairs
-- [ ] L31 · Remove Nth Node from End (Runner)
-- [ ] L32 · Check if List is Sorted
+- [x] L20 · Palindrome Check — Find Mid, Reverse Half, Compare
+- [x] L21 · Reorder List — L0→Ln→L1→Ln-1
+- [x] L22 · Intersection of Two Lists
+- [x] L23 · Remove Duplicates from Sorted List
+- [x] L24 · Remove All Occurrences of a Value
+- [x] L25 · Add Two Numbers as Linked Lists
+- [x] L26 · Rotate List by K
+- [x] L27 · Copy List with Random Pointer
+- [x] L28 · Flatten Multilevel Linked List
+- [x] L29 · Odd-Even Node Grouping
+- [x] L30 · Swap Adjacent Pairs
+- [x] L31 · Remove Nth Node from End (Runner)
+- [x] L32 · Check if List is Sorted
 
 ### Design Patterns (L33–L35)
 - [ ] L33 · Doubly Linked List — Insert and Delete with Sentinel Head/Tail
@@ -303,8 +303,8 @@
 | Batch | Cards | Status |
 |-------|-------|--------|
 | Batch 1 | L01–L10 | ✅ Done |
-| Batch 2 | L11–L20 | 🔄 In Progress |
-| Batch 3 | L21–L30 | |
-| Batch 4 | L31–L35 | |
+| Batch 2 | L11–L20 | ✅ Done |
+| Batch 3 | L21–L32 | ✅ Done |
+| Batch 4 | L33–L35 | 🔄 In Progress |
 
-**Currently reworking:** L16 — Merge Two Sorted Lists
+**Currently reworking:** L33 — Doubly Linked List with Sentinels
