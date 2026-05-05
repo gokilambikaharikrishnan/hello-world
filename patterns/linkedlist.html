@@ -1920,6 +1920,210 @@ Relative order preserved within each group.</div>
   </div>
 </div>
 
+
+<!-- L20 -->
+<div class="card" id="L20">
+  <div class="card-header">
+    <span class="card-id">L20</span>
+    <h2 class="card-title">Palindrome Check — Find Mid, Reverse Half, Compare</h2>
+    <span class="category-badge">Structural Patterns</span>
+  </div>
+
+  <div class="background">
+    <p>Check if a linked list reads the same forwards and backwards. Can't index backwards like an array — instead: find the midpoint, reverse the second half in-place, compare front half vs reversed back half node by node.</p>
+    <p>Three sub-problems composed together: find-middle (L14), reverse-list (L07), and simple traversal comparison.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Validate a palindromic command sequence stored as a list</div><div class="why">Reads same forwards and backwards</div>
+    <div class="sit">Interview: palindrome linked list in O(n) time O(1) space</div><div class="why">No extra array allowed</div>
+    <div class="sit">CRC-style symmetric protocol frame check</div><div class="why">Frame header mirrors frame trailer</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Check if 1→2→2→1 is a palindrome</div>
+    <div class="ascii">
+Step 1 — find middle (second-mid variant):
+  slow/fast → slow stops at second node[2]
+  mid = node[2] (second 2)
+
+Before split:
+  [1]→[2]→[2]→[1]→NULL
+            ↑ mid
+
+Step 2 — reverse second half starting at mid:
+  reverse(node[2]→node[1]) → [1]→[2]→NULL
+  second_half_rev = node[1]
+
+State:
+  first half:  [1]→[2]→...  (node[2] still points to node[2])
+  second half: [1]→[2]→NULL  (reversed)
+
+Step 3 — compare:
+  p=head=1, q=second_half_rev=1:  1==1 ✓
+  p=2,      q=2:                  2==2 ✓
+  q becomes NULL → stop → IS palindrome ✓
+
+Non-palindrome 1→2→3:
+  mid=node[2], reverse(2→3)→3→2
+  p=1, q=3: 1≠3 → NOT palindrome</div>
+    <div class="aha">Compare until the shorter pointer (q, the reversed half) runs out. For odd-length lists the middle node is never compared — it pairs with itself.</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">int is_palindrome(Node *head) {
+    if (!head || !head->next) return 1;
+
+    /* find middle (second-mid) */
+    Node *slow = head, *fast = head;
+    while (fast && fast->next) {
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+
+    /* reverse second half */
+    Node *prev = NULL, *curr = slow;
+    while (curr) {
+        Node *nxt = curr->next;
+        curr->next = prev;
+        prev = curr;
+        curr = nxt;
+    }
+
+    /* compare */
+    Node *left = head, *right = prev;
+    while (right) {
+        if (left->val != right->val) return 0;
+        left  = left->next;
+        right = right->next;
+    }
+    return 1;
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+    <strong>1→2→3→2→1 (odd, palindrome)</strong><br>
+    mid=node3. reverse(3→2→1)=1→2→3.<br>
+    compare: 1==1, 2==2, 3==3, right=NULL → return 1 ✓<br>
+    <strong>1→2→3 (not palindrome)</strong><br>
+    mid=node2(3). reverse(3)=3. compare: 1≠3 → return 0 ✓
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    This destructively reverses the second half. If the caller needs the list intact afterward, restore it (reverse the second half again and reattach). In interviews, mention this tradeoff explicitly.
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    For an even-length palindrome like 1→2→2→1, how many comparisons are made? For an odd-length palindrome 1→2→1, how many?
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Palindrome check on linked list</div>
+    <div class="trigger-variants">find mid, reverse second half, compare both halves until right==NULL</div>
+  </div>
+</div>
+
+<!-- L21 -->
+<div class="card" id="L21">
+  <div class="card-header">
+    <span class="card-id">L21</span>
+    <h2 class="card-title">Reorder List — L0→Ln→L1→Ln-1→…</h2>
+    <span class="category-badge">Structural Patterns</span>
+  </div>
+
+  <div class="background">
+    <p>Reorder the list so the first node is followed by the last, then the second node, then the second-to-last, and so on — weaving the front and back halves together. This is done in-place using three steps: find middle, reverse second half, merge-interleave the two halves.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Interleave a request list with its responses in order</div><div class="why">req1,resp1,req2,resp2... from two sorted halves</div>
+    <div class="sit">Zig-zag display of a sequential list</div><div class="why">UI wants first/last/second/second-last alternation</div>
+    <div class="sit">LeetCode #143 — common interview problem</div><div class="why">Combines find-mid + reverse + interleave</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Reorder 1→2→3→4→5</div>
+    <div class="ascii">
+Step 1 — find middle (first-mid variant, slow stops at node3):
+  first half:  [1]→[2]→[3]
+  second half: [4]→[5]→NULL  (cut slow→next=NULL)
+
+Step 2 — reverse second half:
+  [4]→[5] → [5]→[4]→NULL
+
+Step 3 — interleave:
+  l=[1]→[2]→[3]   r=[5]→[4]
+
+  take l(1), take r(5): [1]→[5]
+  take l(2), take r(4): [1]→[5]→[2]→[4]
+  take l(3), r=NULL:    [1]→[5]→[2]→[4]→[3]
+
+After: [1]→[5]→[2]→[4]→[3]→NULL ✓</div>
+    <div class="aha">Interleave: save l->next and r->next before rewiring. Attach r after l, then l->next was saved to continue. Alternate until one list empties (the remaining one is already in position).</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">void reorder_list(Node *head) {
+    if (!head || !head->next) return;
+
+    /* Step 1: find first middle, split */
+    Node *slow = head, *fast = head;
+    while (fast->next && fast->next->next) {
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+    Node *second = slow->next;
+    slow->next = NULL;
+
+    /* Step 2: reverse second half */
+    Node *prev = NULL, *curr = second;
+    while (curr) {
+        Node *nxt = curr->next;
+        curr->next = prev;
+        prev = curr;
+        curr = nxt;
+    }
+    second = prev;   /* new head of reversed second half */
+
+    /* Step 3: interleave */
+    Node *first = head;
+    while (first && second) {
+        Node *fn = first->next;
+        Node *sn = second->next;
+        first->next  = second;
+        second->next = fn;       /* fn might be NULL — that's fine */
+        first  = fn;
+        second = sn;
+    }
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+    <strong>1→2→3→4</strong><br>
+    mid=node2 (first-mid), second=3→4, cut: 1→2.<br>
+    reverse(3→4)=4→3. second=node4.<br>
+    interleave: first=1,second=4: 1→4→2→3. first=2,second=3: 2→3→NULL. first=NULL, stop.<br>
+    <strong>Result: 1→4→2→3 ✓</strong>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    Save both <code>first->next</code> AND <code>second->next</code> before any rewiring in the interleave loop — you need both to advance after the pointers are changed. Forgetting either loses part of the list.
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    Why do we use the first-middle variant (not second) for the split? What happens to the extra middle node in an odd-length list?
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Reorder list L0→Ln→L1→Ln-1</div>
+    <div class="trigger-variants">split at first-mid, reverse second half, interleave save-next-before-rewire</div>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 <script>hljs.highlightAll();</script>
 </body>
