@@ -1113,6 +1113,273 @@ Node *reverse_k_groups(Node *head, int k) {
   </div>
 </div>
 
+
+<!-- L11 -->
+<div class="card" id="L11">
+  <div class="card-header">
+    <span class="card-id">L11</span>
+    <h2 class="card-title">Reverse Alternate K-Groups</h2>
+    <span class="category-badge">Reversal</span>
+  </div>
+
+  <div class="background">
+    <p>A twist on K-group reversal: reverse the first K nodes, skip the next K nodes untouched, reverse the next K, skip the next K, and so on. Every other group stays in its original order.</p>
+    <p>This requires toggling a boolean flag <code>should_reverse</code> after each group and handling the skip phase by simply advancing K steps without flipping.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Alternating byte-order correction in a mixed-endian protocol</div><div class="why">Even blocks need byte-swap, odd blocks are already correct</div>
+    <div class="sit">Interview follow-up after K-group reversal</div><div class="why">Tests ability to add conditional logic to a known pattern</div>
+    <div class="sit">Interleaving two orderings in a display list</div><div class="why">Reversed vs. normal chunks alternate</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">K=2 on 1→2→3→4→5→6→NULL</div>
+    <div class="ascii">
+Before: [1]→[2]→[3]→[4]→[5]→[6]→NULL
+
+Phase A — REVERSE group [1,2]:
+  dummy→[2]→[1]→[3]→[4]→[5]→[6]
+  group_prev = node[1]  (now the tail of reversed group)
+
+Phase B — SKIP group [3,4]: just advance group_prev two steps
+  group_prev advances to node[4]
+
+Phase A — REVERSE group [5,6]:
+  node[4]→[6]→[5]→NULL
+  group_prev = node[5]
+
+Phase B — no more K nodes to skip → done
+
+After: [2]→[1]→[3]→[4]→[6]→[5]→NULL
+        reversed  skipped  reversed</div>
+    <div class="aha">The skip phase uses the same <code>kth()</code> counter to check availability, then just slides <code>group_prev</code> forward K steps without rewiring any pointers.</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">static Node *kth(Node *curr, int k) {
+    while (curr && k-- > 0) curr = curr->next;
+    return curr;
+}
+
+Node *reverse_alt_k(Node *head, int k) {
+    Node dummy = {0, head};
+    Node *group_prev = &dummy;
+    int should_reverse = 1;
+
+    while (1) {
+        /* check that k nodes exist ahead */
+        if (!kth(group_prev, k)) break;
+
+        if (should_reverse) {
+            Node *group_next = kth(group_prev, k)->next;
+            Node *prev = group_next;
+            Node *curr = group_prev->next;
+            Node *old_head = curr;            /* will be tail after reverse */
+            for (int i = 0; i < k; i++) {
+                Node *nxt = curr->next;
+                curr->next = prev;
+                prev = curr;
+                curr = nxt;
+            }
+            group_prev->next = prev;          /* prev = new group head */
+            group_prev = old_head;            /* old head is new tail */
+        } else {
+            /* skip phase: advance group_prev k steps */
+            for (int i = 0; i < k; i++)
+                group_prev = group_prev->next;
+        }
+        should_reverse ^= 1;                  /* toggle */
+    }
+    return dummy.next;
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+    <strong>K=2 on 1→2→3→4→5→NULL</strong><br>
+    rev[1,2] → 2→1→3→4→5, group_prev=node[1], toggle=skip<br>
+    skip[3,4]: group_prev advances to node[4], toggle=rev<br>
+    rev[5]: only 1 node, kth returns NULL → break<br>
+    <strong>Result: 2→1→3→4→5 ✓</strong>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    Call <code>kth()</code> twice in the reverse phase (once to check, once to get <code>group_next</code>) — or cache the result. Also, calling <code>kth()</code> twice is O(k) twice per group; fine for the algorithm, just don't worry about it.
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    In the skip phase, why do we only advance <code>group_prev</code> rather than rewiring any pointers? What happens if the list length is not a multiple of 2K?
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Reverse alternate K-groups</div>
+    <div class="trigger-variants">toggle should_reverse, reverse phase uses K-group logic, skip phase advances group_prev K steps</div>
+  </div>
+</div>
+
+
+<!-- L12 -->
+<div class="card" id="L12">
+  <div class="card-header">
+    <span class="card-id">L12</span>
+    <h2 class="card-title">Detect Cycle — Floyd's Algorithm</h2>
+    <span class="category-badge">Fast / Slow Pointer</span>
+  </div>
+
+  <div class="background">
+    <p>If a linked list has a cycle, a pointer that moves two steps at a time will eventually lap a pointer moving one step at a time — like a fast runner catching a slow one on a circular track. If there is no cycle, the fast pointer will reach NULL first.</p>
+    <p>Floyd's tortoise-and-hare algorithm detects cycles in O(n) time using only two pointers — no extra memory, no hash set.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Validating a linked list before traversal (OS scheduler, rtos task queue)</div><div class="why">A cycle causes infinite traversal</div>
+    <div class="sit">Memory leak detector: detecting reference cycles</div><div class="why">Cycles prevent garbage collection</div>
+    <div class="sit">Pointer corruption detection in embedded firmware</div><div class="why">Corrupted next pointer can close a cycle</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">List with cycle: 1→2→3→4→5→3 (node 5 points back to node 3)</div>
+    <div class="ascii">
+Nodes:   [1]→[2]→[3]→[4]→[5]
+                  ↑__________↑  (cycle: 5→next = node3)
+
+slow: 1 step   fast: 2 steps
+step  slow  fast
+ 0:    1     1
+ 1:    2     3
+ 2:    3     5
+ 3:    4     4   ← slow==fast → CYCLE DETECTED
+
+(fast went 3→5→3→5... while slow went 1→2→3→4)
+If no cycle: fast hits NULL before meeting slow.</div>
+    <div class="aha">Fast pointer moves at twice the speed inside the cycle, so it must catch slow within at most <em>cycle_length</em> steps after both enter the cycle.</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">int has_cycle(Node *head) {
+    Node *slow = head;
+    Node *fast = head;
+    while (fast && fast->next) {
+        slow = slow->next;
+        fast = fast->next->next;
+        if (slow == fast)
+            return 1;   /* cycle found */
+    }
+    return 0;           /* fast hit NULL — no cycle */
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+    <strong>No cycle: 1→2→3→NULL</strong><br>
+    step1: slow=2, fast=3. step2: slow=3, fast=NULL → while fails → return 0 ✓<br>
+    <strong>Cycle: 1→2→3→2 (3→next=node[2])</strong><br>
+    step1: slow=2, fast=3. step2: slow=3, fast=2. step3: slow=2, fast=3. step4: slow=3, fast=2... hmm<br>
+    Actually step2: fast=3->next->next = node[2]->next = node[3]. slow=3. slow==fast → return 1 ✓
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    Check <code>fast && fast->next</code> (both!) before advancing. If you only check <code>fast->next</code>, a NULL fast dereferences. Always check the pointer itself before its field.
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    Why is checking <code>slow == fast</code> AFTER advancing (not before) correct? What breaks if you check before the first move?
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Detect cycle with fast/slow pointers</div>
+    <div class="trigger-variants">slow+=1, fast+=2, if slow==fast → cycle; fast hits NULL → no cycle</div>
+  </div>
+</div>
+
+<!-- L13 -->
+<div class="card" id="L13">
+  <div class="card-header">
+    <span class="card-id">L13</span>
+    <h2 class="card-title">Find Cycle Entry Point — Floyd Phase 2</h2>
+    <span class="category-badge">Fast / Slow Pointer</span>
+  </div>
+
+  <div class="background">
+    <p>After Floyd's phase 1 detects the meeting point inside the cycle, phase 2 pinpoints where the cycle starts. Move one pointer back to <code>head</code> and leave the other at the meeting point. Advance both one step at a time — they meet exactly at the cycle entry node.</p>
+    <p>Mathematical reason: if the entry is distance F from head, and the meeting point is distance C-F from entry (inside the cycle of length C), then head and meeting point are both exactly F steps from the entry.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Finding a duplicate number (Floyd on index-as-pointer)</div><div class="why">Entry of cycle = duplicate value</div>
+    <div class="sit">Embedded RTOS: finding which task's next pointer is corrupted</div><div class="why">Entry node is the first corrupted link</div>
+    <div class="sit">Debugging circular linked list bugs in device driver</div><div class="why">Entry point is the node that was erroneously re-linked</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">List: 1→2→3→4→5→3 (entry=node3, cycle length C=3)</div>
+    <div class="ascii">
+Phase 1 meeting point: slow and fast meet at node4
+(Derivation: F=2 steps to entry, C=3, meet at F mod C = 2 steps in = node4... actually at node5 with this example — exact meeting spot varies)
+
+Phase 2:
+  ptr1 = head (node1)
+  ptr2 = meeting_point (wherever phase1 stopped)
+
+  step:  ptr1   ptr2
+    0:    1      4
+    1:    2      5
+    2:    3      3   ← BOTH AT NODE3 = cycle entry ✓
+
+Key insight: distance(head → entry) = distance(meeting → entry)
+  Both pointers walk forward 1 step at a time.
+  They MUST meet at the cycle entry.</div>
+    <div class="aha">You don't need to know F or C. Just reset one pointer to head, keep the other at the meeting point, and step both by 1. The math guarantees they meet at the entry.</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">Node *cycle_entry(Node *head) {
+    Node *slow = head, *fast = head;
+
+    /* Phase 1: find meeting point */
+    while (fast && fast->next) {
+        slow = slow->next;
+        fast = fast->next->next;
+        if (slow == fast) break;
+    }
+    if (!fast || !fast->next) return NULL;  /* no cycle */
+
+    /* Phase 2: find entry */
+    Node *ptr = head;
+    while (ptr != slow) {
+        ptr  = ptr->next;
+        slow = slow->next;
+    }
+    return ptr;   /* cycle entry node */
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+    <strong>1→2→3→4→5→3 (entry=node3)</strong><br>
+    Phase 1: slow/fast meet at some node inside cycle (node4 or node3 depending on steps).<br>
+    Phase 2: ptr=head=1, slow=meeting. Both advance 1/step:<br>
+    1→2→3 and meeting→...→3 — they meet at node3 ✓
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    After the while loop breaks, check that the loop exited because <code>slow==fast</code> (cycle detected), not because <code>fast</code> hit NULL (no cycle). Without this guard you'll return a bogus entry for an acyclic list.
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    In phase 2, which pointer goes back to head? Can you run phase 2 with fast still moving at 2 steps? Why or why not?
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Find cycle entry — Floyd phase 2</div>
+    <div class="trigger-variants">phase1 finds meeting point; reset one to head; both advance 1 step; meet at entry</div>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 <script>hljs.highlightAll();</script>
 </body>
