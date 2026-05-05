@@ -1380,6 +1380,203 @@ Key insight: distance(head → entry) = distance(meeting → entry)
   </div>
 </div>
 
+
+<!-- L14 -->
+<div class="card" id="L14">
+  <div class="card-header">
+    <span class="card-id">L14</span>
+    <h2 class="card-title">Find Middle of List</h2>
+    <span class="category-badge">Fast / Slow Pointer</span>
+  </div>
+
+  <div class="background">
+    <p>When fast moves at twice the speed of slow, by the time fast reaches the end of the list, slow is at the midpoint. No length calculation needed — a single pass finds the middle.</p>
+    <p>For even-length lists, there are two middle nodes. The standard variant lands slow on the <em>second</em> middle (used for palindrome check and merge sort on lists).</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Merge sort on a linked list — split at middle</div><div class="why">Need to cut the list in half each recursion</div>
+    <div class="sit">Palindrome check — reverse second half starting from middle</div><div class="why">Mid node is the pivot for the reversal</div>
+    <div class="sit">Balanced rendering: display the middle item first</div><div class="why">UX: highlight central element in a list widget</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Odd list (5 nodes): slow lands on node 3 (true center)</div>
+    <div class="ascii">
+List: [1]→[2]→[3]→[4]→[5]→NULL
+
+step  slow  fast
+  0:    1     1
+  1:    2     3
+  2:    3     5   fast->next=NULL → loop ends → slow=3 ✓
+
+Even list (4 nodes): slow lands on node 3 (second middle)
+
+List: [1]→[2]→[3]→[4]→NULL
+
+step  slow  fast
+  0:    1     1
+  1:    2     3
+  2:    3   NULL  fast=NULL → loop ends → slow=3 (second middle)
+
+To get FIRST middle for even list, stop when fast->next==NULL:</div>
+    <div class="aha">Use <code>fast->next && fast->next->next</code> as the condition to stop at the first middle on even lists (merge sort variant). Use <code>fast && fast->next</code> to stop at second middle.</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">/* Returns second middle for even-length lists (palindrome/merge sort use) */
+Node *find_middle(Node *head) {
+    Node *slow = head;
+    Node *fast = head;
+    while (fast && fast->next) {
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+    return slow;
+}
+
+/* Returns first middle for even-length lists (split-before-middle variant) */
+Node *find_middle_first(Node *head) {
+    Node *slow = head;
+    Node *fast = head;
+    while (fast->next && fast->next->next) {
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+    return slow;
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+    <strong>Odd: 1→2→3→4→5</strong> → find_middle returns node3 ✓<br>
+    <strong>Even: 1→2→3→4</strong> → find_middle returns node3 (second mid) ✓<br>
+    <strong>Even: 1→2→3→4</strong> → find_middle_first returns node2 (first mid) ✓<br>
+    <strong>Single: [1]</strong> → fast->next=NULL on first check → return node1 ✓
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    The two variants (first vs second middle) produce different split points on even lists. Using the wrong one in merge sort can cause an infinite recursion because the "first half" has length 0 when slow stays at head. Always use <code>find_middle_first</code> for merge sort.
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    For a 6-node list, what does each variant return? Why does merge sort need the first-middle variant?
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Find list midpoint with fast/slow</div>
+    <div class="trigger-variants">slow+=1, fast+=2; when fast hits end, slow is at middle</div>
+  </div>
+</div>
+
+<!-- L15 -->
+<div class="card" id="L15">
+  <div class="card-header">
+    <span class="card-id">L15</span>
+    <h2 class="card-title">Kth Node from End — Runner Technique</h2>
+    <span class="category-badge">Fast / Slow Pointer</span>
+  </div>
+
+  <div class="background">
+    <p>To find the Kth node from the end in one pass, start a "runner" pointer K steps ahead of a "follower". Then advance both one step at a time. When the runner falls off the end (hits NULL), the follower is exactly K steps from the end.</p>
+    <p>Physical analogy: two runners on a track separated by K meters. When the front runner crosses the finish line, the back runner is exactly K meters from the end.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Remove Nth node from end (LeetCode #19)</div><div class="why">Stop follower one node before the target to unlink it</div>
+    <div class="sit">Find the node at position len-K in an embedded list</div><div class="why">No length field — one pass avoids two scans</div>
+    <div class="sit">Sliding expiry window in a log list</div><div class="why">K-ago node is the expiry boundary</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">K=2 from end in: 1→2→3→4→5→NULL (answer: node4)</div>
+    <div class="ascii">
+Step 1: advance runner K=2 steps ahead of follower
+
+  follower=1  runner=1
+  run step1 → runner=2
+  run step2 → runner=3
+  Gap is now 2 between follower(1) and runner(3)
+
+Step 2: advance both until runner==NULL
+
+  step  follower  runner
+    1:     2        4
+    2:     3        5
+    3:     4       NULL  ← runner fell off
+
+  follower = node4 = 2nd from end ✓
+
+For REMOVE Nth from end: keep follower one step behind so it
+points to the node BEFORE the target:
+  initialise dummy→head, follower=dummy, advance runner K steps from head</div>
+    <div class="aha">The K-step gap is the invariant. Maintaining it throughout guarantees the correct landing position.</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">/* Return Kth node from end (1-indexed: K=1 is the last node) */
+Node *kth_from_end(Node *head, int k) {
+    Node *runner   = head;
+    Node *follower = head;
+
+    /* advance runner k steps */
+    for (int i = 0; i < k; i++) {
+        if (!runner) return NULL;   /* list shorter than k */
+        runner = runner->next;
+    }
+
+    /* move both until runner == NULL */
+    while (runner) {
+        runner   = runner->next;
+        follower = follower->next;
+    }
+    return follower;
+}
+
+/* Remove Nth from end — follower stops one node BEFORE target */
+Node *remove_nth_from_end(Node *head, int n) {
+    Node dummy = {0, head};
+    Node *runner   = head;
+    Node *follower = &dummy;
+
+    for (int i = 0; i < n; i++) runner = runner->next;
+    while (runner) { runner = runner->next; follower = follower->next; }
+
+    Node *del = follower->next;
+    follower->next = del->next;
+    free(del);
+    return dummy.next;
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+    <strong>kth_from_end(1→2→3→4→5, 2)</strong><br>
+    runner advances: 1→2→3 (2 steps). follower=1, runner=3.<br>
+    Both advance: (2,4) → (3,5) → (4,NULL). Return node4 ✓<br>
+    <strong>remove_nth_from_end(1→2→3→4→5, 2)</strong><br>
+    runner advances 2: node3. follower=dummy.<br>
+    Both advance: (node1,node4) → (node2,node5) → (node3,NULL).<br>
+    follower=node3. del=node4. node3→next=node5. free(node4).<br>
+    Result: 1→2→3→5 ✓
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    For remove-Nth, start follower at dummy (not head) so when follower lands, it points to the node <em>before</em> the target — enabling the unlink. If you start follower at head, you can't unlink the first node when N equals list length.
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    What happens if K equals the list length in <code>kth_from_end</code>? What does follower return, and why?
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Find Kth node from end</div>
+    <div class="trigger-variants">runner K steps ahead, advance both, runner hits NULL → follower is Kth from end</div>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 <script>hljs.highlightAll();</script>
 </body>
