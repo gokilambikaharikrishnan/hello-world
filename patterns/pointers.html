@@ -659,6 +659,465 @@ now head (at 0x3000) = 0x5000 -> node{val=1} -> node{val=2}
   </div>
 </div>
 
+
+<!-- ============================================================= -->
+<!-- Q06 · Function Pointers — Storing and Calling by Address      -->
+<!-- ============================================================= -->
+<div class="card" id="q06">
+  <h2>Q06 · Function Pointers — Storing and Calling Functions by Address</h2>
+
+  <div class="background">
+    <strong>Background</strong>
+    <p>Every function you write is compiled into machine code stored somewhere in flash or RAM. That storage location has an address, just like any variable. A <em>function pointer</em> holds that address and lets you call the function indirectly — you call whatever function the pointer currently points to, not a function name fixed at compile time.</p>
+    <p>Think of a function pointer like a phone number on a speed-dial button. The button does not know or care whose phone it dials; you can reprogram it to reach a different person. In C, this enables callbacks (pass a sort comparator into qsort), dispatch tables (jump to the right handler for a protocol message), and plug-in architectures (swap implementations at runtime).</p>
+    <p>In embedded firmware, function pointer dispatch tables are the standard pattern for state machines and command parsers. Instead of a long if-else chain, an array of function pointers indexed by state or opcode calls the right handler in O(1) — covered in depth in Q20.</p>
+  </div>
+
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit">qsort comparator: <code>qsort(arr, n, sizeof(int), cmp_int);</code></span>
+    <span class="why">qsort takes a function pointer to your comparator so it can sort any type.</span>
+    <span class="sit">Embedded ISR registration: <code>register_isr(IRQ_UART, uart_handler);</code></span>
+    <span class="why">The vector table is an array of function pointers; registration writes a new address.</span>
+    <span class="sit">State machine dispatch: <code>state_fn[current_state]();</code></span>
+    <span class="why">One array lookup + indirect call replaces a switch with N cases.</span>
+    <span class="sit">Plugin / strategy pattern: swap a hash function or codec at runtime.</span>
+    <span class="why">Different function pointers point to different implementations of the same signature.</span>
+  </div>
+
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">Function pointer syntax: return_type (*name)(param_types). The parentheses around *name are mandatory — without them it would be a function returning a pointer.</div>
+    <div class="ascii">
+int add(int a, int b) { return a + b; }
+int sub(int a, int b) { return a - b; }
+
+/* Declare a pointer to function taking (int,int) returning int */
+int (*op)(int, int);
+
+op = add;        /* store address of add   (no & needed for functions) */
+op(3, 4);        /* call add(3,4)  -> 7   (no * needed to call)        */
+
+op = sub;        /* now points to sub                                   */
+op(10, 3);       /* call sub(10,3) -> 7                                 */
+
+/* typedef makes it readable */
+typedef int (*BinOp)(int, int);
+BinOp table[] = { add, sub };
+table[0](5, 2); /* 7 */
+table[1](5, 2); /* 3 */</div>
+    <p>You can call a function pointer with or without the explicit dereference: <code>(*op)(3,4)</code> and <code>op(3,4)</code> are identical. Modern style omits the <code>*</code>. The <code>&amp;</code> when assigning is also optional for function names but required for everything else.</p>
+  </div>
+
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+/* a simple integer comparator for qsort */
+int cmp_asc(const void *a, const void *b) {
+    return *(int*)a - *(int*)b;   /* ascending */
+}
+int cmp_desc(const void *a, const void *b) {
+    return *(int*)b - *(int*)a;   /* descending */
+}
+
+int main(void) {
+    int arr[] = {5, 2, 8, 1, 9, 3};
+    int n = 6;
+
+    /* pass function pointer to qsort */
+    qsort(arr, n, sizeof(int), cmp_asc);
+    for (int i = 0; i &lt; n; i++) printf("%d ", arr[i]); /* 1 2 3 5 8 9 */
+    printf("\n");
+
+    qsort(arr, n, sizeof(int), cmp_desc);
+    for (int i = 0; i &lt; n; i++) printf("%d ", arr[i]); /* 9 8 5 3 2 1 */
+    printf("\n");
+
+    /* store and call via pointer */
+    typedef int (*CmpFn)(const void*, const void*);
+    CmpFn chosen = cmp_asc;
+    qsort(arr, n, sizeof(int), chosen);
+    printf("first: %d\n", arr[0]);  /* 1 */
+    return 0;
+}
+  </code></pre>
+
+  <div class="dry-run">
+    <strong>Dry Run — dispatch table</strong>
+    <pre>
+typedef void (*Handler)(void);
+void on_idle(void)  { puts("idle");  }
+void on_run(void)   { puts("run");   }
+void on_stop(void)  { puts("stop");  }
+
+Handler table[3] = { on_idle, on_run, on_stop };
+int state = 1;
+table[state]();    /* looks up table[1] = on_run, calls it -> "run" */
+state = 2;
+table[state]();    /* calls on_stop -> "stop" */
+    </pre>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>The parentheses in the declaration are essential. <code>int *f(int)</code> is a function that returns <code>int*</code>. <code>int (*f)(int)</code> is a pointer to a function taking int and returning int. These are completely different types. When in doubt, use a typedef to avoid the syntax trap.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Write the declaration for a pointer to a function that takes a <code>const char*</code> and returns <code>int</code>.</li>
+      <li>What happens if you call a function pointer that is NULL?</li>
+      <li>Why does the Cortex-M vector table have its LSB set to 1 for each function pointer entry?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Need to decide at runtime which function to call -> function pointer. Syntax: return_type (*name)(params); Use typedef to keep it readable.</div>
+    <ul class="trigger-variants">
+      <li>Callback to sort/search -> pass function by name, no &amp; needed</li>
+      <li>Dispatch table -> array of function pointers, index by state/opcode</li>
+      <li>Check for NULL before calling -> if (fp) fp(args);</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- Q07 · void* — The Generic Pointer and memcpy                  -->
+<!-- ============================================================= -->
+<div class="card" id="q07">
+  <h2>Q07 · void* — The Generic Pointer and How memcpy Uses It</h2>
+
+  <div class="background">
+    <strong>Background</strong>
+    <p>A <code>void*</code> is a pointer that has been stripped of its type information. Think of it like a locker key with the tag removed — it still opens a locker (reaches valid memory), but you have no idea whether the locker contains clothes, books, or electronics until you cast it back to a typed pointer. The C standard library functions <code>memcpy</code>, <code>malloc</code>, and <code>qsort</code> all use <code>void*</code> so they can work with any data type.</p>
+    <p><code>malloc</code> returns <code>void*</code> because it has no idea what type you intend to store. <code>memcpy</code> accepts <code>void*</code> for both source and destination because it works at the byte level — type does not matter when you are just copying raw bytes. Inside memcpy, the implementation casts both pointers to <code>uint8_t*</code> or similar and walks them byte by byte.</p>
+    <p>In embedded C, <code>void*</code> appears in DMA buffer descriptors, generic ring-buffer implementations, and FreeRTOS task parameters — anywhere a function needs to accept arbitrary data without knowing its type at design time.</p>
+  </div>
+
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit"><code>void *malloc(size_t n)</code> — returns untyped heap pointer.</span>
+    <span class="why">Assign to any typed pointer without a cast in C (cast required in C++).</span>
+    <span class="sit"><code>void *memcpy(void *dst, const void *src, size_t n)</code></span>
+    <span class="why">Copies n bytes regardless of the type stored at src and dst.</span>
+    <span class="sit">FreeRTOS task parameter: <code>xTaskCreate(fn, "task", 256, (void*)&amp;cfg, 1, NULL)</code></span>
+    <span class="why">The task function receives void* and casts it back to the config struct type.</span>
+    <span class="sit">Generic ring buffer: <code>void rb_push(RingBuf *rb, const void *item, size_t item_sz)</code></span>
+    <span class="why">One implementation handles uint8, uint32, structs — caller picks the type.</span>
+  </div>
+
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">void* can be assigned to/from any pointer type without a cast (in C). To use the data, cast back to the correct type before dereferencing — you cannot dereference void* directly.</div>
+    <div class="ascii">
+/* How a simplified memcpy works internally */
+void *my_memcpy(void *dst, const void *src, size_t n) {
+    uint8_t       *d = (uint8_t*)dst;   /* cast to byte pointer */
+    const uint8_t *s = (const uint8_t*)src;
+    while (n--) *d++ = *s++;            /* copy one byte at a time */
+    return dst;
+}
+
+int a = 42;
+int b;
+my_memcpy(&amp;b, &amp;a, sizeof(int));  /* copies 4 raw bytes; b is now 42 */
+
+/* malloc pattern */
+int *arr = malloc(10 * sizeof(int));   /* void* assigned to int* -- no cast needed in C */
+arr[0] = 99;                           /* now we can use it as int* */
+
+/* void* context parameter (FreeRTOS style) */
+void task_fn(void *param) {
+    MyConfig *cfg = (MyConfig*)param;  /* cast back to original type */
+    cfg-&gt;baudrate = 115200;
+}</div>
+  </div>
+
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;stdint.h&gt;
+#include &lt;string.h&gt;
+
+/* generic swap using void* and memcpy -- works for any type */
+void generic_swap(void *a, void *b, size_t sz) {
+    uint8_t tmp[sz];        /* VLA on stack as scratch space */
+    memcpy(tmp, a,   sz);   /* tmp  = *a                    */
+    memcpy(a,   b,   sz);   /* *a   = *b                    */
+    memcpy(b,   tmp, sz);   /* *b   = old *a                */
+}
+
+int main(void) {
+    int x = 3, y = 7;
+    generic_swap(&amp;x, &amp;y, sizeof(int));
+    printf("x=%d y=%d\n", x, y);   /* x=7 y=3 */
+
+    double p = 1.5, q = 9.9;
+    generic_swap(&amp;p, &amp;q, sizeof(double));
+    printf("p=%.1f q=%.1f\n", p, q);  /* p=9.9 q=1.5 */
+    return 0;
+}
+  </code></pre>
+
+  <div class="dry-run">
+    <strong>Dry Run — generic_swap(&amp;x, &amp;y, 4) where x=3, y=7</strong>
+    <pre>
+a=0x2000 (x), b=0x2004 (y), sz=4
+memcpy(tmp, 0x2000, 4): tmp = [3]
+memcpy(0x2000, 0x2004, 4): x = 7
+memcpy(0x2004, tmp, 4): y = 3
+result: x=7, y=3
+    </pre>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>You <strong>cannot dereference</strong> a <code>void*</code> directly: <code>void *p = &amp;x; *p = 5;</code> is a compile error. You must cast first: <code>*(int*)p = 5;</code>. Also, pointer arithmetic on <code>void*</code> is illegal in standard C (though GCC permits it as an extension treating sizeof(void)==1). Always cast to a typed pointer before any arithmetic.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Why does <code>memcpy</code> use <code>void*</code> instead of <code>char*</code> for its parameters?</li>
+      <li>What is wrong with <code>void *p = &amp;x; p++;</code> in standard C?</li>
+      <li>A FreeRTOS task receives <code>void *param</code>. How do you safely recover the original struct pointer?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Need a pointer that works with any type -> void*. Always cast back before dereferencing or doing arithmetic.</div>
+    <ul class="trigger-variants">
+      <li>malloc return -> assign to typed pointer, no cast needed in C</li>
+      <li>Generic copy/move -> memcpy/memmove accept void*, work byte-by-byte</li>
+      <li>Callback context param -> pass as void*, cast inside callback</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- Q08 · const Pointer Variations                                -->
+<!-- ============================================================= -->
+<div class="card" id="q08">
+  <h2>Q08 · const Pointer Variations — const int* vs int* const vs const int* const</h2>
+
+  <div class="background">
+    <strong>Background</strong>
+    <p>The <code>const</code> keyword applied to pointers creates three distinct meanings depending on <em>where</em> it appears relative to the <code>*</code>. Think of a pointer as a sign on a road pointing to a house. You can make the house immutable (you can look at the furniture but not move it), make the sign post immutable (the sign always points to this house, never another), or make both immutable.</p>
+    <p>Getting this right is essential in embedded C. Read-only flash strings must be <code>const char*</code>; hardware register definitions use <code>volatile uint32_t * const</code> (the address is fixed but the value changes). Passing a buffer you don't intend to modify as <code>const uint8_t*</code> signals intent to the compiler and the reader, and enables optimisations — the compiler knows it doesn't have to re-read the buffer in case you wrote to it.</p>
+  </div>
+
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit"><code>const char *str</code> — pointer to read-only string data.</span>
+    <span class="why">String literals are in read-only flash; trying to write through this pointer crashes.</span>
+    <span class="sit"><code>void f(const uint8_t *buf, int len)</code> — function promises not to modify buf.</span>
+    <span class="why">Communicates intent; caller can safely pass a const buffer.</span>
+    <span class="sit">MMIO register: <code>volatile uint32_t * const GPIOA_ODR = (volatile uint32_t*)0x40020C14;</code></span>
+    <span class="why">Address is fixed (const pointer) but value changes any time (volatile data).</span>
+  </div>
+
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">Read right-to-left from the variable name: "p is a [const] pointer to [const] int". Whatever is to the left of * is what the pointer points to; const to the right of * applies to the pointer itself.</div>
+    <div class="ascii">
+int x = 10, y = 20;
+
+/* 1. Pointer to const int (data is read-only) */
+const int *p1 = &amp;x;
+*p1 = 5;     /* ERROR: cannot modify through p1  */
+p1  = &amp;y;    /* OK:    can change where p1 points */
+
+/* 2. const pointer to int (pointer is read-only) */
+int * const p2 = &amp;x;
+*p2 = 5;     /* OK:    can modify the int         */
+p2  = &amp;y;    /* ERROR: cannot change where p2 points */
+
+/* 3. const pointer to const int (both read-only) */
+const int * const p3 = &amp;x;
+*p3 = 5;     /* ERROR */
+p3  = &amp;y;    /* ERROR */
+
+/* Trick: "clockwise/spiral rule" or just read right-to-left
+   p3: p3 is a const pointer to a const int */</div>
+  </div>
+
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;stdint.h&gt;
+
+/* accepts read-only buffer -- compiler enforces no writes inside */
+int sum_bytes(const uint8_t *buf, int len) {
+    int total = 0;
+    while (len--) total += *buf++;  /* read-only dereference, fine */
+    return total;
+}
+
+/* const pointer: address fixed at link time, value changes (e.g. MMIO) */
+static uint32_t fake_reg = 0;
+volatile uint32_t * const REG = (volatile uint32_t*)&amp;fake_reg;
+
+int main(void) {
+    uint8_t data[] = {1, 2, 3, 4};
+    printf("%d\n", sum_bytes(data, 4)); /* 10 */
+
+    *REG = 0xFF;           /* write to register -- OK  */
+    printf("reg=%u\n", *REG); /* read register -- OK   */
+    /* REG = something_else;  -- compile error: const pointer */
+    return 0;
+}
+  </code></pre>
+
+  <div class="dry-run">
+    <strong>Dry Run — const correctness summary</strong>
+    <pre>
+Declaration             | pointer reassignable? | data writable?
+const int *p            |        YES            |      NO
+int * const p           |        NO             |      YES
+const int * const p     |        NO             |      NO
+int *p                  |        YES            |      YES
+    </pre>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Passing a <code>const char*</code> to a function expecting <code>char*</code> silently discards the const qualifier — the compiler may warn but not always error. Inside the function you can then write through what was supposed to be read-only data, which crashes on STM32 if the string lives in read-only flash.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Declare a pointer that can change where it points but not modify the data it points to.</li>
+      <li>Why is the MMIO pointer declaration <code>volatile uint32_t * const REG</code> and not <code>const volatile uint32_t *REG</code>?</li>
+      <li>Can you pass a <code>char*</code> to a function that expects <code>const char*</code>? What about the reverse?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">const left of * -> data is read-only. const right of * -> pointer itself is read-only. Read declarations right-to-left.</div>
+    <ul class="trigger-variants">
+      <li>Read-only input buffer -> const uint8_t *buf</li>
+      <li>Fixed MMIO address, volatile value -> volatile uint32_t * const REG</li>
+      <li>String literal -> always const char*, never char*</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- Q09 · Pointer Subtraction — Counting Elements                 -->
+<!-- ============================================================= -->
+<div class="card" id="q09">
+  <h2>Q09 · Pointer Subtraction — Counting Elements Between Two Pointers</h2>
+
+  <div class="background">
+    <strong>Background</strong>
+    <p>If pointer arithmetic addition moves a pointer forward by <em>n elements</em>, then subtraction works in reverse — subtracting two pointers of the same type gives the number of <em>elements</em> between them, not bytes. The result type is <code>ptrdiff_t</code>, a signed integer large enough to hold any valid element offset on the platform.</p>
+    <p>Think of pointers as mile markers on a highway. If marker B is at mile 80 and marker A is at mile 60, B minus A is 20 miles — the distance between them in the same units. Pointer subtraction gives distance in elements, not bytes. The compiler divides the raw byte difference by sizeof(*ptr) automatically.</p>
+    <p>This is used in standard library idioms like computing the length of a string without strlen (<code>end - start</code> after scanning to the null), in <code>sprintf</code> return value handling, and in any algorithm that needs to know how many elements a pointer has advanced.</p>
+  </div>
+
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit">String length without strlen: scan to '\0' then subtract start pointer.</span>
+    <span class="why">The write pointer minus the base pointer gives characters written.</span>
+    <span class="sit">After a write-pointer loop: <code>int written = w - buf;</code></span>
+    <span class="why">Tells you how many elements were compacted into the output buffer.</span>
+    <span class="sit">Bounds check in embedded: <code>if (ptr - base &gt;= BUFSIZE) overflow_error();</code></span>
+    <span class="why">Ensures a walking pointer has not escaped the buffer.</span>
+  </div>
+
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">ptr_b - ptr_a == (byte_address_b - byte_address_a) / sizeof(*ptr). The compiler does the division — you get element count, not bytes.</div>
+    <div class="ascii">
+int arr[] = {10, 20, 30, 40, 50};
+/* addresses (sizeof(int)=4): */
+arr+0 = 0x1000,  arr+1 = 0x1004,  arr+2 = 0x1008
+arr+3 = 0x100C,  arr+4 = 0x1010
+
+int *a = &amp;arr[1];  /* 0x1004 */
+int *b = &amp;arr[4];  /* 0x1010 */
+
+b - a  ==  (0x1010 - 0x1004) / 4  ==  0x0C / 4  ==  3 elements
+
+/* my_strlen using pointer subtraction */
+size_t my_strlen(const char *s) {
+    const char *p = s;
+    while (*p) p++;       /* advance until null terminator */
+    return p - s;         /* distance in chars (sizeof char = 1) */
+}</div>
+  </div>
+
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;stddef.h&gt;  /* ptrdiff_t */
+
+size_t my_strlen(const char *s) {
+    const char *p = s;
+    while (*p) p++;    /* scan to null terminator  */
+    return (size_t)(p - s);  /* element count        */
+}
+
+/* compact even numbers; return count written */
+int compact_even(int *src, int n, int *dst) {
+    int *w = dst;                          /* write pointer       */
+    for (int *r = src; r &lt; src + n; r++)  /* read pointer        */
+        if (*r % 2 == 0) *w++ = *r;
+    return (int)(w - dst);                 /* elements written    */
+}
+
+int main(void) {
+    printf("%zu\n", my_strlen("hello"));  /* 5 */
+
+    int src[] = {1, 2, 3, 4, 5, 6};
+    int dst[6];
+    int cnt = compact_even(src, 6, dst);
+    printf("count=%d: ", cnt);            /* 3 */
+    for (int i = 0; i &lt; cnt; i++) printf("%d ", dst[i]); /* 2 4 6 */
+    printf("\n");
+    return 0;
+}
+  </code></pre>
+
+  <div class="dry-run">
+    <strong>Dry Run — my_strlen("hello")</strong>
+    <pre>
+s = 0x3000 -> 'h'
+p starts at 0x3000
+p=0x3000 *p='h' != 0 -> p++
+p=0x3001 *p='e' != 0 -> p++
+p=0x3002 *p='l' != 0 -> p++
+p=0x3003 *p='l' != 0 -> p++
+p=0x3004 *p='o' != 0 -> p++
+p=0x3005 *p='\0'     -> stop
+return p - s = 0x3005 - 0x3000 = 5
+    </pre>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Subtracting pointers that point into <strong>different objects</strong> (different arrays, different variables) is undefined behavior, even if the addresses happen to be numerically close. The result is only meaningful when both pointers point into the same array (or one-past-the-end of it).</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>If <code>double *a = &amp;arr[2]</code> and <code>double *b = &amp;arr[5]</code>, what is <code>b - a</code>? What is the byte difference?</li>
+      <li>What type should you use to store the result of pointer subtraction portably?</li>
+      <li>Is <code>arr + n</code> (one-past-the-end) a valid pointer to use in subtraction? Can you dereference it?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Two pointers into same array -> subtract to get element count between them. Result type is ptrdiff_t (signed).</div>
+    <ul class="trigger-variants">
+      <li>Bytes written to buffer -> w - buf (where w is write pointer)</li>
+      <li>String length by scan -> p - s after while(*p) p++</li>
+      <li>Only valid within same array -- never subtract pointers to different objects</li>
+    </ul>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 <script>hljs.highlightAll();</script>
 </body>
