@@ -3030,6 +3030,87 @@ After:  [1]→[2]→[3]→[5]→NULL ✓  (node4 removed)</div>
   </div>
 </div>
 
+
+<!-- L32 -->
+<div class="card" id="L32">
+  <div class="card-header">
+    <span class="card-id">L32</span>
+    <h2 class="card-title">Check if List is Sorted</h2>
+    <span class="category-badge">Structural Patterns</span>
+  </div>
+
+  <div class="background">
+    <p>Walk the list one time. At each node, compare its value to the next node's value. If you ever find a node that is greater than its successor (for ascending order), the list is not sorted. If you reach NULL without finding such a pair, it is sorted.</p>
+    <p>This is the simplest possible linked list scan — one pointer, one comparison, no extra state. But knowing when to reach for it is valuable: sorting algorithms need to check their own output, and search algorithms require sorted input.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Assertion before binary search on a list</div><div class="why">Binary search requires sorted input — verify first</div>
+    <div class="sit">Validate output of sort_list (L18) in tests</div><div class="why">Unit test helper for sorted-order invariant</div>
+    <div class="sit">Embedded firmware: sanity-check a priority queue before use</div><div class="why">Detect heap/list corruption early</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Check 1→3→5→2→7</div>
+    <div class="ascii">
+curr=1: next=3, 1≤3 ✓ advance
+curr=3: next=5, 3≤5 ✓ advance
+curr=5: next=2, 5>2 ✗ → NOT SORTED, return 0
+
+Check 1→2→3→4:
+curr=1: 1≤2 ✓
+curr=2: 2≤3 ✓
+curr=3: 3≤4 ✓
+curr=4: next=NULL → loop ends → IS SORTED, return 1
+
+Edge cases:
+  NULL list   → sorted (vacuously true)  return 1
+  Single node → sorted                   return 1</div>
+    <div class="aha">Compare curr to curr->next — NOT curr->next to curr->next->next. Moving the check one position ahead would miss comparing the last pair.</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">/* Returns 1 if list is non-decreasing, 0 otherwise */
+int is_sorted(Node *head) {
+    for (Node *curr = head; curr && curr->next; curr = curr->next)
+        if (curr->val > curr->next->val)
+            return 0;
+    return 1;
+}
+
+/* Strict ascending (no duplicates) */
+int is_strictly_sorted(Node *head) {
+    for (Node *curr = head; curr && curr->next; curr = curr->next)
+        if (curr->val >= curr->next->val)
+            return 0;
+    return 1;
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+    <strong>5→5→5 (non-decreasing, not strict)</strong><br>
+    is_sorted: 5≤5 ✓, 5≤5 ✓ → return 1 ✓<br>
+    is_strictly_sorted: 5≥5 → return 0 ✓<br>
+    <strong>Single node [7]</strong><br>
+    Loop condition: curr->next=NULL → loop never runs → return 1 ✓
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    The loop condition is <code>curr && curr->next</code> — not just <code>curr</code>. Stopping when <code>curr->next==NULL</code> means we've checked every adjacent pair. If the loop ran while <code>curr</code> alone (accessing <code>curr->next</code> on the last node when it's NULL) that's a NULL dereference.
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    For a 2-node list [3→1]: does the for loop run once? Which comparison fires and what is returned?
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Check if linked list is sorted</div>
+    <div class="trigger-variants">walk curr while curr→next; if curr→val > curr→next→val return 0; else return 1</div>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 <script>hljs.highlightAll();</script>
 </body>
