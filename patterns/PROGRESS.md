@@ -8,7 +8,7 @@
 | arrays.html | 54 | ✅ Done | 2026-05-01 |
 | pointers.html | 30 | ✅ Done | 2026-05-05 |
 | strings.html | 44 | ✅ Done | 2026-05-04 |
-| linkedlist.html | 35 | 🔄 Rework In Progress | 2026-05-05 |
+| linkedlist.html | 35 | ✅ Done | 2026-05-05 |
 | stacks.html | 32 | ✅ Done | 2026-04-29 |
 | queues.html | 22 | ✅ Done | 2026-04-29 |
 
@@ -292,9 +292,9 @@
 - [x] L32 · Check if List is Sorted
 
 ### Design Patterns (L33–L35)
-- [ ] L33 · Doubly Linked List — Insert and Delete with Sentinel Head/Tail
-- [ ] L34 · LRU Cache — Doubly Linked List + Hashmap
-- [ ] L35 · Skip List Concept — Express Lanes in a Sorted List
+- [x] L33 · Doubly Linked List — Insert and Delete with Sentinel Head/Tail
+- [x] L34 · LRU Cache — Doubly Linked List + Hashmap
+- [x] L35 · Skip List Concept — Express Lanes in a Sorted List
 
 ---
 
@@ -305,6 +305,6 @@
 | Batch 1 | L01–L10 | ✅ Done |
 | Batch 2 | L11–L20 | ✅ Done |
 | Batch 3 | L21–L32 | ✅ Done |
-| Batch 4 | L33–L35 | 🔄 In Progress |
+| Batch 4 | L33–L35 | ✅ Done |
 
-**Currently reworking:** L33 — Doubly Linked List with Sentinels
+**All 35 cards complete. Rework complete 2026-05-05.**
