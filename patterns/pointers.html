@@ -2659,6 +2659,525 @@ With restrict, same call is UNDEFINED BEHAVIOR (aliasing):
   </div>
 </div>
 
+
+<!-- ============================================================= -->
+<!-- Q23 · Dangling Pointer — Freed or Stack Memory                -->
+<!-- ============================================================= -->
+<div class="card" id="q23">
+  <h2>Q23 · Dangling Pointer — Pointer to Freed or Stack Memory</h2>
+
+  <div class="background">
+    <strong>Background</strong>
+    <p>A dangling pointer is a pointer that once pointed to valid memory but no longer does — either because the memory was <code>free()</code>d (heap) or because the function that owned the memory returned (stack). The pointer itself still holds the old address number, but that address is now available for reuse. Dereferencing it reads or writes data that belongs to something else entirely — or to nothing at all.</p>
+    <p>Think of giving someone a key to your apartment, then moving out. They still have the key; the lock may even still fit; but whoever moved in next has no idea who this person is or why they are rearranging the furniture. In embedded systems, a dangling stack pointer is especially dangerous: the stack frame is immediately reused by the next function call, so the dangling pointer may appear to work during light testing but corrupt data under different call sequences.</p>
+    <p>There are two classic forms. (1) Heap dangling pointer: <code>free(p)</code> then use <code>*p</code>. (2) Stack dangling pointer: return a pointer to a local variable. Both produce undefined behavior. Symptoms range from silent wrong values to SIGSEGV to rare, intermittent HardFaults on embedded targets.</p>
+  </div>
+
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit">free(ptr) then dereference: data may appear valid until heap reuses that block.</span>
+    <span class="why">The allocator does not zero freed memory; stale bytes persist until overwritten.</span>
+    <span class="sit">Return &amp;local_var from a function: caller holds address of dead stack frame.</span>
+    <span class="why">The stack frame is overwritten the next time any function is called.</span>
+    <span class="sit">Embedded: storing a pointer to a local ISR variable, using it in main after ISR returns.</span>
+    <span class="why">ISR stack frame is gone; the pointer now points into unrelated stack data.</span>
+  </div>
+
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">After free() or function return, the memory the pointer refers to is NO LONGER YOURS. Any dereference is undefined behavior. Null the pointer immediately after free to convert a dangle into a detectable NULL-dereference.</div>
+    <div class="ascii">
+HEAP DANGLING:
+  int *p = malloc(sizeof(int));
+  *p = 42;
+  free(p);          /* memory returned to heap allocator              */
+  printf("%d", *p); /* UB: reads whatever the allocator wrote there   */
+                    /* may print 42 (stale), 0, or crash              */
+  p = NULL;         /* FIX: null after free -> crash is detectable     */
+
+STACK DANGLING:
+  int *bad_ptr(void) {
+      int local = 99;
+      return &amp;local;   /* ERROR: local dies when function returns      */
+  }
+  int *p = bad_ptr();
+  printf("%d", *p);    /* UB: p points to dead stack frame             */
+                       /* next function call overwrites that memory     */
+
+  Address  After bad_ptr returns:
+  SP-4  [  99  ]  <- was 'local', now available for next call
+  SP-8  [  ?   ]
+  p still holds SP-4 but that frame is gone</div>
+  </div>
+
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+/* BAD: returns pointer to local variable */
+int *dangling_stack(void) {
+    int x = 42;
+    return &amp;x;   /* compiler warning: address of stack var returned */
+}
+
+/* BAD: use after free */
+void dangling_heap(void) {
+    int *p = malloc(sizeof(int));
+    *p = 100;
+    free(p);
+    /* p = NULL; */  /* missing: p is now dangling */
+    printf("%d\n", *p);  /* UB: undefined behavior */
+}
+
+/* GOOD: allocate on heap and document ownership */
+int *safe_alloc(void) {
+    int *p = malloc(sizeof(int));
+    if (!p) return NULL;
+    *p = 42;
+    return p;  /* caller owns this memory and must free it */
+}
+
+/* GOOD: null after free */
+void safe_free(int **pp) {
+    free(*pp);
+    *pp = NULL;  /* dangling pointer immediately neutralised */
+}
+
+int main(void) {
+    int *p = safe_alloc();
+    if (p) printf("%d\n", *p);  /* 42 */
+    safe_free(&amp;p);
+    /* p is now NULL -- safe to check but not dereference */
+    return 0;
+}
+  </code></pre>
+
+  <div class="dry-run">
+    <strong>Dry Run — what actually happens with dangling_stack()</strong>
+    <pre>
+call dangling_stack():
+  x=42 stored at SP-4 (say 0x20001FFC)
+  return 0x20001FFC
+  stack frame released, SP restored
+
+printf("%d", *p):  p = 0x20001FFC
+  printf itself uses the stack, pushes frame over SP
+  0x20001FFC is now inside printf's stack frame
+  *p may read printf's saved register or return address
+  result: garbage value, or crash if printf touches that address
+    </pre>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>The bug is often invisible in debug builds because the optimizer keeps the old value in place longer, or because nothing has reused that stack slot yet. Enable <code>-Wall -Wextra</code> and address sanitizer (<code>-fsanitize=address</code>) to catch dangling pointers before they reach the embedded target. On bare-metal, enable the MPU to detect null and stack-overflow accesses at least.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>After <code>free(p); p = NULL;</code> is it safe to call <code>free(p)</code> again? Why?</li>
+      <li>A function allocates a struct with malloc and returns a pointer to it. Who is responsible for freeing it? How do you document this?</li>
+      <li>On an STM32, a dangling stack pointer causes a HardFault sometimes but not always. Why might it work sometimes?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Pointer to freed heap or returned stack frame -> dangling. Fix: p=NULL after free. Never return &amp;local. Detect with -fsanitize=address.</div>
+    <ul class="trigger-variants">
+      <li>After free -> p = NULL immediately</li>
+      <li>Need to return data -> malloc on heap, document caller must free</li>
+      <li>Need local data to outlive function -> static local (one instance) or heap</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- Q24 · NULL Dereference and HardFault in Embedded              -->
+<!-- ============================================================= -->
+<div class="card" id="q24">
+  <h2>Q24 · NULL Dereference — and What HardFault Looks Like in Embedded</h2>
+
+  <div class="background">
+    <strong>Background</strong>
+    <p>NULL is defined as address 0. On all ARM Cortex-M microcontrollers, address 0 is either mapped to flash (at reset, via the BOOT pin) or is explicitly unmapped — either way, a write to address 0 or a few bytes near it triggers a HardFault exception. The CPU stops executing normal code, saves registers, and jumps to the HardFault handler. If the handler is the default weak implementation (an infinite loop), the device locks up and requires a reset.</p>
+    <p>On desktop Linux/Windows, the OS catches the segfault and terminates the process with SIGSEGV. In embedded, there is no OS protection — the CPU just tries to access address 0x00000000 and the memory protection unit (if enabled) fires a bus fault. Without an MPU, the access may silently read flash content at address 0 (the interrupt vector table) and use that as data, producing bizarre wrong results rather than a clean crash.</p>
+    <p>The most common causes: uninitialized pointer (contains 0 or garbage), failed malloc returning NULL not checked, dereferencing the result of a find function that returns NULL on "not found", and using a pointer after it was set to NULL by safe_free.</p>
+  </div>
+
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit">Unchecked malloc: <code>int *p = malloc(n); *p = 0;</code> — if malloc returns NULL on OOM, instant crash.</span>
+    <span class="why">Embedded systems with small heaps run out of memory; malloc failure is not rare.</span>
+    <span class="sit">Linked list find returns NULL: <code>Node *n = find(head, 42); n-&gt;val = 0;</code></span>
+    <span class="why">If 42 not found, n==NULL, dereference = HardFault.</span>
+    <span class="sit">Uninitialised function pointer called: <code>fp();</code> where fp is NULL or garbage.</span>
+    <span class="why">On Cortex-M, call through NULL jumps to 0x00000000 — executes flash data as code.</span>
+  </div>
+
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">Always check pointers before dereferencing: if (p == NULL) { handle_error(); return; }. Enable the MPU to make NULL dereference trigger a MemManage fault immediately rather than silently reading flash.</div>
+    <div class="ascii">
+ARM Cortex-M HardFault sequence on NULL dereference:
+  1. CPU executes STR/LDR to address 0x00000000
+  2. Bus matrix checks address -> MPU fault or BusFault
+  3. CPU pushes {R0-R3, R12, LR, PC, xPSR} to stack
+  4. PC set to HardFault_Handler address (from vector table)
+  5. HardFault_Handler runs (usually infinite loop or reset)
+
+Diagnostic registers available in HardFault handler:
+  SCB->HFSR  = HardFault Status Register
+  SCB->CFSR  = Configurable Fault Status (UFSR, BFSR, MMFSR)
+  SCB->BFAR  = Bus Fault Address Register (the offending address)
+  Stacked PC (in saved exception frame) = address of faulting instruction
+
+How to find the fault:
+  In HardFault handler: read stacked PC from MSP/PSP frame
+  Load .elf in debugger, set breakpoint at HardFault_Handler
+  GDB: x/8x $sp -> stacked PC is at offset 6*4=24 bytes
+  Disassemble at that PC to find the NULL dereference</div>
+  </div>
+
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+typedef struct Node { int val; struct Node *next; } Node;
+
+Node *find(Node *head, int target) {
+    while (head) {
+        if (head-&gt;val == target) return head;
+        head = head-&gt;next;
+    }
+    return NULL;  /* not found */
+}
+
+/* UNSAFE -- no NULL check */
+void bad_use(Node *head) {
+    Node *n = find(head, 99);
+    printf("%d\n", n-&gt;val);  /* HardFault/SIGSEGV if n==NULL */
+}
+
+/* SAFE -- always check */
+void safe_use(Node *head) {
+    Node *n = find(head, 99);
+    if (n == NULL) {
+        printf("not found\n");
+        return;
+    }
+    printf("%d\n", n-&gt;val);
+}
+
+/* malloc with NULL check */
+int *safe_malloc(int n) {
+    int *p = malloc(n * sizeof(int));
+    if (!p) {
+        /* embedded: log error, reset, or enter safe mode */
+        fprintf(stderr, "malloc failed\n");
+        return NULL;
+    }
+    return p;
+}
+
+int main(void) {
+    Node a = {42, NULL};
+    safe_use(&amp;a);  /* "not found" */
+
+    int *arr = safe_malloc(10);
+    if (arr) {
+        arr[0] = 1;
+        free(arr);
+    }
+    return 0;
+}
+  </code></pre>
+
+  <div class="dry-run">
+    <strong>Dry Run — HardFault diagnostic (Cortex-M)</strong>
+    <pre>
+Node *n = find(head, 99);  /* returns NULL */
+n->val:  LDR R0, [R0, #0]  where R0=0x00000000
+  -> Bus fault at 0x00000000
+  -> CPU pushes exception frame, jumps to HardFault_Handler
+  -> BFAR = 0x00000000
+  -> Stacked PC = address of "LDR R0, [R0, #0]" instruction
+  -> In debugger: disassemble at stacked PC -> find culprit
+    </pre>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Without the MPU, dereferencing NULL on STM32 does NOT always crash immediately. The Cortex-M vector table lives at address 0; reading it gives the initial stack pointer value (a large RAM address). Using this as data produces wrong but non-crashing results. Enable the MPU and mark the first region (0x00000000..0x000003FF) as no-access to guarantee a fault on NULL dereference.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>On a Cortex-M without an MPU, what data might you accidentally read if you dereference NULL?</li>
+      <li>Where in the stack frame can you find the PC of the instruction that caused the HardFault?</li>
+      <li>How do you write a HardFault handler that prints diagnostic information over UART before resetting?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Dereference of NULL -> HardFault on Cortex-M. Always check: if (!p) handle_error(). Enable MPU to make NULL dereference trap immediately.</div>
+    <ul class="trigger-variants">
+      <li>After malloc -> if (!p) { /* handle OOM */ return; }</li>
+      <li>After find/search -> if (n == NULL) return; before n->field</li>
+      <li>Diagnose HardFault -> stacked PC, SCB->BFAR, GDB disassembly</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- Q25 · Strict Aliasing — What the Optimizer Assumes            -->
+<!-- ============================================================= -->
+<div class="card" id="q25">
+  <h2>Q25 · Strict Aliasing — What the Optimizer Assumes About Pointer Types</h2>
+
+  <div class="background">
+    <strong>Background</strong>
+    <p>The strict aliasing rule says: the compiler is allowed to assume that two pointers of different incompatible types do not point to the same memory. This gives the optimizer freedom to reorder loads and stores — if a <code>float*</code> write cannot possibly affect what a <code>int*</code> reads (because they are different types), the optimizer can cache the int in a register and skip re-reading it from memory.</p>
+    <p>The rule exists for performance, and it is valid for the vast majority of code. The problem arises when embedded developers do type-punning through pointer casts — <code>uint32_t bits = *(uint32_t*)&amp;my_float;</code> — which violates strict aliasing. The optimizer may reorder the float write and the int read, or eliminate the read entirely, producing code that is technically legal per the standard but wrong for the programmer's intent. This is one of the hardest categories of bugs to debug because the code looks correct and works at -O0 but fails at -O2.</p>
+  </div>
+
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit">Type-punning float to uint32_t via pointer cast to inspect IEEE 754 bits.</span>
+    <span class="why">The cast violates aliasing; use memcpy instead for defined behavior.</span>
+    <span class="sit">Protocol code casting byte buffer to struct: <code>MyPacket *pkt = (MyPacket*)buf;</code></span>
+    <span class="why">Aliasing violation if buf is uint8_t* and MyPacket contains other types.</span>
+    <span class="sit">Endian conversion: reading a uint32_t from a byte stream by casting.</span>
+    <span class="why">Use memcpy or shift+OR to assemble the value portably and legally.</span>
+  </div>
+
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">The rule: accessing an object through a pointer to a different type is UB — EXCEPT for char*/uint8_t* (which can alias anything). Use memcpy for type-punning; it is optimised to a register move by modern compilers.</div>
+    <div class="ascii">
+VIOLATION (common embedded pattern -- undefined behavior):
+float f = 1.0f;
+uint32_t bits = *(uint32_t*)&amp;f;   /* strict aliasing violation! */
+/* Compiler may assume the uint32_t* write does NOT affect f.
+   At -O2 it may reorder or cache f, giving wrong bits. */
+
+CORRECT -- use memcpy (optimised to a register move):
+float f = 1.0f;
+uint32_t bits;
+memcpy(&amp;bits, &amp;f, sizeof(float));  /* defined behavior */
+/* Compiler generates: MOV bits, f (one instruction, no real copy) */
+
+CORRECT -- use union (C99 and later, gcc extension):
+union { float f; uint32_t u; } pun;
+pun.f = 1.0f;
+uint32_t bits = pun.u;  /* defined in C99, UB in C++ */
+
+CHAR EXCEPTION (always legal):
+uint8_t *p = (uint8_t*)&amp;f;   /* legal: char/uint8_t can alias anything */
+/* Walk bytes of f safely */</div>
+  </div>
+
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;stdint.h&gt;
+#include &lt;string.h&gt;
+
+/* WRONG: strict aliasing violation */
+uint32_t float_bits_bad(float f) {
+    return *(uint32_t*)&amp;f;   /* UB: optimizer may break this */
+}
+
+/* CORRECT: memcpy approach (optimised to zero-copy by compiler) */
+uint32_t float_bits_good(float f) {
+    uint32_t bits;
+    memcpy(&amp;bits, &amp;f, sizeof(float));
+    return bits;
+}
+
+/* CORRECT: union type-pun (valid in C99/C11) */
+uint32_t float_bits_union(float f) {
+    union { float f; uint32_t u; } pun;
+    pun.f = f;
+    return pun.u;
+}
+
+/* Assemble uint32_t from byte buffer -- shift+OR, no aliasing */
+uint32_t read_u32_le(const uint8_t *buf) {
+    return (uint32_t)buf[0]
+         | (uint32_t)buf[1] &lt;&lt; 8
+         | (uint32_t)buf[2] &lt;&lt; 16
+         | (uint32_t)buf[3] &lt;&lt; 24;
+}
+
+int main(void) {
+    float f = 1.0f;
+    printf("%08X\n", float_bits_good(f));   /* 3F800000 (IEEE 754 for 1.0) */
+    printf("%08X\n", float_bits_union(f));  /* 3F800000 */
+
+    uint8_t buf[] = {0x78, 0x56, 0x34, 0x12};
+    printf("%08X\n", read_u32_le(buf));     /* 12345678 */
+    return 0;
+}
+  </code></pre>
+
+  <div class="dry-run">
+    <strong>Dry Run — why the violation breaks at -O2</strong>
+    <pre>
+Code:
+  float f = compute_something();
+  uint32_t bits = *(uint32_t*)&amp;f;  /* aliasing violation */
+  f = 2.0f;                         /* write to f */
+  printf("%08X", bits);             /* read bits */
+
+Optimizer reasoning (wrong for us, valid per standard):
+  "bits is uint32_t*, f is float*. Different types -> no aliasing."
+  "I can reorder: compute bits AFTER writing 2.0f to f, since
+   the float write cannot affect bits per aliasing rules."
+  Result: bits = IEEE 754 for 2.0, not for compute_something()'s result.
+    </pre>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Compile with <code>-fno-strict-aliasing</code> to disable the rule (useful for legacy code), or use <code>-fsanitize=undefined</code> to detect violations at runtime. GCC also offers <code>__attribute__((may_alias))</code> on a type to declare that pointers to it may alias anything, but the cleanest and most portable fix is always memcpy for type-punning.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Why is accessing an object through <code>uint8_t*</code> always legal, even for type-punning?</li>
+      <li>A colleague says "it works fine at -O0 so the code must be correct." Why might this be wrong?</li>
+      <li>What does the compiler generate for <code>memcpy(&amp;u32, &amp;f32, 4)</code> on a modern ARM target?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Type-pun (read float as uint32 or vice versa) -> use memcpy, not pointer cast. Pointer cast to different type = strict aliasing violation = UB at -O2.</div>
+    <ul class="trigger-variants">
+      <li>float <-> uint32_t -> memcpy(&amp;dst, &amp;src, sizeof) -- zero overhead</li>
+      <li>Read struct from byte buffer -> field-by-field or shift+OR, not (Struct*)buf</li>
+      <li>Legal aliasing: uint8_t* and char* can alias anything</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- Q26 · sizeof(ptr) vs sizeof(array) — Size Loss on Decay       -->
+<!-- ============================================================= -->
+<div class="card" id="q26">
+  <h2>Q26 · sizeof(ptr) vs sizeof(array) — Size Info Loss on Decay</h2>
+
+  <div class="background">
+    <strong>Background</strong>
+    <p>When an array decays to a pointer (Q04), all size information is lost. The pointer holds the address of the first element — nothing more. It does not remember how many elements the array had. Applying <code>sizeof</code> to the decayed pointer gives the size of the pointer itself (4 bytes on 32-bit ARM, 8 on 64-bit), not the size of the original array.</p>
+    <p>This is the source of one of the most common off-by-one and overflow bugs in C: computing the number of elements with <code>sizeof(arr)/sizeof(arr[0])</code> works correctly when done in the same scope as the array declaration, but silently gives 1 (or 2 on 64-bit) when the array has already decayed to a pointer inside a function. The fix: compute the count at declaration time with a macro, or always pass the length as a separate parameter.</p>
+  </div>
+
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit">Computing array length: <code>int n = sizeof(arr)/sizeof(arr[0]);</code></span>
+    <span class="why">Works in same scope as declaration; silently wrong after decay to pointer.</span>
+    <span class="sit">memset / memcpy with array: <code>memset(arr, 0, sizeof(arr));</code></span>
+    <span class="why">Correct in same scope (zeroes whole array); only zeroes 4 or 8 bytes if arr is a pointer.</span>
+    <span class="sit">Embedded: zeroing a fixed-size buffer passed to a function.</span>
+    <span class="why">Inside the function, sizeof(buf) is pointer size -- pass size explicitly.</span>
+  </div>
+
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">sizeof applied to an array name gives total bytes. sizeof applied to a pointer always gives pointer width (4 or 8). Always compute count at declaration site, store in a const, or use a macro.</div>
+    <div class="ascii">
+int arr[10];             /* 10 ints on the stack */
+
+sizeof(arr)              /* = 40 bytes (10 * 4)  -- CORRECT here     */
+sizeof(arr)/sizeof(int)  /* = 10 elements         -- CORRECT          */
+
+void f(int *arr) {
+    sizeof(arr)          /* = 8 (pointer size on 64-bit) -- WRONG!    */
+    sizeof(arr)/sizeof(int) /* = 2  -- silently wrong!               */
+}
+
+f(arr);  /* arr decays to int*; size info gone */
+
+FIXES:
+#define COUNTOF(a)  (sizeof(a)/sizeof(a[0]))  /* use at declaration site */
+/* Or: */
+void f(int *arr, int n) { ... }  /* pass length explicitly */
+/* Or: */
+static const int N = 10;
+int arr[N];  /* N is always available */</div>
+  </div>
+
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+#define COUNTOF(a)  (sizeof(a) / sizeof((a)[0]))
+
+void print_size_wrong(int *arr) {
+    /* sizeof(arr) is pointer size -- THIS IS WRONG */
+    printf("inside fn: sizeof=%zu\n", sizeof(arr)); /* 8 on 64-bit */
+}
+
+void print_size_right(int *arr, int n) {
+    printf("n=%d\n", n);  /* correct: caller passed it */
+}
+
+int main(void) {
+    int arr[10];
+    printf("sizeof(arr)=%zu\n",    sizeof(arr));              /* 40 */
+    printf("COUNTOF(arr)=%zu\n",   COUNTOF(arr));             /* 10 */
+
+    memset(arr, 0, sizeof(arr));   /* CORRECT: zeroes 40 bytes */
+    print_size_wrong(arr);         /* prints 8 (wrong) */
+    print_size_right(arr, COUNTOF(arr)); /* correct */
+
+    /* nested sizeof pitfall */
+    int (*pa)[10] = &amp;arr;          /* pointer to array -- keeps size */
+    printf("sizeof(*pa)=%zu\n", sizeof(*pa)); /* 40 -- correct */
+    return 0;
+}
+  </code></pre>
+
+  <div class="dry-run">
+    <strong>Dry Run — sizeof at different points</strong>
+    <pre>
+int arr[10];  /* in main */
+sizeof(arr)   = 40   (array type: 10*4)
+COUNTOF(arr)  = 10
+
+void f(int *arr):
+sizeof(arr)   = 8    (pointer, 64-bit system)
+sizeof(arr)/sizeof(int) = 2  (WRONG: would iterate only 2 elements)
+memset(arr, 0, sizeof(arr)) = memset(arr, 0, 8)  (only zeroes 2 ints!)
+    </pre>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p><code>sizeof(arr)/sizeof(arr[0])</code> is NOT safe inside a function that received arr as a parameter. It compiles without error and returns the pointer size divided by element size — often 1 or 2, silently truncating loops that should iterate 64 or 256 times. Enable <code>-Wsizeof-pointer-div</code> in GCC to catch this class of bug.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>In a 32-bit ARM environment, what does <code>sizeof(ptr)/sizeof(int)</code> equal if ptr is an <code>int*</code>? Why is this dangerous?</li>
+      <li>How does <code>int (*pa)[10]</code> differ from <code>int *pa</code>, and how does sizeof behave differently?</li>
+      <li>Write a macro <code>COUNTOF</code> that is safe to use at the declaration site but generates a compile error if accidentally applied to a pointer.</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">sizeof(array) at declaration = total bytes. sizeof(pointer) = 4 or 8 bytes. Always compute COUNTOF at declaration site; pass length explicitly to functions.</div>
+    <ul class="trigger-variants">
+      <li>Array length -> #define COUNTOF(a) (sizeof(a)/sizeof((a)[0]))</li>
+      <li>Function parameter -> always pass int n separately</li>
+      <li>Zero whole buffer -> memset(arr, 0, sizeof(arr)) at declaration site only</li>
+    </ul>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 <script>hljs.highlightAll();</script>
 </body>
