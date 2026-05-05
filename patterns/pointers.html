@@ -2170,6 +2170,495 @@ result: [1,2,2,3,4] (slot 1 freed for insertion)
   </div>
 </div>
 
+
+<!-- ============================================================= -->
+<!-- Q19 · Byte-Level Access via uint8_t* Cast                     -->
+<!-- ============================================================= -->
+<div class="card" id="q19">
+  <h2>Q19 · Byte-Level Access via uint8_t* Cast</h2>
+
+  <div class="background">
+    <strong>Background</strong>
+    <p>Sometimes you need to inspect or transmit the raw bytes of an integer, float, or struct — not its abstract value, but the actual bits sitting in memory. The technique: cast a pointer to the object into a <code>uint8_t*</code> (or <code>unsigned char*</code>, the only two types whose byte-level aliasing is always legal in C), then walk the bytes with a loop.</p>
+    <p>This is essential in embedded firmware for serialisation (packing a 32-bit ADC reading into a 4-byte CAN frame payload byte by byte), endian inspection and conversion (checking whether the LSB is at the lowest address), and checksum computation (XOR or CRC over the raw bytes of a packet). It is also the only portable way to dissect a float's IEEE 754 bit pattern without invoking undefined behavior through a union type-pun.</p>
+  </div>
+
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit">Serialize uint32_t into a byte array for CAN/UART transmission.</span>
+    <span class="why">Protocol frames work at the byte level; byte-by-byte copy fills the payload.</span>
+    <span class="sit">Compute CRC8 over a struct: feed each byte to the CRC accumulator.</span>
+    <span class="why">CRC operates on bytes; casting struct* to uint8_t* provides the byte stream.</span>
+    <span class="sit">Endianness detection: is the LSB of a uint32_t at the lowest address?</span>
+    <span class="why">Cast to uint8_t* and read byte [0] to see if it holds the least-significant byte.</span>
+    <span class="sit">Print raw bytes of a float for debugging on a minimal embedded console.</span>
+    <span class="why">%f may not be available; hex dump of the 4 bytes reveals the IEEE 754 pattern.</span>
+  </div>
+
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">Cast any pointer to uint8_t* to get byte-level access. This is legal in C (char and unsigned char are exempt from strict aliasing). Walk with a loop of n = sizeof(original_type).</div>
+    <div class="ascii">
+uint32_t val = 0x12345678;
+uint8_t *bytes = (uint8_t*)&amp;val;
+
+On a LITTLE-ENDIAN system (ARM Cortex-M):
+  bytes[0] = 0x78   (least significant byte at lowest address)
+  bytes[1] = 0x56
+  bytes[2] = 0x34
+  bytes[3] = 0x12   (most significant byte)
+
+On a BIG-ENDIAN system:
+  bytes[0] = 0x12
+  bytes[3] = 0x78
+
+Serialize for a big-endian protocol (network order):
+  buf[0] = (val >> 24) & 0xFF;  /* MSB first -- endian-safe */
+  buf[1] = (val >> 16) & 0xFF;
+  buf[2] = (val >>  8) & 0xFF;
+  buf[3] = (val      ) & 0xFF;</div>
+  </div>
+
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;stdint.h&gt;
+#include &lt;string.h&gt;
+
+/* Compute XOR checksum over any object by walking its bytes */
+uint8_t xor_checksum(const void *data, size_t len) {
+    const uint8_t *p = (const uint8_t*)data;
+    uint8_t csum = 0;
+    while (len--) csum ^= *p++;
+    return csum;
+}
+
+/* Serialize uint32_t to 4 bytes, MSB first (big-endian / network order) */
+void u32_to_be(uint32_t val, uint8_t *out) {
+    out[0] = (uint8_t)(val &gt;&gt; 24);
+    out[1] = (uint8_t)(val &gt;&gt; 16);
+    out[2] = (uint8_t)(val &gt;&gt;  8);
+    out[3] = (uint8_t)(val      );
+}
+
+/* Hex dump any object */
+void hexdump(const void *data, size_t len) {
+    const uint8_t *p = (const uint8_t*)data;
+    for (size_t i = 0; i &lt; len; i++) printf("%02X ", p[i]);
+    printf("\n");
+}
+
+int main(void) {
+    uint32_t val = 0x12345678;
+    hexdump(&amp;val, sizeof(val));     /* 78 56 34 12 (little-endian ARM) */
+
+    uint8_t buf[4];
+    u32_to_be(val, buf);
+    hexdump(buf, 4);                /* 12 34 56 78 */
+
+    struct { uint16_t x; uint16_t y; } pt = {0x00AA, 0x00BB};
+    printf("csum: %02X\n", xor_checksum(&amp;pt, sizeof(pt)));
+    return 0;
+}
+  </code></pre>
+
+  <div class="dry-run">
+    <strong>Dry Run — xor_checksum on {0x00AA, 0x00BB} (little-endian)</strong>
+    <pre>
+bytes: [0xAA][0x00][0xBB][0x00]
+csum = 0 ^ 0xAA = 0xAA
+csum = 0xAA ^ 0x00 = 0xAA
+csum = 0xAA ^ 0xBB = 0x11
+csum = 0x11 ^ 0x00 = 0x11
+result = 0x11
+    </pre>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Casting through <code>uint32_t*</code> to read a <code>float</code> (or vice versa) violates strict aliasing and is undefined behavior — the compiler may generate wrong code. The only legal type-pun options in C are: cast via <code>uint8_t*</code> / <code>unsigned char*</code>, or use <code>memcpy</code> between the two types. GCC <code>__attribute__((may_alias))</code> is another option but non-portable.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>How would you detect at runtime whether the system is little-endian or big-endian using a byte cast?</li>
+      <li>Why is <code>uint8_t*</code> (not <code>uint32_t*</code>) used to walk the bytes of a struct?</li>
+      <li>Serialize a float to 4 bytes portably (without assuming endianness). What is the safest approach?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Byte-level access to any object -> cast to uint8_t* and walk sizeof(obj) bytes. Legal, portable, strict-aliasing safe.</div>
+    <ul class="trigger-variants">
+      <li>Serialize integer MSB-first -> shift and mask, don't memcpy raw</li>
+      <li>CRC / checksum -> cast struct* to uint8_t*, feed bytes to accumulator</li>
+      <li>Type-pun float <-> uint32_t -> use memcpy, not pointer cast</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- Q20 · Function Pointer Dispatch Table — Indexed State Machine  -->
+<!-- ============================================================= -->
+<div class="card" id="q20">
+  <h2>Q20 · Function Pointer Dispatch Table — Indexed State Machine</h2>
+
+  <div class="background">
+    <strong>Background</strong>
+    <p>A state machine with N states typically starts as a switch statement. Each case handles one state: do some work, maybe transition to another state. This is readable for 4 states but becomes a maintenance nightmare at 20 states — every new state needs a case inserted in the right place, and the switch itself can produce a large jump table or a chain of comparisons depending on the compiler.</p>
+    <p>The function pointer dispatch table replaces the switch with an array of function pointers indexed by state. Each state has a handler function with a known signature. The main loop is just: <code>state = table[state]();</code> or <code>table[state](context);</code>. Adding a new state means writing a new function and adding its pointer to the array — the main loop never changes. In embedded firmware, this pattern is standard for protocol parsers (each byte transitions to a new state), motor controller state machines, and command dispatch in bootloaders.</p>
+  </div>
+
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit">UART protocol parser: each parser state is a function.</span>
+    <span class="why">Incoming byte calls table[state](byte), returns next state. Clean and fast.</span>
+    <span class="sit">Bootloader command handler: table[cmd_opcode](packet).</span>
+    <span class="why">Each command is a separate function; dispatch is one array lookup.</span>
+    <span class="sit">UI menu system: table[menu_state](button_event).</span>
+    <span class="why">Each screen/mode has its own handler; state transitions are return values.</span>
+  </div>
+
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">Define a function typedef matching all state handlers. Build an array of those function pointers. Index by state. Each handler returns the next state.</div>
+    <div class="ascii">
+typedef enum { ST_IDLE, ST_HEADER, ST_DATA, ST_CHECKSUM, ST_COUNT } State;
+typedef State (*StateFn)(uint8_t byte);
+
+State handle_idle(uint8_t b)     { return b==0xAA ? ST_HEADER    : ST_IDLE;     }
+State handle_header(uint8_t b)   { save_len(b);   return ST_DATA;              }
+State handle_data(uint8_t b)     { store_byte(b); return data_done() ? ST_CHECKSUM : ST_DATA; }
+State handle_checksum(uint8_t b) { return verify(b) ? ST_IDLE : ST_IDLE; /* reset */ }
+
+StateFn table[ST_COUNT] = {
+    [ST_IDLE]     = handle_idle,
+    [ST_HEADER]   = handle_header,
+    [ST_DATA]     = handle_data,
+    [ST_CHECKSUM] = handle_checksum,
+};
+
+/* Parser loop */
+State cur = ST_IDLE;
+while (byte_available()) {
+    cur = table[cur](next_byte());  /* one dispatch per byte */
+}</div>
+  </div>
+
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;stdint.h&gt;
+
+typedef enum { ST_IDLE, ST_GOT_SYNC, ST_DATA, ST_DONE, ST_COUNT } State;
+typedef State (*Handler)(uint8_t);
+
+static uint8_t payload[8];
+static int     idx;
+
+State on_idle(uint8_t b) {
+    return b == 0xAA ? ST_GOT_SYNC : ST_IDLE;
+}
+State on_sync(uint8_t b) {
+    idx = 0;
+    return b == 0x55 ? ST_DATA : ST_IDLE;  /* second sync byte */
+}
+State on_data(uint8_t b) {
+    if (idx &lt; 8) payload[idx++] = b;
+    return idx == 8 ? ST_DONE : ST_DATA;
+}
+State on_done(uint8_t b) {
+    printf("packet received!\n");
+    return ST_IDLE;   /* reset for next packet */
+}
+
+static Handler table[ST_COUNT] = {
+    [ST_IDLE]     = on_idle,
+    [ST_GOT_SYNC] = on_sync,
+    [ST_DATA]     = on_data,
+    [ST_DONE]     = on_done,
+};
+
+int main(void) {
+    uint8_t stream[] = { 0xAA, 0x55, 1,2,3,4,5,6,7,8 };
+    State s = ST_IDLE;
+    for (int i = 0; i &lt; (int)sizeof(stream); i++)
+        s = table[s](stream[i]);
+    return 0;
+}
+  </code></pre>
+
+  <div class="dry-run">
+    <strong>Dry Run — stream [0xAA, 0x55, 1..8]</strong>
+    <pre>
+s=IDLE  byte=0xAA: on_idle  -> ST_GOT_SYNC
+s=SYNC  byte=0x55: on_sync  -> ST_DATA, idx=0
+s=DATA  byte=1:    on_data  -> ST_DATA, idx=1
+...
+s=DATA  byte=8:    on_data  -> ST_DONE, idx=8
+s=DONE  (no more bytes but next call would print "packet received!")
+    </pre>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>If a state value is out of range (corrupted or uninitialised), indexing the table with it causes undefined behavior. Always guard with <code>if (s >= ST_COUNT) s = ST_IDLE;</code> before the dispatch, or use a <code>_Static_assert</code> that the enum values match the table slots.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>What is the advantage of designated initialisers (<code>[ST_IDLE] = on_idle</code>) in the table definition?</li>
+      <li>How would you add a timeout mechanism — transition to ST_IDLE if no byte arrives within 100 ms?</li>
+      <li>What happens if you accidentally omit one state from the table? How do designated initialisers help?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">State machine with many states -> dispatch table: typedef fn-ptr, array[N_STATES], indexed by current state. O(1) dispatch, easy to extend.</div>
+    <ul class="trigger-variants">
+      <li>Protocol parser -> each state is a byte handler, returns next state</li>
+      <li>Command dispatch -> table[opcode](packet) replaces switch(opcode)</li>
+      <li>Guard against OOB -> if (s >= COUNT) s = DEFAULT; before table[s]</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- Q21 · const Pointer for Read-Only Buffer Passing              -->
+<!-- ============================================================= -->
+<div class="card" id="q21">
+  <h2>Q21 · const Pointer for Read-Only Buffer Passing</h2>
+
+  <div class="background">
+    <strong>Background</strong>
+    <p>When a function receives a buffer it is supposed to only read — not modify — declaring the parameter as <code>const uint8_t *buf</code> serves three purposes simultaneously. First, it is a contract: the compiler will error if the function body tries to write through buf. Second, it is documentation: readers of the function signature immediately know this function does not modify the buffer. Third, it enables the caller to pass a <code>const</code> buffer (e.g. a string literal in read-only flash) without a warning.</p>
+    <p>In embedded C this matters for functions that consume flash-resident lookup tables, CRC the contents of a buffer before sending, or format data for UART output. The correct qualifier also lets the linker place the buffer in flash (read-only section) on MCUs with Harvard architecture, saving precious RAM.</p>
+  </div>
+
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit"><code>int uart_write(const uint8_t *buf, uint16_t len)</code></span>
+    <span class="why">UART TX only reads bytes; const signals it won't corrupt the buffer.</span>
+    <span class="sit"><code>uint16_t crc16(const uint8_t *data, size_t len)</code></span>
+    <span class="why">CRC computation is read-only; const allows passing flash-resident data.</span>
+    <span class="sit">Passing a string literal to a print function.</span>
+    <span class="why">Literals are const; without const param the call triggers a warning or error.</span>
+  </div>
+
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">const uint8_t *buf: the bytes buf points to are read-only. The pointer itself can still advance (buf++). This is exactly right for a consumer that scans through a buffer.</div>
+    <div class="ascii">
+/* Without const -- caller cannot safely pass a const buffer */
+void bad_crc(uint8_t *data, int n);  /* would discard const if called with const buf */
+
+/* With const -- accepts both const and non-const buffers */
+uint16_t good_crc(const uint8_t *data, int n);
+
+/* Inside good_crc: */
+const uint8_t *p = data;
+while (n--) {
+    crc = update_crc(crc, *p);  /* read-only dereference -- fine */
+    p++;                         /* advance pointer -- fine       */
+    *p = 0;                      /* COMPILE ERROR -- cannot write */
+}
+
+/* Flash-resident table -- must be const to live in flash on Harvard MCU */
+static const uint8_t CRC_TABLE[256] = { ... };
+/* Pass to a function: only accepted if function takes const uint8_t* */</div>
+  </div>
+
+  <pre><code class="language-c">
+#include &lt;stdint.h&gt;
+#include &lt;stdio.h&gt;
+
+/* CRC-8 over a read-only buffer -- const enables flash buffer as input */
+uint8_t crc8(const uint8_t *data, size_t len) {
+    uint8_t crc = 0xFF;
+    while (len--) {
+        crc ^= *data++;                     /* read-only dereference    */
+        for (int i = 0; i &lt; 8; i++)
+            crc = (crc &amp; 0x80) ? (crc &lt;&lt; 1) ^ 0x07 : (crc &lt;&lt; 1);
+    }
+    return crc;
+}
+
+/* Flash-resident packet template -- const keeps it in .rodata */
+static const uint8_t SYNC_FRAME[] = { 0xAA, 0x55, 0x00, 0x00 };
+
+/* Transmit function: read-only input */
+void uart_send(const uint8_t *buf, uint16_t len) {
+    for (uint16_t i = 0; i &lt; len; i++)
+        printf("%02X ", buf[i]);   /* real firmware: write to UART DR */
+    printf("\n");
+}
+
+int main(void) {
+    uint8_t frame[] = {0x01, 0x02, 0x03};
+    printf("CRC: %02X\n", crc8(frame, 3));
+    uart_send(SYNC_FRAME, sizeof(SYNC_FRAME));   /* passing const buf -- fine */
+    uart_send(frame,      sizeof(frame));        /* passing non-const -- also fine */
+    return 0;
+}
+  </code></pre>
+
+  <div class="dry-run">
+    <strong>Dry Run — const correctness chain</strong>
+    <pre>
+SYNC_FRAME is const uint8_t[]
+uart_send(SYNC_FRAME, 4):
+  buf = const uint8_t* pointing to SYNC_FRAME   OK
+  buf[i] -- read: fine
+  buf[i] = x -- compile error if attempted
+
+frame is uint8_t[] (not const)
+uart_send(frame, 3):
+  non-const converts to const uint8_t* -- always allowed
+  (cannot go the other way without explicit cast)
+    </pre>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Casting away const (<code>(uint8_t*)const_ptr</code>) and then writing through the result is undefined behavior. On STM32, SYNC_FRAME lives in flash — the bus will generate a fault (or silently fail, writing to a no-op address) if you attempt a store. Never discard const unless you absolutely know the underlying object is mutable.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Can you pass a <code>uint8_t*</code> to a function expecting <code>const uint8_t*</code>? Can you do the reverse without a cast?</li>
+      <li>Inside a function with <code>const uint8_t *p</code>, can you do <code>p++</code>? Can you do <code>*p = 0</code>?</li>
+      <li>On a Harvard-architecture MCU, what placement benefit does <code>const</code> provide for large lookup tables?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Function only reads a buffer -> const uint8_t *buf. Enables flash buffers as input, prevents accidental writes, documents intent.</div>
+    <ul class="trigger-variants">
+      <li>Lookup tables in flash -> static const uint8_t TABLE[] -- stays in .rodata</li>
+      <li>CRC / hash / transmit -> always const input parameter</li>
+      <li>Never cast away const -- undefined behavior if the object is truly read-only</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- Q22 · restrict Keyword — Promising No Aliasing                -->
+<!-- ============================================================= -->
+<div class="card" id="q22">
+  <h2>Q22 · restrict Keyword — Promising No Aliasing to the Compiler</h2>
+
+  <div class="background">
+    <strong>Background</strong>
+    <p>The C compiler is deeply conservative about pointers. When a function receives two pointers <code>float *a</code> and <code>float *b</code>, the compiler must assume they might point to the same memory (aliasing). It therefore cannot reorder or vectorise accesses freely: if writing through <code>a</code> could change what <code>b</code> reads, all bets on the order of operations are off.</p>
+    <p>The <code>restrict</code> keyword is your promise to the compiler: "for the duration of this function, no other pointer you can reach will access the memory this pointer touches." With that promise, the compiler can load values into registers once, pipeline reads and writes, generate SIMD/DSP instructions, and in general produce dramatically faster code — sometimes 2-4x on DSP-heavy inner loops.</p>
+    <p>In embedded DSP (audio filters, FFT, FIR coefficients), memcpy-style functions, and any tight inner loop operating on separate input and output buffers, <code>restrict</code> is the correct annotation. Standard library declarations already use it: <code>void *memcpy(void * restrict dst, const void * restrict src, size_t n)</code>.</p>
+  </div>
+
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit"><code>void fir_filter(const float * restrict x, float * restrict y, int n)</code></span>
+    <span class="why">Separate input and output arrays; restrict lets the compiler vectorise the inner loop.</span>
+    <span class="sit">Standard memcpy declaration uses restrict on both src and dst.</span>
+    <span class="why">Guarantees no overlap (which is also why memcpy UBs on overlap — see Q18).</span>
+    <span class="sit">Matrix multiply: separate A, B, C pointers promised non-overlapping.</span>
+    <span class="why">Compiler can keep partial sums in registers without re-loading from memory.</span>
+  </div>
+
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">restrict tells the compiler: in this function's scope, all reads/writes through this pointer are the ONLY way to access that memory. The compiler can then cache values in registers across iterations.</div>
+    <div class="ascii">
+WITHOUT restrict:
+void add(float *a, float *b, float *c, int n) {
+    for (int i=0; i&lt;n; i++) c[i] = a[i] + b[i];
+}
+/* Compiler must reload a[i] every iteration in case c == a (aliasing).
+   Cannot vectorise freely. */
+
+WITH restrict:
+void add(float * restrict a, float * restrict b, float * restrict c, int n) {
+    for (int i=0; i&lt;n; i++) c[i] = a[i] + b[i];
+}
+/* Compiler KNOWS a, b, c don't overlap.
+   Can load chunks into SIMD registers, compute 4 additions at once.
+   Typical speedup: 2-4x on Cortex-M4F with FPU. */
+
+IF YOU LIE: you call add(buf, buf+1, buf, n) -- a and c alias.
+The compiler generates code that assumes they don't.
+Result: silently WRONG output. Not a crash -- corrupt data.</div>
+  </div>
+
+  <pre><code class="language-c">
+#include &lt;stdint.h&gt;
+#include &lt;stdio.h&gt;
+
+/* Scale an input buffer into an output buffer -- separate buffers guaranteed */
+void scale(const float * restrict src,
+                 float * restrict dst,
+           float gain, int n) {
+    /* With restrict, compiler can keep 'gain' in FPU register
+       and pipeline the load-multiply-store without worrying about aliasing */
+    for (int i = 0; i &lt; n; i++)
+        dst[i] = src[i] * gain;
+}
+
+/* Custom memcpy using restrict */
+void *fast_copy(void * restrict dst, const void * restrict src, size_t n) {
+    uint8_t       *d = (uint8_t*)dst;
+    const uint8_t *s = (const uint8_t*)src;
+    while (n--) *d++ = *s++;
+    return dst;
+}
+
+int main(void) {
+    float in[]  = {1.0f, 2.0f, 3.0f, 4.0f};
+    float out[4];
+    scale(in, out, 2.0f, 4);
+    for (int i = 0; i &lt; 4; i++) printf("%.1f ", out[i]); /* 2.0 4.0 6.0 8.0 */
+    printf("\n");
+    return 0;
+}
+  </code></pre>
+
+  <div class="dry-run">
+    <strong>Dry Run — aliasing check (why restrict matters)</strong>
+    <pre>
+Without restrict, compiler compiles scale(in, in+1, 2.0f, 3):
+  MUST reload src[i] each iteration in case dst modified it
+  (because dst might == src)
+
+With restrict, same call is UNDEFINED BEHAVIOR (aliasing):
+  Compiler assumed no overlap -> generated SIMD or pipelined code
+  Actual result: garbled output, not a crash
+  Rule: only annotate with restrict when you can GUARANTEE no overlap
+    </pre>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Lying to the compiler with restrict produces silent wrong results, not compile errors or crashes. The optimizer generates code that is technically correct given your promise — but your promise was false. Only use restrict when you can guarantee at the call site that the pointers truly refer to non-overlapping regions.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>What optimisations does restrict enable that the compiler cannot do without it?</li>
+      <li>If you pass overlapping buffers to a restrict-annotated function, will the compiler warn you? What actually happens?</li>
+      <li>Why does the standard library declare <code>memcpy</code> with restrict but not <code>memmove</code>?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">"Separate input/output buffers, no aliasing" -> annotate with restrict. Enables vectorisation and register caching. Only use when you can GUARANTEE non-overlap.</div>
+    <ul class="trigger-variants">
+      <li>DSP filter, matrix ops -> restrict on all non-aliasing array params</li>
+      <li>Custom memcpy -> restrict on dst and src (same as stdlib)</li>
+      <li>Never lie about restrict -- silent wrong output is the consequence</li>
+    </ul>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 <script>hljs.highlightAll();</script>
 </body>
