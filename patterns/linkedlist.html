@@ -2472,6 +2472,197 @@ Carry example: 9→9 + 1 (99+1=100)
   </div>
 </div>
 
+
+<!-- L26 -->
+<div class="card" id="L26">
+  <div class="card-header">
+    <span class="card-id">L26</span>
+    <h2 class="card-title">Rotate List by K</h2>
+    <span class="category-badge">Structural Patterns</span>
+  </div>
+
+  <div class="background">
+    <p>Rotating a list right by K means the last K nodes move to the front. Instead of moving nodes one at a time (O(n·K)), do it in O(n): find the length, reduce K mod length (since rotating by length = no-op), then find the new tail, break the list there, and reattach the back half to the front.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Circular buffer rotation by K positions</div><div class="why">Rotate the head pointer logically without copying</div>
+    <div class="sit">Scheduling: rotate a round-robin task queue by K</div><div class="why">Start K tasks ahead without reshuffling</div>
+    <div class="sit">LeetCode #61 — linked list rotation</div><div class="why">Common interview question on list manipulation</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Rotate 1→2→3→4→5 right by K=2</div>
+    <div class="ascii">
+len=5, k = 2 % 5 = 2
+new tail is at position (len - k) = 3  (1-indexed)
+i.e., node3 is the new tail; node4 becomes new head
+
+Step 1 — find length AND get pointer to tail:
+  Walk to end: tail=node5, len=5
+
+Step 2 — close into a ring:
+  tail→next = head  (node5→next = node1)
+  Ring: [1]→[2]→[3]→[4]→[5]→[1]→...
+
+Step 3 — walk to new tail (len-k-1 = 2 more steps from head):
+  new_tail = head
+  walk (len-k-1)=2 steps: node1→node2→node3
+  new_tail = node3
+
+Step 4 — break ring:
+  new_head = new_tail→next = node4
+  new_tail→next = NULL
+
+Before: [1]→[2]→[3]→[4]→[5]→NULL
+After:  [4]→[5]→[1]→[2]→[3]→NULL ✓</div>
+    <div class="aha">Making the list circular first avoids pointer bookkeeping — you only need to find one break point.</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">Node *rotate_right(Node *head, int k) {
+    if (!head || !head->next || k == 0) return head;
+
+    /* find length and tail */
+    int len = 1;
+    Node *tail = head;
+    while (tail->next) { tail = tail->next; len++; }
+
+    k = k % len;
+    if (k == 0) return head;   /* full rotation — no change */
+
+    /* close into ring, walk to new tail */
+    tail->next = head;
+    Node *new_tail = head;
+    for (int i = 0; i < len - k - 1; i++)
+        new_tail = new_tail->next;
+
+    Node *new_head = new_tail->next;
+    new_tail->next = NULL;
+    return new_head;
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+    <strong>1→2→3→4→5, K=7 (7%5=2)</strong><br>
+    tail=node5, len=5. ring: 5→1. new_tail walks 2 steps: node3.<br>
+    new_head=node4, node3→next=NULL.<br>
+    <strong>Result: 4→5→1→2→3 ✓</strong>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    Always reduce K mod len before doing anything. K can be larger than the list length (the problem guarantees K≥0 but not K&lt;len). Skipping the mod leads to unnecessary extra traversals or incorrect results.
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    For len=5, K=5: what does K%len give, and what does the function return?
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Rotate list right by K</div>
+    <div class="trigger-variants">find len+tail, k%=len, close ring, walk len-k-1 to new tail, break ring</div>
+  </div>
+</div>
+
+<!-- L27 -->
+<div class="card" id="L27">
+  <div class="card-header">
+    <span class="card-id">L27</span>
+    <h2 class="card-title">Copy List with Random Pointer</h2>
+    <span class="category-badge">Structural Patterns</span>
+  </div>
+
+  <div class="background">
+    <p>Each node has a <code>next</code> pointer and a <code>random</code> pointer that can point to any node in the list (or NULL). Deep-copy the entire list — all new nodes, all pointers correctly mapped — without a hash map, using an interleaving trick.</p>
+    <p>Three-pass algorithm: weave clones between originals, set random pointers on clones, then unweave the two lists.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Serializing/cloning a graph-like list structure</div><div class="why">Random pointers make it a graph, not just a chain</div>
+    <div class="sit">Deep-copying a skip list (express-lane pointers are like randoms)</div><div class="why">Each level pointer is a random-style cross-link</div>
+    <div class="sit">LeetCode #138 — hard-but-common interview problem</div><div class="why">Tests multi-pass pointer manipulation</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Original: A→B→C, with randoms A.rand=C, B.rand=A, C.rand=NULL</div>
+    <div class="ascii">
+Pass 1 — weave clones after each original:
+  [A]→[A']→[B]→[B']→[C]→[C']→NULL
+  A'=clone of A, inserted after A
+
+Pass 2 — set random pointers on clones:
+  A'.random = A.random.next  (C.next = C')
+  B'.random = B.random.next  (A.next = A')
+  C'.random = NULL            (C.random = NULL)
+
+Pass 3 — unweave (restore originals, extract clones):
+  originals: A→B→C
+  clones:    A'→B'→C'
+
+Before unweave: A→A'→B→B'→C→C'→NULL
+After:
+  originals: [A]→[B]→[C]→NULL
+  clones:    [A']→[B']→[C']→NULL  ← return this</div>
+    <div class="aha">The key invariant: clone of node X is always X->next (during passes 1 and 2). So X->random->next is the clone of X's random target — no hash map needed.</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">typedef struct Node { int val; struct Node *next, *random; } RNode;
+
+RNode *copy_random_list(RNode *head) {
+    if (!head) return NULL;
+
+    /* Pass 1: interleave clones */
+    for (RNode *cur = head; cur; cur = cur->next->next) {
+        RNode *clone  = malloc(sizeof(RNode));
+        clone->val    = cur->val;
+        clone->next   = cur->next;
+        clone->random = NULL;
+        cur->next     = clone;
+    }
+
+    /* Pass 2: set random on clones */
+    for (RNode *cur = head; cur; cur = cur->next->next)
+        if (cur->random)
+            cur->next->random = cur->random->next;
+
+    /* Pass 3: unweave */
+    RNode *clone_head = head->next;
+    for (RNode *cur = head; cur; cur = cur->next) {
+        RNode *clone = cur->next;
+        cur->next    = clone->next;          /* restore original */
+        clone->next  = cur->next ? cur->next->next : NULL;
+    }
+    return clone_head;
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+    <strong>A(rand=C)→B(rand=A)→C(rand=NULL)</strong><br>
+    Pass1: A→A'→B→B'→C→C'<br>
+    Pass2: A'.rand=C', B'.rand=A', C'.rand=NULL<br>
+    Pass3: A→B→C; A'→B'→C'<br>
+    <strong>Returns A' with correct random pointers ✓</strong>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    In pass 3, the unweave <code>clone->next = cur->next ? cur->next->next : NULL</code> handles the last clone (cur->next becomes NULL after restoring the last original's next to NULL).
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    Why does pass 2 use <code>cur->random->next</code> to find the clone's random target? What invariant makes this work?
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Deep copy list with random pointers</div>
+    <div class="trigger-variants">interleave clones, set random via original→random→next, unweave two lists</div>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 <script>hljs.highlightAll();</script>
 </body>
