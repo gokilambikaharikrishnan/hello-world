@@ -1577,6 +1577,177 @@ Node *remove_nth_from_end(Node *head, int n) {
   </div>
 </div>
 
+
+<!-- L16 -->
+<div class="card" id="L16">
+  <div class="card-header">
+    <span class="card-id">L16</span>
+    <h2 class="card-title">Merge Two Sorted Lists</h2>
+    <span class="category-badge">Merge and Sort</span>
+  </div>
+
+  <div class="background">
+    <p>Given two sorted linked lists, produce a single sorted list without allocating new nodes — just rewire the existing nodes' <code>next</code> pointers. This is the merge step of merge sort on linked lists.</p>
+    <p>Use a dummy head to avoid special-casing the first node. A write-pointer <code>tail</code> always points to the last node of the merged result so far.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Merge sort on linked lists (the merge step)</div><div class="why">Core subroutine of list merge sort</div>
+    <div class="sit">Merging two priority queues stored as sorted lists</div><div class="why">Preserves sorted order in O(n+m)</div>
+    <div class="sit">Combining two sorted DMA descriptor chains</div><div class="why">Embedded: merge by priority without copying</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Merge: 1→3→5 and 2→4→6</div>
+    <div class="ascii">
+dummy→NULL   a=1  b=2
+
+step1: 1<2, tail→[1], a=3
+  dummy→[1]   a=3  b=2
+
+step2: 3>2, tail→[2], b=4
+  dummy→[1]→[2]   a=3  b=4
+
+step3: 3<4, tail→[3], a=5
+  dummy→[1]→[2]→[3]   a=5  b=4
+
+step4: 5>4, tail→[4], b=6
+  dummy→[1]→[2]→[3]→[4]   a=5  b=6
+
+step5: 5<6, tail→[5], a=NULL
+  a is NULL → append remaining b
+
+dummy→[1]→[2]→[3]→[4]→[5]→[6]→NULL ✓</div>
+    <div class="aha">When one list empties, the other is already sorted — just attach it. No more per-node comparison needed.</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">Node *merge_two_sorted(Node *a, Node *b) {
+    Node dummy = {0, NULL};
+    Node *tail = &dummy;
+
+    while (a && b) {
+        if (a->val <= b->val) {
+            tail->next = a;
+            a = a->next;
+        } else {
+            tail->next = b;
+            b = b->next;
+        }
+        tail = tail->next;
+    }
+    tail->next = a ? a : b;   /* attach remaining list */
+    return dummy.next;
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+    <strong>a: 1→3, b: 2→4→5</strong><br>
+    1&lt;2: tail→1, a=3. 3>2: tail→2, b=4. 3&lt;4: tail→3, a=NULL.<br>
+    a=NULL → tail→next=b(4→5).<br>
+    <strong>Result: 1→2→3→4→5 ✓</strong>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    Don't advance <code>tail</code> after attaching the remainder — <code>tail->next = remaining</code> is enough. The remaining sublist is already linked correctly. If you loop through it again you waste O(n) for no reason.
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    What does the function return if both inputs are NULL? If only one is NULL?
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Merge two sorted linked lists</div>
+    <div class="trigger-variants">dummy+tail, compare heads, advance smaller, attach remainder</div>
+  </div>
+</div>
+
+<!-- L17 -->
+<div class="card" id="L17">
+  <div class="card-header">
+    <span class="card-id">L17</span>
+    <h2 class="card-title">Merge K Sorted Lists</h2>
+    <span class="category-badge">Merge and Sort</span>
+  </div>
+
+  <div class="background">
+    <p>Merging K sorted lists at once naively (pick min from K heads each step) costs O(N·K). The efficient approach: divide and conquer — pair up the K lists, merge each pair, repeat until one list remains. This is O(N log K).</p>
+    <p>Alternatively use a min-heap of K heads for O(N log K) with less code in languages that have heaps. In C, the divide-and-conquer approach is simpler.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Merge K sorted log files into one timeline</div><div class="why">Each file is pre-sorted by timestamp</div>
+    <div class="sit">K-way merge of sorted DMA result buffers</div><div class="why">Embedded: merge interrupt logs from K channels</div>
+    <div class="sit">External sort: merge phase when K sorted runs are on disk</div><div class="why">Classic merge-sort merge step</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">4 lists: divide and conquer in log2(4)=2 rounds</div>
+    <div class="ascii">
+Round 1: pair up
+  merge(list[0], list[1]) → merged01
+  merge(list[2], list[3]) → merged23
+
+Round 2: pair up again
+  merge(merged01, merged23) → final result
+
+K=5: round1 pairs (0,1),(2,3), list[4] is unpaired → carry forward
+  merge(list[0],list[1]) → m01
+  merge(list[2],list[3]) → m23
+  list[4] unchanged
+  round2: merge(m01,m23) → m0123
+  merge(m0123,list[4]) → final
+
+Total merges: O(K) per round × O(log K) rounds = O(K log K) merges
+Each merge O(n/K nodes) on average → total O(N log K)</div>
+    <div class="aha">Each round halves the number of lists. Total list-pairs processed is O(K), total nodes touched per round is O(N), and there are O(log K) rounds.</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">/* merge_two_sorted from L16 assumed available */
+
+Node *merge_k_lists(Node **lists, int k) {
+    if (k == 0) return NULL;
+    int count = k;
+    while (count > 1) {
+        int new_count = 0;
+        for (int i = 0; i < count; i += 2) {
+            if (i + 1 < count)
+                lists[new_count++] = merge_two_sorted(lists[i], lists[i+1]);
+            else
+                lists[new_count++] = lists[i];  /* odd one out */
+        }
+        count = new_count;
+    }
+    return lists[0];
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+    <strong>K=3: [1→4], [2→5], [3→6]</strong><br>
+    Round 1: merge([1→4],[2→5])=1→2→4→5; odd=[3→6] → lists=[1→2→4→5, 3→6], count=2<br>
+    Round 2: merge(1→2→4→5, 3→6) = 1→2→3→4→5→6<br>
+    <strong>Result: 1→2→3→4→5→6 ✓</strong>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    The in-place array reuse (writing merged result back into <code>lists[]</code>) works because merge produces exactly one output list per two inputs and the new count is always ≤ old count. Don't allocate a separate output array.
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    What is the time complexity when all K lists each have N/K nodes? How many rounds does the outer while loop run?
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Merge K sorted lists</div>
+    <div class="trigger-variants">divide-and-conquer: pair and merge each round, halve count, O(N log K)</div>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 <script>hljs.highlightAll();</script>
 </body>
