@@ -118,6 +118,547 @@ h2 { color: #58a6ff; font-size: 1.25rem; margin-bottom: 1rem; }
 </div>
 
 <!-- CARDS_START -->
+
+<!-- ============================================================= -->
+<!-- Q01 · Address vs Value — What a Pointer Actually Is           -->
+<!-- ============================================================= -->
+<div class="card" id="q01">
+  <h2>Q01 · Address vs Value — What a Pointer Actually Is</h2>
+
+  <div class="background">
+    <strong>Background</strong>
+    <p>Imagine a city of millions of houses. A house <em>contains</em> furniture (data). The house's <em>street address</em> is a pointer. When you give someone your address, you are not handing them your furniture — you are handing them a number that tells them where to find the furniture. A C pointer is exactly that: a variable that stores a memory address rather than the data itself.</p>
+    <p>Every variable the program creates occupies some bytes in RAM. The compiler assigns each variable a numeric address — the position of its first byte in memory. An <code>int*</code> stores one such address. Dereferencing the pointer (<code>*p</code>) means "go to that address and read/write the bytes there". The pointer type (<code>int*</code> vs <code>char*</code>) tells the CPU how many bytes to touch.</p>
+    <p>Without pointers, functions can only receive copies of data; with pointers they can reach back into the caller's memory and modify the original. This is the foundation of every pass-by-reference pattern in C.</p>
+  </div>
+
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit">Passing large structs to functions without copying.</span>
+    <span class="why">A pointer is 4 or 8 bytes; copying a 200-byte struct is expensive.</span>
+    <span class="sit">Returning multiple values from a function.</span>
+    <span class="why">C has one return value; pass extra output locations as pointers.</span>
+    <span class="sit">Embedded: locating a peripheral at a fixed MMIO address.</span>
+    <span class="why">The UART data register lives at 0x40013804 — you need a pointer to reach it.</span>
+    <span class="sit">Dynamic allocation with malloc.</span>
+    <span class="why">malloc returns the address of heap memory; you hold it in a pointer.</span>
+  </div>
+
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">A pointer IS a number — just an integer that happens to represent a RAM address.</div>
+    <div class="ascii">
+RAM (simplified 32-bit system):
+
+Address   Value
+-------   -----
+0x2000    42       &lt;-- int x = 42; lives here
+0x2004    0x2000   &lt;-- int *p = &amp;x; lives here (holds address of x)
+
+int x  = 42;        /* x occupies bytes at address 0x2000 */
+int *p = &amp;x;        /* p holds the number 0x2000          */
+printf("%d", *p);   /* go to 0x2000, read 4 bytes -> 42   */
+*p = 99;            /* go to 0x2000, write 4 bytes 99      */
+                    /* x is now 99                          */
+
+On a 64-bit system p would be 8 bytes wide; on a 32-bit MCU 4 bytes.</div>
+    <p>The ampersand operator <code>&amp;</code> computes the address of any variable. The star operator <code>*</code> follows an address to the data. These two operators are exact inverses: <code>*(&amp;x) == x</code> always.</p>
+  </div>
+
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+
+int main(void) {
+    int x = 42;          /* compiler allocates 4 bytes for x somewhere in RAM  */
+    int *p = &amp;x;         /* &amp;x = address-of x; p now holds that address        */
+
+    printf("x     = %d\n",  x);   /* 42                           */
+    printf("&amp;x    = %p\n",  (void*)&amp;x); /* e.g. 0x7ffc2000        */
+    printf("p     = %p\n",  (void*)p);  /* same address as &amp;x      */
+    printf("*p    = %d\n",  *p);  /* follow pointer -> 42         */
+
+    *p = 99;             /* write through the pointer -- changes x directly    */
+    printf("x now = %d\n",  x);   /* 99 -- x changed via *p       */
+    return 0;
+}
+  </code></pre>
+
+  <div class="dry-run">
+    <strong>Dry Run</strong>
+    <pre>
+x stored at (say) 0x2000, value = 42
+p stored at (say) 0x2004, value = 0x2000
+
+printf x        -> reads 0x2000 -> 42
+printf &amp;x       -> computes address -> 0x2000
+printf p        -> reads 0x2004 -> 0x2000
+printf *p       -> reads address stored in p (0x2000) -> 42
+*p = 99         -> writes 99 to address 0x2000
+printf x        -> reads 0x2000 -> 99   (changed!)
+    </pre>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Never dereference an uninitialized pointer. <code>int *p; *p = 5;</code> writes to whatever random address happens to be in p — instant undefined behavior, crash, or silent data corruption. Always initialize: <code>int *p = &amp;x;</code> or <code>int *p = NULL;</code> then check before use.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>If <code>int x = 10; int *p = &amp;x; x = 20;</code> what does <code>*p</code> now read? Why?</li>
+      <li>On a 32-bit microcontroller, <code>sizeof(int*)</code> is 4 and <code>sizeof(int)</code> is also 4. Does that mean a pointer and an int are the same thing?</li>
+      <li>What does <code>&amp;(*p)</code> evaluate to, and why?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Variable holds address, not data -> it's a pointer. Dereference with * to reach the data.</div>
+    <ul class="trigger-variants">
+      <li>Need to modify caller's variable -> pass pointer &amp;var</li>
+      <li>Need to reach a fixed MMIO address -> cast that address to a typed pointer</li>
+      <li>malloc returns void* -> assign to correct pointer type</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- Q02 · Dereferencing — Reading and Writing Through a Pointer   -->
+<!-- ============================================================= -->
+<div class="card" id="q02">
+  <h2>Q02 · Dereferencing — Reading and Writing Through a Pointer</h2>
+
+  <div class="background">
+    <strong>Background</strong>
+    <p>Dereferencing is the act of following a pointer to the memory it points to. Think of it like a treasure map: the pointer is the map (it tells you <em>where</em> the treasure is), and dereferencing is the act of going to that location and picking up (or placing) the treasure. The unary <code>*</code> operator is used both to declare a pointer variable and to dereference it — context determines which meaning applies.</p>
+    <p>When you write <code>int *p</code> in a declaration, the <code>*</code> means "p is a pointer to int". When you write <code>*p</code> in an expression, the <code>*</code> means "go to the address stored in p and access the int there". This dual use is one of C's most confusing syntax choices for beginners.</p>
+    <p>In embedded C, dereferencing is how you read a sensor register or set a GPIO output. The hardware peripheral's register is just RAM at a fixed address — you dereference a pointer to that address to interact with the hardware.</p>
+  </div>
+
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit">Reading a hardware register: <code>uint32_t val = *GPIOA_IDR;</code></span>
+    <span class="why">The register lives at a fixed address; dereference reads the current pin states.</span>
+    <span class="sit">Modifying a struct field through a pointer: <code>(*node).val = 5;</code> or <code>node-&gt;val = 5;</code></span>
+    <span class="why">Arrow operator is syntactic sugar for dereference + field access.</span>
+    <span class="sit">Swap via pointers: passing addresses to a swap function.</span>
+    <span class="why">Without dereferencing, the swap would only affect local copies.</span>
+  </div>
+
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">In declaration: * means "pointer to". In expression: * means "go to the address and access the data".</div>
+    <div class="ascii">
+int x = 10, y = 20;
+int *p = &amp;x;           /* declaration: p is a pointer-to-int   */
+
+READ:
+  int v = *p;          /* expression: follow p, read 4 bytes -> 10 */
+
+WRITE:
+  *p = 99;             /* expression: follow p, write 4 bytes 99   */
+  /* x is now 99 */
+
+REASSIGN POINTER:
+  p = &amp;y;              /* p now points to y (0x2004), NOT writing through */
+  *p = 77;             /* now writes to y; y becomes 77            */
+
+ARROW SUGAR:
+  struct Node { int val; struct Node *next; };
+  struct Node n = {5, NULL};
+  struct Node *np = &amp;n;
+  (*np).val == np-&gt;val   /* identical; arrow is just cleaner */</div>
+    <p>A read dereference (<code>int v = *p</code>) is a <em>load</em> instruction. A write dereference (<code>*p = v</code>) is a <em>store</em> instruction. In embedded development with <code>volatile</code> pointers, both generate actual memory bus transactions — the optimizer cannot cache the value in a register.</p>
+  </div>
+
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+
+/* swap via pointer dereference -- classic interview question */
+void swap(int *a, int *b) {
+    int tmp = *a;  /* read through a                */
+    *a = *b;       /* write through a from b's value */
+    *b = tmp;      /* write through b from saved tmp */
+}
+
+int main(void) {
+    int x = 3, y = 7;
+    printf("before: x=%d y=%d\n", x, y);
+    swap(&amp;x, &amp;y);  /* pass addresses, not values    */
+    printf("after:  x=%d y=%d\n", x, y);
+    return 0;
+}
+  </code></pre>
+
+  <div class="dry-run">
+    <strong>Dry Run — swap(&amp;x, &amp;y) where x=3, y=7</strong>
+    <pre>
+a = 0x2000 (address of x), b = 0x2004 (address of y)
+tmp = *a  -> read 0x2000 -> tmp = 3
+*a  = *b  -> read 0x2004 (7), write to 0x2000 -> x = 7
+*b  = tmp -> write 3 to 0x2004 -> y = 3
+return: x=7, y=3
+    </pre>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p><code>p = &amp;y</code> changes where p <em>points</em> — it does NOT write through p. Only <code>*p = &amp;y</code> (which is a type error anyway) or <code>*p = y</code> writes through the pointer. This distinction trips up nearly every C beginner.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>After <code>int x=5; int *p=&amp;x; p++;</code> what does <code>*p</code> read? Is this safe?</li>
+      <li>Why does <code>swap(x, y)</code> (without &amp;) fail to exchange x and y?</li>
+      <li>What is the difference between <code>*p = 0</code> and <code>p = 0</code>?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Need to read/write the data AT an address -> dereference with *. Need to change WHERE the pointer points -> assign the pointer itself.</div>
+    <ul class="trigger-variants">
+      <li>Read register -> val = *REG_ADDR</li>
+      <li>Modify via pointer -> *ptr = new_val</li>
+      <li>Struct through pointer -> ptr-&gt;field (same as (*ptr).field)</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- Q03 · Pointer Arithmetic — Why ptr+1 Moves by sizeof(*ptr)   -->
+<!-- ============================================================= -->
+<div class="card" id="q03">
+  <h2>Q03 · Pointer Arithmetic — Why ptr+1 Moves by sizeof(*ptr)</h2>
+
+  <div class="background">
+    <strong>Background</strong>
+    <p>Imagine a street where all houses are 4 metres wide and numbered consecutively. "House 3" means the house whose left edge is at position 3*4 = 12 metres from the start. When you say "next house" (house 3+1 = house 4), you physically move 4 metres, not 1 metre. C pointer arithmetic works exactly the same way: adding 1 to a pointer moves it forward by one <em>element</em>, not one byte. The size of that element is the sizeof the pointed-to type.</p>
+    <p>This scaling is automatic and intentional. It lets you walk arrays with <code>ptr++</code> regardless of element size: incrementing an <code>int*</code> moves 4 bytes, a <code>double*</code> moves 8 bytes, a <code>struct SensorReading*</code> moves sizeof(struct SensorReading) bytes. The compiler multiplies your offset by the element size every time.</p>
+    <p>In embedded systems, pointer arithmetic is how memcpy and DMA buffer code walks through byte arrays with <code>uint8_t*</code> pointers. Understanding it is essential for any low-level C work.</p>
+  </div>
+
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit">Walking an array: <code>for (int *p = arr; p &lt; arr+n; p++)</code></span>
+    <span class="why">p++ advances by sizeof(int) bytes each iteration, hitting each element exactly.</span>
+    <span class="sit">memcpy inner loop: <code>while (n--) *dst++ = *src++;</code></span>
+    <span class="why">Both pointers advance one byte at a time (uint8_t*), copying each byte.</span>
+    <span class="sit">Accessing a struct array by pointer: <code>structs[i]</code> vs <code>*(structs+i)</code></span>
+    <span class="why">Both compile to the same: start + i*sizeof(struct) bytes offset.</span>
+  </div>
+
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">ptr + n in C means: byte address = (byte address of ptr) + n * sizeof(*ptr). The compiler inserts the multiply automatically.</div>
+    <div class="ascii">
+int arr[4] = {10, 20, 30, 40};
+/* On a system where sizeof(int)=4: */
+
+Address:  0x100  0x104  0x108  0x10C
+Value:    [ 10 ] [ 20 ] [ 30 ] [ 40 ]
+           arr    arr+1  arr+2  arr+3
+
+int *p = arr;       /* p = 0x100                               */
+p + 1               /* 0x100 + 1*4 = 0x104 (points to 20)     */
+p + 2               /* 0x100 + 2*4 = 0x108 (points to 30)     */
+*(p + 2)            /* go to 0x108 -> 30                       */
+p++                 /* p = 0x104 now                           */
+
+char *cp = (char*)arr;  /* same base address 0x100             */
+cp + 1              /* 0x100 + 1*1 = 0x101 (one BYTE forward)  */
+/* char arithmetic moves 1 byte; int arithmetic moves 4 bytes  */</div>
+    <p>You can also <em>subtract</em> two pointers of the same type to get the number of elements between them (see Q09). You cannot add two pointers together — that is undefined behavior.</p>
+  </div>
+
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+
+int main(void) {
+    int arr[] = {10, 20, 30, 40, 50};
+    int *p = arr;          /* points to arr[0] = 10             */
+
+    printf("%d\n", *p);    /* 10 */
+    printf("%d\n", *(p+1));/* 20 -- moves 4 bytes forward       */
+    printf("%d\n", *(p+4));/* 50 -- moves 16 bytes forward      */
+
+    /* walk with pointer increment */
+    for (int *q = arr; q &lt; arr + 5; q++) {
+        printf("%d ", *q); /* 10 20 30 40 50                    */
+    }
+    printf("\n");
+
+    /* pointer arithmetic on different types */
+    double darr[] = {1.1, 2.2, 3.3};
+    double *dp = darr;
+    printf("dp+1 offset: %td bytes\n",
+           (char*)(dp+1) - (char*)dp);  /* 8 (sizeof double)   */
+    return 0;
+}
+  </code></pre>
+
+  <div class="dry-run">
+    <strong>Dry Run — walking int arr[5]</strong>
+    <pre>
+arr at 0x1000, sizeof(int)=4
+q=0x1000: *q=10
+q=0x1004: *q=20
+q=0x1008: *q=30
+q=0x100C: *q=40
+q=0x1010: *q=50
+q=0x1014: loop ends (0x1014 == arr+5)
+    </pre>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Only pointer arithmetic within (or one-past-the-end of) the same array is defined. <code>int x; int *p = &amp;x; p+1;</code> is undefined behavior — there is no array, so there is no valid "next" element. Also, <code>void*</code> arithmetic is illegal in standard C (GCC allows it as an extension, treating void* like char*).</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>If <code>double *p</code> sits at address 0x200, what is the byte address of <code>p+3</code>?</li>
+      <li>Why is <code>arr[i]</code> exactly equivalent to <code>*(arr+i)</code> at the compiler level?</li>
+      <li>A <code>uint8_t *dst</code> increments by how many bytes per <code>dst++</code> step? Why is <code>uint8_t*</code> used for byte-level copies?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">ptr + n skips n *elements*, not n bytes. The compiler multiplies by sizeof(*ptr) automatically.</div>
+    <ul class="trigger-variants">
+      <li>Walk an array without index -> for (T *p = arr; p &lt; arr+n; p++)</li>
+      <li>Byte-level walk -> cast to uint8_t* first</li>
+      <li>Jump to element k -> *(ptr + k) or ptr[k] (identical)</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- Q04 · Array Decay to Pointer — arr[i] == *(arr+i)            -->
+<!-- ============================================================= -->
+<div class="card" id="q04">
+  <h2>Q04 · Array Decay to Pointer — arr[i] == *(arr+i)</h2>
+
+  <div class="background">
+    <strong>Background</strong>
+    <p>In C, an array name is not a pointer — but it "decays" to one in almost every context. Think of an array like a building: the array name is the address of the front door (the first element). The moment you use the array name in an expression (other than as the operand of <code>sizeof</code>, <code>&amp;</code>, or as a string-literal initializer), C automatically converts it to a pointer to its first element.</p>
+    <p>This decay is why <code>arr[i]</code> and <code>*(arr+i)</code> compile to identical machine code — the compiler rewrites the subscript operator as pointer addition followed by a dereference. It also explains why passing an array to a function actually passes a pointer: the array decays at the call site, and all size information disappears. This "size loss" is one of the most common sources of bugs for C beginners and a key interview question.</p>
+  </div>
+
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit">Passing an array to a function: <code>void f(int *arr, int n)</code></span>
+    <span class="why">The array decays to a pointer; you must pass the length separately.</span>
+    <span class="sit">String literals decay: <code>"hello"</code> becomes <code>const char*</code> pointing to 'h'.</span>
+    <span class="why">char* s = "hello" works because the literal decays to a pointer.</span>
+    <span class="sit">Embedded: passing a buffer to a UART transmit function.</span>
+    <span class="why">uint8_t buf[64] decays to uint8_t* — HAL_UART_Transmit receives a pointer.</span>
+  </div>
+
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">arr[i] is defined as *(arr+i). The [] operator is syntactic sugar for pointer arithmetic + dereference. This is true everywhere in C without exception.</div>
+    <div class="ascii">
+int arr[4] = {10, 20, 30, 40};
+
+arr decays to: int* pointing to arr[0]
+
+arr[2]        == *(arr+2)     == *(2+arr)  == 2[arr]  (all identical!)
+               pointer arith    commutative   weird but legal
+
+sizeof(arr)   = 4 * sizeof(int) = 16   (full array size -- no decay here)
+sizeof(&amp;arr)  = sizeof(int*)   = 8    (pointer size -- different!)
+
+void f(int *p, int n) {
+    sizeof(p)   /* = 8: size of pointer, NOT array */
+}
+f(arr, 4);     /* arr decays to int*, size info GONE */</div>
+    <p>The one place decay does NOT happen: <code>sizeof(arr)</code> gives the full array size. And <code>&amp;arr</code> gives a pointer-to-array (<code>int (*)[4]</code>), not a pointer-to-int — they have the same numerical address but different types and therefore different pointer arithmetic behaviour.</p>
+  </div>
+
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+
+/* arr decays to int* here -- n is the element count we pass explicitly */
+int sum(int *arr, int n) {
+    int total = 0;
+    for (int i = 0; i &lt; n; i++) total += arr[i]; /* arr[i] == *(arr+i) */
+    return total;
+}
+
+int main(void) {
+    int data[5] = {1, 2, 3, 4, 5};
+
+    printf("sizeof data in main: %zu\n", sizeof(data));  /* 20 bytes */
+
+    /* decay in action: data becomes int* at the call site */
+    int s = sum(data, 5);
+    printf("sum = %d\n", s); /* 15 */
+
+    /* arr[i] == *(arr+i): demonstrate they're identical */
+    printf("%d %d %d\n", data[2], *(data+2), 2[data]); /* 3 3 3 */
+    return 0;
+}
+  </code></pre>
+
+  <div class="dry-run">
+    <strong>Dry Run — sum(data, 5)</strong>
+    <pre>
+arr = pointer to data[0] = 0x1000
+n   = 5
+i=0: arr[0] = *(0x1000) = 1, total=1
+i=1: arr[1] = *(0x1004) = 2, total=3
+i=2: arr[2] = *(0x1008) = 3, total=6
+i=3: arr[3] = *(0x100C) = 4, total=10
+i=4: arr[4] = *(0x1010) = 5, total=15
+return 15
+    </pre>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Inside a function, <code>sizeof(arr)</code> gives the pointer size (4 or 8 bytes), NOT the array size. You cannot recover the array length from a decayed pointer. Always pass the length as a separate parameter or use a sentinel value (like the null terminator for strings).</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>In <code>int a[10]; int *p = a;</code> are <code>a</code> and <code>p</code> the same thing? What's the key difference?</li>
+      <li>What does <code>3[arr]</code> mean in C? Is it legal?</li>
+      <li>You have <code>int arr[10];</code>. What is the type of <code>&amp;arr</code>? What is the byte difference between <code>&amp;arr+1</code> and <code>&amp;arr</code>?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Array name in expression -> decays to pointer to first element. arr[i] == *(arr+i), always.</div>
+    <ul class="trigger-variants">
+      <li>Pass array to function -> pass pointer + length explicitly</li>
+      <li>sizeof inside function -> gives pointer size, not array size</li>
+      <li>Keep array size -> use sizeof at declaration site or a #define/constant</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- Q05 · Double Pointer — Modifying a Pointer from a Function   -->
+<!-- ============================================================= -->
+<div class="card" id="q05">
+  <h2>Q05 · Double Pointer — Modifying a Pointer from a Function</h2>
+
+  <div class="background">
+    <strong>Background</strong>
+    <p>If a regular pointer is a street address (telling you where a house is), then a double pointer is the address of a sticky note that has a street address written on it. To change which house someone goes to, you don't need to rebuild the house — you just need the address of their sticky note so you can rewrite the address on it.</p>
+    <p>In C, when you want a function to modify a variable, you pass a pointer to it. When you want a function to modify a <em>pointer</em> itself (not just the data it points to), you must pass a pointer to that pointer — a <code>**</code>. This comes up constantly in linked list operations (insert at head), dynamic memory allocation wrappers, and any function that needs to "return" a new pointer to the caller via an out-parameter.</p>
+    <p>In embedded development, double pointers appear in device driver APIs where an output handle is filled in by an initialisation function: <code>uart_init(&amp;uart_handle)</code> takes a <code>uart_handle_t **</code> or a <code>uart_handle_t *</code> depending on the pattern used.</p>
+  </div>
+
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit">Linked list: inserting a node at the head modifies the head pointer itself.</span>
+    <span class="why">The function needs <code>Node **head</code> to change where head points.</span>
+    <span class="sit">Safe malloc wrapper: <code>void safe_alloc(void **out, size_t sz)</code></span>
+    <span class="why">The function writes the newly allocated address into *out.</span>
+    <span class="sit">argv in main: <code>char **argv</code> — array of string pointers.</span>
+    <span class="why">Each argv[i] is a char* pointing to a command-line argument string.</span>
+  </div>
+
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">To modify X from a function: pass &amp;X. X is an int -> pass int*. X is an int* -> pass int**.</div>
+    <div class="ascii">
+                 MEMORY
+Addr    Content    Meaning
+0x2000  42         int x = 42
+0x2004  0x2000     int *p = &amp;x      (p holds address of x)
+0x2008  0x2004     int **pp = &amp;p    (pp holds address of p)
+
+*pp   = 0x2004   -> read the pointer p
+**pp  = 42       -> follow p, then read x
+*pp   = 0x3000   -> CHANGES p to point somewhere new (does not touch x)
+**pp  = 99       -> writes 99 to wherever p currently points
+
+void set_ptr(int **pp, int *new_target) {
+    *pp = new_target;  /* change what p points to */
+}
+int y = 99;
+set_ptr(&amp;p, &amp;y);       /* p now points to y */</div>
+    <p>The golden rule: to modify something, pass its address. The "something" here is a pointer, so we pass the address of the pointer — which is a pointer to a pointer.</p>
+  </div>
+
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+/* allocate n ints and return via double pointer */
+void alloc_array(int **out, int n) {
+    *out = malloc(n * sizeof(int));   /* write the new address into *out */
+    if (*out == NULL) return;
+    for (int i = 0; i &lt; n; i++) (*out)[i] = i * 10;
+}
+
+/* insert node at head of linked list */
+typedef struct Node { int val; struct Node *next; } Node;
+
+void push(Node **head, int val) {
+    Node *node = malloc(sizeof(Node)); /* create new node                */
+    node-&gt;val  = val;
+    node-&gt;next = *head;                /* new node points to old head    */
+    *head      = node;                 /* update caller's head pointer   */
+}
+
+int main(void) {
+    int *arr = NULL;
+    alloc_array(&amp;arr, 5);             /* &amp;arr is int** */
+    for (int i = 0; i &lt; 5; i++) printf("%d ", arr[i]); /* 0 10 20 30 40 */
+    printf("\n");
+    free(arr);
+
+    Node *head = NULL;
+    push(&amp;head, 3); push(&amp;head, 2); push(&amp;head, 1);
+    for (Node *n = head; n; n = n-&gt;next) printf("%d ", n-&gt;val); /* 1 2 3 */
+    printf("\n");
+    return 0;
+}
+  </code></pre>
+
+  <div class="dry-run">
+    <strong>Dry Run — push(&amp;head, 1) when head already points to {val=2}</strong>
+    <pre>
+head at 0x3000, value = 0x4000 (address of node{val=2})
+*head = 0x4000
+
+push receives: head_pp = 0x3000 (address of head variable)
+node = malloc() -> 0x5000, node->val=1, node->next = *head_pp = 0x4000
+*head_pp = 0x5000    <- writes 0x5000 into address 0x3000
+now head (at 0x3000) = 0x5000 -> node{val=1} -> node{val=2}
+    </pre>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Passing <code>head</code> (a <code>Node*</code>) instead of <code>&amp;head</code> (a <code>Node**</code>) to push means the function modifies a local copy of the pointer and the caller's <code>head</code> is unchanged. The new node is allocated and immediately leaked. Always use <code>**</code> when the function must change which object a pointer references.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>In <code>void f(int **pp) { *pp = NULL; }</code> what does the caller's pointer look like after the call?</li>
+      <li>What is the difference between <code>*pp = new_val</code> and <code>**pp = new_val</code>?</li>
+      <li>argv in main is <code>char **argv</code>. How would you print the third command-line argument?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Function must change a pointer itself -> pass **. To reach data: **, to change the pointer: *pp = new_addr.</div>
+    <ul class="trigger-variants">
+      <li>Insert at linked list head -> Node **head parameter</li>
+      <li>malloc wrapper that fills out-param -> void **out</li>
+      <li>argv parsing -> char **argv, index with argv[i]</li>
+    </ul>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 <script>hljs.highlightAll();</script>
 </body>
