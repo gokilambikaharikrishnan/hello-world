@@ -2124,6 +2124,177 @@ After: [1]→[5]→[2]→[4]→[3]→NULL ✓</div>
   </div>
 </div>
 
+
+<!-- L22 -->
+<div class="card" id="L22">
+  <div class="card-header">
+    <span class="card-id">L22</span>
+    <h2 class="card-title">Intersection of Two Lists</h2>
+    <span class="category-badge">Structural Patterns</span>
+  </div>
+
+  <div class="background">
+    <p>Two linked lists may share a common tail — from some node onward they are literally the same nodes in memory. The task: find the first shared node without modifying the lists and without extra memory.</p>
+    <p>The two-pointer trick: run one pointer through list A then list B, and the other through list B then list A. Both pointers travel the same total distance (lenA + lenB), so they meet at the intersection or both hit NULL at the same step.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Detecting shared structure in two linked data structures</div><div class="why">Shared tail means shared memory — important for free()ing correctly</div>
+    <div class="sit">Finding the merge point of two call chains in a profiler</div><div class="why">Two paths converge at a common function</div>
+    <div class="sit">OS: finding where two process address lists share pages</div><div class="why">Shared pages are the intersection</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">listA: a1→a2→c1→c2→c3, listB: b1→b2→b3→c1→c2→c3</div>
+    <div class="ascii">
+pA starts at a1, pB starts at b1.
+
+pA path: a1→a2→c1→c2→c3→NULL→b1→b2→b3→[c1] ← meets here
+pB path: b1→b2→b3→c1→c2→c3→NULL→a1→a2→[c1] ← meets here
+
+lenA=5, lenB=6, shared=3
+pA travels: 5 + (6-3) = 8 steps to reach c1
+pB travels: 6 + (5-3) = 8 steps to reach c1
+Both travel lenA+lenB-shared = same distance → meet at c1 ✓
+
+No intersection: both reach NULL at the same step → return NULL</div>
+    <div class="aha">When a pointer reaches NULL, redirect it to the other list's head. No length calculation needed — the math works out automatically.</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">Node *get_intersection(Node *headA, Node *headB) {
+    Node *a = headA, *b = headB;
+    while (a != b) {
+        a = a ? a->next : headB;  /* when A exhausted, switch to B */
+        b = b ? b->next : headA;  /* when B exhausted, switch to A */
+    }
+    return a;   /* NULL if no intersection */
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+    <strong>A: 1→3→5, B: 2→3→5 (intersect at node3)</strong><br>
+    a=1,b=2 → a=3,b=3 → a==b → return node3 ✓<br>
+    <strong>A: 1→2, B: 3→4 (no intersection)</strong><br>
+    a=1,b=3 → a=2,b=4 → a=NULL→headB=3, b=NULL→headA=1 → a=4,b=2 → a=NULL→headB=3,b=NULL→headA=1... wait, both NULL at same step: a=b=NULL → return NULL ✓
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    The loop condition is <code>a != b</code>, not <code>a && b</code>. If there's no intersection both pointers become NULL simultaneously and the loop exits returning NULL — which is correct. Never check for NULL inside the loop to break early.
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    Prove that both pointers travel exactly lenA + lenB steps total before meeting. What does the meeting point being NULL mean?
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Find intersection of two lists</div>
+    <div class="trigger-variants">two pointers switch lists at NULL; meet at intersection or both reach NULL together</div>
+  </div>
+</div>
+
+<!-- L23 -->
+<div class="card" id="L23">
+  <div class="card-header">
+    <span class="card-id">L23</span>
+    <h2 class="card-title">Remove Duplicates from Sorted List</h2>
+    <span class="category-badge">Structural Patterns</span>
+  </div>
+
+  <div class="background">
+    <p>In a sorted linked list all duplicates of a value are adjacent. Walk the list; whenever the current node's value equals the next node's value, skip over the next node (unlink it). Because the list is sorted you never need to look back.</p>
+    <p>Two variants: keep one copy of each value, or remove ALL copies of values that appear more than once (LeetCode #82).</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Deduplicating a sorted event log</div><div class="why">Adjacent duplicates are the same event</div>
+    <div class="sit">Implementing a sorted set as a linked list</div><div class="why">Insert then deduplicate = set semantics</div>
+    <div class="sit">Removing repeated sensor samples before processing</div><div class="why">Embedded: debounce by dropping adjacent duplicates</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Keep one copy: 1→1→2→3→3→NULL → 1→2→3</div>
+    <div class="ascii">
+curr=1: curr->next(1)->val == curr->val(1)
+  curr->next = curr->next->next (skip the second 1)
+  List: [1]→[2]→[3]→[3]→NULL   curr stays at node1
+
+curr=1: curr->next(2)->val ≠ 1 → advance curr=2
+curr=2: curr->next(3)->val ≠ 2 → advance curr=3
+curr=3: curr->next(3)->val == 3 → skip
+  List: [1]→[2]→[3]→NULL   curr stays at node3(first)
+curr=3: curr->next=NULL → done
+
+Remove ALL copies: 1→2→2→3 → 1→3
+  dummy→1→2→2→3
+  prev=dummy, curr=1:
+    1 != curr->next(2) → advance prev=1, curr=2
+    2 == curr->next(2) → skip all 2s: curr advances to 3
+    prev->next=3 (skip both 2s)
+    advance prev=3, curr=NULL → done</div>
+    <div class="aha">For "remove all" use a prev pointer and skip entire runs of equal values. For "keep one" just unlink the immediate duplicate in a single pointer walk.</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">/* Keep one copy of each duplicate */
+Node *remove_dups(Node *head) {
+    Node *curr = head;
+    while (curr && curr->next) {
+        if (curr->val == curr->next->val)
+            curr->next = curr->next->next;  /* skip duplicate */
+        else
+            curr = curr->next;              /* advance only if no skip */
+    }
+    return head;
+}
+
+/* Remove ALL nodes with duplicate values */
+Node *remove_dups_all(Node *head) {
+    Node dummy = {0, head};
+    Node *prev = &dummy, *curr = head;
+    while (curr) {
+        if (curr->next && curr->val == curr->next->val) {
+            int dup = curr->val;
+            while (curr && curr->val == dup)
+                curr = curr->next;          /* skip entire run */
+            prev->next = curr;              /* bridge over the run */
+        } else {
+            prev = curr;
+            curr = curr->next;
+        }
+    }
+    return dummy.next;
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+    <strong>remove_dups_all on 1→2→2→3→3→NULL</strong><br>
+    curr=1: next=2≠1 → prev=1,curr=2<br>
+    curr=2: next=2==2 → dup=2, skip run: curr→3<br>
+    prev(1)→next=3. curr=3.<br>
+    curr=3: next=3==3 → dup=3, skip run: curr→NULL<br>
+    prev(1)→next=NULL.<br>
+    <strong>Result: 1→NULL ✓</strong>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    In <code>remove_dups</code> do NOT advance <code>curr</code> after a skip — the next node after the skip might itself be another duplicate and needs re-checking. Only advance when no skip happened.
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    In <code>remove_dups_all</code>, why must <code>prev->next = curr</code> be set before advancing <code>prev</code>? What if the duplicate run is at the head of the list?
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Remove duplicates from sorted list</div>
+    <div class="trigger-variants">keep-one: skip curr->next when equal; remove-all: dummy+prev, skip entire run, bridge prev→next</div>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 <script>hljs.highlightAll();</script>
 </body>
