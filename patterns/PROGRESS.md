@@ -8,7 +8,7 @@
 | arrays.html | 54 | ✅ Done | 2026-05-01 |
 | pointers.html | 30 | ✅ Done | 2026-05-05 |
 | strings.html | 44 | ✅ Done | 2026-05-04 |
-| linkedlist.html | 35 | ✅ Done | 2026-04-29 |
+| linkedlist.html | 35 | 🔄 Rework In Progress | 2026-05-05 |
 | stacks.html | 32 | ✅ Done | 2026-04-29 |
 | queues.html | 22 | ✅ Done | 2026-04-29 |
 
@@ -244,3 +244,67 @@
 | Batch 3 | Q19–Q30 | ✅ Done |
 
 **All 30 cards complete. Rework complete 2026-05-05.**
+
+---
+
+## linkedlist.html — Rework Audit (All 35 Cards)
+
+### Fundamentals (L01–L06)
+- [ ] L01 · Node Struct — Memory Layout and Chaining
+- [ ] L02 · Basic Traversal — Walking the List with a Pointer
+- [ ] L03 · Dummy Head Node Trick — Eliminating Edge Cases
+- [ ] L04 · prev/curr/next — The Triple Pointer Walk Pattern
+- [ ] L05 · Insert Node — At Head, Tail, and Position
+- [ ] L06 · Delete Node — By Value and By Position
+
+### Reversal Patterns (L07–L11)
+- [ ] L07 · Reverse Full List — Iterative (prev/curr/next)
+- [ ] L08 · Reverse Full List — Recursive
+- [ ] L09 · Reverse Between Positions m and n
+- [ ] L10 · Reverse in K-Groups
+- [ ] L11 · Reverse Alternate K-Groups
+
+### Fast / Slow Pointer (L12–L15)
+- [ ] L12 · Detect Cycle — Floyd's Algorithm
+- [ ] L13 · Find Cycle Entry Point — Floyd Phase 2
+- [ ] L14 · Find Middle of List
+- [ ] L15 · Kth Node from End — Runner Technique
+
+### Merge and Sort (L16–L19)
+- [ ] L16 · Merge Two Sorted Lists
+- [ ] L17 · Merge K Sorted Lists
+- [ ] L18 · Sort Linked List — Merge Sort
+- [ ] L19 · Partition List Around a Value
+
+### Structural Patterns (L20–L32)
+- [ ] L20 · Palindrome Check — Find Mid, Reverse Half, Compare
+- [ ] L21 · Reorder List — L0→Ln→L1→Ln-1
+- [ ] L22 · Intersection of Two Lists
+- [ ] L23 · Remove Duplicates from Sorted List
+- [ ] L24 · Remove All Occurrences of a Value
+- [ ] L25 · Add Two Numbers as Linked Lists
+- [ ] L26 · Rotate List by K
+- [ ] L27 · Copy List with Random Pointer
+- [ ] L28 · Flatten Multilevel Linked List
+- [ ] L29 · Odd-Even Node Grouping
+- [ ] L30 · Swap Adjacent Pairs
+- [ ] L31 · Remove Nth Node from End (Runner)
+- [ ] L32 · Check if List is Sorted
+
+### Design Patterns (L33–L35)
+- [ ] L33 · Doubly Linked List — Insert and Delete with Sentinel Head/Tail
+- [ ] L34 · LRU Cache — Doubly Linked List + Hashmap
+- [ ] L35 · Skip List Concept — Express Lanes in a Sorted List
+
+---
+
+## linkedlist.html Rework Progress Log
+
+| Batch | Cards | Status |
+|-------|-------|--------|
+| Batch 1 | L01–L10 | ⏳ Next |
+| Batch 2 | L11–L20 | |
+| Batch 3 | L21–L30 | |
+| Batch 4 | L31–L35 | |
+
+**Currently reworking:** L01 — Node Struct
