@@ -1748,6 +1748,178 @@ Node *merge_k_lists(Node **lists, int k) {
   </div>
 </div>
 
+
+<!-- L18 -->
+<div class="card" id="L18">
+  <div class="card-header">
+    <span class="card-id">L18</span>
+    <h2 class="card-title">Sort Linked List — Merge Sort</h2>
+    <span class="category-badge">Merge and Sort</span>
+  </div>
+
+  <div class="background">
+    <p>Merge sort is the optimal comparison sort for linked lists: O(n log n) time, O(log n) stack space, and no random access needed. QuickSort is poor on lists because finding the pivot's final position requires a pass.</p>
+    <p>Pattern: find the middle (use first-middle variant to avoid infinite recursion), split there, recursively sort both halves, merge them back together.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Sorting a linked list of tasks by priority</div><div class="why">Stable sort, no array needed</div>
+    <div class="sit">Sorting a large list when memory is tight</div><div class="why">Only O(log n) stack — no O(n) aux array</div>
+    <div class="sit">Embedded firmware: sort event log by timestamp</div><div class="why">Log is a linked list; merge sort fits naturally</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Sort: 4→2→1→3</div>
+    <div class="ascii">
+split at middle (first-mid variant):
+  left  = 4→2   right = 1→3
+
+sort(4→2):
+  split: left=4  right=2
+  sort(4)→4   sort(2)→2
+  merge(4,2) → 2→4
+
+sort(1→3):
+  split: left=1  right=3
+  sort(1)→1   sort(3)→3
+  merge(1,3) → 1→3
+
+merge(2→4, 1→3):
+  1<2 → [1], 2<3 → [2], 3<4 → [3], append 4
+  → 1→2→3→4 ✓</div>
+    <div class="aha">Critical: use the <em>first-middle</em> variant (stop when <code>fast->next->next==NULL</code>) so the left half always has at least one node. Using the second-middle variant causes infinite recursion on 2-node lists.</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">static Node *split_half(Node *head) {
+    /* returns head of second half; first half ends at slow */
+    Node *slow = head, *fast = head;
+    while (fast->next && fast->next->next) {
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+    Node *second = slow->next;
+    slow->next = NULL;   /* cut the list */
+    return second;
+}
+
+Node *sort_list(Node *head) {
+    if (!head || !head->next) return head;   /* 0 or 1 node */
+
+    Node *right = split_half(head);          /* split; head = left half */
+    Node *left  = sort_list(head);
+    right       = sort_list(right);
+    return merge_two_sorted(left, right);
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+    <strong>Input: 3→1→2</strong><br>
+    split: left=3→1, right=2 (slow stops at node1, second=node2, node1→next=NULL)<br>
+    sort(3→1): split left=3,right=1; merge(3,1)=1→3<br>
+    sort(2)=2<br>
+    merge(1→3, 2): 1,2,3 → 1→2→3 ✓
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <code>slow->next = NULL</code> after finding the split point is essential — it terminates the left half. Without it both recursive calls receive the full list and you recurse infinitely. Set the cut before making any recursive calls.
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    Why does the first-middle variant (not second-middle) prevent infinite recursion on a 2-node list?
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Sort linked list with merge sort</div>
+    <div class="trigger-variants">split at first-middle (cut slow→next=NULL), sort halves recursively, merge</div>
+  </div>
+</div>
+
+<!-- L19 -->
+<div class="card" id="L19">
+  <div class="card-header">
+    <span class="card-id">L19</span>
+    <h2 class="card-title">Partition List Around a Value</h2>
+    <span class="category-badge">Merge and Sort</span>
+  </div>
+
+  <div class="background">
+    <p>Rearrange a linked list so all nodes with value less than X come before nodes with value ≥ X, while preserving the original relative order within each group. This is the linked-list equivalent of the partition step used in quicksort.</p>
+    <p>Build two separate sub-lists (less-than list and greater-or-equal list) using dummy heads, then join them at the end.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">QuickSort on linked list (partition step)</div><div class="why">Stable partition without in-place index swaps</div>
+    <div class="sit">Separating high-priority from low-priority tasks in a queue</div><div class="why">All tasks above threshold go first</div>
+    <div class="sit">Grouping sensor readings: below/above threshold in one pass</div><div class="why">Embedded data pipeline sorting</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Partition 3→1→4→2→5→2 around X=3</div>
+    <div class="ascii">
+Before: [3]→[1]→[4]→[2]→[5]→[2]→NULL   pivot X=3
+
+Walk each node; route to lo (<3) or hi (≥3) sub-list:
+  node3: 3≥3 → hi:  [3]
+  node1: 1<3 → lo:  [1]
+  node4: 4≥3 → hi:  [3]→[4]
+  node2: 2<3 → lo:  [1]→[2]
+  node5: 5≥3 → hi:  [3]→[4]→[5]
+  node2: 2<3 → lo:  [1]→[2]→[2]
+
+Join: lo_tail→next = hi_head
+  [1]→[2]→[2]→[3]→[4]→[5]→NULL ✓
+
+Relative order preserved within each group.</div>
+    <div class="aha">Two dummy heads eliminate all edge cases. The lo tail's next must be set to NULL after joining (the last hi node's next is already NULL, but lo_tail's original next pointer might still dangle).</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">Node *partition(Node *head, int x) {
+    Node lo_dummy = {0, NULL}, hi_dummy = {0, NULL};
+    Node *lo = &lo_dummy, *hi = &hi_dummy;
+
+    for (Node *curr = head; curr; curr = curr->next) {
+        if (curr->val < x) {
+            lo->next = curr;
+            lo = lo->next;
+        } else {
+            hi->next = curr;
+            hi = hi->next;
+        }
+    }
+    hi->next = NULL;          /* terminate hi list (avoid stale next) */
+    lo->next = hi_dummy.next; /* stitch lo tail to hi head */
+    return lo_dummy.next;
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+    <strong>1→4→3→2→5→2, X=3</strong><br>
+    1→lo, 4→hi, 3→hi, 2→lo, 5→hi, 2→lo<br>
+    lo list: 1→2→2, hi list: 4→3→5<br>
+    hi→next=NULL, lo_tail→next=4→3→5<br>
+    <strong>Result: 1→2→2→4→3→5 ✓</strong>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    Always set <code>hi->next = NULL</code> before joining. The last node routed to hi still has its original <code>next</code> pointer which may point into the lo list — creating a cycle. Terminate hi explicitly.
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    What happens if all nodes are less than X? What does the joined list look like? Does <code>hi_dummy.next</code> being NULL cause any issues?
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Partition list around pivot X</div>
+    <div class="trigger-variants">two dummy-head sub-lists (lo/hi), route each node, hi→next=NULL, join lo tail to hi head</div>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 <script>hljs.highlightAll();</script>
 </body>
