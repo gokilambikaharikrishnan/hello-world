@@ -744,6 +744,173 @@ del_pos(head=[1]->[2]->[4], pos=0):
   </div>
 </div>
 
+
+<!-- L07 -->
+<div class="card" id="L07">
+  <div class="card-header">
+    <span class="card-id">L07</span>
+    <h2 class="card-title">Reverse Full List — Iterative (prev/curr/next)</h2>
+    <span class="category-badge">Reversal</span>
+  </div>
+
+  <div class="background">
+    <p>Reversing a linked list is like a one-way street that needs to flip direction. Every arrow currently points forward — you must redirect each arrow to point backward, one at a time, without losing the rest of the chain.</p>
+    <p>The three-pointer dance: save <code>next</code> before you break the link, flip the link, then slide all three pointers one step forward.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Palindrome check on a linked list (reverse second half)</div><div class="why">Need reversed copy to compare</div>
+    <div class="sit">Reorder list (L0→Ln→L1→Ln-1)</div><div class="why">Reverse second half first</div>
+    <div class="sit">Add two numbers stored in lists (MSB first)</div><div class="why">Reverse both so you start from units digit</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Before: head → [1] → [2] → [3] → [4] → NULL</div>
+    <div class="ascii">
+Before:
+  prev=NULL  curr=1       next=?
+              |
+  NULL ← [1]→[2]→[3]→[4]→NULL
+
+Step 1: next=curr->next(2), curr->next=prev(NULL), prev=curr(1), curr=next(2)
+  NULL←[1]   [2]→[3]→[4]→NULL
+  prev=1    curr=2
+
+Step 2: next=3, [2]->next=prev(1), prev=2, curr=3
+  NULL←[1]←[2]   [3]→[4]→NULL
+  prev=2          curr=3
+
+Step 3: next=4, [3]->next=2, prev=3, curr=4
+  NULL←[1]←[2]←[3]   [4]→NULL
+
+Step 4: next=NULL, [4]->next=3, prev=4, curr=NULL
+  NULL←[1]←[2]←[3]←[4]
+                      prev=4 ← new head
+
+After: head=4 → [4]→[3]→[2]→[1]→NULL</div>
+    <div class="aha">Loop exits when curr==NULL. At that point prev is the new head.</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">typedef struct Node { int val; struct Node *next; } Node;
+
+Node *reverse_list(Node *head) {
+    Node *prev = NULL;
+    Node *curr = head;
+    while (curr) {
+        Node *next = curr->next;  /* save before we break the link */
+        curr->next = prev;        /* flip the arrow */
+        prev = curr;              /* slide prev forward */
+        curr = next;              /* slide curr forward */
+    }
+    return prev;                  /* prev is the new head */
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+    <strong>Input: 1→2→3→NULL</strong><br>
+    iter 1: next=2, [1]→NULL, prev=1, curr=2<br>
+    iter 2: next=3, [2]→1,   prev=2, curr=3<br>
+    iter 3: next=NULL, [3]→2, prev=3, curr=NULL<br>
+    loop ends → return prev=3<br>
+    <strong>Result: 3→2→1→NULL ✓</strong>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    Save <code>next</code> BEFORE overwriting <code>curr->next</code>. If you flip first, you lose the rest of the list. Also: reversing NULL or a single node is safe — the while loop simply never runs / runs once.
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    What does prev hold when curr first becomes NULL? What is the return value for an empty list?
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Reverse a linked list iteratively</div>
+    <div class="trigger-variants">prev=NULL, save next, flip arrow, slide both forward, return prev</div>
+  </div>
+</div>
+
+<!-- L08 -->
+<div class="card" id="L08">
+  <div class="card-header">
+    <span class="card-id">L08</span>
+    <h2 class="card-title">Reverse Full List — Recursive</h2>
+    <span class="category-badge">Reversal</span>
+  </div>
+
+  <div class="background">
+    <p>The recursive insight: if the rest of the list after <code>head</code> is already reversed, all you need to do is make the next node point back at head, and sever head's forward link.</p>
+    <p>Base case: a list of 0 or 1 nodes is already reversed — return it as is. The key trick is that the last non-null node becomes the new head and floats all the way back up through the call stack unchanged.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Interview when the iterative version feels mechanical</div><div class="why">Shows understanding of recursive list structure</div>
+    <div class="sit">Reversing a sub-list in a recursive algorithm</div><div class="why">Composes naturally with other recursive list ops</div>
+    <div class="sit">Understanding how the call stack acts as implicit storage</div><div class="why">Each frame holds one node's address</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Visualise the recursion for 1→2→3→NULL</div>
+    <div class="ascii">
+reverse(1)
+  reverse(2)
+    reverse(3)
+      reverse(NULL) → return NULL... wait, base: return 3 when next=NULL
+      [3]->next = NULL (already), return 3 as new_head
+    back in reverse(2): new_head=3, head=2, head->next=3
+      head->next->next = head  →  [3]->next = 2
+      head->next = NULL        →  [2]->next = NULL
+      return new_head=3
+  back in reverse(1): new_head=3, head=1, head->next=2
+    [2]->next = 1
+    [1]->next = NULL
+    return 3
+
+Before: [1]→[2]→[3]→NULL
+After:  [3]→[2]→[1]→NULL   new_head = 3</div>
+    <div class="aha"><code>head->next->next = head</code> makes the next node point back. <code>head->next = NULL</code> breaks the old forward link (prevents cycle).</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">Node *reverse_recursive(Node *head) {
+    if (!head || !head->next)
+        return head;                    /* base: 0 or 1 nodes */
+
+    Node *new_head = reverse_recursive(head->next);  /* reverse rest */
+    head->next->next = head;  /* next node now points back at us */
+    head->next = NULL;        /* we are the new tail — sever forward link */
+    return new_head;          /* bubble the new head up unchanged */
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+    <strong>Trace for 1→2→3→NULL</strong><br>
+    Call depth 0 (head=1): calls reverse(2)<br>
+    Call depth 1 (head=2): calls reverse(3)<br>
+    Call depth 2 (head=3): next=NULL → return 3<br>
+    Back at depth 1: new_head=3, [3]→next=2, [2]→next=NULL, return 3<br>
+    Back at depth 0: new_head=3, [2]→next=1, [1]→next=NULL, return 3<br>
+    <strong>Result: 3→2→1→NULL ✓</strong>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    Stack depth = list length. For a 10 000-node list this blows the stack. Embedded systems have tiny stacks (512 B – 8 KB) — always use the iterative version in production firmware. Recursion here is for understanding, not deployment.
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    Why must you set <code>head->next = NULL</code> after the back-link? What happens if you forget?
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Reverse list recursively</div>
+    <div class="trigger-variants">reverse(rest), next→next=head, head→next=NULL, return new_head</div>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 <script>hljs.highlightAll();</script>
 </body>
