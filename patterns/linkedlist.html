@@ -911,6 +911,208 @@ After:  [3]→[2]→[1]→NULL   new_head = 3</div>
   </div>
 </div>
 
+
+<!-- L09 -->
+<div class="card" id="L09">
+  <div class="card-header">
+    <span class="card-id">L09</span>
+    <h2 class="card-title">Reverse Between Positions m and n</h2>
+    <span class="category-badge">Reversal</span>
+  </div>
+
+  <div class="background">
+    <p>Sometimes you need to flip only a segment of a list while leaving the head and tail intact. The trick is to stitch three pieces together: the untouched prefix, the reversed middle, and the untouched suffix.</p>
+    <p>Anchor the node just before position m (call it <code>pre</code>), then run a standard iterative reverse for exactly <code>n-m</code> steps inside the window.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Rotate a sub-segment of a command history list</div><div class="why">Only a window needs flipping</div>
+    <div class="sit">In-place reversal of a packet field stored as a list</div><div class="why">Header and trailer are untouched</div>
+    <div class="sit">Reverse K-groups (builds on this primitive)</div><div class="why">Each group is a bounded reverse-between</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Reverse positions 2–4 in: 1→2→3→4→5→NULL</div>
+    <div class="ascii">
+Before:
+  [1]→[2]→[3]→[4]→[5]→NULL
+   pre  ↑             ↑
+        m=2           n=4   (1-indexed)
+
+Step 1 — walk to pre (node before m):
+  pre = node[1]  (position 1)
+  curr = pre->next = node[2]   ← start of window
+
+Step 2 — reverse n-m=2 times using front-insert trick:
+  iteration 1:  pull node[3] to front of window
+    [1]→[3]→[2]→[4]→[5]
+  iteration 2:  pull node[4] to front of window
+    [1]→[4]→[3]→[2]→[5]
+
+After:
+  [1]→[4]→[3]→[2]→[5]→NULL
+  prefix  reversed   suffix</div>
+    <div class="aha">Front-insert: let curr stay fixed as the tail of the reversing window. Each step, pluck <code>curr->next</code>, insert it after <code>pre</code>.</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">Node *reverse_between(Node *head, int m, int n) {
+    Node dummy = {0, head};
+    Node *pre = &dummy;
+
+    /* walk pre to the node just before position m */
+    for (int i = 1; i < m; i++)
+        pre = pre->next;
+
+    Node *curr = pre->next;          /* first node of the window */
+
+    /* front-insert n-m times */
+    for (int i = 0; i < n - m; i++) {
+        Node *next = curr->next;     /* node to pull to front */
+        curr->next = next->next;     /* unlink next from chain */
+        next->next = pre->next;      /* next now points at window head */
+        pre->next = next;            /* pre now points at next */
+    }
+    return dummy.next;
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+    <strong>Input: 1→2→3→4→5, m=2, n=4</strong><br>
+    pre walks to node[1]. curr=node[2].<br>
+    i=0: next=node[3], node[2]→next=node[4], node[3]→next=node[2], node[1]→next=node[3] → 1→3→2→4→5<br>
+    i=1: next=node[4], node[2]→next=node[5], node[4]→next=node[3], node[1]→next=node[4] → 1→4→3→2→5<br>
+    <strong>Result: 1→4→3→2→5 ✓</strong>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    The front-insert trick keeps <code>curr</code> stationary — it slides to the back of the reversed window automatically. Don't confuse this with the standard 3-pointer reverse where curr advances. Also: dummy node makes m=1 work without a special case.
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    Why does <code>curr</code> not need to advance in the inner loop? What is its role after all iterations complete?
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Reverse sublist from m to n</div>
+    <div class="trigger-variants">walk pre to m-1, front-insert curr->next n-m times, dummy handles m=1</div>
+  </div>
+</div>
+
+<!-- L10 -->
+<div class="card" id="L10">
+  <div class="card-header">
+    <span class="card-id">L10</span>
+    <h2 class="card-title">Reverse in K-Groups</h2>
+    <span class="category-badge">Reversal</span>
+  </div>
+
+  <div class="background">
+    <p>Divide the list into consecutive groups of K nodes each. Reverse every complete group; leave a leftover tail (fewer than K nodes) as-is. This is the hardest reversal pattern and combines counting, reversing, and stitching.</p>
+    <p>Key insight: reverse each K-block using the standard iterative reversal, but carefully record the group's original head (it becomes the group's tail after reversal) so you can attach the next group to it.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">LeetCode #25 — hard interview staple</div><div class="why">Tests all reversal mechanics at once</div>
+    <div class="sit">DMA descriptor ring reordering in K-sized bursts</div><div class="why">Embedded DMA chains sometimes need block-level reorder</div>
+    <div class="sit">Chunked stream processing with reversal per chunk</div><div class="why">Network protocol with reversed block headers</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">K=3 on 1→2→3→4→5→6→7→NULL</div>
+    <div class="ascii">
+Before:
+  [1]→[2]→[3]→[4]→[5]→[6]→[7]→NULL
+  |---group1---|---group2---|  tail
+
+Step 1 — check if K nodes remain (count 3 from head: yes)
+  Reverse [1]→[2]→[3]:
+    group_tail = node[1]  (remember: it becomes the tail)
+    after reverse: [3]→[2]→[1]→NULL
+  Attach: prev_tail->next = node[3]  (dummy->next = 3)
+  group_tail->next = node[4]         (node[1]->next = 4)
+
+  State: [3]→[2]→[1]→[4]→[5]→[6]→[7]→NULL
+                   ↑ group_tail
+
+Step 2 — check K=3 from node[4] (4,5,6 — yes)
+  Reverse [4]→[5]→[6]:
+    group_tail = node[4]
+    after reverse: [6]→[5]→[4]→NULL
+  Attach: node[1]->next = node[6]
+  node[4]->next = node[7]
+
+  State: [3]→[2]→[1]→[6]→[5]→[4]→[7]→NULL
+
+Step 3 — check K=3 from node[7]: only 1 node — leave as is
+
+After: [3]→[2]→[1]→[6]→[5]→[4]→[7]→NULL</div>
+    <div class="aha">The original group head (before reversal) becomes the group tail. Save it before reversing so you can stitch the next group onto it.</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">/* count k nodes ahead; return NULL if fewer than k remain */
+static Node *kth(Node *curr, int k) {
+    while (curr && k-- > 0)
+        curr = curr->next;
+    return curr;
+}
+
+Node *reverse_k_groups(Node *head, int k) {
+    Node dummy = {0, head};
+    Node *group_prev = &dummy;   /* tail of the already-processed part */
+
+    while (1) {
+        Node *kth_node = kth(group_prev, k);
+        if (!kth_node) break;    /* fewer than k nodes left — stop */
+
+        Node *group_next = kth_node->next;  /* first node after this group */
+
+        /* reverse k nodes starting from group_prev->next */
+        Node *prev = group_next;
+        Node *curr = group_prev->next;
+        for (int i = 0; i < k; i++) {
+            Node *nxt = curr->next;
+            curr->next = prev;
+            prev = curr;
+            curr = nxt;
+        }
+
+        /* stitch: group_prev → new group head; old group head → group_next */
+        Node *old_head = group_prev->next;  /* will become group tail */
+        group_prev->next = kth_node;        /* kth_node is new group head */
+        group_prev = old_head;              /* advance group_prev to new tail */
+    }
+    return dummy.next;
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+    <strong>K=2 on 1→2→3→4→NULL</strong><br>
+    group1: kth_node=node[2], group_next=node[3]. Reverse 1→2 into 2→1 with sentinel=node[3]. Stitch: dummy→2, node[1]→3. State: 2→1→3→4, group_prev=node[1].<br>
+    group2: kth_node=node[4], group_next=NULL. Reverse 3→4 into 4→3 with sentinel=NULL. Stitch: node[1]→4, node[3]→NULL. State: 2→1→4→3, group_prev=node[3].<br>
+    kth returns NULL → break.<br>
+    <strong>Result: 2→1→4→3 ✓</strong>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    Set <code>prev = group_next</code> (not NULL) before the inner reverse so the last node of the group automatically links to the next group — no extra stitching needed. Forgetting this creates a broken list.
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    Why is <code>prev</code> initialised to <code>group_next</code> instead of NULL in the inner reverse loop? What role does <code>kth()</code> serve beyond counting?
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Reverse in K-groups</div>
+    <div class="trigger-variants">count K ahead, reverse with prev=group_next, stitch old_head→group_next, advance group_prev</div>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 <script>hljs.highlightAll();</script>
 </body>
