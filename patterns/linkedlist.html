@@ -3111,6 +3111,333 @@ int is_strictly_sorted(Node *head) {
   </div>
 </div>
 
+
+<!-- L33 -->
+<div class="card" id="L33">
+  <div class="card-header">
+    <span class="card-id">L33</span>
+    <h2 class="card-title">Doubly Linked List — Insert and Delete with Sentinel Head/Tail</h2>
+    <span class="category-badge">Design Patterns</span>
+  </div>
+
+  <div class="background">
+    <p>A doubly linked list has both <code>next</code> and <code>prev</code> pointers, enabling O(1) insert/delete anywhere without searching for the predecessor. Two permanent sentinel nodes (dummy head and dummy tail) eliminate all edge-case checks — the list is never truly empty and insertions never need to handle NULL neighbors.</p>
+    <p>This structure is the backbone of LRU caches, OS schedulers, and text editors.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">LRU cache (L34) — move accessed node to front in O(1)</div><div class="why">Doubly linked enables O(1) removal from anywhere</div>
+    <div class="sit">OS ready-queue: insert/remove tasks by priority pointer</div><div class="why">Kernel task list is a classic doubly linked list</div>
+    <div class="sit">Text editor line list — O(1) insert/delete at cursor</div><div class="why">No shifting; just rewire two pointers</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Structure with sentinels — always at least HEAD sentinel and TAIL sentinel</div>
+    <div class="ascii">
+Empty list:
+  [HEAD]↔[TAIL]
+
+After insert_after(HEAD, A):
+  [HEAD]↔[A]↔[TAIL]
+
+After insert_after(A, B):
+  [HEAD]↔[A]↔[B]↔[TAIL]
+
+Delete node A (any position — no NULL checks needed):
+  A.prev(HEAD)->next = A.next(B)
+  A.next(B)->prev    = A.prev(HEAD)
+  Result: [HEAD]↔[B]↔[TAIL]
+
+Sentinels absorb every edge case: insert at front, insert at back,
+delete first node, delete last node — all use identical code.</div>
+    <div class="aha">Every real node always has valid prev and next (the sentinels fill the ends). No NULL checks needed inside insert/delete.</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">typedef struct DL { int val; struct DL *prev, *next; } DL;
+typedef struct { DL head, tail; } DList;
+
+void dl_init(DList *l) {
+    l->head.next = &l->tail;
+    l->tail.prev = &l->head;
+    l->head.prev = l->tail.next = NULL;
+}
+
+static void dl_insert_after(DL *pos, DL *node) {
+    node->next      = pos->next;
+    node->prev      = pos;
+    pos->next->prev = node;   /* must come before next line */
+    pos->next       = node;
+}
+
+static void dl_remove(DL *node) {
+    node->prev->next = node->next;
+    node->next->prev = node->prev;
+}
+
+void dl_push_front(DList *l, DL *node) { dl_insert_after(&l->head, node); }
+void dl_push_back(DList *l,  DL *node) { dl_insert_after(l->tail.prev, node); }
+
+DL *dl_pop_back(DList *l) {
+    if (l->tail.prev == &l->head) return NULL;
+    DL *node = l->tail.prev;
+    dl_remove(node);
+    return node;
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+    <strong>push_front(A), push_front(B), pop_back()</strong><br>
+    push A: HEAD↔A↔TAIL<br>
+    push B: HEAD↔B↔A↔TAIL<br>
+    pop_back: removes A (tail.prev), HEAD↔B↔TAIL. Returns A ✓
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    In <code>dl_insert_after</code>, update <code>pos->next->prev = node</code> BEFORE overwriting <code>pos->next = node</code>. Once you overwrite <code>pos->next</code>, you lose the original successor's address and cannot update its prev pointer.
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    Why does <code>dl_remove</code> work correctly when removing the only real node between the two sentinels?
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Doubly linked list with sentinel head/tail</div>
+    <div class="trigger-variants">insert: wire node neighbors then update their back-pointers; remove: prev→next and next→prev skip the node</div>
+  </div>
+</div>
+
+
+<!-- L34 -->
+<div class="card" id="L34">
+  <div class="card-header">
+    <span class="card-id">L34</span>
+    <h2 class="card-title">LRU Cache — Doubly Linked List + Hashmap</h2>
+    <span class="category-badge">Design Patterns</span>
+  </div>
+
+  <div class="background">
+    <p>An LRU (Least Recently Used) cache evicts the item accessed longest ago when full. Implementation: a doubly linked list (MRU at front, LRU at back) plus a hashmap (key to node pointer) for O(1) lookup. Every get or put moves the touched node to the front. Eviction removes from the back.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">CPU cache page eviction simulation</div><div class="why">LRU is the standard cache replacement algorithm</div>
+    <div class="sit">Web browser page cache / DNS resolver cache</div><div class="why">Evict least-recently-used entry when memory full</div>
+    <div class="sit">Embedded firmware: bounded memoization with O(1) get/put</div><div class="why">Fixed-size lookup table with automatic eviction</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Capacity=2: put(1,A), put(2,B), get(1), put(3,C)</div>
+    <div class="ascii">
+put(1,A): HEAD↔[1:A]↔TAIL            map={1}
+put(2,B): HEAD↔[2:B]↔[1:A]↔TAIL     map={1,2}
+get(1):   move node1 to front
+          HEAD↔[1:A]↔[2:B]↔TAIL      node1 is now MRU
+put(3,C): full → evict LRU = tail.prev = node2
+          remove node2, delete map[2]
+          insert node3 at front
+          HEAD↔[3:C]↔[1:A]↔TAIL      map={1,3}
+
+get/put algorithm:
+  get(k): found in map? → move to front, return val. else return -1.
+  put(k,v): in map? → update + move to front.
+            not in map? → new node, insert front.
+            over capacity? → evict tail.prev, erase from map.</div>
+    <div class="aha">The hashmap provides O(1) node access; the doubly linked list provides O(1) move-to-front and eviction. Neither structure alone achieves both.</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">#define CAP 128
+typedef struct LNode { int key, val; struct LNode *prev, *next; } LNode;
+
+typedef struct {
+    int cap, size;
+    LNode head, tail;        /* sentinels */
+    LNode *map[CAP * 2];     /* open-addressing hashmap (simplified) */
+} LRU;
+
+static int slot(LRU *c, int key) { return ((unsigned)key * 2654435761u) % (CAP*2); }
+
+static LNode **find_slot(LRU *c, int key) {
+    int s = slot(c, key);
+    while (c->map[s] && c->map[s]->key != key) s = (s+1) % (CAP*2);
+    return &c->map[s];
+}
+
+static void move_front(LRU *c, LNode *n) {
+    /* unlink */
+    n->prev->next = n->next;  n->next->prev = n->prev;
+    /* insert after head */
+    n->next = c->head.next;   n->prev = &c->head;
+    c->head.next->prev = n;   c->head.next = n;
+}
+
+void lru_init(LRU *c, int cap) {
+    c->cap = cap; c->size = 0;
+    c->head.next = &c->tail; c->tail.prev = &c->head;
+    c->head.prev = c->tail.next = NULL;
+    for (int i = 0; i < CAP*2; i++) c->map[i] = NULL;
+}
+
+int lru_get(LRU *c, int key) {
+    LNode **s = find_slot(c, key);
+    if (!*s) return -1;
+    move_front(c, *s);
+    return (*s)->val;
+}
+
+void lru_put(LRU *c, int key, int val) {
+    LNode **s = find_slot(c, key);
+    if (*s) { (*s)->val = val; move_front(c, *s); return; }
+    if (c->size == c->cap) {           /* evict LRU */
+        LNode *lru = c->tail.prev;
+        lru->prev->next = &c->tail; c->tail.prev = lru->prev;
+        *find_slot(c, lru->key) = NULL;
+        *s = lru; lru->key = key; lru->val = val; c->size--;
+    } else {
+        *s = malloc(sizeof(LNode)); (*s)->key = key; (*s)->val = val;
+    }
+    move_front(c, *s); c->size++;
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+    <strong>cap=2: put(1,10), put(2,20), get(1), put(3,30)</strong><br>
+    put(1,10): insert [1:10] front. size=1.<br>
+    put(2,20): insert [2:20] front. HEAD↔2↔1↔TAIL. size=2.<br>
+    get(1): move [1] to front. HEAD↔1↔2↔TAIL. return 10.<br>
+    put(3,30): full → evict tail.prev=[2:20], erase key 2. insert [3:30] front.<br>
+    HEAD↔3↔1↔TAIL. get(2)=-1 ✓
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    After evicting a node, clear its slot in the hashmap before reusing the node struct — otherwise the old key still maps to that node. In a real implementation use a proper hashmap (uthash, or a purpose-built one) instead of the simplified open-addressing above.
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    Why are both data structures needed? What breaks if you use only a hashmap? Only a doubly linked list?
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">LRU cache with O(1) get and put</div>
+    <div class="trigger-variants">doubly linked list (MRU front, LRU back) + hashmap; access → move to front; full → evict tail.prev</div>
+  </div>
+</div>
+
+
+<!-- L35 -->
+<div class="card" id="L35">
+  <div class="card-header">
+    <span class="card-id">L35</span>
+    <h2 class="card-title">Skip List Concept — Express Lanes in a Sorted List</h2>
+    <span class="category-badge">Design Patterns</span>
+  </div>
+
+  <div class="background">
+    <p>A skip list layers multiple linked lists on top of a base sorted list. Higher layers skip over more nodes — like express train lanes above a local train track. Search, insert, and delete all run in O(log n) expected time with only linked list operations, no tree rotations.</p>
+    <p>Each node is promoted to higher layers with probability 1/2. The result: on average, half the nodes appear at level 1, a quarter at level 2, one eighth at level 3, and so on.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Ordered key-value store (Redis uses skip lists for sorted sets)</div><div class="why">O(log n) operations with simpler code than balanced BSTs</div>
+    <div class="sit">Concurrent ordered map — easier to make lock-free than AVL/RB trees</div><div class="why">Each level can be independently CAS-updated</div>
+    <div class="sit">Range queries on a sorted list in O(log n + k)</div><div class="why">Express lanes skip to start, then walk base level</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Skip list with 3 levels — searching for 17</div>
+    <div class="ascii">
+Level 2 (express): HEAD ──────────────────→ [12] ──────────→ [21] → NULL
+Level 1 (fast):    HEAD ──────→ [6] ───────→ [12] → [17] → [21] → NULL
+Level 0 (base):    HEAD → [3] → [6] → [9] → [12] → [17] → [21] → NULL
+
+Search for 17:
+  Start at HEAD, level 2:
+    HEAD→next[2] = 12 < 17 → advance to 12
+    12→next[2]   = 21 > 17 → drop to level 1
+  At node 12, level 1:
+    12→next[1] = 17 == 17 → FOUND ✓
+
+Only 3 comparisons instead of 6 on the base level.
+
+Insert 15 (promoted to level 1 by coin flip):
+  Update array 'update[i]' = last node at each level where we went right
+  Then splice node15 in after update[0] at level 0 and update[1] at level 1</div>
+    <div class="aha">The search always moves right as far as possible at the current level before dropping down. The drop is free — each node stores pointers for each level it occupies.</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">#define MAXLEV 16
+
+typedef struct SNode {
+    int key;
+    struct SNode *fwd[MAXLEV];  /* forward pointers per level */
+} SNode;
+
+typedef struct { SNode *head; int level; } SkipList;
+
+static int rand_level(void) {
+    int lv = 1;
+    while (lv < MAXLEV && (rand() & 1)) lv++;
+    return lv;
+}
+
+SNode *sl_search(SkipList *sl, int key) {
+    SNode *cur = sl->head;
+    for (int i = sl->level - 1; i >= 0; i--)
+        while (cur->fwd[i] && cur->fwd[i]->key < key)
+            cur = cur->fwd[i];
+    cur = cur->fwd[0];
+    return (cur && cur->key == key) ? cur : NULL;
+}
+
+void sl_insert(SkipList *sl, int key) {
+    SNode *update[MAXLEV], *cur = sl->head;
+    for (int i = sl->level - 1; i >= 0; i--) {
+        while (cur->fwd[i] && cur->fwd[i]->key < key) cur = cur->fwd[i];
+        update[i] = cur;
+    }
+    int lv = rand_level();
+    if (lv > sl->level) {
+        for (int i = sl->level; i < lv; i++) update[i] = sl->head;
+        sl->level = lv;
+    }
+    SNode *n = calloc(1, sizeof(SNode));
+    n->key = key;
+    for (int i = 0; i < lv; i++) {
+        n->fwd[i]        = update[i]->fwd[i];
+        update[i]->fwd[i] = n;
+    }
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+    <strong>Insert 3, 6, 9 (all stay at level 0); insert 12 (promoted to level 1)</strong><br>
+    Base: HEAD→3→6→9→12. Level 1: HEAD→12.<br>
+    search(9): drop from level1 at HEAD (12&gt;9), walk level0: 3,6,9=found ✓<br>
+    search(12): level1 HEAD→12=found ✓ (1 hop instead of 4)
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    The <code>update[]</code> array records where you "turned right" at each level — these are the nodes whose forward pointers must be updated on insert. Forgetting a level leaves a dangling or missing link at that level.
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    Why is <code>rand_level()</code> capped at MAXLEV? What would happen with an unbounded level on a small list?
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Skip list — O(log n) search/insert via express lanes</div>
+    <div class="trigger-variants">top level down: advance while next-key &lt; target, drop one level; update[] tracks splice points for insert</div>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 <script>hljs.highlightAll();</script>
 </body>
