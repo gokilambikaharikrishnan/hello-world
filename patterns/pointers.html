@@ -1118,6 +1118,573 @@ return p - s = 0x3005 - 0x3000 = 5
   </div>
 </div>
 
+
+<!-- ============================================================= -->
+<!-- Q10 · Fast/Slow — Cycle Detection (Floyd's Algorithm)         -->
+<!-- ============================================================= -->
+<div class="card" id="q10">
+  <h2>Q10 · Fast/Slow — Cycle Detection (Floyd's Algorithm)</h2>
+
+  <div class="background">
+    <strong>Background</strong>
+    <p>Imagine two runners on a circular track. One runs at 1 lap/minute, the other at 2 laps/minute. If the track is truly circular, the faster runner will always lap the slower one — they will be at the same point eventually. If the track is not circular (it has a definite end), the faster runner hits the end first and they never meet. Floyd's cycle detection algorithm applies this insight to linked structures: advance one pointer by one step (slow) and another by two steps (fast); if they ever point to the same node, there is a cycle.</p>
+    <p>This runs in O(n) time and O(1) space — no hash set needed to track visited nodes. It works on any structure where you can advance a pointer: linked lists, implicit sequences (like x → f(x) in number theory), and even array index chains.</p>
+  </div>
+
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit">Detect cycle in a singly linked list.</span>
+    <span class="why">Classic interview question; O(1) space vs O(n) hash-set approach.</span>
+    <span class="sit">Detect cycle in an implicit sequence: x, f(x), f(f(x)), ...</span>
+    <span class="why">Used in "Happy Number" and rho factorisation problems.</span>
+    <span class="sit">Embedded: detect runaway pointer in a linked buffer descriptor ring.</span>
+    <span class="why">If head catches tail when it shouldn't, there is a corrupt link.</span>
+  </div>
+
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">slow moves 1 step, fast moves 2 steps. If fast or fast->next becomes NULL: no cycle. If slow == fast: cycle detected.</div>
+    <div class="ascii">
+List: 1 -> 2 -> 3 -> 4 -> 5
+                     ^         |
+                     +-------- + (5->next = 3, cycle!)
+
+Step  slow  fast
+ 0     1     1
+ 1     2     3
+ 2     3     5
+ 3     4     3   (fast wrapped: 5->next=3, then 3->next=4 but fast does 2 steps: 3->4->5... wait)
+             let's be precise: fast = fast->next->next
+ step3: slow=4, fast: was at 5, fast->next=3, fast->next->next=4 => fast=4
+ slow==fast => CYCLE DETECTED at node 4</div>
+    <p>The key invariant: in a cycle of length C, after at most C steps the two pointers are at the same node. The fast pointer gains one step on slow per iteration inside the cycle.</p>
+  </div>
+
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+typedef struct Node { int val; struct Node *next; } Node;
+
+Node *make(int v) { Node *n = malloc(sizeof(Node)); n-&gt;val=v; n-&gt;next=NULL; return n; }
+
+int has_cycle(Node *head) {
+    Node *slow = head, *fast = head;
+    while (fast &amp;&amp; fast-&gt;next) {       /* fast hits NULL -> no cycle  */
+        slow = slow-&gt;next;              /* 1 step                      */
+        fast = fast-&gt;next-&gt;next;        /* 2 steps                     */
+        if (slow == fast) return 1;     /* same node -> cycle          */
+    }
+    return 0;
+}
+
+int main(void) {
+    Node *a=make(1), *b=make(2), *c=make(3), *d=make(4);
+    a-&gt;next=b; b-&gt;next=c; c-&gt;next=d;
+
+    printf("no cycle: %d\n", has_cycle(a));  /* 0 */
+
+    d-&gt;next = b;  /* create cycle: d -> b */
+    printf("cycle:    %d\n", has_cycle(a));  /* 1 */
+    d-&gt;next = NULL;  /* break cycle before free */
+    free(a); free(b); free(c); free(d);
+    return 0;
+}
+  </code></pre>
+
+  <div class="dry-run">
+    <strong>Dry Run — 1->2->3->4->2 (cycle at 2)</strong>
+    <pre>
+step 1: slow=2, fast=3
+step 2: slow=3, fast=2  (fast: 4->2)
+step 3: slow=4, fast=4  (fast: 2->4) -- slow==fast -> CYCLE
+    </pre>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Always check <code>fast &amp;&amp; fast-&gt;next</code> before advancing fast. Checking only <code>fast-&gt;next</code> will segfault when fast itself is NULL. The order matters: check fast first, then fast->next.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Why does the fast pointer move 2 steps instead of 3 or 4? Would those work too?</li>
+      <li>What happens if the list has only one node that points to itself?</li>
+      <li>After detection, slow and fast are at the same node inside the cycle. What is that node's relationship to the cycle entry point?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Cycle detection in linked structure -> Floyd: slow=1 step, fast=2 steps, meet -> cycle. No extra memory needed.</div>
+    <ul class="trigger-variants">
+      <li>Loop guard: while (fast &amp;&amp; fast->next)</li>
+      <li>Works on implicit sequences too (x -> f(x))</li>
+      <li>Phase 2 (find entry): see Q11</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- Q11 · Fast/Slow — Find Cycle Entry Point (Floyd Phase 2)      -->
+<!-- ============================================================= -->
+<div class="card" id="q11">
+  <h2>Q11 · Fast/Slow — Find Cycle Entry Point (Floyd Phase 2)</h2>
+
+  <div class="background">
+    <strong>Background</strong>
+    <p>Once Floyd's algorithm detects a meeting point inside a cycle, a beautiful mathematical property lets you find exactly where the cycle begins. Reset one pointer to the head of the list. Leave the other at the meeting point. Now advance both pointers one step at a time. The step where they meet again is the cycle entry node.</p>
+    <p>The proof relies on the relationship between the distance from head to the cycle entry (call it F), the distance from entry to the meeting point (call it a), and the cycle length (C). At the meeting point: F = C - a (mod C), which means advancing from head F steps and from the meeting point F steps lands both pointers at the entry simultaneously. You do not need to know F, C, or a — just apply the two-pointer walk.</p>
+  </div>
+
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit">Find the node where a linked list begins looping.</span>
+    <span class="why">Phase 2 of Floyd gives O(1) space solution vs O(n) hash set.</span>
+    <span class="sit">Find the duplicate number in an array where values are 1..n (array as implicit linked list).</span>
+    <span class="why">The duplicate is the cycle entry in the implicit sequence index[i] -> arr[i].</span>
+  </div>
+
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">After phase 1 detection: reset slow to head. Advance both slow and fast one step at a time. Where they meet = cycle entry.</div>
+    <div class="ascii">
+List: head -> A -> B -> C -> D
+                            |        |
+                   cycle entry E     |
+                            ^        |
+                            +-- F -- +
+
+Phase 1: slow and fast meet somewhere inside cycle (call it M).
+Phase 2:
+  slow reset to head.
+  Both advance 1 step at a time.
+  They meet exactly at E (cycle entry).
+
+Why? Mathematical proof:
+  dist(head -> E)  = F
+  dist(E -> M)     = a   (inside cycle)
+  At meeting: fast travelled 2*(F+a), slow travelled F+a
+  => fast did extra full cycles: 2(F+a) = F+a + k*C
+  => F = k*C - a = C - a (for k=1)
+  => from M, advancing C-a = F steps reaches E
+  => from head, advancing F steps reaches E
+  => they meet at E</div>
+  </div>
+
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+typedef struct Node { int val; struct Node *next; } Node;
+Node *make(int v) { Node *n=malloc(sizeof(Node)); n-&gt;val=v; n-&gt;next=NULL; return n; }
+
+Node *cycle_entry(Node *head) {
+    Node *slow = head, *fast = head;
+
+    /* Phase 1: detect cycle */
+    while (fast &amp;&amp; fast-&gt;next) {
+        slow = slow-&gt;next;
+        fast = fast-&gt;next-&gt;next;
+        if (slow == fast) break;
+    }
+    if (!fast || !fast-&gt;next) return NULL; /* no cycle */
+
+    /* Phase 2: find entry */
+    slow = head;                    /* reset slow to head         */
+    while (slow != fast) {          /* advance both 1 step        */
+        slow = slow-&gt;next;
+        fast = fast-&gt;next;
+    }
+    return slow;                    /* meeting point = entry node */
+}
+
+int main(void) {
+    Node *n1=make(1),*n2=make(2),*n3=make(3),*n4=make(4),*n5=make(5);
+    n1-&gt;next=n2; n2-&gt;next=n3; n3-&gt;next=n4; n4-&gt;next=n5;
+    n5-&gt;next = n3;  /* cycle enters at n3 */
+
+    Node *entry = cycle_entry(n1);
+    printf("cycle entry val: %d\n", entry-&gt;val);  /* 3 */
+    n5-&gt;next = NULL;
+    free(n1); free(n2); free(n3); free(n4); free(n5);
+    return 0;
+}
+  </code></pre>
+
+  <div class="dry-run">
+    <strong>Dry Run — 1->2->3->4->5->3 (entry=3)</strong>
+    <pre>
+Phase 1:
+  step1: slow=2, fast=3
+  step2: slow=3, fast=5
+  step3: slow=4, fast=4  (fast: 5->3->4) meet at 4
+
+Phase 2: slow=1(head), fast=4
+  step1: slow=2, fast=5
+  step2: slow=3, fast=3  MEET at 3 -> entry=3
+    </pre>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>In phase 2, both pointers move exactly <strong>one step</strong> at a time — not one slow and two fast. Using two steps for fast in phase 2 breaks the mathematical guarantee and gives a wrong answer.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>What does phase 2 return if the cycle entry is the head itself?</li>
+      <li>Why must you check for no-cycle before starting phase 2?</li>
+      <li>How would you use this to find the duplicate in an array of integers 1..n?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">"Find where the cycle starts" -> Floyd phase 2: reset slow to head, advance both 1 step, meeting point = entry.</div>
+    <ul class="trigger-variants">
+      <li>Phase 2 only works after phase 1 confirms a cycle exists</li>
+      <li>Both pointers move 1 step in phase 2 (not 2)</li>
+      <li>Also solves "find duplicate in 1..n array" (treat array as linked list)</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- Q12 · Fast/Slow — Find Midpoint of a Sequence                 -->
+<!-- ============================================================= -->
+<div class="card" id="q12">
+  <h2>Q12 · Fast/Slow — Find Midpoint of a Sequence</h2>
+
+  <div class="background">
+    <strong>Background</strong>
+    <p>When fast reaches the end, slow is at the middle. This is the simplest fast/slow application: no cycle, no phase 2 — just use the speed difference as a ruler. Because fast moves twice as fast as slow, when fast has walked the full list slow has walked exactly half of it.</p>
+    <p>This is the foundation for merge sort on a linked list (split at mid), palindrome checking on a linked list (reverse second half in-place), and any divide-and-conquer algorithm on a structure you cannot index directly.</p>
+  </div>
+
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit">Merge sort on a linked list — split at the midpoint.</span>
+    <span class="why">Cannot compute mid with (lo+hi)/2 when there is no index; use fast/slow.</span>
+    <span class="sit">Check if a linked list is a palindrome — find mid, reverse second half.</span>
+    <span class="why">Compare first half forward with second half reversed in O(n) time O(1) space.</span>
+  </div>
+
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">When fast reaches end (NULL or last node), slow is at the midpoint. For even-length lists: slow lands at the SECOND of the two middle nodes if fast stops at NULL, or the FIRST middle node if fast stops at the last node. Choose your stopping condition based on what you need.</div>
+    <div class="ascii">
+Odd length  (5 nodes): 1 -> 2 -> [3] -> 4 -> 5
+  step1: s=2 f=3
+  step2: s=3 f=5   fast->next=NULL -> stop; slow=3 (true mid)
+
+Even length (6 nodes): 1 -> 2 -> [3] -> [4] -> 5 -> 6
+  while(fast->next && fast->next->next):
+  step1: s=2 f=3
+  step2: s=3 f=5   fast->next->next=NULL -> stop; slow=3 (first mid)</div>
+  </div>
+
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+typedef struct Node { int val; struct Node *next; } Node;
+Node *make(int v) { Node *n=malloc(sizeof(Node)); n-&gt;val=v; n-&gt;next=NULL; return n; }
+
+/* Returns the middle node (first middle for even-length lists) */
+Node *find_mid(Node *head) {
+    Node *slow = head, *fast = head;
+    while (fast-&gt;next &amp;&amp; fast-&gt;next-&gt;next) {
+        slow = slow-&gt;next;
+        fast = fast-&gt;next-&gt;next;
+    }
+    return slow;
+}
+
+int main(void) {
+    /* odd: 1-2-3-4-5, mid=3 */
+    Node *a=make(1),*b=make(2),*c=make(3),*d=make(4),*e=make(5);
+    a-&gt;next=b; b-&gt;next=c; c-&gt;next=d; d-&gt;next=e;
+    printf("odd  mid: %d\n", find_mid(a)-&gt;val);   /* 3 */
+
+    /* even: 1-2-3-4, mid=2 (first mid) */
+    Node *p=make(1),*q=make(2),*r=make(3),*s=make(4);
+    p-&gt;next=q; q-&gt;next=r; r-&gt;next=s;
+    printf("even mid: %d\n", find_mid(p)-&gt;val);   /* 2 */
+
+    free(a);free(b);free(c);free(d);free(e);
+    free(p);free(q);free(r);free(s);
+    return 0;
+}
+  </code></pre>
+
+  <div class="dry-run">
+    <strong>Dry Run — even list 1->2->3->4</strong>
+    <pre>
+Initial: slow=1(0x100) fast=1(0x100)
+step1: fast->next=2, fast->next->next=3 (not NULL) -> slow=2, fast=3
+step2: fast->next=4, fast->next->next=NULL -> STOP
+return slow = node(2) -> val=2
+    </pre>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>The stopping condition <code>fast->next && fast->next->next</code> vs <code>fast && fast->next</code> gives different midpoints for even-length lists. Know which middle node you need before choosing the condition. For merge sort, you typically want the first middle so you can split <em>after</em> slow.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>For a 4-node list, what node does slow point to when using <code>while(fast &amp;&amp; fast-&gt;next)</code> vs <code>while(fast-&gt;next &amp;&amp; fast-&gt;next-&gt;next)</code>?</li>
+      <li>After finding mid for merge sort, how do you split the list into two halves?</li>
+      <li>What happens if you call find_mid on a single-node list?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">"Find middle without length" -> fast/slow: fast moves 2, slow moves 1; when fast ends, slow is at mid.</div>
+    <ul class="trigger-variants">
+      <li>Merge sort split -> find_mid, cut at slow->next = NULL</li>
+      <li>Palindrome check -> find_mid, reverse second half, compare</li>
+      <li>Even list: choose stop condition based on which mid you need</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- Q13 · Read/Write Pointers — In-Place Compaction               -->
+<!-- ============================================================= -->
+<div class="card" id="q13">
+  <h2>Q13 · Read/Write Pointers — In-Place Compaction</h2>
+
+  <div class="background">
+    <strong>Background</strong>
+    <p>Imagine a conveyor belt carrying items — some good, some defective. One worker (the read pointer) picks up every item and inspects it. A second worker (the write pointer) only places items on the output belt when they pass inspection. The read pointer always moves forward; the write pointer only advances when it places something. At the end, the write pointer's position tells you how many good items there were.</p>
+    <p>This read/write pointer pattern does compaction (filtering) in-place with O(1) extra space. It is the core of <code>remove_if</code> in C++, the in-place string filter (Q13 in strings.html), "remove duplicates from sorted array", and countless array manipulation problems in interviews and embedded pre-processing pipelines.</p>
+  </div>
+
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit">Remove all occurrences of value v from an array in-place.</span>
+    <span class="why">Read scans all, write copies only non-v elements. No extra array needed.</span>
+    <span class="sit">Remove duplicates from sorted array.</span>
+    <span class="why">Read advances freely; write advances only when value changes.</span>
+    <span class="sit">Embedded: strip corrupt bytes from a received UART buffer before parsing.</span>
+    <span class="why">Same pattern: read every byte, write only valid ones to the same buffer.</span>
+  </div>
+
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">Invariant: everything at indices [0, w) is the compacted output. r scans [0, n); w only advances when it writes. At end, w = count of kept elements.</div>
+    <div class="ascii">
+Remove all 0s from [3, 0, 1, 0, 2, 0, 4]:
+
+r=0 w=0: arr[0]=3 (keep) -> arr[w]=3, w=1, r=1
+r=1 w=1: arr[1]=0 (skip) -> r=2
+r=2 w=1: arr[2]=1 (keep) -> arr[w]=1, w=2, r=3
+r=3 w=2: arr[3]=0 (skip) -> r=4
+r=4 w=2: arr[4]=2 (keep) -> arr[2]=2, w=3, r=5
+r=5 w=3: arr[5]=0 (skip) -> r=6
+r=6 w=3: arr[6]=4 (keep) -> arr[3]=4, w=4, r=7
+
+result: [3,1,2,4, ...] first w=4 elements are valid
+                          ^
+                          r==w when element kept -> no actual move needed</div>
+  </div>
+
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+
+/* remove all occurrences of val; return new length */
+int compact(int *arr, int n, int val) {
+    int w = 0;                          /* write pointer (index)   */
+    for (int r = 0; r &lt; n; r++) {       /* read pointer scans all  */
+        if (arr[r] != val)
+            arr[w++] = arr[r];          /* keep: copy and advance w */
+    }
+    return w;                           /* new logical length       */
+}
+
+int main(void) {
+    int a[] = {3, 0, 1, 0, 2, 0, 4};
+    int n = compact(a, 7, 0);
+    printf("len=%d: ", n);              /* 4 */
+    for (int i = 0; i &lt; n; i++) printf("%d ", a[i]); /* 3 1 2 4 */
+    printf("\n");
+
+    /* remove duplicates from sorted array */
+    int b[] = {1, 1, 2, 3, 3, 4};
+    int w = 0;
+    for (int r = 0; r &lt; 6; r++) {
+        if (w == 0 || b[r] != b[w-1])  /* new value: keep */
+            b[w++] = b[r];
+    }
+    printf("dedup len=%d: ", w);        /* 4 */
+    for (int i = 0; i &lt; w; i++) printf("%d ", b[i]); /* 1 2 3 4 */
+    printf("\n");
+    return 0;
+}
+  </code></pre>
+
+  <div class="dry-run">
+    <strong>Dry Run — compact([3,0,1,0,2], 5, 0)</strong>
+    <pre>
+r=0 arr[0]=3 !=0: arr[0]=3, w=1
+r=1 arr[1]=0 ==0: skip
+r=2 arr[2]=1 !=0: arr[1]=1, w=2
+r=3 arr[3]=0 ==0: skip
+r=4 arr[4]=2 !=0: arr[2]=2, w=3
+return 3, array=[3,1,2,...]
+    </pre>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>The array beyond index w still contains old data — do not read it. Only indices [0, w) are valid after compaction. Callers must use the returned new length, not the original n.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>When r == w (both at the same index), what does <code>arr[w++] = arr[r]</code> do? Is this a problem?</li>
+      <li>How would you modify compact to keep elements that satisfy a predicate instead of a fixed value?</li>
+      <li>Does this pattern preserve the relative order of kept elements?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Filter array in-place -> read/write pointers: r scans all, w writes only keepers. Return w as new length.</div>
+    <ul class="trigger-variants">
+      <li>Remove value -> if arr[r] != val: arr[w++] = arr[r]</li>
+      <li>Remove duplicates (sorted) -> if w==0 || arr[r]!=arr[w-1]: arr[w++]=arr[r]</li>
+      <li>Bytes beyond w are stale -- use returned length, not original n</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- Q14 · Runner Technique — K-Gap Between Two Pointers           -->
+<!-- ============================================================= -->
+<div class="card" id="q14">
+  <h2>Q14 · Runner Technique — K-Gap Between Two Pointers</h2>
+
+  <div class="background">
+    <strong>Background</strong>
+    <p>Imagine two runners starting from the same point on a straight track. You let runner A head out first and get a K-step lead before runner B starts. Now both run at the same speed. When runner B is at position P, runner A is always at position P+K. When runner A reaches the finish line, runner B is exactly K steps from the finish.</p>
+    <p>In pointer terms: advance the "fast" pointer K steps ahead, then advance both pointers together at the same speed. When fast reaches the end (NULL or last node), slow is exactly K positions from the end. This one-pass technique avoids needing to know the total length in advance.</p>
+    <p>The classic use: delete the Nth node from the end of a linked list without knowing the list length. It also appears in finding the K-th element from the end, and in the "find intersection point" of two lists variant.</p>
+  </div>
+
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit">Delete the Nth node from the end of a linked list.</span>
+    <span class="why">Advance fast N+1 steps; when fast=NULL, slow->next is the node to delete.</span>
+    <span class="sit">Return the Kth node from the end.</span>
+    <span class="why">Advance fast K steps; when fast=NULL, slow is the answer.</span>
+    <span class="sit">Rotating a linked list by K positions.</span>
+    <span class="why">Find the new tail at (len-K) from start using K-gap technique.</span>
+  </div>
+
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">Advance fast K steps first. Then move both at the same speed. When fast hits NULL, slow is K steps from the end.</div>
+    <div class="ascii">
+List: 1 -> 2 -> 3 -> 4 -> 5 -> NULL    Remove 2nd from end (=4).
+
+Step 1: advance fast N+1=3 steps:
+  fast: 1 -> 2 -> 3 -> 4    (3 steps: at node 4)
+  slow: 1
+
+Step 2: advance both until fast=NULL:
+  fast=4->5, slow=1->2
+  fast=5->NULL, slow=2->3
+  fast=NULL -> STOP
+
+slow->next = 4 (the node to remove)
+slow->next = slow->next->next = 5
+List: 1->2->3->5</div>
+  </div>
+
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+typedef struct Node { int val; struct Node *next; } Node;
+Node *make(int v) { Node *n=malloc(sizeof(Node)); n-&gt;val=v; n-&gt;next=NULL; return n; }
+
+/* Delete Nth node from the end; use a dummy head to simplify edge cases */
+Node *delete_nth_from_end(Node *head, int n) {
+    Node dummy = {0, head};            /* dummy node before head          */
+    Node *fast = &amp;dummy, *slow = &amp;dummy;
+
+    for (int i = 0; i &lt;= n; i++)      /* advance fast N+1 steps          */
+        fast = fast-&gt;next;
+
+    while (fast) {                     /* move both until fast = NULL     */
+        slow = slow-&gt;next;
+        fast = fast-&gt;next;
+    }
+    Node *del = slow-&gt;next;            /* node to delete                  */
+    slow-&gt;next = del-&gt;next;           /* unlink it                       */
+    free(del);
+    return dummy.next;                 /* head may have changed           */
+}
+
+void print_list(Node *h) {
+    for (; h; h=h-&gt;next) printf("%d ", h-&gt;val); printf("\n");
+}
+
+int main(void) {
+    Node *h=make(1); h-&gt;next=make(2); h-&gt;next-&gt;next=make(3);
+    h-&gt;next-&gt;next-&gt;next=make(4); h-&gt;next-&gt;next-&gt;next-&gt;next=make(5);
+    print_list(h);                     /* 1 2 3 4 5 */
+    h = delete_nth_from_end(h, 2);
+    print_list(h);                     /* 1 2 3 5   */
+    while (h) { Node *t=h->next; free(h); h=t; }
+    return 0;
+}
+  </code></pre>
+
+  <div class="dry-run">
+    <strong>Dry Run — delete 2nd from end of 1->2->3->4->5</strong>
+    <pre>
+dummy->1->2->3->4->5
+fast advances N+1=3 steps: dummy->1->2->3 (fast=3)
+Both advance:
+  slow=1,   fast=4
+  slow=2,   fast=5
+  slow=3,   fast=NULL -> stop
+del = slow->next = 4
+slow->next = 5
+List: 1->2->3->5
+    </pre>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Advance fast N<strong>+1</strong> steps (not N) so that slow lands on the <em>predecessor</em> of the node to delete, allowing <code>slow->next = slow->next->next</code>. Using a dummy node before head means deleting the head node works without a special case.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Why do we use a dummy node before head in the delete implementation?</li>
+      <li>If N equals the list length (delete the head), trace through the algorithm to verify it works.</li>
+      <li>How would you find the Kth node from the end without deleting it? Which stop condition and gap do you use?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">"Kth from end / delete Nth from end" -> runner: advance fast K (or K+1) steps, then move both; when fast=NULL slow is the target.</div>
+    <ul class="trigger-variants">
+      <li>Delete Nth from end -> gap = N+1, slow lands at predecessor</li>
+      <li>Return Kth from end -> gap = K, stop when fast=NULL</li>
+      <li>Use dummy head to handle deleting the head node cleanly</li>
+    </ul>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 <script>hljs.highlightAll();</script>
 </body>
