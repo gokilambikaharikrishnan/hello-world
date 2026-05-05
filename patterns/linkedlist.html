@@ -2295,6 +2295,183 @@ Node *remove_dups_all(Node *head) {
   </div>
 </div>
 
+
+<!-- L24 -->
+<div class="card" id="L24">
+  <div class="card-header">
+    <span class="card-id">L24</span>
+    <h2 class="card-title">Remove All Occurrences of a Value</h2>
+    <span class="category-badge">Structural Patterns</span>
+  </div>
+
+  <div class="background">
+    <p>Delete every node whose value equals a target, regardless of position (head, tail, middle, or all nodes). The dummy head trick is essential here: without it, deleting the head node requires special-casing the return value.</p>
+    <p>Walk with a <code>prev</code> pointer. When <code>curr->val == target</code>, unlink curr by setting <code>prev->next = curr->next</code> without advancing prev. Otherwise advance both.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Filter a message queue to remove a cancelled message type</div><div class="why">All occurrences need removal, not just first</div>
+    <div class="sit">Evict all cache entries of a specific key</div><div class="why">Linked list cache with duplicate keys</div>
+    <div class="sit">Remove all nodes matching a condition in an embedded linked list</div><div class="why">General list-filter pattern</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Remove all 3s from: 3→1→3→3→2→3→NULL</div>
+    <div class="ascii">
+dummy→[3]→[1]→[3]→[3]→[2]→[3]→NULL
+prev=dummy, curr=3
+
+curr=3 == target: prev→next=1  (skip node3)
+  dummy→[1]→[3]→[3]→[2]→[3]   curr=1
+
+curr=1 ≠ target: prev=1, curr=3
+
+curr=3 == target: prev(1)→next=3(second)  wait...
+  prev(1)→next = curr->next = node3(second), curr=node3(second)
+  dummy→[1]→[3]→[3]→[2]→[3]   Hmm, need to track carefully:
+
+After each skip, curr = prev->next (the node we just linked to).
+  skip node3(first):  dummy→1→3→3→2→3,  curr=1
+  advance: prev=1, curr=3(second)
+  skip 3(second): 1→3(third)→2→3, curr=3(third)
+  skip 3(third):  1→2→3, curr=2
+  advance: prev=2, curr=3(last)
+  skip 3(last): 2→NULL, curr=NULL → done
+
+After: dummy→[1]→[2]→NULL ✓</div>
+    <div class="aha">Never advance prev when you unlink — the node now at prev->next is the one that was skipped over and needs to be checked next.</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">Node *remove_val(Node *head, int val) {
+    Node dummy = {0, head};
+    Node *prev = &dummy;
+    Node *curr = head;
+    while (curr) {
+        if (curr->val == val) {
+            prev->next = curr->next;   /* unlink curr */
+            free(curr);
+            curr = prev->next;         /* advance curr only */
+        } else {
+            prev = curr;               /* advance both */
+            curr = curr->next;
+        }
+    }
+    return dummy.next;
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+    <strong>1→2→6→3→4→5→6, val=6</strong><br>
+    curr=1≠6: prev=1,curr=2. curr=2≠6: prev=2,curr=6.<br>
+    curr=6==6: prev(2)→next=3, free(6), curr=3.<br>
+    curr=3,4,5: advance. curr=6==6: prev(5)→next=NULL, free(6), curr=NULL. Done.<br>
+    <strong>Result: 1→2→3→4→5 ✓</strong>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    After <code>free(curr)</code>, access <code>prev->next</code> (not <code>curr->next</code>) to get the next node — the freed memory is undefined. Always save or recompute the next pointer before freeing.
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    What is returned when every node is the target value? Walk through a list of all 3s being removed.
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Remove all nodes with target value</div>
+    <div class="trigger-variants">dummy+prev; on match: prev→next=curr→next, free, advance curr only; else advance both</div>
+  </div>
+</div>
+
+<!-- L25 -->
+<div class="card" id="L25">
+  <div class="card-header">
+    <span class="card-id">L25</span>
+    <h2 class="card-title">Add Two Numbers as Linked Lists</h2>
+    <span class="category-badge">Structural Patterns</span>
+  </div>
+
+  <div class="background">
+    <p>Two non-negative integers are stored in linked lists with digits in reverse order (units digit first). Add them and return the sum as a linked list in the same reversed format. This simulates column addition: walk both lists simultaneously, sum digits with a carry.</p>
+    <p>The loop runs while either list has digits remaining OR there is an outstanding carry — all three conditions in the while guard.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Arbitrary-precision integer addition (bignum library)</div><div class="why">Numbers too large for 64-bit registers</div>
+    <div class="sit">BCD addition in embedded systems (digit-by-digit)</div><div class="why">Hardware stores digits separately</div>
+    <div class="sit">LeetCode #2 — entry-level linked list problem</div><div class="why">Tests simultaneous list traversal and carry logic</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Add 342 + 465 = 807 (stored as 2→4→3 and 5→6→4)</div>
+    <div class="ascii">
+  List A: [2]→[4]→[3]→NULL   (represents 342)
+  List B: [5]→[6]→[4]→NULL   (represents 465)
+  carry=0
+
+step  a   b   sum  digit  carry   result
+  1:  2 + 5 + 0 = 7    7     0    [7]
+  2:  4 + 6 + 0 = 10   0     1    [7]→[0]
+  3:  3 + 4 + 1 = 8    8     0    [7]→[0]→[8]
+  both NULL, carry=0 → done
+
+Result: [7]→[0]→[8] = 807 ✓
+
+Carry example: 9→9 + 1 (99+1=100)
+  9+1+0=10 → digit=0, carry=1  →  [0]
+  9+0+1=10 → digit=0, carry=1  →  [0]→[0]
+  both NULL but carry=1: emit [1]  →  [0]→[0]→[1] = 100 ✓</div>
+    <div class="aha">The while condition <code>a || b || carry</code> ensures the final carry digit is always emitted even when both lists are exhausted.</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">Node *add_two_numbers(Node *a, Node *b) {
+    Node dummy = {0, NULL};
+    Node *tail = &dummy;
+    int carry = 0;
+
+    while (a || b || carry) {
+        int sum = carry;
+        if (a) { sum += a->val; a = a->next; }
+        if (b) { sum += b->val; b = b->next; }
+        carry = sum / 10;
+
+        Node *node = malloc(sizeof(Node));
+        node->val  = sum % 10;
+        node->next = NULL;
+        tail->next = node;
+        tail = node;
+    }
+    return dummy.next;
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+    <strong>5→NULL + 5→NULL (5+5=10)</strong><br>
+    iter1: sum=0+5+5=10, digit=0, carry=1. emit [0].<br>
+    iter2: a=NULL,b=NULL,carry=1. sum=1, digit=1, carry=0. emit [1].<br>
+    carry=0, both NULL → exit.<br>
+    <strong>Result: 0→1 = 10 ✓</strong>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    Lists may have different lengths — handle NULL lists inside the loop by checking <code>if (a)</code> before accessing <code>a->val</code>. Don't assume equal lengths.
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    What is emitted when adding 0→NULL and 0→NULL? Does the carry loop condition handle this correctly?
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Add two numbers stored as reversed digit lists</div>
+    <div class="trigger-variants">walk both simultaneously, sum=carry+a+b, emit digit, carry=sum/10, loop while a||b||carry</div>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 <script>hljs.highlightAll();</script>
 </body>
