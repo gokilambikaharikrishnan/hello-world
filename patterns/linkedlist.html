@@ -2849,6 +2849,187 @@ After:  [1]→[3]→[5]→[2]→[4]→NULL ✓</div>
   </div>
 </div>
 
+
+<!-- L30 -->
+<div class="card" id="L30">
+  <div class="card-header">
+    <span class="card-id">L30</span>
+    <h2 class="card-title">Swap Adjacent Pairs</h2>
+    <span class="category-badge">Structural Patterns</span>
+  </div>
+
+  <div class="background">
+    <p>Swap every two adjacent nodes without modifying values — only rewire pointers. Node 1↔Node 2, Node 3↔Node 4, etc. A dummy head prevents special-casing the first pair.</p>
+    <p>For each pair: save the two nodes, rewire four pointers, advance the processing pointer two steps.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Swap bytes in a list of 16-bit words for endian conversion</div><div class="why">Each pair of bytes is one word needing byte-swap</div>
+    <div class="sit">Interleave two sorted halves stored as one flat list</div><div class="why">Pre-processing step before merge</div>
+    <div class="sit">LeetCode #24 — swap nodes in pairs</div><div class="why">Common pointer-rewiring practice</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Swap pairs in 1→2→3→4→NULL</div>
+    <div class="ascii">
+dummy→[1]→[2]→[3]→[4]→NULL
+prev=dummy
+
+Pair 1: first=node1, second=node2
+  Rewire:
+    prev→next  = second (dummy→2)
+    first→next = second→next (1→3)
+    second→next = first (2→1)
+  List: dummy→[2]→[1]→[3]→[4]
+  prev = first = node1 (new tail of processed part)
+
+Pair 2: first=node3, second=node4
+  Rewire:
+    prev(1)→next = second(4)
+    first(3)→next = second(4)→next = NULL
+    second(4)→next = first(3)
+  List: dummy→[2]→[1]→[4]→[3]→NULL
+  prev = node3
+
+No more pairs (prev→next = NULL) → done
+
+After: [2]→[1]→[4]→[3]→NULL ✓</div>
+    <div class="aha">Three pointer assignments per pair: prev→second, first→second's old next, second→first. Order matters — save <code>second->next</code> first via <code>first->next = second->next</code>, then link <code>second->next = first</code>.</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">Node *swap_pairs(Node *head) {
+    Node dummy = {0, head};
+    Node *prev = &dummy;
+
+    while (prev->next && prev->next->next) {
+        Node *first  = prev->next;
+        Node *second = prev->next->next;
+
+        first->next  = second->next;  /* first skips over second */
+        second->next = first;         /* second points back to first */
+        prev->next   = second;        /* prev now points to second */
+
+        prev = first;                 /* first is now the tail; advance */
+    }
+    return dummy.next;
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+    <strong>1→2→3→NULL (odd length)</strong><br>
+    iter1: first=1,second=2. 1→next=3, 2→next=1, dummy→2. prev=1.<br>
+    prev→next=3, prev→next→next=NULL → loop exits.<br>
+    <strong>Result: 2→1→3 ✓ (last unpaired node stays)</strong>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    The order of the three assignments matters: set <code>first->next</code> before <code>second->next</code>. If you set <code>second->next = first</code> first, you lose the reference to <code>second->next</code> (the rest of the list).
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    For a single-node list [1]: does the while condition trigger? What is returned?
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Swap adjacent pairs in linked list</div>
+    <div class="trigger-variants">dummy+prev; per pair: first→second's next, second→first, prev→second; advance prev=first</div>
+  </div>
+</div>
+
+<!-- L31 -->
+<div class="card" id="L31">
+  <div class="card-header">
+    <span class="card-id">L31</span>
+    <h2 class="card-title">Remove Nth Node from End (Runner)</h2>
+    <span class="category-badge">Structural Patterns</span>
+  </div>
+
+  <div class="background">
+    <p>Delete the Nth node from the end in a single pass. This is the removal application of the runner/K-gap pattern from L15 — but the follower starts at a dummy node so it naturally lands on the node <em>before</em> the target, enabling the unlink.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Remove the last command from a history buffer (N=1)</div><div class="why">Linked list history, single-pass delete</div>
+    <div class="sit">Trim the Nth-oldest entry from a log list</div><div class="why">FIFO eviction counted from the tail</div>
+    <div class="sit">LeetCode #19 — remove Nth from end</div><div class="why">Classic one-pass interview problem</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Remove 2nd from end in 1→2→3→4→5</div>
+    <div class="ascii">
+dummy→[1]→[2]→[3]→[4]→[5]→NULL
+runner=head=node1, follower=dummy
+
+Step 1: advance runner N=2 steps ahead of follower:
+  runner→node2→node3
+  Gap: follower=dummy, runner=node3 (2 apart)
+
+Step 2: advance both until runner==NULL:
+  step  follower  runner
+    1:    node1    node4
+    2:    node2    node5
+    3:    node3    NULL ← runner fell off
+
+follower=node3 is the node BEFORE the target (node4)
+
+Step 3: unlink node4:
+  follower(3)→next = follower(3)→next→next = node5
+
+Before: [1]→[2]→[3]→[4]→[5]→NULL
+After:  [1]→[2]→[3]→[5]→NULL ✓  (node4 removed)</div>
+    <div class="aha">Starting follower at dummy (not head) means when runner stops, follower is one node before the target — exactly where you need to be to unlink.</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">Node *remove_nth_from_end(Node *head, int n) {
+    Node dummy = {0, head};
+    Node *runner   = head;
+    Node *follower = &dummy;
+
+    /* advance runner n steps */
+    for (int i = 0; i < n; i++)
+        runner = runner->next;
+
+    /* advance both until runner reaches NULL */
+    while (runner) {
+        runner   = runner->next;
+        follower = follower->next;
+    }
+
+    /* follower is now just before the target */
+    Node *del    = follower->next;
+    follower->next = del->next;
+    free(del);
+    return dummy.next;
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+    <strong>Remove 1st from end in [1] (single node)</strong><br>
+    runner advances 1 step: NULL. while loop doesn't run. follower=dummy.<br>
+    del=dummy→next=node1. dummy→next=NULL. free(node1).<br>
+    <strong>Result: dummy.next=NULL ✓</strong>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    If N equals the list length, runner reaches NULL after the initial advance loop — the while loop body never executes, and follower stays at dummy. That correctly targets the head node for removal. The dummy handles this edge case automatically.
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    For a 5-node list, removing the 5th from end (the head): trace where follower ends up and verify the correct node is removed.
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Remove Nth from end in one pass</div>
+    <div class="trigger-variants">runner N steps ahead of dummy-follower; when runner=NULL, follower is before target; unlink</div>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 <script>hljs.highlightAll();</script>
 </body>
