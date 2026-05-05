@@ -250,25 +250,25 @@
 ## linkedlist.html — Rework Audit (All 35 Cards)
 
 ### Fundamentals (L01–L06)
-- [ ] L01 · Node Struct — Memory Layout and Chaining
-- [ ] L02 · Basic Traversal — Walking the List with a Pointer
-- [ ] L03 · Dummy Head Node Trick — Eliminating Edge Cases
-- [ ] L04 · prev/curr/next — The Triple Pointer Walk Pattern
-- [ ] L05 · Insert Node — At Head, Tail, and Position
-- [ ] L06 · Delete Node — By Value and By Position
+- [x] L01 · Node Struct — Memory Layout and Chaining
+- [x] L02 · Basic Traversal — Walking the List with a Pointer
+- [x] L03 · Dummy Head Node Trick — Eliminating Edge Cases
+- [x] L04 · prev/curr/next — The Triple Pointer Walk Pattern
+- [x] L05 · Insert Node — At Head, Tail, and Position
+- [x] L06 · Delete Node — By Value and By Position
 
 ### Reversal Patterns (L07–L11)
-- [ ] L07 · Reverse Full List — Iterative (prev/curr/next)
-- [ ] L08 · Reverse Full List — Recursive
-- [ ] L09 · Reverse Between Positions m and n
-- [ ] L10 · Reverse in K-Groups
-- [ ] L11 · Reverse Alternate K-Groups
+- [x] L07 · Reverse Full List — Iterative (prev/curr/next)
+- [x] L08 · Reverse Full List — Recursive
+- [x] L09 · Reverse Between Positions m and n
+- [x] L10 · Reverse in K-Groups
+- [x] L11 · Reverse Alternate K-Groups
 
 ### Fast / Slow Pointer (L12–L15)
-- [ ] L12 · Detect Cycle — Floyd's Algorithm
-- [ ] L13 · Find Cycle Entry Point — Floyd Phase 2
-- [ ] L14 · Find Middle of List
-- [ ] L15 · Kth Node from End — Runner Technique
+- [x] L12 · Detect Cycle — Floyd's Algorithm
+- [x] L13 · Find Cycle Entry Point — Floyd Phase 2
+- [x] L14 · Find Middle of List
+- [x] L15 · Kth Node from End — Runner Technique
 
 ### Merge and Sort (L16–L19)
 - [ ] L16 · Merge Two Sorted Lists
@@ -302,9 +302,9 @@
 
 | Batch | Cards | Status |
 |-------|-------|--------|
-| Batch 1 | L01–L10 | ⏳ Next |
-| Batch 2 | L11–L20 | |
+| Batch 1 | L01–L10 | ✅ Done |
+| Batch 2 | L11–L20 | 🔄 In Progress |
 | Batch 3 | L21–L30 | |
 | Batch 4 | L31–L35 | |
 
-**Currently reworking:** L01 — Node Struct
+**Currently reworking:** L16 — Merge Two Sorted Lists
