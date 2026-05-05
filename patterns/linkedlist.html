@@ -108,6 +108,642 @@ h2 { color: #58a6ff; font-size: 1.25rem; margin-bottom: 1rem; }
 </div>
 
 <!-- CARDS_START -->
+<!-- L01 -->
+<div class="card" id="l01">
+  <h2>L01 &middot; Node Struct &mdash; Memory Layout and Chaining</h2>
+  <div class="background">
+    <p>A linked list is a chain of nodes where each node contains two things: the data you care about and the address of the next node. Think of a treasure hunt: each clue tells you what the prize is at this location and gives you the address of the next clue. The final clue has no next address &mdash; it stores NULL, signalling the end of the chain.</p>
+    <p>Unlike an array, list nodes do not need to be contiguous in memory. They can be scattered anywhere in the heap. The only connection between them is the <code>next</code> pointer inside each node. This means insertion and deletion at any point costs O(1) pointer rewiring &mdash; no shifting of elements &mdash; but random access to the Kth element costs O(K) because you must follow K pointers from the head.</p>
+    <p>In C, a node is a self-referential struct: it contains a pointer to its own type. This is legal because the pointer size is always known (4 or 8 bytes) even when the full struct size is not yet resolved by the compiler.</p>
+  </div>
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit">Building any singly linked list from scratch.</span>
+    <span class="why">The Node struct is the universal building block for every pattern in this file.</span>
+    <span class="sit">Embedded free-list allocator: freed blocks are chained via their own next pointer.</span>
+    <span class="why">No separate metadata needed; the node itself holds the chain link.</span>
+    <span class="sit">OS task queue: each TCB (task control block) contains a next pointer for the ready list.</span>
+    <span class="why">Intrusive linked list embeds the link directly in the data structure.</span>
+  </div>
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">A node struct has two fields: val (the payload) and next (the address of the next node or NULL).</div>
+    <div class="ascii">
+Memory layout for list  1 -> 2 -> 3 -> NULL
+
+Address  Field         Value
+0x1000   node1.val     1
+0x1004   node1.next    0x2000   &lt;-- points to node2
+
+0x2000   node2.val     2
+0x2004   node2.next    0x3000   &lt;-- points to node3
+
+0x3000   node3.val     3
+0x3004   node3.next    NULL (0x0000)
+
+head = 0x1000  (pointer to first node)
+
+Accessing val of node2:  head->next->val  = 2
+Accessing val of node3:  head->next->next->val = 3</div>
+  </div>
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+/* Self-referential struct: next points to another Node */
+typedef struct Node {
+    int         val;   /* payload data                        */
+    struct Node *next; /* address of next node, or NULL       */
+} Node;
+
+/* Allocate one node on the heap */
+Node *make_node(int val) {
+    Node *n = malloc(sizeof(Node)); /* heap allocation         */
+    n->val  = val;
+    n->next = NULL;                 /* always initialise next  */
+    return n;
+}
+
+int main(void) {
+    /* Build list 1 -> 2 -> 3 -> NULL manually */
+    Node *head = make_node(1);
+    head->next = make_node(2);
+    head->next->next = make_node(3);
+
+    /* Walk and print */
+    for (Node *p = head; p != NULL; p = p->next)
+        printf("%d ", p->val);   /* 1 2 3 */
+    printf("\n");
+
+    /* Free all nodes */
+    Node *cur = head;
+    while (cur) { Node *tmp = cur->next; free(cur); cur = tmp; }
+    return 0;
+}
+  </code></pre>
+  <div class="dry-run">
+Step-by-step memory after building the list:
+  make_node(1): alloc at 0x1000, val=1, next=NULL -> head=0x1000
+  make_node(2): alloc at 0x2000, val=2, next=NULL
+  head->next = 0x2000: node1.next now points to node2
+  make_node(3): alloc at 0x3000, val=3, next=NULL
+  head->next->next = 0x3000: node2.next now points to node3
+
+Walk: p=0x1000->1, p=0x2000->2, p=0x3000->3, p=NULL->stop</div>
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Always set <code>next = NULL</code> when creating a node. An uninitialized next pointer is wild (points to garbage), so the loop termination check <code>p != NULL</code> will never fire and the traversal runs off into undefined memory.</p>
+  </div>
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Why must the struct field be <code>struct Node *next</code> and not <code>Node *next</code> inside the struct definition?</li>
+      <li>What is the difference between a singly linked list and an array in terms of memory layout and access time?</li>
+      <li>How would you add a <code>tail</code> pointer alongside <code>head</code> to allow O(1) append?</li>
+    </ol>
+  </div>
+  <div class="trigger-big">
+    <div class="trigger-main">Every linked list card uses this Node struct. Data + next pointer + NULL sentinel. Allocate with malloc, always init next=NULL.</div>
+    <ul class="trigger-variants">
+      <li>Self-referential: struct Node { int val; struct Node *next; }</li>
+      <li>End of list: p->next == NULL</li>
+      <li>Walk: for (Node *p = head; p; p = p->next)</li>
+    </ul>
+  </div>
+</div>
+
+<!-- L02 -->
+<div class="card" id="l02">
+  <h2>L02 &middot; Basic Traversal &mdash; Walking the List with a Pointer</h2>
+  <div class="background">
+    <p>Traversal is the act of visiting every node in the list exactly once, in order, by following <code>next</code> pointers from head to NULL. It is the foundation of every other operation: searching for a value, computing the length, printing the list, and finding the predecessor of a node all require traversal. Every linked list algorithm begins with "walk the list until you reach the target."</p>
+    <p>The idiom is a single pointer variable (call it <code>p</code> or <code>curr</code>) that starts at <code>head</code> and advances one step per iteration: <code>p = p-&gt;next</code>. The loop condition is <code>p != NULL</code> (or equivalently <code>p</code>). When p becomes NULL, you have passed the last node and the loop exits.</p>
+  </div>
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit">Print all values, compute sum, find maximum.</span>
+    <span class="why">All require visiting every node exactly once.</span>
+    <span class="sit">Search for a node with a specific value.</span>
+    <span class="why">Walk until p->val == target or p == NULL (not found).</span>
+    <span class="sit">Count the length of the list.</span>
+    <span class="why">Increment a counter for each node visited; return it after traversal.</span>
+  </div>
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">Start p at head. Each step: process p->val, then p = p->next. Stop when p == NULL.</div>
+    <div class="ascii">
+List: [1]->[2]->[3]->[4]->NULL
+
+Step 1: p=&[1]  process val=1  p = p->next -> &[2]
+Step 2: p=&[2]  process val=2  p = p->next -> &[3]
+Step 3: p=&[3]  process val=3  p = p->next -> &[4]
+Step 4: p=&[4]  process val=4  p = p->next -> NULL
+Step 5: p=NULL  loop ends</div>
+  </div>
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+
+typedef struct Node { int val; struct Node *next; } Node;
+
+/* Print every value */
+void print_list(Node *head) {
+    for (Node *p = head; p != NULL; p = p->next)
+        printf("%d ", p->val);
+    printf("\n");
+}
+
+/* Count nodes */
+int length(Node *head) {
+    int cnt = 0;
+    for (Node *p = head; p; p = p->next) cnt++;
+    return cnt;
+}
+
+/* Find node by value; returns pointer or NULL */
+Node *find(Node *head, int target) {
+    for (Node *p = head; p; p = p->next)
+        if (p->val == target) return p;
+    return NULL;
+}
+  </code></pre>
+  <div class="dry-run">
+find(head, 3) on list 1->2->3->4->NULL:
+  p=1: 1!=3, p=p->next
+  p=2: 2!=3, p=p->next
+  p=3: 3==3, return p  -> found node with val=3
+
+length(head) on same list:
+  p=1: cnt=1, p=p->next
+  p=2: cnt=2, p=p->next
+  p=3: cnt=3, p=p->next
+  p=4: cnt=4, p=p->next
+  p=NULL: return 4</div>
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Never advance the pointer with <code>head = head-&gt;next</code> inside the traversal loop if you need <code>head</code> again afterward &mdash; that destroys your only reference to the list. Always use a separate traversal variable <code>p = head</code>.</p>
+  </div>
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>What does <code>for (Node *p = head; p; p = p->next)</code> do when <code>head</code> is NULL?</li>
+      <li>How do you find the last node (the one whose next is NULL) in a single traversal?</li>
+      <li>What is the time complexity of traversal, and why can't you do better for an arbitrary linked list?</li>
+    </ol>
+  </div>
+  <div class="trigger-big">
+    <div class="trigger-main">Visit every node -> for (Node *p = head; p; p = p->next). Use separate p, never advance head itself.</div>
+    <ul class="trigger-variants">
+      <li>Search: if (p->val == target) return p;</li>
+      <li>Count: cnt++ each iteration, return cnt</li>
+      <li>Find tail: while (p->next) p = p->next; return p;</li>
+    </ul>
+  </div>
+</div>
+
+<!-- L03 -->
+<div class="card" id="l03">
+  <h2>L03 &middot; Dummy Head Node Trick &mdash; Eliminating Edge Cases</h2>
+  <div class="background">
+    <p>Many linked list operations have awkward special cases for the head node. Inserting before the first node changes head; deleting the first node changes head; building a list by appending requires checking if the list is empty. The dummy head (also called sentinel head or fake head) eliminates all of these by introducing a node that sits before the real first node and never moves or gets deleted.</p>
+    <p>The dummy node has no meaningful value. Its <code>next</code> pointer is the real head. All operations that would otherwise need to special-case the head can now treat every node identically &mdash; because every real node always has a predecessor (at worst, the dummy). At the end of the operation, the real head is <code>dummy.next</code>.</p>
+  </div>
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit">Building a list by tail-appending in a loop.</span>
+    <span class="why">Dummy lets you start with a valid tail pointer without an empty-list check.</span>
+    <span class="sit">Deleting a node by value when it might be the head.</span>
+    <span class="why">Every node has a prev; no special case for head deletion.</span>
+    <span class="sit">Merge two sorted lists, partition list, remove Nth from end.</span>
+    <span class="why">These algorithms all produce a result list; dummy is the anchor for the output.</span>
+  </div>
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">Declare Node dummy = {0, NULL}. Set tail = &amp;dummy. Append to tail->next and advance tail. Real result starts at dummy.next.</div>
+    <div class="ascii">
+BEFORE (building list 1->2->3):
+  dummy -> NULL
+  tail = &amp;dummy
+
+Append 1:
+  tail->next = new Node(1)  =>  dummy -> [1] -> NULL
+  tail = tail->next         =>  tail points to [1]
+
+Append 2:
+  tail->next = new Node(2)  =>  dummy -> [1] -> [2] -> NULL
+  tail = tail->next         =>  tail points to [2]
+
+Append 3:
+  tail->next = new Node(3)  =>  dummy -> [1] -> [2] -> [3] -> NULL
+  tail = tail->next
+
+RESULT: dummy.next = &amp;[1]  (real head of list)</div>
+  </div>
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+typedef struct Node { int val; struct Node *next; } Node;
+Node *mk(int v) { Node *n=malloc(sizeof(Node)); n->val=v; n->next=NULL; return n; }
+
+/* Build list from array using dummy head */
+Node *build(int *arr, int n) {
+    Node dummy = {0, NULL};        /* dummy sits before the real list  */
+    Node *tail = &dummy;           /* tail always points to last node  */
+    for (int i = 0; i &lt; n; i++) {
+        tail->next = mk(arr[i]);   /* append new node after tail       */
+        tail = tail->next;         /* advance tail to new last node    */
+    }
+    return dummy.next;             /* real head (dummy.next)           */
+}
+
+/* Delete first occurrence of val; dummy eliminates head special case */
+Node *delete_val(Node *head, int val) {
+    Node dummy = {0, head};        /* dummy.next = head                */
+    Node *prev = &dummy;
+    Node *curr = head;
+    while (curr) {
+        if (curr->val == val) {
+            prev->next = curr->next; /* unlink curr                   */
+            free(curr);
+            break;
+        }
+        prev = curr;
+        curr = curr->next;
+    }
+    return dummy.next;             /* head may have changed            */
+}
+
+int main(void) {
+    int arr[] = {1, 2, 3, 4, 5};
+    Node *h = build(arr, 5);
+    h = delete_val(h, 1);          /* delete head node -- no special case */
+    for (Node *p = h; p; p = p->next) printf("%d ", p->val); /* 2 3 4 5 */
+    printf("\n");
+    while (h) { Node *t=h->next; free(h); h=t; }
+    return 0;
+}
+  </code></pre>
+  <div class="dry-run">
+delete_val(head=&[1], val=1):
+  dummy = {0, &[1]}  prev=&dummy  curr=&[1]
+  curr->val==1: prev->next = curr->next = &[2]
+               dummy.next now = &[2]
+               free(node1)
+  return dummy.next = &[2]  (new head)
+
+No special case needed even though we deleted the head node.</div>
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>The dummy is usually declared as a stack variable (<code>Node dummy = {0, head};</code>), not malloc'd. Do not <code>free(&amp;dummy)</code> at the end &mdash; it lives on the stack. Only the real nodes (dummy.next onward) were malloc'd.</p>
+  </div>
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Without a dummy, what special case do you need when deleting the head node?</li>
+      <li>After <code>Node dummy = {0, head};</code>, what is <code>dummy.next</code>?</li>
+      <li>What would go wrong if you returned <code>&amp;dummy</code> instead of <code>dummy.next</code>?</li>
+    </ol>
+  </div>
+  <div class="trigger-big">
+    <div class="trigger-main">Any list op that may change head -> use dummy: Node dummy={0,head}; work on dummy.next; return dummy.next as new head.</div>
+    <ul class="trigger-variants">
+      <li>Build by appending -> tail=&amp;dummy; tail->next=new_node; tail=tail->next</li>
+      <li>Delete head-possibly -> prev=&amp;dummy; unlink curr; return dummy.next</li>
+      <li>Merge/partition output -> dummy as anchor; real result = dummy.next</li>
+    </ul>
+  </div>
+</div>
+
+<!-- L04 -->
+<div class="card" id="l04">
+  <h2>L04 &middot; prev/curr/next &mdash; The Triple Pointer Walk Pattern</h2>
+  <div class="background">
+    <p>Most non-trivial linked list operations &mdash; deletion, insertion in the middle, reversal &mdash; need to know not just the current node but also its predecessor. In a singly linked list you cannot go backward, so you carry three pointers simultaneously: <code>prev</code> (one step behind <code>curr</code>), <code>curr</code> (the node being processed), and <code>next</code> (one step ahead, saved before any rewiring so you don't lose the rest of the list).</p>
+    <p>The discipline is always the same: save <code>next = curr-&gt;next</code> before touching any pointers, do the rewiring, then advance all three pointers one step forward. Saving next first is critical &mdash; rewiring curr's pointer before saving it loses the rest of the list forever.</p>
+  </div>
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit">Iterative list reversal (L07): redirect every next pointer backward.</span>
+    <span class="why">prev captures where we came from; next captures where to go next.</span>
+    <span class="sit">Delete node by value without dummy head.</span>
+    <span class="why">prev->next = curr->next unlinks curr; prev is required for this.</span>
+    <span class="sit">Insert a node between two existing nodes.</span>
+    <span class="why">new->next = curr; prev->next = new connects the new node into the chain.</span>
+  </div>
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">Save next FIRST. Then rewire. Then advance. In that order, always.</div>
+    <div class="ascii">
+List: [1] -> [2] -> [3] -> [4] -> NULL
+Deleting node with val=2:
+
+Initial: prev=NULL  curr=[1]  (scan forward)
+Step 1:  prev=[1]   curr=[2]  &lt;-- found target
+  next = curr->next = [3]
+  prev->next = next            [1]->next now points to [3]
+  free(curr)
+  Result: [1] -> [3] -> [4] -> NULL
+
+BEFORE delete: [1] -> [2] -> [3] -> [4] -> NULL
+AFTER  delete: [1] -> [3] -> [4] -> NULL</div>
+  </div>
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+typedef struct Node { int val; struct Node *next; } Node;
+Node *mk(int v){Node *n=malloc(sizeof(Node));n->val=v;n->next=NULL;return n;}
+
+/* Delete node with given val; return new head */
+Node *delete_node(Node *head, int val) {
+    Node *prev = NULL, *curr = head;
+    while (curr) {
+        Node *next = curr->next;     /* SAVE next before any rewiring   */
+        if (curr->val == val) {
+            if (prev) prev->next = next; /* unlink: prev skips curr     */
+            else      head = next;       /* deleting head: update head  */
+            free(curr);
+            return head;
+        }
+        prev = curr;                 /* advance prev to current         */
+        curr = next;                 /* advance curr using saved next   */
+    }
+    return head;                     /* val not found                   */
+}
+
+int main(void) {
+    Node *h = mk(1); h->next = mk(2); h->next->next = mk(3);
+    h = delete_node(h, 2);
+    for (Node *p = h; p; p = p->next) printf("%d ", p->val); /* 1 3 */
+    printf("\n");
+    while (h) { Node *t=h->next; free(h); h=t; }
+    return 0;
+}
+  </code></pre>
+  <div class="dry-run">
+List: [1]->[2]->[3]->NULL   delete val=2
+
+prev=NULL curr=[1]
+  curr->val=1 != 2
+  prev=[1], curr=[2]
+
+prev=[1] curr=[2]
+  curr->val=2 == 2
+  next = [3]
+  prev->next = [3]  ([1]->next now points to [3])
+  free([2])
+  return head=[1]
+
+Result: [1]->[3]->NULL</div>
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Saving <code>next = curr-&gt;next</code> AFTER rewiring <code>curr-&gt;next</code> loses the rest of the list. The save must always happen as the very first action inside the loop body, before any pointer is modified.</p>
+  </div>
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>What is the purpose of <code>next = curr->next</code> at the top of the loop, before any rewiring?</li>
+      <li>After deleting curr, why do we return immediately rather than continuing the loop?</li>
+      <li>How does this pattern handle deleting the last node in the list?</li>
+    </ol>
+  </div>
+  <div class="trigger-big">
+    <div class="trigger-main">Modify a node's links -> triple walk: save next first, rewire, then advance. Order: save -> rewire -> advance.</div>
+    <ul class="trigger-variants">
+      <li>Delete curr: prev->next = curr->next; free(curr)</li>
+      <li>Insert after curr: new->next=curr->next; curr->next=new</li>
+      <li>Reverse step: curr->next=prev; prev=curr; curr=saved_next</li>
+    </ul>
+  </div>
+</div>
+
+<!-- L05 -->
+<div class="card" id="l05">
+  <h2>L05 &middot; Insert Node &mdash; At Head, Tail, and Position</h2>
+  <div class="background">
+    <p>Insertion is one of the linked list's strongest advantages over arrays: inserting anywhere costs O(1) pointer rewiring once you are at the right location (finding the location still costs O(n)). There are three canonical cases: insert at head (prepend), insert at tail (append), and insert at a given position (after finding the predecessor).</p>
+    <p>Insert at head is the simplest: set new-&gt;next = head, then update head to the new node. Insert at tail requires finding the last node first, then setting last-&gt;next = new. Insert at position k requires walking k-1 steps to reach the predecessor, then splicing in the new node.</p>
+  </div>
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit">Stack push on a linked list: insert at head, O(1).</span>
+    <span class="why">Head insertion is the cheapest operation; it becomes the stack push.</span>
+    <span class="sit">Queue enqueue: insert at tail (with a tail pointer for O(1)).</span>
+    <span class="why">With a tail pointer, tail append is also O(1).</span>
+    <span class="sit">Sorted insert: find the right position by value, splice in the new node.</span>
+    <span class="why">Walk until next->val &gt; new->val, then insert between curr and next.</span>
+  </div>
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">Three cases, each a two-step rewire: (1) new->next=head; head=new. (2) tail->next=new; tail=new. (3) new->next=prev->next; prev->next=new.</div>
+    <div class="ascii">
+INSERT AT HEAD (prepend 0 to [1]->[2]):
+BEFORE: head->[1]->[2]->NULL
+  new->next = head  =>  [0]->[1]->[2]
+  head = new        =>  head->[0]->[1]->[2]
+AFTER:  head->[0]->[1]->[2]->NULL
+
+INSERT AT TAIL (append 3 to [1]->[2]):
+BEFORE: [1]->[2]->NULL
+  walk to tail: tail=[2]
+  tail->next = new  =>  [1]->[2]->[3]->NULL
+AFTER:  [1]->[2]->[3]->NULL
+
+INSERT AT POSITION 1 (0-indexed) (insert 9 between [1] and [2]):
+BEFORE: [1]->[2]->[3]->NULL
+  walk to predecessor: prev=[1] (0 steps)
+  new->next = prev->next = [2]   =>   [9]->[2]->[3]
+  prev->next = new               =>   [1]->[9]->[2]->[3]
+AFTER:  [1]->[9]->[2]->[3]->NULL</div>
+  </div>
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+typedef struct Node { int val; struct Node *next; } Node;
+Node *mk(int v){Node *n=malloc(sizeof(Node));n->val=v;n->next=NULL;return n;}
+
+Node *insert_head(Node *head, int val) {
+    Node *n = mk(val);
+    n->next = head;          /* new node points to old head            */
+    return n;                /* new node IS the new head               */
+}
+
+Node *insert_tail(Node *head, int val) {
+    Node *n = mk(val);
+    if (!head) return n;     /* empty list: new node is head and tail  */
+    Node *tail = head;
+    while (tail->next) tail = tail->next;  /* walk to last node       */
+    tail->next = n;          /* last node now points to new node       */
+    return head;
+}
+
+/* Insert after the node at 0-indexed position pos */
+Node *insert_at(Node *head, int val, int pos) {
+    if (pos == 0) return insert_head(head, val);
+    Node *prev = head;
+    for (int i = 0; i &lt; pos - 1 &amp;&amp; prev; i++) prev = prev->next;
+    if (!prev) return head;  /* pos out of range                       */
+    Node *n = mk(val);
+    n->next    = prev->next; /* new node points to what was after prev */
+    prev->next = n;          /* prev now points to new node            */
+    return head;
+}
+
+int main(void) {
+    Node *h = NULL;
+    h = insert_tail(h, 2); h = insert_tail(h, 3);
+    h = insert_head(h, 1);
+    h = insert_at(h, 9, 1);
+    for (Node *p=h; p; p=p->next) printf("%d ", p->val); /* 1 9 2 3 */
+    printf("\n");
+    while (h){Node *t=h->next;free(h);h=t;}
+    return 0;
+}
+  </code></pre>
+  <div class="dry-run">
+insert_at(head=[1]->[2]->[3], val=9, pos=1):
+  pos != 0, walk to prev at pos-1=0: prev=[1]
+  n = new node(9)
+  n->next    = prev->next = [2]    => [9]->[2]->[3]
+  prev->next = n                   => [1]->[9]->[2]->[3]
+  return head=[1]
+
+Final list: [1]->[9]->[2]->[3]->NULL</div>
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>In insert_at, always set <code>n-&gt;next = prev-&gt;next</code> BEFORE <code>prev-&gt;next = n</code>. If you do it in reverse, prev-&gt;next is overwritten to n before you copy it to n-&gt;next, and the rest of the list is lost.</p>
+  </div>
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Why does insert_head return the new node rather than modifying head in-place?</li>
+      <li>What is the time complexity of insert_tail without a tail pointer? With one?</li>
+      <li>What does insert_at do if pos is greater than the list length?</li>
+    </ol>
+  </div>
+  <div class="trigger-big">
+    <div class="trigger-main">Insert head: new->next=head; return new. Insert tail: walk to last, last->next=new. Insert middle: new->next=prev->next; prev->next=new.</div>
+    <ul class="trigger-variants">
+      <li>Stack push -> insert_head, O(1)</li>
+      <li>Queue enqueue -> insert_tail with tail ptr, O(1)</li>
+      <li>Sorted insert -> walk while next->val &lt; val, then splice</li>
+    </ul>
+  </div>
+</div>
+
+<!-- L06 -->
+<div class="card" id="l06">
+  <h2>L06 &middot; Delete Node &mdash; By Value and By Position</h2>
+  <div class="background">
+    <p>Deleting a node from a singly linked list requires knowing the node's predecessor, because the predecessor's <code>next</code> pointer must be updated to skip the deleted node. Since there is no backward pointer, you must walk the list carrying a <code>prev</code> pointer alongside <code>curr</code>. The dummy head trick (L03) simplifies the head-deletion case by ensuring every real node always has a predecessor.</p>
+    <p>After unlinking the node (<code>prev-&gt;next = curr-&gt;next</code>), you must <code>free</code> it if it was heap-allocated. Forgetting to free is a memory leak; freeing and then accessing the node is a use-after-free bug. The correct sequence: save any data you need, unlink, free, done.</p>
+  </div>
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit">Remove a task from an OS ready queue by TCB pointer.</span>
+    <span class="why">Walk the list, find the node, unlink it, the task is dequeued.</span>
+    <span class="sit">Remove duplicate entries from a sorted list.</span>
+    <span class="why">While curr->val == curr->next->val, delete curr->next.</span>
+    <span class="sit">Remove all nodes matching a condition (filter).</span>
+    <span class="why">Delete every node where pred(curr->val) is true; walk continues.</span>
+  </div>
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">Use a dummy head. Walk prev and curr together. When curr is the target: prev->next = curr->next, free curr, done. Return dummy.next as new head.</div>
+    <div class="ascii">
+Delete val=3 from [1]->[2]->[3]->[4]->NULL
+
+BEFORE: dummy->[1]->[2]->[3]->[4]->NULL
+  prev=dummy  curr=[1]: val=1!=3, advance
+  prev=[1]    curr=[2]: val=2!=3, advance
+  prev=[2]    curr=[3]: val=3==3, TARGET FOUND
+
+  Rewire: prev->next = curr->next
+    [2]->next now points to [4]   (skipping [3])
+  free([3])
+
+AFTER: dummy->[1]->[2]->[4]->NULL
+return dummy.next = [1]</div>
+  </div>
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+typedef struct Node { int val; struct Node *next; } Node;
+Node *mk(int v){Node *n=malloc(sizeof(Node));n->val=v;n->next=NULL;return n;}
+
+/* Delete first occurrence of val; use dummy to handle head deletion */
+Node *del_val(Node *head, int val) {
+    Node dummy = {0, head};
+    Node *prev = &dummy, *curr = head;
+    while (curr) {
+        if (curr->val == val) {
+            prev->next = curr->next;  /* skip over curr                */
+            free(curr);               /* release memory                */
+            return dummy.next;        /* done -- head may have changed */
+        }
+        prev = curr;
+        curr = curr->next;
+    }
+    return dummy.next;  /* val not found, list unchanged               */
+}
+
+/* Delete node at 0-indexed position */
+Node *del_pos(Node *head, int pos) {
+    Node dummy = {0, head};
+    Node *prev = &dummy;
+    for (int i = 0; i &lt; pos &amp;&amp; prev->next; i++) prev = prev->next;
+    Node *target = prev->next;
+    if (target) {
+        prev->next = target->next;    /* unlink target                 */
+        free(target);
+    }
+    return dummy.next;
+}
+
+int main(void) {
+    Node *h = mk(1); h->next=mk(2); h->next->next=mk(3); h->next->next->next=mk(4);
+    h = del_val(h, 3);
+    for (Node *p=h;p;p=p->next) printf("%d ",p->val); /* 1 2 4 */
+    printf("\n");
+    h = del_pos(h, 0);  /* delete head */
+    for (Node *p=h;p;p=p->next) printf("%d ",p->val); /* 2 4 */
+    printf("\n");
+    while(h){Node *t=h->next;free(h);h=t;}
+    return 0;
+}
+  </code></pre>
+  <div class="dry-run">
+del_pos(head=[1]->[2]->[4], pos=0):
+  dummy={0,[1]}  prev=&dummy
+  i=0: loop condition i&lt;0 is FALSE, loop does not run
+  target = prev->next = [1]
+  prev->next = [1]->next = [2]   (dummy->next now = [2])
+  free([1])
+  return dummy.next = [2]  (new head)</div>
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>After <code>free(curr)</code>, do NOT read <code>curr-&gt;next</code> or any field of curr. If you need <code>curr-&gt;next</code> for the next iteration, save it as <code>Node *next = curr-&gt;next</code> before calling free.</p>
+  </div>
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>How does the dummy node eliminate the special case for deleting the head?</li>
+      <li>What is the correct order of operations when deleting curr: save next, unlink, or free first?</li>
+      <li>How would you delete ALL nodes matching a value (not just the first)?</li>
+    </ol>
+  </div>
+  <div class="trigger-big">
+    <div class="trigger-main">Delete a node -> dummy head, walk prev+curr, on match: prev->next=curr->next; free(curr); return dummy.next.</div>
+    <ul class="trigger-variants">
+      <li>Delete first match -> break after free</li>
+      <li>Delete all matches -> continue loop (don't break) using saved next</li>
+      <li>Delete by position -> walk prev pos steps, then unlink prev->next</li>
+    </ul>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 <script>hljs.highlightAll();</script>
 </body>
