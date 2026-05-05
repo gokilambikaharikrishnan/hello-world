@@ -1685,6 +1685,491 @@ List: 1->2->3->5
   </div>
 </div>
 
+
+<!-- ============================================================= -->
+<!-- Q15 · Hardware Register — volatile uint32_t* at Fixed Address -->
+<!-- ============================================================= -->
+<div class="card" id="q15">
+  <h2>Q15 · Hardware Register — volatile uint32_t* at Fixed Address</h2>
+
+  <div class="background">
+    <strong>Background</strong>
+    <p>On a microcontroller like the STM32, peripherals (UART, GPIO, timers, ADC) are not accessed through function calls to a driver chip — they are memory-mapped hardware. The chip designer allocates a fixed range of the 32-bit address space to each peripheral's registers. Writing to address 0x40020C14 sets GPIO port A's output data; reading address 0x40013804 retrieves the UART receive buffer.</p>
+    <p>To access these registers in C, you cast the numeric address to a pointer of the correct width and dereference it. The critical qualifier is <code>volatile</code> — without it, the compiler is allowed to cache the register value in a CPU register and never re-read it from RAM, or to eliminate a "redundant" write entirely. Hardware registers change for reasons the compiler cannot see (an interrupt fires, a DMA transfer completes, a button is pressed), so every access must generate a real bus transaction.</p>
+    <p>This is the most fundamental embedded C pattern. Every CMSIS header, every ST HAL macro, and every bare-metal driver ultimately reduces to this: cast address → volatile pointer → dereference.</p>
+  </div>
+
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit">Set a GPIO pin high: <code>*GPIOA_ODR |= (1u &lt;&lt; 5);</code></span>
+    <span class="why">Reads current output register, sets bit 5, writes back — one read-modify-write.</span>
+    <span class="sit">Wait for UART TX ready: <code>while (!(*USART1_SR &amp; (1u&lt;&lt;7)));</code></span>
+    <span class="why">volatile ensures the register is re-read every loop iteration, not cached.</span>
+    <span class="sit">Clear a DMA transfer-complete flag: <code>*DMA_IFCR = (1u &lt;&lt; 5);</code></span>
+    <span class="why">Write-to-clear registers must be written; without volatile the write may be dropped.</span>
+    <span class="sit">Read an ADC result: <code>uint16_t raw = (uint16_t)(*ADC1_DR);</code></span>
+    <span class="why">The data register holds the latest conversion result; read it after EOC flag.</span>
+  </div>
+
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">Cast the address to (volatile uint32_t*), then dereference. volatile tells the compiler: every read/write to this address MUST go to the bus — do not cache, do not eliminate.</div>
+    <div class="ascii">
+STM32F4 memory map (simplified):
+0x00000000 - 0x1FFFFFFF  Flash / ROM
+0x20000000 - 0x2001FFFF  SRAM
+0x40000000 - 0x5FFFFFFF  Peripheral registers (APB1, APB2, AHB1, AHB2)
+
+GPIOA base = 0x40020000
+GPIOA_MODER  at 0x40020000   (mode register -- input/output/AF/analog)
+GPIOA_ODR    at 0x40020C14   (output data register)
+GPIOA_IDR    at 0x40020C10   (input data register)
+
+/* Define pointer to ODR */
+#define GPIOA_ODR  ((volatile uint32_t*)0x40020C14)
+
+/* Set pin 5 (LED on Nucleo) */
+*GPIOA_ODR |= (1u << 5);   /* read 32 bits, OR bit5, write 32 bits back */
+
+Without volatile: compiler may do the OR once and cache result,
+never re-reading the register if another part of hardware changes it.</div>
+  </div>
+
+  <pre><code class="language-c">
+#include &lt;stdint.h&gt;
+
+/* STM32F411 Nucleo -- bare-metal LED toggle on PA5 */
+
+/* RCC AHB1 enable register -- bit 0 = GPIOA clock */
+#define RCC_AHB1ENR   ((volatile uint32_t*)0x40023830)
+/* GPIOA registers */
+#define GPIOA_MODER   ((volatile uint32_t*)0x40020000)
+#define GPIOA_ODR     ((volatile uint32_t*)0x40020014)
+
+static void delay(volatile uint32_t n) { while (n--); }
+
+int main(void) {
+    /* Enable GPIOA clock (bit 0 of RCC_AHB1ENR) */
+    *RCC_AHB1ENR |= (1u &lt;&lt; 0);
+
+    /* Set PA5 as general-purpose output (MODER bits [11:10] = 01) */
+    *GPIOA_MODER &amp;= ~(3u &lt;&lt; 10);  /* clear bits 11:10    */
+    *GPIOA_MODER |=  (1u &lt;&lt; 10);  /* set to output mode  */
+
+    while (1) {
+        *GPIOA_ODR ^= (1u &lt;&lt; 5); /* toggle PA5 (LED)    */
+        delay(1000000);
+    }
+}
+  </code></pre>
+
+  <div class="dry-run">
+    <strong>Dry Run — GPIOA_MODER configuration</strong>
+    <pre>
+Initial MODER = 0xA8000000 (reset value on STM32F4)
+Clear bits 11:10:
+  mask = ~(3u << 10) = ~0x00000C00 = 0xFFFFF3FF
+  MODER &= 0xFFFFF3FF  ->  bits 11:10 = 00
+
+Set bit 10:
+  MODER |= (1u << 10) = 0x00000400
+  bits 11:10 = 01  ->  PA5 is general-purpose output
+    </pre>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Forgetting <code>volatile</code> is the single most common embedded C bug. In O2/O3 optimisation, the compiler will eliminate "redundant" reads of a non-volatile register and cache the old value forever. The symptom: code works at -O0 but breaks at -O2. Always use <code>volatile</code> for any memory-mapped register access.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Why is <code>volatile</code> needed even for a write-only register like GPIOA_ODR?</li>
+      <li>What is the difference between <code>volatile uint32_t *REG</code> and <code>uint32_t * volatile REG</code>? Which do you want for MMIO?</li>
+      <li>A busy-wait loop <code>while (!(*SR &amp; FLAG));</code> hangs at -O2 but works at -O0. What is the root cause?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Access a hardware register at fixed address -> #define REG ((volatile uint32_t*)ADDRESS), then *REG to read/write.</div>
+    <ul class="trigger-variants">
+      <li>Set bit -> *REG |= (1u &lt;&lt; n)</li>
+      <li>Clear bit -> *REG &amp;= ~(1u &lt;&lt; n)</li>
+      <li>Toggle bit -> *REG ^= (1u &lt;&lt; n)</li>
+      <li>Busy wait -> while (!(*REG &amp; FLAG)); -- volatile guarantees re-read</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- Q16 · Memory-Mapped IO — Cast Base Address to Struct*         -->
+<!-- ============================================================= -->
+<div class="card" id="q16">
+  <h2>Q16 · Memory-Mapped IO — Casting Base Address to Struct*</h2>
+
+  <div class="background">
+    <strong>Background</strong>
+    <p>A peripheral like a UART or SPI controller has many registers at consecutive addresses. Defining each as a separate <code>#define</code> pointer (as in Q15) works but becomes unwieldy with 20+ registers. The cleaner approach: define a C struct whose fields map exactly onto the peripheral's register layout, then cast the peripheral's base address to a pointer to that struct. You access registers as struct fields — clean, readable, and type-checked.</p>
+    <p>This is exactly how CMSIS (Cortex Microcontroller Software Interface Standard) works. Every ST HAL call ultimately dereferences a pointer like <code>USART1-&gt;DR</code> where <code>USART1</code> is <code>(USART_TypeDef*)0x40011000</code>. The struct fields are laid out in the exact order the silicon designer placed the registers in the address space.</p>
+    <p>The struct must use fixed-width types (<code>uint32_t</code>), no padding surprises (use <code>__attribute__((packed))</code> when needed), and <code>volatile</code> on every field or on the pointer itself. Reserved register gaps must be padded with dummy fields so the offset of each named field matches the hardware's register offset.</p>
+  </div>
+
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit">CMSIS peripheral definitions: <code>GPIOA-&gt;ODR |= (1&lt;&lt;5);</code></span>
+    <span class="why">GPIOA is a struct pointer; ODR is a field at the right offset into the GPIO block.</span>
+    <span class="sit">Custom bare-metal driver without CMSIS, defining your own peripheral struct.</span>
+    <span class="why">Cleaner than 30 individual #define pointers; all registers grouped in one place.</span>
+    <span class="sit">Bootloader writing to flash control registers via struct pointer.</span>
+    <span class="why">FLASH->CR, FLASH->SR, FLASH->KEYR all at known offsets from FLASH_BASE.</span>
+  </div>
+
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">Define a struct matching the peripheral's register map. Pad gaps with reserved fields. Cast the base address to (volatile PeriphType*). Access via ->.</div>
+    <div class="ascii">
+STM32 USART register layout (offsets from base):
+Offset   Register   Name in struct
+0x00     SR         Status Register
+0x04     DR         Data Register
+0x08     BRR        Baud Rate Register
+0x0C     CR1        Control Register 1
+0x10     CR2        Control Register 2
+0x14     CR3        Control Register 3
+0x18     GTPR       Guard Time Register
+
+typedef struct {
+    volatile uint32_t SR;    /* offset 0x00 */
+    volatile uint32_t DR;    /* offset 0x04 */
+    volatile uint32_t BRR;   /* offset 0x08 */
+    volatile uint32_t CR1;   /* offset 0x0C */
+    volatile uint32_t CR2;   /* offset 0x10 */
+    volatile uint32_t CR3;   /* offset 0x14 */
+    volatile uint32_t GTPR;  /* offset 0x18 */
+} USART_Regs;
+
+#define USART1  ((USART_Regs*)0x40011000)
+
+USART1->DR = 'A';    /* write to data register: sends 'A' */
+while (!(USART1->SR &amp; (1u&lt;&lt;6)));  /* wait for TC flag  */</div>
+  </div>
+
+  <pre><code class="language-c">
+#include &lt;stdint.h&gt;
+
+/* Simplified GPIO register map for STM32F4 */
+typedef struct {
+    volatile uint32_t MODER;   /* 0x00: Mode register          */
+    volatile uint32_t OTYPER;  /* 0x04: Output type            */
+    volatile uint32_t OSPEEDR; /* 0x08: Output speed           */
+    volatile uint32_t PUPDR;   /* 0x0C: Pull-up/pull-down      */
+    volatile uint32_t IDR;     /* 0x10: Input data             */
+    volatile uint32_t ODR;     /* 0x14: Output data            */
+    volatile uint32_t BSRR;    /* 0x18: Bit set/reset          */
+    volatile uint32_t LCKR;    /* 0x1C: Lock register          */
+    volatile uint32_t AFR[2];  /* 0x20: Alternate function     */
+} GPIO_Regs;
+
+#define GPIOA  ((GPIO_Regs*)0x40020000)
+#define GPIOC  ((GPIO_Regs*)0x40020800)
+
+/* RCC */
+#define RCC_AHB1ENR  ((volatile uint32_t*)0x40023830)
+
+void gpio_init_output(GPIO_Regs *port, uint32_t pin) {
+    port-&gt;MODER &amp;= ~(3u &lt;&lt; (pin * 2));  /* clear mode bits      */
+    port-&gt;MODER |=  (1u &lt;&lt; (pin * 2));  /* set output mode      */
+}
+
+int main(void) {
+    *RCC_AHB1ENR |= (1u &lt;&lt; 0);  /* GPIOA clock on         */
+    gpio_init_output(GPIOA, 5); /* PA5 as output (LED)    */
+    GPIOA-&gt;BSRR = (1u &lt;&lt; 5);   /* set PA5 high (BSRR upper = reset, lower = set) */
+    return 0;
+}
+  </code></pre>
+
+  <div class="dry-run">
+    <strong>Dry Run — offsetof check (ensure struct matches hardware)</strong>
+    <pre>
+offsetof(GPIO_Regs, MODER)   = 0x00  EXPECTED 0x00 OK
+offsetof(GPIO_Regs, ODR)     = 0x14  EXPECTED 0x14 OK
+offsetof(GPIO_Regs, AFR[0])  = 0x20  EXPECTED 0x20 OK
+If any offset mismatches, every register access hits the wrong address!
+    </pre>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>If the compiler inserts padding between struct fields (e.g. aligning a 16-bit field to a 32-bit boundary), your field offsets will be wrong and every register access hits the wrong address. Use <code>uint32_t</code> for all fields (or explicit padding fields) and verify with <code>_Static_assert(offsetof(GPIO_Regs, ODR) == 0x14, "layout mismatch");</code>.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>How do you handle a 8-byte "reserved" gap at offset 0x20 in the register map? What field do you add to the struct?</li>
+      <li>Should the volatile qualifier go on each field or on the struct pointer? What's the difference?</li>
+      <li>What does <code>_Static_assert</code> do and why is it useful for peripheral structs?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Group of peripheral registers -> typedef struct matching layout, cast base address, access via ->field. Verify offsets with _Static_assert.</div>
+    <ul class="trigger-variants">
+      <li>volatile on each field -> every field access is a bus transaction</li>
+      <li>Pad reserved gaps -> uint32_t RESERVED[N] to keep offsets correct</li>
+      <li>Check layout -> _Static_assert(offsetof(T, field) == EXPECTED, "msg")</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- Q17 · Circular Buffer with Head/Tail Pointer Wrap             -->
+<!-- ============================================================= -->
+<div class="card" id="q17">
+  <h2>Q17 · Circular Buffer with Head/Tail Pointer Wrap</h2>
+
+  <div class="background">
+    <strong>Background</strong>
+    <p>A circular buffer (ring buffer) is a fixed-size array that behaves as if the end connects back to the beginning. Imagine a conveyor belt that loops around: items are added at one end (the write pointer / head) and consumed at the other end (the read pointer / tail). When either pointer reaches the end of the underlying array, it wraps back to index 0 — hence "circular".</p>
+    <p>Ring buffers are the dominant data structure for producer-consumer communication in embedded systems: UART receive ISR writes bytes into the ring; the main loop reads them out. DMA ping-pong buffers, audio sample queues, and CAN message FIFOs all use this pattern. The key properties: fixed memory (no dynamic allocation), O(1) push and pop, and safe use in interrupt contexts when only one side writes and one reads (single-producer single-consumer).</p>
+    <p>The usual implementation uses indices (integers) rather than actual pointers, because pointer comparison across the buffer boundary is trickier to get right than modulo arithmetic. The "is full" condition uses (head+1) % size == tail; "is empty" uses head == tail.</p>
+  </div>
+
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit">UART ISR writes received bytes into a ring; main loop reads and parses.</span>
+    <span class="why">ISR can run at any time; ring buffer lets it push without blocking.</span>
+    <span class="sit">Audio codec DMA: double-buffer / ping-pong fills audio frames in order.</span>
+    <span class="why">Ring of two or more buffers; head/tail track which is being filled vs consumed.</span>
+    <span class="sit">Logging system: circular log wraps oldest entries when full.</span>
+    <span class="why">Always have the N most recent log entries without dynamic allocation.</span>
+  </div>
+
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">head = next write slot, tail = next read slot. Empty: head==tail. Full: (head+1)%SIZE == tail. Advance either index with (idx+1)%SIZE.</div>
+    <div class="ascii">
+SIZE=8:  [0][1][2][3][4][5][6][7]
+                 ^               ^
+                tail            head
+
+push('A'): buf[head]='A'; head=(head+1)%8
+pop():  c = buf[tail]; tail=(tail+1)%8; return c
+
+Full condition: (head+1)%SIZE == tail
+  -- we sacrifice one slot so full != empty (both would be head==tail)
+
+UART ISR (producer):
+  if not full: buf[head]=byte; head=(head+1)%SIZE
+
+Main loop (consumer):
+  if not empty: c=buf[tail]; tail=(tail+1)%SIZE</div>
+  </div>
+
+  <pre><code class="language-c">
+#include &lt;stdint.h&gt;
+#include &lt;stddef.h&gt;
+
+#define RB_SIZE 64
+
+typedef struct {
+    uint8_t  buf[RB_SIZE];
+    volatile uint16_t head;   /* write index -- written by ISR   */
+    volatile uint16_t tail;   /* read  index -- written by main  */
+} RingBuf;
+
+static inline int rb_full(const RingBuf *rb) {
+    return ((rb-&gt;head + 1) % RB_SIZE) == rb-&gt;tail;
+}
+static inline int rb_empty(const RingBuf *rb) {
+    return rb-&gt;head == rb-&gt;tail;
+}
+
+/* Called from ISR -- push one byte */
+int rb_push(RingBuf *rb, uint8_t byte) {
+    if (rb_full(rb)) return -1;             /* drop on overflow     */
+    rb-&gt;buf[rb-&gt;head] = byte;
+    rb-&gt;head = (rb-&gt;head + 1) % RB_SIZE;   /* wrap around          */
+    return 0;
+}
+
+/* Called from main loop -- pop one byte */
+int rb_pop(RingBuf *rb, uint8_t *out) {
+    if (rb_empty(rb)) return -1;
+    *out = rb-&gt;buf[rb-&gt;tail];
+    rb-&gt;tail = (rb-&gt;tail + 1) % RB_SIZE;   /* wrap around          */
+    return 0;
+}
+
+/* Usage */
+static RingBuf uart_rx = { .head=0, .tail=0 };
+
+/* UART ISR would call: rb_push(&amp;uart_rx, received_byte); */
+/* Main loop:          rb_pop(&amp;uart_rx, &amp;byte);          */
+  </code></pre>
+
+  <div class="dry-run">
+    <strong>Dry Run — SIZE=4, push A B C, pop one</strong>
+    <pre>
+Initial: head=0 tail=0 (empty)
+push 'A': buf[0]='A', head=1
+push 'B': buf[1]='B', head=2
+push 'C': buf[2]='C', head=3
+full? (3+1)%4=0 == tail(0)? YES -- buffer full (slot 3 sacrificed)
+pop: out='A', tail=1
+pop: out='B', tail=2
+empty? head(3)==tail(2)? NO
+pop: out='C', tail=3
+empty? head(3)==tail(3)? YES
+    </pre>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>In a single-producer single-consumer ISR context, head is written only by the ISR and tail only by main — this is safe without a mutex IF head and tail are <code>volatile</code> and their width is naturally atomic (uint8_t or uint16_t on most MCUs). But adding two bytes atomically is NOT safe without a critical section — use power-of-two size + bitmask to avoid the modulo, and keep each index update as a single store.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Why is one slot sacrificed in the "full" condition? What alternative tracking method avoids this?</li>
+      <li>If RB_SIZE is a power of two (e.g. 64), how can you replace the modulo with a faster bitwise AND?</li>
+      <li>What makes the ring buffer safe for single-producer/single-consumer without a mutex? What breaks that guarantee?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">FIFO with fixed memory, ISR-safe -> ring buffer. head=write, tail=read. Full:(head+1)%N==tail. Empty:head==tail.</div>
+    <ul class="trigger-variants">
+      <li>Wrap index -> (idx+1) % SIZE (or &amp; (SIZE-1) if power-of-two)</li>
+      <li>ISR producer + main consumer -> volatile indices, single-writer per index</li>
+      <li>Overflow policy -> drop newest (return -1) or drop oldest (advance tail)</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- Q18 · memcpy/memmove — Walking src and dst Pointers           -->
+<!-- ============================================================= -->
+<div class="card" id="q18">
+  <h2>Q18 · memcpy/memmove — How They Walk src and dst Pointers</h2>
+
+  <div class="background">
+    <strong>Background</strong>
+    <p>At their core, <code>memcpy</code> and <code>memmove</code> are just two-pointer walks: one pointer reads from the source, another writes to the destination, and they both advance one element at a time until n bytes have been transferred. The source and destination are typed as <code>void*</code> (Q07) and internally cast to <code>uint8_t*</code> so that arithmetic proceeds one byte at a time regardless of the original data type.</p>
+    <p>The critical difference between the two: <code>memcpy</code> assumes the regions do not overlap and can copy in any order (forward, backward, in chunks) — the C standard gives the implementation latitude for speed. <code>memmove</code> guarantees correctness even when regions overlap, by checking the direction and copying backward when the destination would overwrite not-yet-read source bytes.</p>
+    <p>In embedded firmware, you use memcpy constantly: copy a packet payload into a DMA buffer, copy a struct into flash NVM, copy received bytes from a ring buffer into a frame buffer. Understanding when to use memmove (overlapping regions, in-place shifts) prevents silent data corruption that is extremely hard to debug.</p>
+  </div>
+
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit">Copy a struct into a serialisation buffer: <code>memcpy(buf, &amp;pkt, sizeof(pkt));</code></span>
+    <span class="why">Copies raw bytes of the struct in one call, faster than field-by-field assignment.</span>
+    <span class="sit">Insert a byte at position i in a buffer: shift [i..n-1] forward by 1.</span>
+    <span class="why">memmove required because src and dst overlap: memmove(buf+i+1, buf+i, n-i).</span>
+    <span class="sit">DMA completion callback: memcpy from DMA buffer to processing buffer.</span>
+    <span class="why">DMA writes to a fixed buffer; processing needs a stable copy.</span>
+  </div>
+
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">memcpy: forward byte copy, assumes no overlap. memmove: check if dst > src (and overlap exists) -> copy backward to avoid clobbering unread bytes.</div>
+    <div class="ascii">
+MEMCPY (forward, no overlap):
+src: [A][B][C][D]
+dst:             [A][B][C][D]
+copy A first, then B, C, D -- safe because dst is far right
+
+MEMMOVE overlapping -- WRONG direction (dst > src, overlap):
+src: [A][B][C][D]
+dst:    [A][B][C][D]   (dst = src+1)
+Forward copy: write A to dst[0]=src[1], OVERWRITES B before reading it!
+Backward copy: copy D first, then C, B, A -- safe
+
+Backward walk:
+d = dst + n - 1
+s = src + n - 1
+while (n--) *d-- = *s--;</div>
+  </div>
+
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;stdint.h&gt;
+#include &lt;string.h&gt;   /* real memcpy/memmove */
+
+/* Simplified memcpy -- forward walk, no overlap allowed */
+void *my_memcpy(void *dst, const void *src, size_t n) {
+    uint8_t       *d = (uint8_t*)dst;
+    const uint8_t *s = (const uint8_t*)src;
+    while (n--) *d++ = *s++;
+    return dst;
+}
+
+/* Simplified memmove -- handles overlap correctly */
+void *my_memmove(void *dst, const void *src, size_t n) {
+    uint8_t       *d = (uint8_t*)dst;
+    const uint8_t *s = (const uint8_t*)src;
+    if (d &lt; s || d &gt;= s + n) {
+        while (n--) *d++ = *s++;        /* no overlap or dst before src: forward */
+    } else {
+        d += n - 1; s += n - 1;         /* dst in src region: backward           */
+        while (n--) *d-- = *s--;
+    }
+    return dst;
+}
+
+int main(void) {
+    uint8_t buf[] = {1, 2, 3, 4, 5};
+
+    /* Shift elements [1..4] right by 1 (insert slot at index 1) */
+    my_memmove(buf + 2, buf + 1, 4);   /* overlap: dst > src */
+    buf[1] = 99;
+    for (int i = 0; i &lt; 5; i++) printf("%d ", buf[i]); /* 1 99 2 3 4 */
+    printf("\n");
+    return 0;
+}
+  </code></pre>
+
+  <div class="dry-run">
+    <strong>Dry Run — memmove(buf+2, buf+1, 4) on [1,2,3,4,5]</strong>
+    <pre>
+src=buf+1=[2,3,4,5], dst=buf+2=[3,4,5,?]
+dst(buf+2) > src(buf+1) and overlap -> BACKWARD copy
+d = buf+5 (dst+n-1=buf+2+3), s = buf+4 (src+n-1=buf+1+3)
+step1: buf[5]=buf[4]=5, d-- s--
+step2: buf[4]=buf[3]=4
+step3: buf[3]=buf[2]=3
+step4: buf[2]=buf[1]=2
+result: [1,2,2,3,4] (slot 1 freed for insertion)
+    </pre>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Using <code>memcpy</code> on overlapping regions is <strong>undefined behavior</strong>. On many platforms it appears to work (the implementation happens to copy forward and the overlap is harmless by luck), but with aggressive compiler optimisation or SIMD copies it silently corrupts data. Always use <code>memmove</code> when regions might overlap.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>You need to shift elements right in an array to make room for an insert. Which function do you use and why?</li>
+      <li>Why does memmove copy backward when dst &gt; src and they overlap?</li>
+      <li>What is the return value of both memcpy and memmove, and when is it useful?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Copy bytes: memcpy (no overlap) or memmove (may overlap). Both take void*, cast to uint8_t* internally, walk byte by byte.</div>
+    <ul class="trigger-variants">
+      <li>Non-overlapping regions -> memcpy (faster in practice)</li>
+      <li>In-place shift / overlap possible -> memmove (always safe)</li>
+      <li>Copy struct to buffer -> memcpy(&amp;dst, &amp;src, sizeof(struct))</li>
+    </ul>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 <script>hljs.highlightAll();</script>
 </body>
