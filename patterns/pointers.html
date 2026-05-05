@@ -3178,6 +3178,482 @@ memset(arr, 0, sizeof(arr)) = memset(arr, 0, 8)  (only zeroes 2 ints!)
   </div>
 </div>
 
+
+<!-- ============================================================= -->
+<!-- Q27 · Off-by-One in Pointer Walk                              -->
+<!-- ============================================================= -->
+<div class="card" id="q27">
+  <h2>Q27 · Off-by-One in Pointer Walk — Walking Past End of Array</h2>
+
+  <div class="background">
+    <strong>Background</strong>
+    <p>The one-past-the-end address (<code>arr + n</code>) is a valid pointer value in C — you can compute it and compare against it, but you must never dereference it. This distinction is subtle: the language deliberately makes the address one-past-end representable so that idioms like <code>for (p = arr; p &lt; arr+n; p++)</code> work correctly. But a loop condition that uses <code>&lt;=</code> instead of <code>&lt;</code> will dereference exactly that forbidden address on the last iteration.</p>
+    <p>In embedded systems, the byte immediately past the end of your array might be a hardware register, the stack guard word, or another thread's data. Writing or reading it silently corrupts system state. The bug often does not manifest until stress testing or a specific data pattern, making it extremely difficult to track down without memory sanitizers or an MPU watchpoint.</p>
+  </div>
+
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit"><code>while (p &lt;= end)</code> instead of <code>while (p &lt; end)</code> — walks one element too far.</span>
+    <span class="why">Reads or writes one element past the array boundary on the last iteration.</span>
+    <span class="sit">Buffer fill: <code>for (i = 0; i &lt;= n; i++) buf[i] = 0;</code></span>
+    <span class="why">buf[n] is one past the end — overwrites the adjacent variable on the stack.</span>
+    <span class="sit">String scan: <code>while (*p++);</code> skips the null, keeps reading.</span>
+    <span class="why">Post-increment advances past null before the loop body can stop.</span>
+  </div>
+
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">Valid elements: arr[0] to arr[n-1]. arr+n is valid to compute and compare, NEVER to dereference. Loop condition: strictly &lt; not &lt;=.</div>
+    <div class="ascii">
+int arr[4] = {10, 20, 30, 40};
+
+Valid elements:   arr[0] arr[1] arr[2] arr[3]
+One-past-end:                                arr+4  (compare only, never *arr+4)
+
+WRONG -- &lt;= reads one too many:
+for (int *p = arr; p &lt;= arr+4; p++) { *p = 0; }
+  Last iter: p=arr+4, *p = UB -> writes adjacent stack/heap byte
+
+CORRECT:
+for (int *p = arr; p &lt; arr+4; p++) { *p = 0; }
+  Last iter: p=arr+3, *p=arr[3]; then p=arr+4, loop ends
+
+String scan:
+WRONG:  while (*p++);       len = p - str - 1;  // must subtract 1
+CORRECT: while (*p) p++;    len = p - str;       // clean and obvious</div>
+  </div>
+
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+
+int main(void) {
+    int data[4] = {1, 2, 3, 4};
+    int sentinel = 0xDEAD;          /* adjacent on stack       */
+
+    printf("sentinel before: 0x%X\n", sentinel);
+
+    /* WRONG: i &lt;= 4 iterates 5 times; data[4] hits sentinel */
+    for (int i = 0; i &lt;= 4; i++)   /* should be i &lt; 4        */
+        data[i] = 99;
+
+    printf("sentinel after:  0x%X\n", sentinel); /* likely 99 */
+
+    /* CORRECT: pointer walk with strict &lt; */
+    int data2[4] = {0};
+    for (int *p = data2; p &lt; data2 + 4; p++)
+        *p = 7;
+    for (int i = 0; i &lt; 4; i++) printf("%d ", data2[i]); /* 7 7 7 7 */
+    printf("\n");
+    return 0;
+}
+  </code></pre>
+
+  <div class="dry-run">
+    <strong>Dry Run — wrong loop on int data[4]</strong>
+    <pre>
+Stack (simplified):
+  data[0..3] at 0x2000-0x200C
+  sentinel   at 0x2010
+
+i=3: data[3]=99 at 0x200C  OK
+i=4: data[4]=99 at 0x2010  OVERWRITES sentinel!
+sentinel = 0x63 (99 decimal)
+    </pre>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Off-by-one writes to adjacent memory often produce silent corruption rather than a crash — the adjacent location is still valid RAM, so no bus fault fires. Enable AddressSanitizer (<code>-fsanitize=address</code>) during testing to catch every out-of-bounds access immediately.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Is <code>int *p = arr + n;</code> legal to compute? Can you dereference it?</li>
+      <li>What is wrong with <code>while (*p++);</code> as a string-length idiom?</li>
+      <li>You fill a buffer of size N. Is <code>i &lt; N</code> or <code>i &lt;= N-1</code> safer? Are they identical?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Pointer walk bound: strictly &lt; arr+n, never &lt;=. arr+n is valid to compare, never to dereference. Off-by-one corrupts adjacent memory silently.</div>
+    <ul class="trigger-variants">
+      <li>Array loop -> p &lt; arr+n  (not &lt;=)</li>
+      <li>String scan -> while (*p) p++  (pre-check)</li>
+      <li>Buffer fill -> for (i=0; i&lt;N; i++)  (not i&lt;=N)</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- Q28 · Returning Pointer to Local Variable                     -->
+<!-- ============================================================= -->
+<div class="card" id="q28">
+  <h2>Q28 · Returning Pointer to Local Variable</h2>
+
+  <div class="background">
+    <strong>Background</strong>
+    <p>Local (automatic) variables live on the stack for the duration of the function call. The moment the function returns, the stack frame is released — the CPU restores SP and those bytes become available for the next call. Any pointer to a local variable that survives the function return is immediately a dangling pointer.</p>
+    <p>This is particularly insidious because the stale bytes often still hold the old value right after return — nothing has overwritten them yet — so the bug appears to "work" in simple tests. The corruption appears only when the next function call overwrites those stack bytes, which may happen far away in the call sequence.</p>
+    <p>Modern compilers with <code>-Wall</code> warn: "address of local variable returned." But they cannot catch all cases — storing the pointer in a struct or casting through void* can hide it from static analysis. AddressSanitizer catches it reliably at runtime.</p>
+  </div>
+
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit"><code>char *get_buf() { char buf[64]; return buf; }</code> — caller gets dead stack frame.</span>
+    <span class="why">The 64-byte buffer is gone the moment get_buf returns.</span>
+    <span class="sit">Returning <code>&amp;local_struct</code> to avoid copying a large struct.</span>
+    <span class="why">The struct is overwritten by the next function's frame before the caller uses it.</span>
+    <span class="sit">Embedded ISR stores <code>&amp;isr_local</code> for main to read after ISR returns.</span>
+    <span class="why">ISR stack frame is gone; main reads unrelated stack data.</span>
+  </div>
+
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">Three safe alternatives: (1) static local (shared, not re-entrant), (2) caller-provides buffer (best for embedded), (3) malloc on heap (caller must free).</div>
+    <div class="ascii">
+WRONG:
+char *format_msg(int code) {
+    char buf[32];                   /* stack, dies on return   */
+    snprintf(buf, 32, "E%d", code);
+    return buf;                     /* DANGLING                */
+}
+
+OPTION 1 -- static (not re-entrant, not ISR-safe):
+char *format_msg(int code) {
+    static char buf[32];            /* .bss, lives forever     */
+    snprintf(buf, 32, "E%d", code);
+    return buf;                     /* valid but shared        */
+}
+
+OPTION 2 -- caller provides (best for firmware):
+void format_msg(int code, char *buf, int sz) {
+    snprintf(buf, sz, "E%d", code);
+}
+/* Caller: char b[32]; format_msg(5, b, sizeof(b)); */
+
+OPTION 3 -- heap (caller must free):
+char *format_msg(int code) {
+    char *buf = malloc(32);
+    if (!buf) return NULL;
+    snprintf(buf, 32, "E%d", code);
+    return buf;                     /* caller calls free(buf)  */
+}</div>
+  </div>
+
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+/* CORRECT option 1: static buffer (simple, non-reentrant) */
+const char *static_msg(int code) {
+    static char buf[32];
+    snprintf(buf, sizeof(buf), "error %d", code);
+    return buf;
+}
+
+/* CORRECT option 2: caller provides buffer */
+void safe_msg(int code, char *buf, int sz) {
+    snprintf(buf, sz, "error %d", code);
+}
+
+int main(void) {
+    /* Static buffer approach */
+    printf("%s\n", static_msg(42));   /* "error 42" */
+
+    /* Caller-provides-buffer approach */
+    char my_buf[32];
+    safe_msg(99, my_buf, sizeof(my_buf));
+    printf("%s\n", my_buf);           /* "error 99" */
+    return 0;
+}
+  </code></pre>
+
+  <div class="dry-run">
+    <strong>Dry Run — why the wrong version sometimes "works"</strong>
+    <pre>
+bad_msg(42) returns pointer p to stack slot at 0x20001FF0
+Stack frame released; SP restored.
+
+printf("%s\n", p):
+  If printf is inlined or tail-called, no new frame pushed.
+  0x20001FF0 still contains "error 42" -- appears to work.
+
+Next test with a helper function called before printf:
+  helper() pushes frame at 0x20001FF0, overwrites "error 42"
+  printf reads garbage -- bug finally visible.
+    </pre>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Static local buffers are not re-entrant or thread-safe. On an RTOS with two tasks calling the same function, the second call overwrites the first's result before the first task reads it. Prefer the caller-provides-buffer pattern in all firmware that runs under an RTOS.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>In an RTOS with two tasks calling <code>static_msg()</code> concurrently, what data race occurs?</li>
+      <li>How does the caller-provides-buffer pattern move buffer lifetime responsibility to the caller?</li>
+      <li>When is a static local buffer acceptable in embedded firmware?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Never return &amp;local_var. Safe options: static local (non-reentrant), caller-provides buffer (preferred in firmware), or heap (caller must free).</div>
+    <ul class="trigger-variants">
+      <li>ISR / RTOS context -> caller-provides: void f(char *buf, int sz)</li>
+      <li>Simple utility, single-threaded -> static char buf[] inside function</li>
+      <li>Dynamic lifetime -> malloc, document that caller must free</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- Q29 · Uninitialized Pointer — Wild Pointer                    -->
+<!-- ============================================================= -->
+<div class="card" id="q29">
+  <h2>Q29 · Uninitialized Pointer — Wild Pointer</h2>
+
+  <div class="background">
+    <strong>Background</strong>
+    <p>An uninitialized pointer contains whatever bytes happen to be in that stack location. In debug builds the runtime sometimes zeroes the stack, making the pointer NULL and producing a detectable crash. In release builds with -O2, the location holds leftover data from a previous call — a return address, a saved register, or old data — and the dereference reaches that random address silently.</p>
+    <p>Wild pointers are especially dangerous in embedded because the random address often falls within valid RAM. The dereference succeeds, reads or writes an unrelated variable, and corrupts system state with no immediate signal. On a BMS or motor controller this can cause a safety-critical failure — a relay switches incorrectly, a PWM value is corrupted — far removed in time from when the bug was introduced.</p>
+  </div>
+
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit"><code>int *p; if (cond) p = &amp;x; *p = 5;</code> — wild on the else branch.</span>
+    <span class="why">If cond is false, p is uninitialized; *p writes to a random address.</span>
+    <span class="sit">Struct on stack, pointer fields not initialized.</span>
+    <span class="why">C does not zero stack; pointer fields are wild until explicitly set.</span>
+    <span class="sit">Pointer assigned deep in a conditional; caller assumes always set.</span>
+    <span class="why">Missed branch leaves pointer wild; intermittent bug depending on runtime path.</span>
+  </div>
+
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">Initialize every pointer at declaration: int *p = NULL. NULL crashes detectably on dereference; a wild pointer corrupts silently. Always check before use.</div>
+    <div class="ascii">
+WRONG:
+int *p;               /* wild: contains leftover bytes, e.g. 0x20001234 */
+if (condition)
+    p = &amp;x;
+*p = 5;               /* if condition==false: stores 5 at 0x20001234    */
+                      /* may corrupt any variable in RAM silently        */
+
+CORRECT:
+int *p = NULL;        /* safe sentinel value                            */
+if (condition)
+    p = &amp;x;
+if (p != NULL)        /* always guard before dereference                */
+    *p = 5;
+
+Stack frame before function call:
+  SP-4: 0x08001234  (leftover: previous function's return address)
+  SP-8: 0x20003F00  (leftover: previous function's local variable value)
+  New call declares int *p at SP-8 -> p = 0x20003F00 (wild!)
+  *p reads/writes RAM at 0x20003F00 -- some other variable's home</div>
+  </div>
+
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+
+/* WRONG -- uninitialized pointer */
+int bad_fn(int cond) {
+    int x = 42;
+    int *p;              /* WILD */
+    if (cond) p = &amp;x;
+    return *p;           /* UB if cond==0 */
+}
+
+/* CORRECT -- always initialize, always check */
+int safe_fn(int cond) {
+    int x = 42;
+    int *p = NULL;
+    if (cond) p = &amp;x;
+    if (p == NULL) { printf("not set\n"); return -1; }
+    return *p;
+}
+
+/* Struct: zero-initialise to null all pointers */
+typedef struct { int *data; int len; } Buf;
+
+int main(void) {
+    printf("safe(1)=%d\n", safe_fn(1));  /* 42 */
+    printf("safe(0)=%d\n", safe_fn(0));  /* -1 */
+
+    /* WRONG: uninitialized struct -- data is wild */
+    /* Buf b; b.len = 4; b.data[0] = 0; -- UB */
+
+    /* CORRECT: zero-init sets data=NULL */
+    Buf b = {0};
+    printf("b.data is NULL: %d\n", b.data == NULL); /* 1 */
+    return 0;
+}
+  </code></pre>
+
+  <div class="dry-run">
+    <strong>Dry Run — wild pointer in a realistic scenario</strong>
+    <pre>
+prev_fn() ran: local int arr[8] at SP-32, value[0]=0x20002000
+prev_fn() returned, frame released
+
+safe_fn(0) called:
+  x at SP-4 = 42
+  p at SP-8 = (uninitialized, contains leftover e.g. 0x20002000)
+  cond=0: p never assigned
+  *p reads *(0x20002000) = some other variable's value
+  Returns garbage, or corrupts on write
+    </pre>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>C does NOT zero-initialize stack variables. Some debug RTOSes or startup code zero the stack at reset, making uninitialized pointers NULL in testing — masking the bug. Release builds skip this initialization for speed, exposing the wild pointer. Always initialize explicitly; never rely on the stack being clean.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>A debug build always shows NULL for your uninitialized pointer. Will this hold in a release build? Why not?</li>
+      <li>How does <code>MyStruct s = {0};</code> ensure pointer fields start as NULL?</li>
+      <li>Name two compiler/tool flags that detect uninitialized variable use.</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Wild pointer = uninitialized = random address. Fix: int *p = NULL at declaration. Check before use. NULL crashes detectably; wild corrupts silently.</div>
+    <ul class="trigger-variants">
+      <li>Single pointer -> int *p = NULL; at declaration line</li>
+      <li>Struct on stack -> MyStruct s = {0}; zero-inits all pointer fields</li>
+      <li>Detect at build time -> -Wuninitialized, -fsanitize=memory</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- Q30 · Pointer Comparison — Valid Ranges and Relational UB     -->
+<!-- ============================================================= -->
+<div class="card" id="q30">
+  <h2>Q30 · Pointer Comparison — Valid Ranges and the Relational UB Trap</h2>
+
+  <div class="background">
+    <strong>Background</strong>
+    <p>Pointer equality comparison (<code>==</code> and <code>!=</code>) is always valid for any two pointers of compatible type, including NULL checks. But relational comparisons — <code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code>, <code>&gt;=</code> — are only defined when both pointers point into the same array (or one-past-its-end). Comparing pointers from different objects is undefined behavior.</p>
+    <p>On flat-address-space systems (ARM Cortex-M, x86) pointer comparison is just integer subtraction and always "works" numerically. But the C optimizer is allowed to assume undefined behavior never occurs and make transformations valid only under that assumption — so cross-object relational comparisons can produce incorrect code at -O2 even when they appear to work at -O0. The standard-safe workaround is to cast to <code>uintptr_t</code> first, which makes the comparison implementation-defined (not UB) on any reasonable platform.</p>
+  </div>
+
+  <div class="situations">
+    <strong>Where You See This</strong>
+    <span class="sit">Bounds check within same array: <code>if (ptr &gt;= buf &amp;&amp; ptr &lt; buf + SIZE)</code></span>
+    <span class="why">Legal: all three addresses derived from the same array object.</span>
+    <span class="sit">Checking if a pointer is in RAM vs flash: comparing stack address to flash address.</span>
+    <span class="why">Technically UB (different objects); use uintptr_t cast for portability.</span>
+    <span class="sit">Linked-list node search: <code>while (node != target)</code></span>
+    <span class="why">Use == not &lt; -- equality is always valid across objects.</span>
+  </div>
+
+  <div class="logic-build">
+    <strong>Building the Logic from Scratch</strong>
+    <div class="aha">== and != between any same-type pointers: always valid. &lt; &gt; &lt;= &gt;= between same-array pointers: valid. Cross-object relational: UB. Use uintptr_t cast for cross-region checks.</div>
+    <div class="ascii">
+int arr[10];
+int x = 5;
+int *p = &amp;arr[3];
+int *q = &amp;x;
+
+p == q         /* defined: compares addresses, likely false   */
+p != NULL      /* defined: NULL check always valid            */
+p &lt; q          /* UB: p and q from different objects          */
+               /* optimizer may assume always false/true       */
+
+SAFE bounds check (same array):
+p &gt;= arr &amp;&amp; p &lt; arr + 10   /* legal: all derived from arr   */
+
+SAFE loop:
+for (int *it = arr; it &lt; arr + 10; it++) { }   /* legal     */
+
+CROSS-REGION check (e.g. is ptr in a given RAM range):
+uintptr_t addr = (uintptr_t)ptr;
+uintptr_t base = (uintptr_t)ram_base;
+if (addr - base &lt; RAM_SIZE) { /* implementation-defined, not UB */ }</div>
+  </div>
+
+  <pre><code class="language-c">
+#include &lt;stdio.h&gt;
+#include &lt;stdint.h&gt;
+
+#define POOL_SIZE 16
+static int pool[POOL_SIZE];
+
+/* CORRECT: bounds check within same array */
+int in_pool(const int *ptr) {
+    return ptr &gt;= pool &amp;&amp; ptr &lt; pool + POOL_SIZE;
+}
+
+/* Cross-region check using uintptr_t (implementation-defined, safe on flat MCU) */
+int in_range(const void *ptr, const void *base, size_t sz) {
+    uintptr_t p = (uintptr_t)ptr;
+    uintptr_t b = (uintptr_t)base;
+    return (p - b) &lt; (uintptr_t)sz;   /* unsigned subtraction wraps safely */
+}
+
+int main(void) {
+    int *p = &amp;pool[5];
+    int x = 0;
+
+    printf("p in pool:  %d\n", in_pool(p));   /* 1 */
+    printf("&x in pool: %d\n", in_pool(&amp;x));  /* 0 */
+
+    printf("p in range: %d\n", in_range(p, pool, sizeof(pool)));  /* 1 */
+    return 0;
+}
+  </code></pre>
+
+  <div class="dry-run">
+    <strong>Dry Run — in_pool check</strong>
+    <pre>
+pool at 0x20000100, POOL_SIZE=16, pool+16 = 0x20000140
+p = &amp;pool[5] = 0x20000114
+
+p &gt;= pool:    0x20000114 &gt;= 0x20000100  TRUE
+p &lt; pool+16:  0x20000114 &lt;  0x20000140  TRUE
+result: 1 (in pool)
+
+&amp;x at 0x20001000 (different variable):
+&amp;x &gt;= pool:    0x20001000 &gt;= 0x20000100  TRUE
+&amp;x &lt; pool+16:  0x20001000 &lt;  0x20000140  FALSE
+result: 0 (not in pool)
+-- but this comparison is UB per standard! Use uintptr_t version instead.
+    </pre>
+  </div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>The common embedded pattern <code>if (ptr &gt;= pool &amp;&amp; ptr &lt; pool+N)</code> is technically UB when ptr points outside pool — the second comparison involves a cross-object relational. It works on every flat-address MCU in practice, but is not standard. The uintptr_t subtraction idiom (<code>(uintptr_t)ptr - (uintptr_t)base &lt; SIZE</code>) achieves the same effect without UB.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>When is <code>p == q</code> always valid, even if p and q point to different objects?</li>
+      <li>Why does <code>p &lt; q</code> between two different local variables produce undefined behavior per the standard?</li>
+      <li>How does the uintptr_t subtraction trick avoid UB for cross-region pointer range checks?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Relational pointer comparison: only valid within same array. == and != always valid. Cross-region check -> cast to uintptr_t first.</div>
+    <ul class="trigger-variants">
+      <li>Bounds check within array -> ptr &gt;= arr &amp;&amp; ptr &lt; arr+N  (valid)</li>
+      <li>Cross-region -> (uintptr_t)ptr - (uintptr_t)base &lt; SIZE</li>
+      <li>Node equality search -> while (node != target)  (not &lt;)</li>
+    </ul>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 <script>hljs.highlightAll();</script>
 </body>
