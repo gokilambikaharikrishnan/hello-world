@@ -109,6 +109,397 @@ h2 { color: #58a6ff; font-size: 1.25rem; margin-bottom: 1rem; }
 </div>
 
 <!-- CARDS_START -->
+
+<!-- ST01 -->
+<div class="card" id="st01">
+  <div class="card-header">
+    <span class="card-id">ST01</span>
+    <h2 class="card-title">LIFO Intuition — What a Stack Is and When to Reach for It</h2>
+    <span class="category-badge">Fundamentals</span>
+  </div>
+
+  <div class="background">
+    <p>A stack is a container where the last item added is the first item removed — Last In, First Out. Think of a stack of plates: you always add and remove from the top. You cannot reach the bottom plate without removing every plate above it.</p>
+    <p>Stacks appear whenever you need to <em>undo</em> or <em>backtrack</em> in the reverse order of arrival. The C function call stack is the canonical example: when foo() calls bar() which calls baz(), the return order is baz → bar → foo — perfectly reversed. Each frame is pushed on entry and popped on return.</p>
+    <p>The two signal patterns that scream "use a stack": (1) you process something, and later encounter its matching counterpart — parentheses, tags, open/close brackets; (2) you need the most recently seen element that satisfies some condition — monotonic stack problems. Any time you say "I need to remember what I saw, and process it in reverse," a stack is the answer.</p>
+    <p>In embedded C, stacks are everywhere: the hardware call stack (SP register on ARM Cortex-M), ISR nesting (interrupts push processor state to the call stack), undo buffers in state machines, and explicitly managed stacks for DFS traversal without recursion.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Function call stack — return address and locals on hardware stack</div><div class="why">Calls nest LIFO; CPU SP is a hardware stack pointer</div>
+    <div class="sit">ISR nesting on Cortex-M — exception frame pushed automatically</div><div class="why">Hardware pushes R0–R3, LR, PC, xPSR on exception entry</div>
+    <div class="sit">Bracket / tag matching in a parser</div><div class="why">Open tags pushed; closed tags must match the top</div>
+    <div class="sit">Undo/redo in a text editor or state machine</div><div class="why">Reverse the action history LIFO</div>
+    <div class="sit">DFS traversal without recursion</div><div class="why">Explicit stack replaces the implicit call stack</div>
+    <div class="sit">Expression evaluation — operands pushed, popped when operator seen</div><div class="why">Operators consume the most recent operands</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Core operations — only three matter:</div>
+    <div class="ascii">
+push(x)  — add x to the top
+pop()    — remove and return the top element
+peek()   — read the top without removing it
+
+LIFO property visualised:
+  push(1): [1]
+  push(2): [1, 2]
+  push(3): [1, 2, 3]
+  pop()  → 3   stack: [1, 2]
+  pop()  → 2   stack: [1]
+  pop()  → 1   stack: []
+
+Rule: if you push A then B then C, you will always see C before B before A.</div>
+    <div class="aha">When to reach for a stack: "I need to process something now, but I might need to revisit it when its counterpart arrives later — and that revisit happens in reverse order of arrival."</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">/* Minimal array stack — the template used by every stack card in this file */
+#define MAXN 100000
+int stk[MAXN];
+int top = 0;                     /* top points ONE PAST the last element */
+
+void push(int x)   { stk[top++] = x; }
+int  pop(void)     { return stk[--top]; }
+int  peek(void)    { return stk[top - 1]; }
+int  empty(void)   { return top == 0; }
+int  size(void)    { return top; }</code></pre>
+  </div>
+
+  <div class="dry-run">
+push(5) → stk=[5],       top=1
+push(3) → stk=[5,3],     top=2
+push(8) → stk=[5,3,8],   top=3
+peek()  → 8   (top-1=2, stk[2]=8)
+pop()   → 8   stk=[5,3], top=2
+pop()   → 3   stk=[5],   top=1
+empty() → 0   (top=1, not 0)</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p><code>top</code> is the index of the <em>next free slot</em>, not the last filled slot. So <code>peek = stk[top-1]</code> and <code>pop = stk[--top]</code>. If you define top as the last filled index, every formula shifts by one — pick one convention and stick to it throughout your code.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>What is the difference between peek() and pop()? When would you use one vs the other?</li>
+      <li>Name two real-world systems where LIFO order is a hard requirement, not just a choice.</li>
+      <li>If you push A, B, C, D then pop twice, what two values come out and in what order?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">When you see: "need to revisit something in reverse order" → reach for a stack</div>
+    <div class="trigger-variants">
+      <li>Matching open/close delimiters → push opens, match on close</li>
+      <li>Need most-recently-seen element satisfying a condition → monotonic stack</li>
+      <li>Recursive algorithm without recursion → explicit stack replacing call stack</li>
+    </div>
+  </div>
+</div>
+
+<!-- ST02 -->
+<div class="card" id="st02">
+  <div class="card-header">
+    <span class="card-id">ST02</span>
+    <h2 class="card-title">Stack Implementation — Array-Based with Top Pointer</h2>
+    <span class="category-badge">Fundamentals</span>
+  </div>
+
+  <div class="background">
+    <p>The simplest, fastest stack implementation: a fixed-size array plus a single integer <code>top</code> that tracks how many elements are in use. All operations are O(1) with no allocation, no pointer chasing, and excellent cache locality — every element is contiguous in memory.</p>
+    <p>This is exactly how the hardware call stack works on ARM Cortex-M: the stack pointer (SP / R13) decrements on push and increments on pop. The hardware stack grows downward in memory; a software array stack typically grows upward (index 0 = bottom). The mental model is the same.</p>
+    <p>In competitive programming and embedded firmware, the array-based stack is always the first choice. The only limitation is a fixed capacity — which is fine when the problem bounds are known.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Any algorithm problem where the input size is bounded</div><div class="why">No malloc, no free, no fragmentation — just an array</div>
+    <div class="sit">Embedded firmware stack for DFS or expression evaluation</div><div class="why">Heap may not exist; static allocation is safe</div>
+    <div class="sit">ISR-safe stack (no dynamic allocation in interrupt context)</div><div class="why">malloc is not reentrant; static array avoids the problem</div>
+    <div class="sit">Performance-critical inner loop needing O(1) guaranteed</div><div class="why">Array push/pop is a single store + increment</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Memory layout — top grows upward from index 0:</div>
+    <div class="ascii">
+index:  0    1    2    3    4  ...
+        [5]  [3]  [8]  [ ]  [ ]
+         ^              ^
+       bottom          top=3 (next free slot)
+
+push(7):  stk[3]=7, top=4
+  [5]  [3]  [8]  [7]  [ ]
+                       top=4
+
+pop():    val=stk[3]=7, top=3   (just decrement — no erasure needed)
+  [5]  [3]  [8]  [7*] [ ]
+                 top=3   (* still in memory but logically gone)
+
+peek():   return stk[top-1] = stk[2] = 8  (no move)</div>
+    <div class="aha">The "popped" value physically stays in the array — it's logically gone because top no longer covers it. The next push overwrites it.</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">#define STACK_MAX 100000
+
+typedef struct {
+    int  data[STACK_MAX];
+    int  top;              /* index of next free slot; 0 = empty */
+} Stack;
+
+void stk_init(Stack *s)         { s->top = 0; }
+int  stk_empty(const Stack *s)  { return s->top == 0; }
+int  stk_full(const Stack *s)   { return s->top == STACK_MAX; }
+int  stk_size(const Stack *s)   { return s->top; }
+
+void stk_push(Stack *s, int x) {
+    s->data[s->top++] = x;   /* store then increment */
+}
+
+int stk_pop(Stack *s) {
+    return s->data[--s->top]; /* decrement then read */
+}
+
+int stk_peek(const Stack *s) {
+    return s->data[s->top - 1];
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+stk_init:  top=0
+push(10):  data[0]=10, top=1
+push(20):  data[1]=20, top=2
+push(30):  data[2]=30, top=3
+peek():    data[2]=30  (top unchanged)
+pop():     --top=2, return data[2]=30
+pop():     --top=1, return data[1]=20
+empty():   top=1 → 0 (false)</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p><code>push</code> uses post-increment (<code>top++</code>): store first at <code>top</code>, then increment. <code>pop</code> uses pre-decrement (<code>--top</code>): decrement first, then read. Swap them and you read/write one slot off — an off-by-one that looks correct until the stack wraps. Always: push stores at current top then moves top up; pop moves top down then reads.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>If STACK_MAX=4 and you push 5 elements, what physically happens to the 5th push?</li>
+      <li>After push(A), push(B), pop(), push(C) — what does peek() return?</li>
+      <li>Why don't you need to zero out the slot on pop()?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Array stack: push = store at top then top++; pop = --top then read</div>
+    <div class="trigger-variants">
+      <li>top==0 → empty; top==STACK_MAX → full</li>
+      <li>peek = data[top-1] without moving top</li>
+      <li>All operations O(1), zero allocation, cache-friendly</li>
+    </div>
+  </div>
+</div>
+
+<!-- ST03 -->
+<div class="card" id="st03">
+  <div class="card-header">
+    <span class="card-id">ST03</span>
+    <h2 class="card-title">Stack Implementation — Linked List Based</h2>
+    <span class="category-badge">Fundamentals</span>
+  </div>
+
+  <div class="background">
+    <p>A linked list stack grows dynamically — no fixed capacity. The head of the list is the top of the stack: push prepends a new node to the front, pop removes the front node. Both are O(1).</p>
+    <p>The trade-off: each push calls malloc and each pop calls free, which is expensive and non-deterministic in time. In an embedded system without a heap — or in a hard-real-time context where malloc latency is unacceptable — this is the wrong choice. In a general-purpose application where capacity is unknown and memory is available, it is fine.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">General-purpose stack when maximum depth is unknown at compile time</div><div class="why">Grows on demand — no capacity planning needed</div>
+    <div class="sit">LRU cache node pool (nodes recycled from a free list)</div><div class="why">Free list is a linked-list stack of available nodes</div>
+    <div class="sit">Teaching linked list pointer manipulation via stack</div><div class="why">Push/pop show prepend/delete-head patterns</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Stack top = linked list head. Push = prepend. Pop = remove head.</div>
+    <div class="ascii">
+Empty:  top=NULL
+
+push(1):  [1|next=NULL]   top→[1]
+push(2):  [2|next→[1]]    top→[2]→[1]
+push(3):  [3|next→[2]]    top→[3]→[2]→[1]
+
+pop():
+  val  = top->val = 3
+  old  = top            (save to free)
+  top  = top->next →   top→[2]→[1]
+  free(old)
+  return 3</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">typedef struct SNode { int val; struct SNode *next; } SNode;
+
+typedef struct { SNode *top; int size; } LStack;
+
+void ls_init(LStack *s)  { s->top = NULL; s->size = 0; }
+int  ls_empty(LStack *s) { return s->top == NULL; }
+
+void ls_push(LStack *s, int x) {
+    SNode *n = malloc(sizeof(SNode));
+    n->val  = x;
+    n->next = s->top;  /* new node points at old top */
+    s->top  = n;       /* top is now the new node */
+    s->size++;
+}
+
+int ls_pop(LStack *s) {
+    SNode *old = s->top;
+    int val = old->val;
+    s->top = old->next; /* top moves down one */
+    free(old);
+    s->size--;
+    return val;
+}
+
+int ls_peek(LStack *s) { return s->top->val; }</code></pre>
+  </div>
+
+  <div class="dry-run">
+push(5): top→[5→NULL],      size=1
+push(9): top→[9→[5→NULL]],  size=2
+peek():  top->val=9
+pop():   val=9, top→[5→NULL], free node9, size=1
+pop():   val=5, top=NULL, size=0
+empty(): top==NULL → 1 (true)</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Save <code>top</code> to a temp pointer <em>before</em> advancing <code>top = top->next</code>, then <code>free</code> the saved pointer. If you free first, <code>top->next</code> is a use-after-free. Always: save the node to be freed, move the pointer, then free.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Why is the head of the linked list the top and not the tail?</li>
+      <li>What is the time complexity of pop() for the array-based vs linked-list stack?</li>
+      <li>In an embedded RTOS with no heap, which implementation do you use and why?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Linked list stack: push = prepend to head; pop = remove head; top = head</div>
+    <div class="trigger-variants">
+      <li>Unbounded capacity — grows with malloc on every push</li>
+      <li>No random access — only top is visible</li>
+      <li>Prefer array stack in embedded / performance-critical code</li>
+    </div>
+  </div>
+</div>
+
+<!-- ST04 -->
+<div class="card" id="st04">
+  <div class="card-header">
+    <span class="card-id">ST04</span>
+    <h2 class="card-title">Stack Overflow and Underflow — Guards and Detection</h2>
+    <span class="category-badge">Fundamentals</span>
+  </div>
+
+  <div class="background">
+    <p>Stack overflow happens when you push onto a full stack. Stack underflow happens when you pop from an empty stack. Both are silent bugs if unchecked — overflow corrupts adjacent memory, underflow reads garbage data or crashes with an array-index fault.</p>
+    <p>On ARM Cortex-M, hardware call-stack overflow is one of the leading causes of hard faults in embedded firmware. The stack grows downward into the heap; when it collides, you get data corruption that manifests far from the actual overflow. FreeRTOS and most RTOSes paint the stack with a known canary pattern and check it periodically.</p>
+    <p>For software stacks in algorithms, the guard is simple: check before push (is top &lt; STACK_MAX?) and before pop (is top &gt; 0?). In competitive programming these checks are usually omitted since input bounds guarantee the depth; in production code they are mandatory.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Embedded firmware — call stack overflow causes HardFault on Cortex-M</div><div class="why">Stack grows into heap; canary detection or MPU guard region</div>
+    <div class="sit">Recursive DFS hitting stack depth limit</div><div class="why">Deep trees overflow the call stack — switch to iterative</div>
+    <div class="sit">Bracket matching on malformed input (all opens, no closes)</div><div class="why">Stack grows to size of input — must cap or handle gracefully</div>
+    <div class="sit">Calculator with deeply nested parentheses</div><div class="why">100 levels of nesting = 100 stack frames; check capacity</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Overflow: push when full. Underflow: pop when empty.</div>
+    <div class="ascii">
+OVERFLOW — push on full stack (top == STACK_MAX):
+  stk[STACK_MAX] = x;  // writes beyond array → UB / memory corruption
+  top becomes STACK_MAX+1 → next pop reads stk[STACK_MAX] = garbage
+
+UNDERFLOW — pop on empty stack (top == 0):
+  --top → top = -1
+  return stk[-1];      // reads before array → UB
+
+Canary pattern (embedded):
+  Fill stack array with 0xDEADBEEF at init.
+  Periodically check if canary near the top is still intact.
+  If overwritten → overflow detected before crash.</div>
+    <div class="aha">Guard pattern: check before every push and pop. Fail loudly (assert, error return, or halt) — silent corruption is far worse than a clean error.</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">#define STACK_MAX 100000
+#define CANARY    0xDEADBEEFu
+
+typedef struct {
+    int  data[STACK_MAX];
+    int  top;
+} Stack;
+
+/* Returns 0 on success, -1 on overflow */
+int stk_push_safe(Stack *s, int x) {
+    if (s->top >= STACK_MAX) return -1;  /* overflow guard */
+    s->data[s->top++] = x;
+    return 0;
+}
+
+/* Returns INT_MIN on underflow */
+int stk_pop_safe(Stack *s) {
+    if (s->top == 0) return INT_MIN;     /* underflow guard */
+    return s->data[--s->top];
+}
+
+/* Embedded canary check — call from a periodic timer ISR */
+void stk_check_canary(Stack *s) {
+    /* check top few slots for canary overwrite */
+    for (int i = STACK_MAX - 4; i < STACK_MAX; i++)
+        if ((unsigned)s->data[i] != CANARY)
+            __asm volatile("bkpt 0");   /* halt debugger */
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+Overflow:  STACK_MAX=3, push 3 elements (top=3), push 4th:
+  stk_push_safe: top(3) >= STACK_MAX(3) → return -1  ✓
+
+Underflow: top=0, call pop:
+  stk_pop_safe: top==0 → return INT_MIN  ✓
+
+Normal:    top=1, pop:
+  --top=0, return data[0]  ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>In competitive programming, the "safe" guards add a branch to every push/pop. People often skip them and rely on input bounds — that is fine for a contest. In any code that ships, skip the guards only if you can <em>prove</em> the bound is never exceeded. A defensive <code>assert(top &lt; STACK_MAX)</code> that fires in testing is infinitely better than silent memory corruption in production.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>What is the difference between stack overflow and buffer overflow?</li>
+      <li>Why is stack underflow dangerous even if top becomes -1 instead of crashing immediately?</li>
+      <li>How does a canary pattern help detect overflow before a crash?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Always guard push (top &lt; MAX) and pop (top &gt; 0) in production code</div>
+    <div class="trigger-variants">
+      <li>Overflow: write past array end → UB / corruption</li>
+      <li>Underflow: read before array start → UB / garbage</li>
+      <li>Embedded: canary pattern + MPU guard region for call stack</li>
+    </div>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 
 <script>hljs.highlightAll();</script>
