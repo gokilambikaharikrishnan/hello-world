@@ -1681,6 +1681,304 @@ Result: 4 ✓ (2×2 block of 1s in top-left)</div>
   </div>
 </div>
 
+
+<!-- ST18 -->
+<div class="card" id="st18">
+  <div class="card-header">
+    <span class="card-id">ST18</span>
+    <h2 class="card-title">Trapping Rain Water — Stack Approach</h2>
+    <span class="category-badge">Monotonic Stack</span>
+  </div>
+
+  <div class="background">
+    <p>Given an elevation map, compute how much water is trapped between bars after it rains. The stack approach thinks in terms of horizontal layers: when we find a bar taller than the stack top, a "valley" has formed — the stack top is the valley floor, the current bar is the right wall, and the new stack top (after popping) is the left wall. The trapped water in this layer = width × min(left_wall, right_wall) − floor_height.</p>
+    <p>This complements the two-pointer approach (arrays.html P43): the stack version accumulates water layer by layer horizontally, while the two-pointer version computes each bar's contribution directly. Both are O(n) and O(n) space; the stack version is arguably more intuitive for understanding the geometric decomposition.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">LeetCode #42 — Trapping Rain Water (stack variant)</div><div class="why">Alternative to two-pointer; shows horizontal decomposition</div>
+    <div class="sit">Cumulative flow in a terrain profile</div><div class="why">Volume of water pooled in valleys</div>
+    <div class="sit">Embedded: buffer overflow estimation in bursty data streams</div><div class="why">How much data accumulates between two higher-throughput windows</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Pop = valley found. Water = width × min(left wall, right wall) − floor height. Accumulate horizontally, layer by layer.</div>
+    <div class="ascii">
+height: [0,1,0,2,1,0,1,3,2,1,2,1]
+         0 1 2 3 4 5 6 7 8 9 10 11
+
+Maintain a non-increasing stack of indices.
+
+i=0,h=0: push 0          stk:[0(h0)]
+i=1,h=1: 1>0 → POP 0:
+  floor  = h[0] = 0
+  left   = stk empty → skip (need left wall to trap water)
+  push 1                  stk:[1(h1)]
+i=2,h=0: push 2           stk:[1,2(h0)]
+i=3,h=2: 2>0 → POP 2(floor h=0):
+  left=idx 1, h=1. right=idx 3, h=2
+  width = 3-1-1=1, bounded_h=min(1,2)-0=1, water+=1
+  2>1 → POP 1(floor h=1):
+  left: stk empty → no left wall → skip water
+  push 3                  stk:[3(h2)]
+i=4,h=1: push 4           stk:[3,4]
+i=5,h=0: push 5           stk:[3,4,5]
+i=6,h=1: 1>0 → POP 5(floor h=0):
+  left=4,h=1. right=6,h=1. width=6-4-1=1. water+=min(1,1)-0=1
+  1=1 (not >) → push 6    stk:[3,4,6]
+i=7,h=3: 3>1 → POP 6(floor h=1):
+  left=4,h=1. water=min(1,3)-1=0 (no new layer above h=1 here)
+  3>1 → POP 4(floor h=1):
+  left=3,h=2. width=7-3-1=3. water+=min(2,3)-1=1 → water+=3
+  3>2 → POP 3(floor h=2):
+  stk empty → no left wall
+  push 7                  stk:[7]
+...continue similarly...
+
+Final total = 6 ✓</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">int trap_water(int *height, int n) {
+    int stk[n], top = 0;
+    int water = 0;
+
+    for (int i = 0; i < n; i++) {
+        while (top > 0 && height[stk[top-1]] < height[i]) {
+            int floor_idx = stk[--top];
+            if (top == 0) break;          /* no left wall — can't trap */
+
+            int left    = stk[top-1];
+            int width   = i - left - 1;
+            int bounded = (height[left] < height[i] ? height[left] : height[i])
+                          - height[floor_idx];
+            water += bounded * width;
+        }
+        stk[top++] = i;
+    }
+    return water;
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+height=[3,0,2,0,4]:
+  push 0(3). i=1,0<3 → push 1. i=2,2>0 → pop 1: left=0,width=2-0-1=1,bounded=min(3,2)-0=2. water+=2.
+  2<3 → push 2. i=3,0<2 → push 3. i=4,4>0 → pop 3: left=2,width=4-2-1=1,bounded=min(2,4)-0=2. water+=2.
+  4>2 → pop 2: left=0,width=4-0-1=3,bounded=min(3,4)-2=1. water+=3.
+  4>3 → pop 0: stk empty → break. push 4.
+Result: 2+2+3=7. Correct! (3+0+2+0+4 traps 7 units)</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>After popping the floor, check if the stack is empty. An empty stack means no left wall exists and water cannot be trapped — break without adding water. Forgetting this check causes a bounds read on an empty stack.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>What does the popped element represent geometrically in the water-trapping computation?</li>
+      <li>Why do you need both a left wall AND a right wall to compute water?</li>
+      <li>For height=[1,0,1], trace the stack and verify the output is 1.</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Trap water (stack): pop = valley floor; water = width × (min_wall − floor); need left wall after pop</div>
+    <div class="trigger-variants">
+      <li>Left wall = new stack top after popping floor</li>
+      <li>Width = right_index − left_index − 1</li>
+    </div>
+  </div>
+</div>
+
+<!-- ST19 -->
+<div class="card" id="st19">
+  <div class="card-header">
+    <span class="card-id">ST19</span>
+    <h2 class="card-title">Sum of Subarray Minimums</h2>
+    <span class="category-badge">Monotonic Stack</span>
+  </div>
+
+  <div class="background">
+    <p>For every contiguous subarray, find its minimum element. Return the sum of all those minimums. Brute force is O(n³) or O(n²). The O(n) insight: each element arr[i] is the minimum of exactly those subarrays where it is the smallest element — the subarrays whose left and right extent don't reach a smaller element.</p>
+    <p>Use two monotonic stack passes: prev_smaller (strict) gives the left boundary of arr[i]'s dominance, next_smaller_or_equal gives the right boundary. The number of subarrays where arr[i] is the minimum = left_span × right_span, and arr[i]'s total contribution = arr[i] × left_span × right_span.</p>
+    <p>The strict/non-strict asymmetry on equal elements prevents double-counting: for equal-valued adjacent elements, exactly one is counted as the minimum.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">LeetCode #907 — Sum of Subarray Minimums</div><div class="why">O(n) with monotonic stack; O(n³) brute force is too slow</div>
+    <div class="sit">Statistical analysis: total min contribution across all windows</div><div class="why">Aggregate minimum over all possible contiguous views</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Each element's contribution = value × (distance to prev-smaller) × (distance to next-smaller). Compute both with two stack passes.</div>
+    <div class="ascii">
+arr: [3, 1, 2, 4]   MOD = 1e9+7
+
+For arr[i], count subarrays where arr[i] is minimum:
+  left[i]  = i - prev_strictly_smaller_index  (use -1 if none)
+  right[i] = next_smaller_or_equal_index - i  (use n if none)
+
+  i=0, val=3: prev=-1→left=0-(-1)=1, next=1→right=1-0=1, contrib=3*1*1=3
+  i=1, val=1: prev=-1→left=1-(-1)=2, next=4→right=4-1=3, contrib=1*2*3=6
+  i=2, val=2: prev=1→left=2-1=1,     next=4→right=4-2=2, contrib=2*1*2=4
+  i=3, val=4: prev=2→left=3-2=1,     next=4→right=4-3=1, contrib=4*1*1=4
+
+Total = 3+6+4+4 = 17
+
+Verify manually:
+  [3]=3, [1]=1, [2]=2, [4]=4
+  [3,1]=1, [1,2]=1, [2,4]=2
+  [3,1,2]=1, [1,2,4]=1
+  [3,1,2,4]=1
+  Sum = 3+1+2+4+1+1+2+1+1+1 = 17 ✓</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">#define MOD 1000000007LL
+
+long long sum_subarray_mins(int *arr, int n) {
+    int *left  = malloc(n * sizeof(int));  /* distance to prev strictly smaller */
+    int *right = malloc(n * sizeof(int));  /* distance to next smaller or equal */
+    int stk[n], top;
+
+    /* prev strictly smaller — use > to pop (keep equal elements) */
+    top = 0;
+    for (int i = 0; i < n; i++) {
+        while (top > 0 && arr[stk[top-1]] >= arr[i]) top--;
+        left[i] = (top > 0) ? i - stk[top-1] : i + 1;
+        stk[top++] = i;
+    }
+
+    /* next smaller or equal — use >= to pop (consume equal elements) */
+    top = 0;
+    for (int i = n - 1; i >= 0; i--) {
+        while (top > 0 && arr[stk[top-1]] > arr[i]) top--;
+        right[i] = (top > 0) ? stk[top-1] - i : n - i;
+        stk[top++] = i;
+    }
+
+    long long ans = 0;
+    for (int i = 0; i < n; i++)
+        ans = (ans + (long long)arr[i] * left[i] % MOD * right[i]) % MOD;
+
+    free(left); free(right);
+    return ans;
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+arr=[2,2]:
+  left: i=0 prev none → left[0]=1. i=1: arr[0]=2 >= arr[1]=2 → pop, empty → left[1]=2.
+  right: i=1 next none → right[1]=1. i=0: arr[1]=2 > arr[0]=2? No → right[0]=1.
+  contrib[0]=2*1*1=2, contrib[1]=2*2*1=4. total=6.
+  Manual: [2]=2, [2]=2, [2,2]=2. sum=6 ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Use <em>strictly</em> smaller for the left boundary and <em>smaller or equal</em> for the right boundary (or vice versa, consistently). This asymmetry prevents double-counting when elements are equal. If you use the same comparison in both directions, equal-element subarrays are counted twice.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Why is the contribution of element arr[i] = arr[i] × left[i] × right[i]?</li>
+      <li>Why must the left and right boundary computations use different strictness (strict vs non-strict)?</li>
+      <li>For arr=[1,1,1], what is the sum of subarray minimums?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Sum of subarray mins: contribution = val × left_span × right_span; two-pass monotonic stack</div>
+    <div class="trigger-variants">
+      <li>Left: strictly smaller (pop >=); right: smaller or equal (pop >)</li>
+      <li>Asymmetry prevents double-counting equal elements</li>
+    </div>
+  </div>
+</div>
+
+<!-- ST20 -->
+<div class="card" id="st20">
+  <div class="card-header">
+    <span class="card-id">ST20</span>
+    <h2 class="card-title">132 Pattern Detection</h2>
+    <span class="category-badge">Monotonic Stack</span>
+  </div>
+
+  <div class="background">
+    <p>Find whether a "132 pattern" exists: indices i &lt; j &lt; k such that arr[i] &lt; arr[k] &lt; arr[j]. The "3" is the tallest, "1" is the smallest (leftmost), and "2" is between them but comes after the "3" in position.</p>
+    <p>The O(n) stack approach scans right-to-left. Maintain a decreasing stack. Track a variable <code>k_val</code> (the "2" in 132): whenever you pop an element from the stack (because a taller element is coming from the right), the popped element is the best candidate for "2" seen so far. If the current element (scanning right-to-left) is less than <code>k_val</code>, you've found the "1" and the pattern exists.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">LeetCode #456 — 132 Pattern</div><div class="why">O(n) with right-to-left stack scan; hard to see without the intuition</div>
+    <div class="sit">Detecting non-monotone triples in a time series</div><div class="why">Anomaly: value X then Y>X then Z where X<Z<Y</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Scan right-to-left. Stack holds "3" candidates. k_val tracks the best "2" seen. If arr[i] < k_val, found "1" → pattern exists.</div>
+    <div class="ascii">
+arr: [3, 1, 4, 2]   Looking for i<j<k with arr[i]<arr[k]<arr[j]
+
+Scan right to left. k_val = -INF (no "2" yet).
+
+i=3, val=2: stack empty → push 3        stk:[2]  k_val=-INF
+i=2, val=4: 4>2 → POP 2: k_val=max(-INF,2)=2   stk:[] push 2  stk:[4]
+i=1, val=1: 1 < k_val(2) → FOUND! (i=1 is the "1", k_val=2 is the "2", 4 is the "3")
+  Pattern: arr[1]=1 < arr[3]=2 < arr[2]=4, indices 1<2<3 ✓  return true
+
+Another example: [1,2,3,4] → no pattern (strictly increasing, no 2 ever gets popped)
+k_val stays -INF → false ✓</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">int find_132_pattern(int *nums, int n) {
+    int stk[n], top = 0;
+    int k_val = INT_MIN;   /* best "2" seen so far (must be > some element to its left) */
+
+    for (int i = n - 1; i >= 0; i--) {
+        if (nums[i] < k_val) return 1;   /* found "1" — pattern exists */
+        /* pop all elements smaller than nums[i] — they become candidates for "2" */
+        while (top > 0 && stk[top-1] < nums[i]) {
+            int popped = stk[--top];
+            if (popped > k_val) k_val = popped;  /* update best "2" */
+        }
+        stk[top++] = nums[i];
+    }
+    return 0;
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+arr=[-1,3,2,0]:
+  i=3,val=0: stk empty → push 0. k=-INF.
+  i=2,val=2: 2>0 → pop 0: k=0. push 2. stk:[2].
+  i=1,val=3: 3>2 → pop 2: k=2. push 3. stk:[3].
+  i=0,val=-1: -1 < k(2) → return 1 ✓ (pattern: -1,3,2)</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Scan right-to-left, not left-to-right. The reason: scanning right-to-left lets you find the "3" (tallest, middle position) first, then use its pop to discover the "2" (the candidate between 1 and 3), and finally check if the "1" (leftmost, smallest) exists anywhere to its left.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>What does k_val represent, and why is it updated only when an element is popped?</li>
+      <li>Why is the scan direction right-to-left rather than left-to-right?</li>
+      <li>For arr=[1,0,1,-4,-3], does the 132 pattern exist? Trace the algorithm.</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">132 pattern: right-to-left scan; pop → update k_val ("2"); if curr &lt; k_val → found "1"</div>
+    <div class="trigger-variants">
+      <li>Decreasing stack; k_val = best popped value so far</li>
+      <li>Return true immediately when arr[i] &lt; k_val</li>
+    </div>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 
 <script>hljs.highlightAll();</script>
