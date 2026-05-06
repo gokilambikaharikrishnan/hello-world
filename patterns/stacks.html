@@ -1979,6 +1979,275 @@ arr=[-1,3,2,0]:
   </div>
 </div>
 
+
+<!-- ST21 -->
+<div class="card" id="st21">
+  <div class="card-header">
+    <span class="card-id">ST21</span>
+    <h2 class="card-title">Online Stock Span</h2>
+    <span class="category-badge">Monotonic Stack</span>
+  </div>
+
+  <div class="background">
+    <p>The stock span for today is the number of consecutive days (including today) where the stock price was less than or equal to today's price. Design a data structure that computes this online (one price at a time) in amortised O(1) per price.</p>
+    <p>This is the previous-greater-element problem in disguise: the span = today's index − index of the previous day with a higher price. Use a stack of (price, span) pairs. When today's price is higher than the stack top, the stack top's entire span merges into today's span — pop it and accumulate its span.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">LeetCode #901 — Online Stock Span</div><div class="why">Streaming previous-greater with accumulated span</div>
+    <div class="sit">Moving dominance window in a real-time data feed</div><div class="why">How many recent readings were below the current value?</div>
+    <div class="sit">Embedded: how many consecutive sensor samples were below current reading</div><div class="why">Running streak detector in streaming sensor data</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Stack stores (price, span) pairs. When today >= top price, add top's span to today's span and pop. Result is the cumulative span.</div>
+    <div class="ascii">
+Prices arrive one at a time: [100, 80, 60, 70, 60, 75, 85]
+
+price=100: stk empty → span=1.     push(100,1)   stk:[(100,1)]
+price=80:  80<100 → span=1.         push(80,1)    stk:[(100,1),(80,1)]
+price=60:  60<80  → span=1.         push(60,1)    stk:[(100,1),(80,1),(60,1)]
+price=70:  70>60 → pop(60,1): span=1+1=2
+           70<80  → stop. span=2.   push(70,2)    stk:[(100,1),(80,1),(70,2)]
+price=60:  60<70  → span=1.         push(60,1)    stk:[...,(70,2),(60,1)]
+price=75:  75>60 → pop(60,1): span=1+1=2
+           75>70 → pop(70,2): span=2+2=4
+           75<80  → stop. span=4.   push(75,4)    stk:[(100,1),(80,1),(75,4)]
+price=85:  85>75 → pop(75,4): span=1+4=5
+           85>80 → pop(80,1): span=5+1=6
+           85<100 → stop. span=6.   push(85,6)    stk:[(100,1),(85,6)]
+
+Spans: [1, 1, 1, 2, 1, 4, 6] ✓</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">typedef struct { int price; int span; } StockFrame;
+
+typedef struct {
+    StockFrame stk[10001];
+    int top;
+} StockSpanner;
+
+void ss_init(StockSpanner *ss) { ss->top = 0; }
+
+int ss_next(StockSpanner *ss, int price) {
+    int span = 1;
+    /* merge spans of all days with price <= today */
+    while (ss->top > 0 && ss->stk[ss->top-1].price <= price) {
+        span += ss->stk[--ss->top].span;
+    }
+    ss->stk[ss->top++] = (StockFrame){price, span};
+    return span;
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+prices=[7,7,7,7]:  Each price=7: first span=1, then each subsequent merges previous (7<=7 → pop and add span).
+  p=7: span=1. p=7: pop(7,1): span=2. p=7: pop(7,2): span=3. p=7: pop(7,3): span=4.
+  Spans: [1,2,3,4] ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>The comparison is <code>&lt;=</code> (pop when top price is less than or equal to today's price). Using strict <code>&lt;</code> would fail for equal prices — a day with the same price should still be included in the span count.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>What does the span stored in each stack frame represent?</li>
+      <li>Why do we add the popped frame's span rather than counting +1 per pop?</li>
+      <li>What is the amortised time complexity per call, and why?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Stock span: stack of (price, span); pop and accumulate span while top &lt;= today; O(1) amortised</div>
+    <div class="trigger-variants">
+      <li>Each frame's span = its own day + all days it previously absorbed</li>
+      <li>Use &lt;= to include equal-price days in the span</li>
+    </div>
+  </div>
+</div>
+
+<!-- ST22 -->
+<div class="card" id="st22">
+  <div class="card-header">
+    <span class="card-id">ST22</span>
+    <h2 class="card-title">Remove K Digits to Make Smallest Number</h2>
+    <span class="category-badge">Monotonic Stack</span>
+  </div>
+
+  <div class="background">
+    <p>Given a number as a string and a budget of k removals, remove k digits to produce the lexicographically smallest number. The greedy insight: from left to right, whenever you see a digit smaller than the stack top, removing the top produces a smaller number. Use an increasing monotonic stack; pop (remove) the top when the current digit is smaller, as long as k &gt; 0.</p>
+    <p>After processing all digits, if k &gt; 0 remaining removals, remove from the end (the largest digits are now at the end of an already-increasing stack). Strip leading zeros in the final result.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">LeetCode #402 — Remove K Digits</div><div class="why">Greedy stack, O(n) solution</div>
+    <div class="sit">Minimising a result string by deleting characters with a budget</div><div class="why">Same pattern generalises to lexicographic minimisation</div>
+    <div class="sit">Embedded: build the smallest valid command code by dropping excess bits</div><div class="why">Protocol field optimisation with a fixed number of allowed drops</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Increasing stack. Pop when current digit < top AND k > 0. After scan, if k > 0, remove from the end.</div>
+    <div class="ascii">
+num="1432219", k=3
+
+i=0, '1': push 1          stk:[1]    k=3
+i=1, '4': 4>1 → push 4   stk:[1,4]  k=3
+i=2, '3': 3<4 → POP 4 (k=2)        stk:[1]    k=2
+          3>1 → push 3   stk:[1,3]
+i=3, '2': 2<3 → POP 3 (k=1)        stk:[1]    k=1
+          2>1 → push 2   stk:[1,2]
+i=4, '2': 2=2 → push 2   stk:[1,2,2] k=1
+i=5, '1': 1<2 → POP 2 (k=0)        stk:[1,2]  k=0
+          k=0, stop popping → push 1  stk:[1,2,1]
+i=6, '9': k=0 → push 9   stk:[1,2,1,9]
+
+k=0 → no trailing removal needed.
+Result: "1219"
+
+Wait, manual check: remove 4,3,2 from "1432219" → "1219" ✓</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">char *remove_k_digits(const char *num, int k) {
+    int n = strlen(num);
+    char *stk = malloc(n + 1);
+    int top = 0;
+
+    for (int i = 0; i < n; i++) {
+        /* pop larger digits as long as budget allows */
+        while (k > 0 && top > 0 && stk[top-1] > num[i]) {
+            top--;
+            k--;
+        }
+        stk[top++] = num[i];
+    }
+    /* if budget remains, remove from the end */
+    top -= k;
+
+    /* strip leading zeros */
+    int start = 0;
+    while (start < top - 1 && stk[start] == '0') start++;
+
+    stk[top] = '\0';
+    return stk + start;   /* note: caller must not free at wrong offset */
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+num="10", k=2:  push '1'. '0'<'1' → pop (k=1), push '0'. k=1 → remove 1 from end: top=1.
+  stk="0". No leading zero issue (it's the only char). Result: "0" ✓
+num="10", k=1:  push '1'. '0'<'1' → pop (k=0), push '0'. Result: "0" ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>After the main loop, use remaining k to trim from the right (<code>top -= k</code>). Don't pop in a second loop — just decrement top. Also handle the all-zeros edge case: strip leading zeros but always return at least "0" if the result is empty or all zeros.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>For num="9", k=1, what is the result and why?</li>
+      <li>Why does the "remove from end" step handle remaining k after the loop?</li>
+      <li>For num="10200", k=1, trace the algorithm and give the result.</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Remove K digits: increasing stack; pop top when top &gt; curr and k&gt;0; trim end if k remains</div>
+    <div class="trigger-variants">
+      <li>Budget k decrements on each pop</li>
+      <li>Strip leading zeros; return "0" if empty</li>
+    </div>
+  </div>
+</div>
+
+<!-- ST23 -->
+<div class="card" id="st23">
+  <div class="card-header">
+    <span class="card-id">ST23</span>
+    <h2 class="card-title">Buildings with Ocean View</h2>
+    <span class="category-badge">Monotonic Stack</span>
+  </div>
+
+  <div class="background">
+    <p>Buildings face the ocean on the right. A building has an ocean view if all buildings to its right are strictly shorter. Find all buildings with ocean views, from left to right.</p>
+    <p>Monotonic stack approach: scan left to right with a decreasing stack. A building keeps its ocean view unless a taller building arrives to its right. At the end, whatever remains on the stack has an unobstructed view — those are the answers.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">LeetCode #1762 — Buildings with Ocean View</div><div class="why">Decreasing stack; remaining elements at end are the answer</div>
+    <div class="sit">Visibility analysis: which elements in a sequence dominate all elements to their right</div><div class="why">Any "visible from the right" query</div>
+    <div class="sit">Embedded: which sensor nodes have unobstructed line-of-sight to the base station</div><div class="why">Signal-path visibility in a linear array of nodes</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Scan left-to-right. Decreasing stack. Pop buildings that lose their view. What's left at the end = ocean view buildings.</div>
+    <div class="ascii">
+heights: [4, 2, 3, 1]   (ocean is on the right)
+
+i=0, h=4: push 0          stk:[0(4)]
+i=1, h=2: 2<4 → push 1   stk:[0(4),1(2)]
+i=2, h=3: 3>2 → POP 1: building 1 loses its view!
+          3<4 → push 2   stk:[0(4),2(3)]
+i=3, h=1: 1<3 → push 3   stk:[0(4),2(3),3(1)]
+
+Remaining on stack: indices [0, 2, 3]
+Buildings 0(h=4), 2(h=3), 3(h=1) have ocean view ✓
+
+Building 1 (h=2) was blocked by building 2 (h=3).</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">/* Returns result in ans[], sets *count to number of results */
+void ocean_view(int *heights, int n, int *ans, int *count) {
+    int stk[n], top = 0;
+
+    for (int i = 0; i < n; i++) {
+        /* pop buildings that are now blocked by building i */
+        while (top > 0 && heights[stk[top-1]] <= heights[i])
+            top--;   /* that building loses its view */
+        stk[top++] = i;
+    }
+    /* remaining elements have ocean view */
+    *count = top;
+    for (int i = 0; i < top; i++) ans[i] = stk[i];
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+heights=[1,3,2,4]:
+  push 0(1). 3>1 → pop 0, push 1(3). 2<3 → push 2(2). 4>2 → pop 2; 4>3 → pop 1. push 3(4).
+  stk=[3]. Only building 3 (h=4) has ocean view ✓ (tallest building, unobstructed)
+
+heights=[1,2,3,4]:
+  Each new building blocks all previous → stk=[3] at end. Only building 3 ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Use <code>&lt;=</code> in the pop condition so buildings of equal height also lose their view (a building with an equal-height blocker to its right doesn't have an unobstructed view). The problem typically says "strictly shorter to the right" — so equal-height is a blocker and warrants popping.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Why are the answers in sorted order (left to right) at the end without any extra sorting?</li>
+      <li>For heights=[4,3,2,1], what does the stack contain at the end?</li>
+      <li>How does this problem differ from "next greater element" — what question does each answer?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Ocean view: decreasing stack; pop on &lt;=; indices remaining on stack at end = answer</div>
+    <div class="trigger-variants">
+      <li>Answer is the stack contents at the end, already in sorted order</li>
+      <li>Pop with &lt;= to handle equal-height blockers correctly</li>
+    </div>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 
 <script>hljs.highlightAll();</script>
