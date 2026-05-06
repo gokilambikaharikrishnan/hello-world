@@ -500,6 +500,476 @@ Normal:    top=1, pop:
   </div>
 </div>
 
+
+<!-- ST05 -->
+<div class="card" id="st05">
+  <div class="card-header">
+    <span class="card-id">ST05</span>
+    <h2 class="card-title">Valid Parentheses — Push Open, Match on Close</h2>
+    <span class="category-badge">Bracket / Matching</span>
+  </div>
+
+  <div class="background">
+    <p>Given a string containing only <code>(</code>, <code>)</code>, <code>[</code>, <code>]</code>, <code>{</code>, <code>}</code>, determine whether the brackets are correctly matched and nested. The rule: every closing bracket must match the most recently opened unmatched bracket.</p>
+    <p>"Most recently opened" is exactly LIFO — the stack holds the opens we haven't matched yet. When we see a close, we check whether it matches the top of the stack. If yes, pop and continue. If no, or if the stack is empty, the string is invalid.</p>
+    <p>This pattern is the fundamental building block of every parser, compiler, and syntax validator ever written. XML/HTML tag matching, JSON validation, and expression parsers all reduce to this core idea.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Compiler / interpreter — validate expression brackets</div><div class="why">Syntax error if brackets don't match</div>
+    <div class="sit">JSON / XML validator</div><div class="why">Open tags/braces must be closed in reverse order</div>
+    <div class="sit">Firmware command-line parser — validate nested commands</div><div class="why">Embedded CLI with grouped command syntax</div>
+    <div class="sit">Regular expression engine — validate character classes []</div><div class="why">Nested quantifiers must be balanced</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Rule: push every open bracket; on close, check it matches the top then pop.</div>
+    <div class="ascii">
+Input: "({[]})"
+
+char  action          stack
+ (    push (          [(]
+ {    push {          [(, {]
+ [    push [          [(, {, []
+ ]    close ]: top=[  pop → match ✓   [(, {]
+ }    close }: top={  pop → match ✓   [(]
+ )    close ): top=(  pop → match ✓   []
+end   stack empty → VALID ✓
+
+Input: "([)]"
+char  action          stack
+ (    push (          [(]
+ [    push [          [(, []
+ )    close ): top=[  mismatch! → INVALID ✗</div>
+    <div class="aha">Two failure modes: (1) a close bracket doesn't match the top — wrong type of close; (2) the stack is empty when we see a close — too many closes. A third: stack non-empty at the end — unclosed opens.</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">int is_valid(const char *s) {
+    char stk[10001];
+    int top = 0;
+
+    for (; *s; s++) {
+        if (*s == '(' || *s == '[' || *s == '{') {
+            stk[top++] = *s;          /* push any open bracket */
+        } else {
+            if (top == 0) return 0;   /* close but stack empty */
+            char open = stk[--top];   /* pop */
+            if (*s == ')' && open != '(') return 0;
+            if (*s == ']' && open != '[') return 0;
+            if (*s == '}' && open != '{') return 0;
+        }
+    }
+    return top == 0;  /* valid only if no unmatched opens remain */
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+"()[]{}":
+  (, push. ), pop (→ match. [, push. ], pop [→ match. {, push. }, pop {→ match.
+  top=0 → return 1 ✓
+
+"(]":
+  (, push. ], top=(, (≠[ → return 0 ✓
+
+"(((":
+  (, push×3. end: top=3≠0 → return 0 ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Check <code>top == 0</code> before popping on a close bracket — otherwise <code>--top</code> goes to -1 and you read garbage. Also, at the end return <code>top == 0</code>, not just <code>1</code> — unclosed opens are invalid even if all closes matched.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Why does "(]" fail even though it has exactly one open and one close bracket?</li>
+      <li>What does it mean when the stack is non-empty at the end of the string?</li>
+      <li>How would you extend this to match HTML tags like &lt;div&gt;…&lt;/div&gt;?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Bracket matching: push opens; on close, pop and verify match; end: stack must be empty</div>
+    <div class="trigger-variants">
+      <li>Empty stack on close → invalid (too many closes)</li>
+      <li>Top mismatch on close → invalid (wrong type)</li>
+      <li>Non-empty stack at end → invalid (unclosed opens)</li>
+    </div>
+  </div>
+</div>
+
+<!-- ST06 -->
+<div class="card" id="st06">
+  <div class="card-header">
+    <span class="card-id">ST06</span>
+    <h2 class="card-title">Longest Valid Parentheses Substring</h2>
+    <span class="category-badge">Bracket / Matching</span>
+  </div>
+
+  <div class="background">
+    <p>Find the length of the longest contiguous substring of correctly balanced parentheses. The trick: use a stack of <em>indices</em> rather than characters. Push the index of every <code>(</code>. When we see <code>)</code>, pop the matching <code>(</code>'s index; the length of the valid substring is <code>i - stack_top</code> (the index below the just-matched pair acts as the left boundary).</p>
+    <p>Initialise the stack with -1 as a sentinel so the first unmatched <code>)</code> doesn't need a special case — it just becomes the new boundary.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Find the longest well-formed expression in a partially corrupt stream</div><div class="why">Recover the valid portion from garbled input</div>
+    <div class="sit">LeetCode #32 — hard classic, interview staple</div><div class="why">Demonstrates stack-of-indices technique</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Stack holds indices. Bottom of stack always holds the boundary of the last unmatched ')' (or -1 initially).</div>
+    <div class="ascii">
+Input: "()(()" indices 0-4
+
+stk: [-1]   (sentinel)
+
+i=0 '(':  push 0      stk: [-1, 0]
+i=1 ')':  pop 0       stk: [-1]
+          length = i - stk_top = 1 - (-1) = 2   max=2
+
+i=2 '(':  push 2      stk: [-1, 2]
+i=3 '(':  push 3      stk: [-1, 2, 3]
+i=4 ')':  pop 3       stk: [-1, 2]
+          length = 4 - stk_top = 4 - 2 = 2      max=2
+
+Result: 2
+
+Input: ")()())"
+i=0 ')':  pop -1 (sentinel)! stk empty → push 0 as new boundary
+          stk: [0]
+i=1 '(':  push 1   stk:[0,1]
+i=2 ')':  pop 1    stk:[0]   len=2-0=2   max=2
+i=3 '(':  push 3   stk:[0,3]
+i=4 ')':  pop 3    stk:[0]   len=4-0=4   max=4
+i=5 ')':  pop 0    stk empty → push 5 as new boundary
+Result: 4</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">int longest_valid_parens(const char *s) {
+    int n = strlen(s);
+    int stk[n + 1], top = 0;
+    stk[top++] = -1;   /* sentinel: left boundary */
+    int best = 0;
+
+    for (int i = 0; i < n; i++) {
+        if (s[i] == '(') {
+            stk[top++] = i;          /* push index of open */
+        } else {
+            top--;                   /* pop the matching open (or sentinel) */
+            if (top == 0) {
+                stk[top++] = i;      /* no match — this ')' is new boundary */
+            } else {
+                int len = i - stk[top - 1];
+                if (len > best) best = len;
+            }
+        }
+    }
+    return best;
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+"(()":
+  push -1. i=0 '(' push 0. i=1 '(' push 1.
+  i=2 ')' pop 1: top=2, len=2-stk[1]=2-0=2. max=2.
+  end. return 2 ✓ (longest is "()")
+
+"(()):
+  push -1. push 0. push 1.
+  i=2 ')' pop 1: top=2, len=2-0=2. max=2.
+  i=3 ')' pop 0: top=1, len=3-(-1)=4. max=4.
+  return 4 ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>When you pop and the stack becomes empty, push the current index <em>i</em> as the new boundary — don't just leave the stack empty. The next valid pair needs a boundary to measure against. Forgetting this gives wrong lengths after an unmatched <code>)</code>.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Why does the stack hold indices rather than the characters themselves?</li>
+      <li>What role does the initial -1 sentinel play?</li>
+      <li>For ")()(", what is the longest valid substring and what does the stack look like at the end?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Longest valid parens: stack of indices, sentinel -1; length = i − stack top after match</div>
+    <div class="trigger-variants">
+      <li>On ')' with empty stack after pop → push i as new boundary</li>
+      <li>Length of matched segment = current index − index below the match</li>
+    </div>
+  </div>
+</div>
+
+<!-- ST07 -->
+<div class="card" id="st07">
+  <div class="card-header">
+    <span class="card-id">ST07</span>
+    <h2 class="card-title">Minimum Removals to Make Valid Parentheses</h2>
+    <span class="category-badge">Bracket / Matching</span>
+  </div>
+
+  <div class="background">
+    <p>Given a string with only <code>(</code> and <code>)</code>, find the minimum number of brackets to remove so the remaining string is valid. A greedy two-pass approach: scan left-to-right counting unmatched closes, then right-to-left counting unmatched opens. The sum is the answer.</p>
+    <p>The stack-based equivalent: use the stack to count unmatched opens; use a counter for unmatched closes. At the end, <code>opens_on_stack + close_counter</code> = minimum removals.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Auto-correcting code formatter — minimum edits to fix brackets</div><div class="why">Find fewest removals to produce valid syntax</div>
+    <div class="sit">LeetCode #921 — minimum add to make parentheses valid</div><div class="why">Same count — removals vs additions are symmetric</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Greedy scan: match opens to closes greedily; what's left is the minimum to remove.</div>
+    <div class="ascii">
+Input: "())(()"   answer: 2
+
+Left-to-right pass — count unmatched ')':
+  char   open_count   close_removed
+   (        1              0
+   )        0              0      (matched with open)
+   )        0              1      (no open → remove this ')')
+   (        1              1
+   (        2              1
+   )        1              1      (matched)
+  unmatched opens = 1
+
+  total = unmatched_opens(1) + close_removed(1) = 2 ✓
+
+Intuition: every unmatched ')' we count; at the end the stack holds unmatched '('.
+Both counts are removals needed.</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">int min_remove_to_valid(const char *s) {
+    int open = 0;   /* unmatched '(' remaining on virtual stack */
+    int close = 0;  /* unmatched ')' seen so far */
+
+    for (; *s; s++) {
+        if (*s == '(') {
+            open++;
+        } else {          /* ')' */
+            if (open > 0)
+                open--;   /* matched with an unmatched '(' */
+            else
+                close++;  /* no open available — must remove this ')' */
+        }
+    }
+    return open + close;  /* unmatched opens + unmatched closes */
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+"(((":  open grows to 3. close=0. return 3 ✓
+")))":  open=0 throughout. close grows to 3. return 3 ✓
+"())(": (→open=1, )→open=0, )→close=1, (→open=1. return 2 ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>The <code>open</code> counter acts as a virtual stack depth. You never need an actual stack here — <code>open</code> is sufficient because you only care about the count, not which specific open each close matched.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>For "(()", what are the values of open and close at the end?</li>
+      <li>Why is the answer open + close and not max(open, close)?</li>
+      <li>How does this relate to LeetCode #921 (minimum additions)?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Min removals: count unmatched opens + unmatched closes in one pass</div>
+    <div class="trigger-variants">
+      <li>On '(': open++. On ')': if open>0 open-- else close++</li>
+      <li>Answer = open + close</li>
+    </div>
+  </div>
+</div>
+
+<!-- ST08 -->
+<div class="card" id="st08">
+  <div class="card-header">
+    <span class="card-id">ST08</span>
+    <h2 class="card-title">Score of Parentheses</h2>
+    <span class="category-badge">Bracket / Matching</span>
+  </div>
+
+  <div class="background">
+    <p>A balanced parentheses string has a score: <code>()</code> = 1, and concatenated strings add scores, while a string wrapped in outer parens doubles the inner score. E.g. <code>(())</code> = 2, <code>()()</code> = 2, <code>((()))</code> = 4.</p>
+    <p>Stack approach: push 0 when you see <code>(</code> (placeholder for "score of what's inside"). When you see <code>)</code>, pop the top (the inner score), and add <code>max(2*inner, 1)</code> to the new top. The bottom of the stack accumulates the total.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Evaluate a scoring rule encoded as nested brackets</div><div class="why">Recursive score structure maps naturally to a stack</div>
+    <div class="sit">LeetCode #856 — score of parentheses</div><div class="why">Shows how stacks handle nested aggregation</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Stack holds running scores at each nesting level. '(' opens a new level; ')' collapses it into the level below.</div>
+    <div class="ascii">
+Input: "(()(()))"
+
+char  action                      stack
+ (    push 0 (new level)          [0, 0]
+ (    push 0                      [0, 0, 0]
+ )    pop 0, inner=0, add max(2*0,1)=1 to top   [0, 1]
+ (    push 0                      [0, 1, 0]
+ (    push 0                      [0, 1, 0, 0]
+ )    pop 0, add max(1)=1         [0, 1, 1]
+ )    pop 1, add max(2*1,1)=2     [0, 3]
+ )    pop 3, add max(2*3,1)=6     [6]
+
+Result: 6 ✓  ("(()(()))": outer doubles inner (()(())) = (1+2)×2 = 6)</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">int score_of_parens(const char *s) {
+    int stk[200], top = 0;
+    stk[top++] = 0;   /* base score accumulator */
+
+    for (; *s; s++) {
+        if (*s == '(') {
+            stk[top++] = 0;              /* new nesting level */
+        } else {
+            int inner = stk[--top];      /* pop inner score */
+            int add = inner == 0 ? 1 : 2 * inner;  /* "()" → 1, else double */
+            stk[top - 1] += add;         /* add to enclosing level */
+        }
+    }
+    return stk[0];
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+"()":    push 0. ')': pop 0, inner=0 → add 1 to stk[0]. stk=[1]. return 1 ✓
+"(())":  push 0, push 0. ')': pop 0 → add 1, stk=[1]. ')': pop 1 → add 2, stk=[2]. return 2 ✓
+"()()":  push 0. ')': add 1, stk=[1]. '(': push 0, stk=[1,0]. ')': add 1, stk=[2]. return 2 ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>The initial <code>stk[0]=0</code> is the global accumulator. Don't forget to push it before entering the loop — otherwise the first <code>)</code> pops into an empty stack. The invariant is: there is always at least one element on the stack (the current level's accumulator).</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>What does a 0 on the stack represent when we pop on seeing ')'?</li>
+      <li>For "(()())", compute the score step by step.</li>
+      <li>Why is the score <code>max(2*inner, 1)</code> instead of <code>2*inner + 1</code>?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Score of parens: push 0 on '('; on ')' pop inner, add max(2*inner,1) to new top</div>
+    <div class="trigger-variants">
+      <li>inner==0 means "()" → score 1; inner>0 means nested → double it</li>
+      <li>Start with stk=[0]; result is stk[0] at end</li>
+    </div>
+  </div>
+</div>
+
+<!-- ST09 -->
+<div class="card" id="st09">
+  <div class="card-header">
+    <span class="card-id">ST09</span>
+    <h2 class="card-title">Remove Duplicate Letters (Lexicographically Smallest)</h2>
+    <span class="category-badge">Bracket / Matching</span>
+  </div>
+
+  <div class="background">
+    <p>Remove duplicate letters so each letter appears exactly once and the result is the lexicographically smallest possible subsequence. This is a greedy stack problem: maintain a stack of chosen characters. When you encounter a new character, pop the top if: (1) the top is greater than the current character (we can do better by swapping), and (2) the top character still appears later in the string (so we won't lose it permanently).</p>
+    <p>This pattern — "pop when the top is suboptimal AND the element can be recovered later" — appears in several "smallest/largest result with constraints" problems.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">LeetCode #316 — Remove Duplicate Letters</div><div class="why">Greedy stack to build lexicographically smallest subsequence</div>
+    <div class="sit">Building the smallest valid string by removing excess characters</div><div class="why">Same pattern: maintain sorted-ish stack with future availability check</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Two preconditions to pop the top: top &gt; current AND top appears again later (last_occurrence[top] &gt; i).</div>
+    <div class="ascii">
+Input: "bcabc"
+last_occurrence: b=3, c=4, a=2
+
+i=0 'b': stack empty → push b        stk: [b]
+i=1 'c': c>b? no → push c            stk: [b,c]
+i=2 'a': a<c AND last[c]=4>2 → pop c  stk: [b]
+         a<b AND last[b]=3>2 → pop b  stk: []
+         push a                        stk: [a]
+i=3 'b': b>a? no → push b            stk: [a,b]
+         'b' already in stack? NO (we track in_stack[])
+         Wait: b not in stack → push   stk: [a,b]
+i=4 'c': c>b? no → push c            stk: [a,b,c]
+         'c' not in stack → push
+
+Result: "abc" ✓
+
+Key: skip push if character is already in the stack (use in_stack[] bool array).</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">char *remove_dup_letters(const char *s) {
+    int last[26] = {0};        /* last occurrence index of each letter */
+    int in_stk[26] = {0};      /* is this letter currently in stack */
+    int n = strlen(s);
+
+    for (int i = 0; i < n; i++) last[s[i]-'a'] = i;
+
+    char stk[27]; int top = 0;
+
+    for (int i = 0; i < n; i++) {
+        int c = s[i] - 'a';
+        if (in_stk[c]) continue;     /* already in result — skip */
+
+        /* pop top if: top > current AND top appears later */
+        while (top > 0 && stk[top-1] > s[i] && last[stk[top-1]-'a'] > i) {
+            in_stk[stk[--top] - 'a'] = 0;
+        }
+        stk[top++] = s[i];
+        in_stk[c] = 1;
+    }
+    stk[top] = '\0';
+    return strdup(stk);
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+"cbacdcbc": last: c=7,b=6,a=3,d=4
+  c: push c [c]. b: b<c, last[c]=7>0 → pop c, push b [b].
+  a: a<b, last[b]=6>2 → pop b, push a [a].
+  c: push c [a,c]. d: push d [a,c,d].
+  c: c in stk → skip. b: push b [a,c,d,b]. c: c in stk → skip.
+  Result: "acdb" ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>You must check <em>both</em> pop conditions: top &gt; current (greedy: smaller is better) AND the top letter still appears later (safety: don't lose the last occurrence). Missing the second check removes a letter permanently.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Why do we skip a character that's already in the stack rather than pushing it again?</li>
+      <li>What happens if we remove the condition <code>last[top] &gt; i</code>? Give a counterexample.</li>
+      <li>Is the output always a subsequence of the original string? Why?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Remove dup letters: greedy stack — pop top if top > current AND top appears later</div>
+    <div class="trigger-variants">
+      <li>Track in_stack[] to skip already-included characters</li>
+      <li>Track last_occurrence[] to know if it's safe to pop</li>
+    </div>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 
 <script>hljs.highlightAll();</script>
