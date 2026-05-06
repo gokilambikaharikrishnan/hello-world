@@ -9,7 +9,7 @@
 | pointers.html | 30 | ✅ Done | 2026-05-05 |
 | strings.html | 44 | ✅ Done | 2026-05-04 |
 | linkedlist.html | 35 | ✅ Done | 2026-05-05 |
-| stacks.html | 32 | 🔄 Rework In Progress | 2026-05-06 |
+| stacks.html | 32 | ✅ Done | 2026-05-06 |
 | queues.html | 22 | ✅ Done | 2026-04-29 |
 
 ---
@@ -332,30 +332,30 @@
 - [x] ST12 · Next Smaller Element — Increasing Stack
 - [x] ST13 · Previous Greater Element
 - [x] ST14 · Previous Smaller Element
-- [ ] ST15 · Daily Temperatures — Store Indices Not Values
-- [ ] ST16 · Largest Rectangle in Histogram
-- [ ] ST17 · Maximal Rectangle in Binary Matrix
-- [ ] ST18 · Trapping Rain Water — Stack Approach
-- [ ] ST19 · Sum of Subarray Minimums
-- [ ] ST20 · 132 Pattern Detection
-- [ ] ST21 · Online Stock Span
-- [ ] ST22 · Remove K Digits to Make Smallest Number
-- [ ] ST23 · Buildings with Ocean View
+- [x] ST15 · Daily Temperatures — Store Indices Not Values
+- [x] ST16 · Largest Rectangle in Histogram
+- [x] ST17 · Maximal Rectangle in Binary Matrix
+- [x] ST18 · Trapping Rain Water — Stack Approach
+- [x] ST19 · Sum of Subarray Minimums
+- [x] ST20 · 132 Pattern Detection
+- [x] ST21 · Online Stock Span
+- [x] ST22 · Remove K Digits to Make Smallest Number
+- [x] ST23 · Buildings with Ocean View
 
 ### Expression / Calculation (ST24–ST27)
-- [ ] ST24 · Evaluate Reverse Polish Notation
-- [ ] ST25 · Basic Calculator — Plus/Minus with Parentheses
-- [ ] ST26 · Calculator with Multiply/Divide Precedence
-- [ ] ST27 · Decode String with Stack
+- [x] ST24 · Evaluate Reverse Polish Notation
+- [x] ST25 · Basic Calculator — Plus/Minus with Parentheses
+- [x] ST26 · Calculator with Multiply/Divide Precedence
+- [x] ST27 · Decode String with Stack
 
 ### Design Patterns (ST28–ST31)
-- [ ] ST28 · Min Stack — O(1) getMin with Auxiliary Stack
-- [ ] ST29 · Max Stack
-- [ ] ST30 · Queue Using Two Stacks
-- [ ] ST31 · Next Greater in Circular Array
+- [x] ST28 · Min Stack — O(1) getMin with Auxiliary Stack
+- [x] ST29 · Max Stack
+- [x] ST30 · Queue Using Two Stacks
+- [x] ST31 · Next Greater in Circular Array
 
 ### Simulation (ST32)
-- [ ] ST32 · Iterative DFS with Explicit Stack
+- [x] ST32 · Iterative DFS with Explicit Stack
 
 ---
 
@@ -364,7 +364,7 @@
 | Batch | Cards | Status |
 |-------|-------|--------|
 | Batch 1 | ST01–ST10 | ✅ Done |
-| Batch 2 | ST11–ST20 | 🔄 In Progress |
-| Batch 3 | ST21–ST32 | |
+| Batch 2 | ST11–ST20 | ✅ Done |
+| Batch 3 | ST21–ST32 | ✅ Done |
 
-**Currently reworking:** ST15 — Daily Temperatures
+**All 32 cards complete. Rework complete 2026-05-06.**
