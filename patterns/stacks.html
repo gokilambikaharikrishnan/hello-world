@@ -2628,6 +2628,461 @@ char *decode_string(const char *s) {
   </div>
 </div>
 
+
+<!-- ST28 -->
+<div class="card" id="st28">
+  <div class="card-header">
+    <span class="card-id">ST28</span>
+    <h2 class="card-title">Min Stack — O(1) getMin with Auxiliary Stack</h2>
+    <span class="category-badge">Design Patterns</span>
+  </div>
+
+  <div class="background">
+    <p>Design a stack that supports push, pop, top, and <code>getMin()</code> all in O(1). The challenge: when you pop the current minimum, what is the new minimum? You can't just track a single variable — it would lose track when the minimum is popped.</p>
+    <p>Solution: maintain a second "min stack" in parallel. When pushing, push to the min stack only if the new value is ≤ the current min (the min stack's top). When popping, if the value being popped equals the min stack's top, pop from the min stack too. The min stack always holds the minimum value reachable at each "depth level" of the main stack.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">LeetCode #155 — Min Stack</div><div class="why">Classic design problem: augment a stack with O(1) minimum query</div>
+    <div class="sit">Sliding window minimum when window grows from one end only</div><div class="why">Stack variant of the deque-based sliding window minimum</div>
+    <div class="sit">Embedded: track minimum voltage seen so far in a streaming ADC buffer</div><div class="why">Min query must be O(1) even as readings are pushed/popped</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Auxiliary min stack tracks the minimum at each nesting level. Push to min_stk when new val &lt;= current min. Pop from min_stk when main stack pop equals current min.</div>
+    <div class="ascii">
+Operations: push(5), push(3), push(7), push(2), getMin, pop, getMin
+
+push(5): main:[5]    min_stk:[5]   (5 <= nothing → push)
+push(3): main:[5,3]  min_stk:[5,3] (3<=5 → push)
+push(7): main:[5,3,7] min_stk:[5,3] (7>3 → don't push, min still 3)
+push(2): main:[5,3,7,2] min_stk:[5,3,2] (2<=3 → push)
+getMin(): min_stk top = 2 ✓
+pop():    pop 2. 2==min_stk top(2) → pop min_stk too. min_stk:[5,3]
+getMin(): min_stk top = 3 ✓ (correctly returns 3 after 2 was popped)</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">typedef struct {
+    int main_stk[10001]; int main_top;
+    int min_stk[10001];  int min_top;
+} MinStack;
+
+void ms_push(MinStack *ms, int val) {
+    ms->main_stk[ms->main_top++] = val;
+    /* push to min stack if val is a new minimum (or stack is empty) */
+    if (ms->min_top == 0 || val <= ms->min_stk[ms->min_top - 1])
+        ms->min_stk[ms->min_top++] = val;
+}
+
+int ms_pop(MinStack *ms) {
+    int val = ms->main_stk[--ms->main_top];
+    /* if popped value was the current min, pop min stack too */
+    if (val == ms->min_stk[ms->min_top - 1])
+        ms->min_top--;
+    return val;
+}
+
+int ms_top(MinStack *ms) { return ms->main_stk[ms->main_top - 1]; }
+int ms_getmin(MinStack *ms) { return ms->min_stk[ms->min_top - 1]; }</code></pre>
+  </div>
+
+  <div class="dry-run">
+push(2),push(0),push(3),push(0):
+  main:[2,0,3,0]  min_stk:[2,0,0]
+  getMin()=0. pop(): val=0==min_top(0) → pop min. min_stk:[2,0]. getMin()=0 ✓
+  pop(): val=3≠min_top(0) → don't pop min. min_stk:[2,0]. getMin()=0 ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Use <code>&lt;=</code> (not <code>&lt;</code>) when deciding to push onto the min stack. If you push only on strict improvement (<code>&lt;</code>), then popping a duplicate minimum would incorrectly also pop the min stack when only one copy should be removed. With <code>&lt;=</code>, each push of a minimum value pushes a corresponding copy onto the min stack.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Why does the min stack need to track duplicate minimums (e.g., push(2),push(2))?</li>
+      <li>What is the maximum size of the min stack relative to the main stack?</li>
+      <li>Can you implement this with a single stack by storing (value, current_min) pairs? What are the tradeoffs?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Min stack: parallel min_stk; push to min_stk on &lt;=; pop from min_stk when val == min_stk top</div>
+    <div class="trigger-variants">
+      <li>getMin() = min_stk top — always O(1)</li>
+      <li>Use &lt;= to handle duplicate minimum values correctly</li>
+    </div>
+  </div>
+</div>
+
+<!-- ST29 -->
+<div class="card" id="st29">
+  <div class="card-header">
+    <span class="card-id">ST29</span>
+    <h2 class="card-title">Max Stack</h2>
+    <span class="category-badge">Design Patterns</span>
+  </div>
+
+  <div class="background">
+    <p>A max stack supports push, pop, top, and <code>getMax()</code> all in O(1). The design is the mirror image of the min stack: maintain a parallel max stack that tracks the maximum at each depth level. Push to the max stack when the new value is ≥ the current max; pop from the max stack when the popped value equals the current max.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Track running maximum in a stack of undo operations</div><div class="why">O(1) query for the most impactful undoable action</div>
+    <div class="sit">Sliding window maximum (stack-based variant for growing windows)</div><div class="why">Max query with O(1) per push/pop</div>
+    <div class="sit">Embedded: track peak sensor reading in a LIFO sample buffer</div><div class="why">O(1) peak query without scanning the buffer</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Parallel max_stk. Push to max_stk on >=. Pop from max_stk when val == max_stk top.</div>
+    <div class="ascii">
+Operations: push(1), push(5), push(3), push(5), getMax, pop, getMax
+
+push(1): main:[1]      max_stk:[1]
+push(5): main:[1,5]    max_stk:[1,5]   (5>=1 → push)
+push(3): main:[1,5,3]  max_stk:[1,5]   (3<5 → skip)
+push(5): main:[1,5,3,5] max_stk:[1,5,5] (5>=5 → push)
+getMax() = 5 ✓
+pop(): val=5==max_stk top(5) → pop max_stk. max_stk:[1,5]
+getMax() = 5 ✓ (the earlier 5 is still there)</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">typedef struct {
+    int main_stk[10001]; int main_top;
+    int max_stk[10001];  int max_top;
+} MaxStack;
+
+void maxstk_push(MaxStack *ms, int val) {
+    ms->main_stk[ms->main_top++] = val;
+    if (ms->max_top == 0 || val >= ms->max_stk[ms->max_top - 1])
+        ms->max_stk[ms->max_top++] = val;
+}
+
+int maxstk_pop(MaxStack *ms) {
+    int val = ms->main_stk[--ms->main_top];
+    if (val == ms->max_stk[ms->max_top - 1])
+        ms->max_top--;
+    return val;
+}
+
+int maxstk_getmax(MaxStack *ms) { return ms->max_stk[ms->max_top - 1]; }</code></pre>
+  </div>
+
+  <div class="dry-run">
+push(3),push(1),push(4),pop():
+  max_stk: push 3→[3], skip 1, push 4→[3,4].
+  pop(): val=4==max_top(4) → pop max. max_stk:[3]. getMax()=3 ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Use <code>&gt;=</code> (not <code>&gt;</code>) when pushing to the max stack — same reason as min stack: duplicate maximums need separate copies on the max stack so that popping one copy doesn't incorrectly invalidate the remaining copy.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>For push(5), push(5), pop() — does getMax() correctly return 5 after the pop?</li>
+      <li>What is the only difference between the MinStack and MaxStack implementations?</li>
+      <li>Can you combine both into a single MinMaxStack? What would the data structure look like?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Max stack: parallel max_stk; push on >=; pop when val == max_stk top; getMax = max_stk top</div>
+    <div class="trigger-variants">
+      <li>Mirror image of min stack — change &lt;= to >= and min to max</li>
+    </div>
+  </div>
+</div>
+
+<!-- ST30 -->
+<div class="card" id="st30">
+  <div class="card-header">
+    <span class="card-id">ST30</span>
+    <h2 class="card-title">Queue Using Two Stacks</h2>
+    <span class="category-badge">Design Patterns</span>
+  </div>
+
+  <div class="background">
+    <p>Implement a FIFO queue using only two LIFO stacks. The idea: one stack (inbox) receives all pushes. When you need to dequeue, if the outbox is empty, pour everything from inbox into outbox (reversing the order). Dequeue from outbox.</p>
+    <p>The pour only happens when the outbox is empty — so each element is moved at most once from inbox to outbox. Amortised O(1) per enqueue and dequeue. This pattern appears in lock-free queue implementations where two stacks can be manipulated independently by different threads.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">LeetCode #232 — Implement Queue using Stacks</div><div class="why">Amortised O(1) queue from two O(1) stacks</div>
+    <div class="sit">Lock-free concurrent queue — two separate stacks for push/pop</div><div class="why">Each stack protected by its own lock; pour under lock</div>
+    <div class="sit">Bounded work-stealing deque using two stacks</div><div class="why">Push to one end, steal from the other</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">inbox receives pushes. outbox supplies pops. Pour inbox→outbox only when outbox is empty.</div>
+    <div class="ascii">
+enqueue(1), enqueue(2), enqueue(3), dequeue, dequeue, enqueue(4)
+
+enqueue(1): inbox=[1]   outbox=[]
+enqueue(2): inbox=[1,2] outbox=[]
+enqueue(3): inbox=[1,2,3] outbox=[]
+
+dequeue: outbox empty → pour inbox into outbox:
+  pour: 3→outbox, 2→outbox, 1→outbox
+  inbox=[] outbox=[3,2,1]  (top of outbox = 1 = FIFO front)
+  pop outbox → return 1.   outbox=[3,2]
+
+dequeue: outbox non-empty → pop outbox → return 2.  outbox=[3]
+
+enqueue(4): inbox=[4]   outbox=[3]
+
+dequeue: outbox non-empty → pop 3 → return 3.   inbox=[4] outbox=[]
+dequeue: outbox empty → pour: outbox=[4]. pop → 4. ✓</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">typedef struct {
+    int inbox[10001];  int in_top;
+    int outbox[10001]; int out_top;
+} TwoStackQueue;
+
+void tsq_enqueue(TwoStackQueue *q, int x) {
+    q->inbox[q->in_top++] = x;
+}
+
+int tsq_dequeue(TwoStackQueue *q) {
+    if (q->out_top == 0) {
+        /* pour inbox into outbox — reverses order to FIFO */
+        while (q->in_top > 0)
+            q->outbox[q->out_top++] = q->inbox[--q->in_top];
+    }
+    return q->outbox[--q->out_top];
+}
+
+int tsq_peek(TwoStackQueue *q) {
+    if (q->out_top == 0)
+        while (q->in_top > 0)
+            q->outbox[q->out_top++] = q->inbox[--q->in_top];
+    return q->outbox[q->out_top - 1];
+}
+
+int tsq_empty(TwoStackQueue *q) { return q->in_top == 0 && q->out_top == 0; }</code></pre>
+  </div>
+
+  <div class="dry-run">
+enqueue(1,2,3): inbox=[1,2,3].
+dequeue: pour → outbox=[3,2,1]. pop → 1. outbox=[3,2].
+dequeue: pop → 2. outbox=[3].
+enqueue(4): inbox=[4].
+dequeue: pop outbox → 3. outbox=[]. inbox=[4].
+dequeue: pour → outbox=[4]. pop → 4. ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Pour from inbox to outbox ONLY when outbox is empty. If you pour every time, you mix old and new items incorrectly. The lazy-transfer invariant — outbox is only refilled when empty — is what guarantees FIFO order.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Prove the amortised O(1) dequeue: each element is moved at most once from inbox to outbox.</li>
+      <li>What happens if you pour inbox into outbox when outbox is non-empty?</li>
+      <li>How would you implement a LIFO stack using two queues (the reverse problem)?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Queue from two stacks: enqueue to inbox; dequeue pours inbox→outbox only when outbox empty</div>
+    <div class="trigger-variants">
+      <li>Each element moved at most once → amortised O(1) dequeue</li>
+      <li>Pour = reverse order, turning LIFO inbox into FIFO outbox</li>
+    </div>
+  </div>
+</div>
+
+<!-- ST31 -->
+<div class="card" id="st31">
+  <div class="card-header">
+    <span class="card-id">ST31</span>
+    <h2 class="card-title">Next Greater in Circular Array</h2>
+    <span class="category-badge">Design Patterns</span>
+  </div>
+
+  <div class="background">
+    <p>Find the next greater element for each element in a circular array (the array wraps around). The key trick: simulate two passes through the array by iterating indices 0 to 2n-1 with modulo n. The first pass builds the stack; the second pass allows elements in the second half to serve as "next greater" for elements in the first half.</p>
+    <p>You don't actually duplicate the array — just use <code>i % n</code> to index, and push only during the first pass (first n iterations). During the second pass, only pop (resolve remaining elements).</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">LeetCode #503 — Next Greater Element II</div><div class="why">Circular array variant of next-greater</div>
+    <div class="sit">Round-robin scheduler: for each task, find the next higher-priority task</div><div class="why">Circular queue of tasks with priority ordering</div>
+    <div class="sit">Embedded sensor ring buffer: for each sample, when does a higher reading next appear (wrapping around)</div><div class="why">Circular next-greater for a ring buffer of ADC values</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Iterate 2n times with index i%n. Only push (not pop) during first n iters to avoid redundant work — but the classic approach just runs 2n iterations fully.</div>
+    <div class="ascii">
+arr: [1, 2, 1]  (circular)
+
+Run i from 0 to 5 (2n-1), index j = i%3:
+
+i=0,j=0,val=1: push 0           stk:[0(1)]
+i=1,j=1,val=2: 2>1 → POP 0: ans[0]=2    stk:[] push 1   stk:[1(2)]
+i=2,j=2,val=1: 1<2 → push 2             stk:[1(2),2(1)]
+i=3,j=0,val=1: 1<2 → push 0 (push ONLY if i<n, skip in 2nd pass)
+               Actually: push j but check i<n first.
+               Standard: push j if i < n, skip push if i >= n.
+               1<2 → nothing to pop in second pass either.
+i=4,j=1,val=2: 2>1(stk top j=2) → POP 2: ans[2]=2   stk:[1(2)]
+               2=2 (top j=1) → stop (not strictly greater)
+i=5,j=2,val=1: 1<2 → nothing pops
+End: remaining j=1 has no next greater → ans[1]=-1
+
+Answers: [2, -1, 2] ✓</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">void next_greater_circular(int *arr, int n, int *ans) {
+    int stk[n], top = 0;
+
+    for (int i = 0; i < 2 * n; i++) {
+        /* pop: resolve elements whose next greater is arr[i%n] */
+        while (top > 0 && arr[stk[top-1]] < arr[i % n])
+            ans[stk[--top]] = arr[i % n];
+
+        /* push only in the first pass — second pass only resolves */
+        if (i < n) stk[top++] = i;
+    }
+    /* anything still on stack has no next greater in the circular array */
+    while (top > 0) ans[stk[--top]] = -1;
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+arr=[5,4,3,2,1]:  all decreasing, circular — no element has a greater element anywhere.
+  All remain on stack after 2n iterations → all get -1 ✓
+
+arr=[3,1,2]:
+  push 0(3). 1<3→push 1. 2>1→pop1:ans[1]=2. 2<3→push 2. i=3,j=0,val=3: skip push.
+  3>2→pop2:ans[2]=3. 3=3 → stop (no strict greater). pop 0: ans[0]=-1.
+  Answers: [-1, 2, 3] ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Push only during the first n iterations (<code>i &lt; n</code>). If you push during the second pass too, you'll push duplicate indices onto the stack and overwrite already-computed answers. The second pass exists solely to resolve elements that didn't find their answer in the first pass.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Why do we need two passes (2n iterations) for a circular array?</li>
+      <li>Why do we push only in the first n iterations?</li>
+      <li>For arr=[1,1,1,1], what is the next-greater array?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Next greater circular: iterate 2n with i%n; push only when i&lt;n; remaining get -1</div>
+    <div class="trigger-variants">
+      <li>Second pass lets later elements resolve earlier ones that wrapped</li>
+      <li>Same decreasing-stack logic as ST11</li>
+    </div>
+  </div>
+</div>
+
+<!-- ST32 -->
+<div class="card" id="st32">
+  <div class="card-header">
+    <span class="card-id">ST32</span>
+    <h2 class="card-title">Iterative DFS with Explicit Stack</h2>
+    <span class="category-badge">Simulation</span>
+  </div>
+
+  <div class="background">
+    <p>Recursive DFS uses the call stack implicitly. When the call stack is too shallow (deep graph, small stack on an embedded system) or when you need fine-grained control over traversal, replace recursion with an explicit stack. The pattern is simple: push the start node, then loop: pop a node, process it, push its unvisited neighbours.</p>
+    <p>On ARM Cortex-M, the default task stack is 512–4096 bytes. A graph with depth 500 easily overflows it. An explicit stack on the heap has no such limit. This is also how iterative post-order traversal, iterative tree serialisation, and all non-recursive graph traversals are implemented.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Graph DFS without recursion — deep graphs that would overflow the call stack</div><div class="why">Explicit stack has O(V) space; call stack is bounded by system limits</div>
+    <div class="sit">Embedded firmware: DFS over a state machine graph with no heap recursion</div><div class="why">RTOS tasks have tiny stacks; heap-allocated explicit stack is safer</div>
+    <div class="sit">Iterative tree traversal (pre-order, post-order)</div><div class="why">Same push/pop pattern applies to trees</div>
+    <div class="sit">Connected-component labelling in an image (flood fill)</div><div class="why">Pixel-by-pixel DFS without recursion</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Push start. Loop: pop → process → push unvisited neighbours. Visited array prevents re-processing.</div>
+    <div class="ascii">
+Graph: 0→1, 0→2, 1→3, 2→3   Start at 0
+
+explicit stk: [0]
+visited:      [F,F,F,F]
+
+pop 0: visit 0. push neighbours 1,2.   stk:[1,2]  visited:[T,F,F,F]
+pop 2: visit 2. push neighbour 3.      stk:[1,3]  visited:[T,F,T,F]
+pop 3: visit 3. push neighbours: 3 has none.  stk:[1]  visited:[T,F,T,T]
+pop 1: visit 1. push neighbour 3 (already visited → skip).  stk:[]
+
+DFS order: 0, 2, 3, 1
+(Note: order depends on push order of neighbours; push in reverse for "left first")</div>
+    <div class="aha">Push neighbours in REVERSE order if you want left-to-right DFS traversal (since stack is LIFO, the last pushed is visited first).</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">#define MAXV 10000
+
+/* adj[v] = array of neighbour vertex indices, deg[v] = number of neighbours */
+void iterative_dfs(int start, int **adj, int *deg, int V) {
+    int stk[MAXV], top = 0;
+    int visited[MAXV] = {0};
+
+    stk[top++] = start;
+
+    while (top > 0) {
+        int v = stk[--top];
+        if (visited[v]) continue;  /* skip if already processed */
+        visited[v] = 1;
+
+        printf("visit %d\n", v);   /* process node v */
+
+        /* push unvisited neighbours (reverse for left-to-right order) */
+        for (int i = deg[v] - 1; i >= 0; i--) {
+            int u = adj[v][i];
+            if (!visited[u]) stk[top++] = u;
+        }
+    }
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+Binary tree root=1, left=2, right=3:
+  stk=[1]. pop 1: visit, push right(3) then left(2): stk=[3,2].
+  pop 2: visit, no children. stk=[3].
+  pop 3: visit. stk=[].
+  Pre-order: 1, 2, 3 ✓ (left before right because left pushed last)</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Check <code>visited[v]</code> after the pop, not before the push. A node may be pushed multiple times (by different neighbours) before it's visited. The visited check on pop ensures it's processed exactly once. Checking before push misses the case where the same node is pushed by two different neighbours before either is processed.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Why can a node appear on the explicit stack more than once?</li>
+      <li>Why do we push neighbours in reverse order to get left-to-right traversal?</li>
+      <li>How does this compare to BFS — what single change produces BFS instead of DFS?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Iterative DFS: push start; loop pop → check visited → process → push unvisited neighbours</div>
+    <div class="trigger-variants">
+      <li>Check visited after pop (not before push) to handle multiple pushes of same node</li>
+      <li>Push neighbours in reverse for left-to-right traversal order</li>
+      <li>Replace stack with queue → BFS</li>
+    </div>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 
 <script>hljs.highlightAll();</script>
