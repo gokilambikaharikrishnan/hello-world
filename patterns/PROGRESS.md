@@ -9,7 +9,7 @@
 | pointers.html | 30 | ✅ Done | 2026-05-05 |
 | strings.html | 44 | ✅ Done | 2026-05-04 |
 | linkedlist.html | 35 | ✅ Done | 2026-05-05 |
-| stacks.html | 32 | ✅ Done | 2026-04-29 |
+| stacks.html | 32 | 🔄 Rework In Progress | 2026-05-06 |
 | queues.html | 22 | ✅ Done | 2026-04-29 |
 
 ---
@@ -308,3 +308,63 @@
 | Batch 4 | L33–L35 | ✅ Done |
 
 **All 35 cards complete. Rework complete 2026-05-05.**
+
+---
+
+## stacks.html — Rework Audit (All 32 Cards)
+
+### Fundamentals (ST01–ST04)
+- [ ] ST01 · LIFO Intuition — What a Stack Is and When to Reach for It
+- [ ] ST02 · Stack Implementation — Array-Based with Top Pointer
+- [ ] ST03 · Stack Implementation — Linked List Based
+- [ ] ST04 · Stack Overflow and Underflow — Guards and Detection
+
+### Bracket / Matching (ST05–ST09)
+- [ ] ST05 · Valid Parentheses — Push Open, Match on Close
+- [ ] ST06 · Longest Valid Parentheses Substring
+- [ ] ST07 · Minimum Removals to Make Valid
+- [ ] ST08 · Score of Parentheses
+- [ ] ST09 · Remove Duplicate Letters with Stack
+
+### Monotonic Stack (ST10–ST23)
+- [ ] ST10 · Monotonic Stack Core Idea — Why Popping Finds Answers
+- [ ] ST11 · Next Greater Element — Decreasing Stack
+- [ ] ST12 · Next Smaller Element — Increasing Stack
+- [ ] ST13 · Previous Greater Element
+- [ ] ST14 · Previous Smaller Element
+- [ ] ST15 · Daily Temperatures — Store Indices Not Values
+- [ ] ST16 · Largest Rectangle in Histogram
+- [ ] ST17 · Maximal Rectangle in Binary Matrix
+- [ ] ST18 · Trapping Rain Water — Stack Approach
+- [ ] ST19 · Sum of Subarray Minimums
+- [ ] ST20 · 132 Pattern Detection
+- [ ] ST21 · Online Stock Span
+- [ ] ST22 · Remove K Digits to Make Smallest Number
+- [ ] ST23 · Buildings with Ocean View
+
+### Expression / Calculation (ST24–ST27)
+- [ ] ST24 · Evaluate Reverse Polish Notation
+- [ ] ST25 · Basic Calculator — Plus/Minus with Parentheses
+- [ ] ST26 · Calculator with Multiply/Divide Precedence
+- [ ] ST27 · Decode String with Stack
+
+### Design Patterns (ST28–ST31)
+- [ ] ST28 · Min Stack — O(1) getMin with Auxiliary Stack
+- [ ] ST29 · Max Stack
+- [ ] ST30 · Queue Using Two Stacks
+- [ ] ST31 · Next Greater in Circular Array
+
+### Simulation (ST32)
+- [ ] ST32 · Iterative DFS with Explicit Stack
+
+---
+
+## stacks.html Rework Progress Log
+
+| Batch | Cards | Status |
+|-------|-------|--------|
+| Batch 1 | ST01–ST10 | ⏳ Next |
+| Batch 2 | ST11–ST20 | |
+| Batch 3 | ST21–ST32 | |
+
+**Currently reworking:** ST01 — LIFO Intuition
