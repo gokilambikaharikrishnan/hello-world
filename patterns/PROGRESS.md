@@ -314,24 +314,24 @@
 ## stacks.html — Rework Audit (All 32 Cards)
 
 ### Fundamentals (ST01–ST04)
-- [ ] ST01 · LIFO Intuition — What a Stack Is and When to Reach for It
-- [ ] ST02 · Stack Implementation — Array-Based with Top Pointer
-- [ ] ST03 · Stack Implementation — Linked List Based
-- [ ] ST04 · Stack Overflow and Underflow — Guards and Detection
+- [x] ST01 · LIFO Intuition — What a Stack Is and When to Reach for It
+- [x] ST02 · Stack Implementation — Array-Based with Top Pointer
+- [x] ST03 · Stack Implementation — Linked List Based
+- [x] ST04 · Stack Overflow and Underflow — Guards and Detection
 
 ### Bracket / Matching (ST05–ST09)
-- [ ] ST05 · Valid Parentheses — Push Open, Match on Close
-- [ ] ST06 · Longest Valid Parentheses Substring
-- [ ] ST07 · Minimum Removals to Make Valid
-- [ ] ST08 · Score of Parentheses
-- [ ] ST09 · Remove Duplicate Letters with Stack
+- [x] ST05 · Valid Parentheses — Push Open, Match on Close
+- [x] ST06 · Longest Valid Parentheses Substring
+- [x] ST07 · Minimum Removals to Make Valid
+- [x] ST08 · Score of Parentheses
+- [x] ST09 · Remove Duplicate Letters with Stack
 
 ### Monotonic Stack (ST10–ST23)
-- [ ] ST10 · Monotonic Stack Core Idea — Why Popping Finds Answers
-- [ ] ST11 · Next Greater Element — Decreasing Stack
-- [ ] ST12 · Next Smaller Element — Increasing Stack
-- [ ] ST13 · Previous Greater Element
-- [ ] ST14 · Previous Smaller Element
+- [x] ST10 · Monotonic Stack Core Idea — Why Popping Finds Answers
+- [x] ST11 · Next Greater Element — Decreasing Stack
+- [x] ST12 · Next Smaller Element — Increasing Stack
+- [x] ST13 · Previous Greater Element
+- [x] ST14 · Previous Smaller Element
 - [ ] ST15 · Daily Temperatures — Store Indices Not Values
 - [ ] ST16 · Largest Rectangle in Histogram
 - [ ] ST17 · Maximal Rectangle in Binary Matrix
@@ -363,8 +363,8 @@
 
 | Batch | Cards | Status |
 |-------|-------|--------|
-| Batch 1 | ST01–ST10 | ⏳ Next |
-| Batch 2 | ST11–ST20 | |
+| Batch 1 | ST01–ST10 | ✅ Done |
+| Batch 2 | ST11–ST20 | 🔄 In Progress |
 | Batch 3 | ST21–ST32 | |
 
-**Currently reworking:** ST01 — LIFO Intuition
+**Currently reworking:** ST15 — Daily Temperatures
