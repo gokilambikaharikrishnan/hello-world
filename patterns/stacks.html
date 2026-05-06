@@ -2248,6 +2248,386 @@ heights=[1,2,3,4]:
   </div>
 </div>
 
+
+<!-- ST24 -->
+<div class="card" id="st24">
+  <div class="card-header">
+    <span class="card-id">ST24</span>
+    <h2 class="card-title">Evaluate Reverse Polish Notation</h2>
+    <span class="category-badge">Expression / Calculation</span>
+  </div>
+
+  <div class="background">
+    <p>Reverse Polish Notation (RPN / postfix) puts the operator after its operands: <code>3 4 +</code> means 3+4. No parentheses needed — operator precedence is encoded by order. The evaluation rule is simple: scan left to right; push numbers; when you see an operator, pop two numbers, apply the operator, push the result.</p>
+    <p>RPN is how compilers internally represent expressions, how Forth-family languages work, and how HP calculators operate. It eliminates the need for parentheses by encoding evaluation order explicitly.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Compiler back-end — evaluate intermediate code in postfix form</div><div class="why">Postfix is the natural output of a recursive-descent parser</div>
+    <div class="sit">Forth-like scripting language for embedded systems</div><div class="why">Stack-based VMs use RPN natively (used in PostScript, GFORTH)</div>
+    <div class="sit">LeetCode #150 — Evaluate Reverse Polish Notation</div><div class="why">Classic O(n) stack evaluation problem</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Number → push. Operator → pop two, compute, push result. Final answer is stk[0].</div>
+    <div class="ascii">
+Tokens: ["2","1","+","3","*"]   (meaning (2+1)*3 = 9)
+
+token  action              stack
+ "2"   push 2              [2]
+ "1"   push 1              [2, 1]
+ "+"   pop 1,2. 2+1=3.     [3]
+       push 3
+ "3"   push 3              [3, 3]
+ "*"   pop 3,3. 3*3=9.     [9]
+       push 9
+
+Result: stk[0] = 9 ✓
+
+Division note: "6","2","/" → pop 2 then 6 → 6/2=3
+  Second pop is the RIGHT operand; first pop is the LEFT operand.
+  This matters for subtraction and division!</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">int eval_rpn(char **tokens, int n) {
+    long stk[n];
+    int top = 0;
+
+    for (int i = 0; i < n; i++) {
+        char *t = tokens[i];
+        if (t[1] == '\0' && (*t == '+' || *t == '-' || *t == '*' || *t == '/')) {
+            long b = stk[--top];   /* right operand (popped second) */
+            long a = stk[--top];   /* left operand  (popped first) */
+            if      (*t == '+') stk[top++] = a + b;
+            else if (*t == '-') stk[top++] = a - b;
+            else if (*t == '*') stk[top++] = a * b;
+            else                stk[top++] = a / b;  /* C truncates toward 0 */
+        } else {
+            stk[top++] = atol(t);
+        }
+    }
+    return (int)stk[0];
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+["4","13","5","/","+"]:   (4 + 13/5 = 4 + 2 = 6)
+  push 4. push 13. push 5.
+  '/': b=5, a=13. 13/5=2. push 2. stk=[4,2].
+  '+': b=2, a=4. 4+2=6. push 6.
+  Result: 6 ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Pop order matters for non-commutative operators. The FIRST pop is the RIGHT operand (b), the SECOND pop is the LEFT operand (a). So <code>a - b</code> is correct, not <code>b - a</code>. For "3 4 -" the result is 3-4=-1, not 4-3=1. Getting this backwards is the most common RPN bug.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>For "5 1 2 + 4 * + 3 -", evaluate step by step. What is the result?</li>
+      <li>Why does RPN not need parentheses?</li>
+      <li>What happens if you pop in the wrong order for division — give a concrete example?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">RPN: number → push; operator → pop b (right), pop a (left), compute, push result</div>
+    <div class="trigger-variants">
+      <li>First pop = right operand; second pop = left operand</li>
+      <li>Final answer is stk[0] after all tokens processed</li>
+    </div>
+  </div>
+</div>
+
+<!-- ST25 -->
+<div class="card" id="st25">
+  <div class="card-header">
+    <span class="card-id">ST25</span>
+    <h2 class="card-title">Basic Calculator — Plus/Minus with Parentheses</h2>
+    <span class="category-badge">Expression / Calculation</span>
+  </div>
+
+  <div class="background">
+    <p>Evaluate a string expression containing non-negative integers, <code>+</code>, <code>-</code>, and <code>()</code>. The challenge is parentheses — they temporarily override the current sign context. The stack stores (current_result, current_sign) pairs so that when you close a parenthesis, you can restore the outer context and add in the sub-expression result.</p>
+    <p>There is no multiplication or division — this makes it simpler than the full calculator. The sign propagates: a <code>-</code> before a parenthesis inverts everything inside.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">LeetCode #224 — Basic Calculator</div><div class="why">Plus/minus with nested parens; no multiply/divide</div>
+    <div class="sit">Simple expression evaluation in an embedded scripting engine</div><div class="why">Config file expressions with grouping but no precedence</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Track running result and current sign. On '(': save (result, sign) to stack, reset. On ')': pop (outer_result, outer_sign), merge.</div>
+    <div class="ascii">
+Expression: "1 - (2 + 3)"  = 1 - 5 = -4
+
+Token  result  sign  num  stack
+'1'    build num=1
+' '    result+=sign*num=1, num=0   result=1
+'-'    sign=-1
+'('    push(result=1, sign=-1), reset result=0, sign=+1
+        stk:[(1,-1)]
+'2'    num=2
+'+'    result+=sign*num=2, sign=+1  result=2
+'3'    num=3
+')'    result+=sign*num=3 → result=5
+        pop (outer_res=1, outer_sign=-1)
+        result = outer_res + outer_sign * result = 1 + (-1)*5 = -4
+
+Result: -4 ✓</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">int calculate_basic(const char *s) {
+    int stk[100001], top = 0;
+    int result = 0, sign = 1, num = 0;
+
+    for (; *s; s++) {
+        if (*s >= '0' && *s <= '9') {
+            num = num * 10 + (*s - '0');    /* build multi-digit number */
+        } else if (*s == '+' || *s == '-') {
+            result += sign * num;            /* commit current number */
+            num = 0;
+            sign = (*s == '+') ? 1 : -1;
+        } else if (*s == '(') {
+            stk[top++] = result;             /* save outer result */
+            stk[top++] = sign;               /* save sign before '(' */
+            result = 0;  sign = 1;           /* reset for sub-expression */
+        } else if (*s == ')') {
+            result += sign * num;            /* commit final number in parens */
+            num = 0;
+            int outer_sign = stk[--top];
+            int outer_res  = stk[--top];
+            result = outer_res + outer_sign * result;
+        }
+        /* spaces are ignored */
+    }
+    return result + sign * num;  /* commit the last number */
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+"2-(3-4)":
+  num=2, '-': result=2, sign=-1. '(': push(2,-1), result=0,sign=1.
+  num=3, '-': result=3, sign=-1. num=4. ')': result+=(-1)*4=3-4=-1.
+  pop: outer_sign=-1, outer_res=2. result=2+(-1)*(-1)=3.
+  end: result+sign*num = 3+1*0 = 3 ✓ (2-(3-4)=2-(-1)=3)</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Don't forget to add <code>sign * num</code> to result at the very end (after the loop). The last number in the expression is never followed by an operator that would flush it — so you must commit it explicitly after the loop exits.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>What two values are pushed onto the stack when '(' is encountered?</li>
+      <li>Why does pushing the sign before the parenthesis correctly handle expressions like "-(2+3)"?</li>
+      <li>For "1+(4+5+2)-3", trace the stack states at each '(' and ')'.</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Basic calculator: track result+sign; on '(' push(result,sign) and reset; on ')' pop and merge</div>
+    <div class="trigger-variants">
+      <li>Commit num on operator or ')': result += sign * num</li>
+      <li>Flush last number after loop: return result + sign * num</li>
+    </div>
+  </div>
+</div>
+
+<!-- ST26 -->
+<div class="card" id="st26">
+  <div class="card-header">
+    <span class="card-id">ST26</span>
+    <h2 class="card-title">Calculator with Multiply/Divide Precedence</h2>
+    <span class="category-badge">Expression / Calculation</span>
+  </div>
+
+  <div class="background">
+    <p>Evaluate a string expression with integers, <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, no parentheses. Multiplication and division have higher precedence than addition and subtraction. The stack-based approach handles precedence without a full parser: treat the stack as a "pending addition" list. Multiply and divide are applied immediately to the top of the stack; addition and subtraction push a new pending term.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">LeetCode #227 — Basic Calculator II</div><div class="why">Precedence handling without parentheses</div>
+    <div class="sit">Embedded: evaluate simple sensor threshold formulas at runtime</div><div class="why">Config-file expressions like "temp * 2 - offset"</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">+ and -: push ±num onto the stack. * and /: pop top, compute with num, push result. Sum stack at end.</div>
+    <div class="ascii">
+Expression: "3+2*2-1"  = 3+4-1 = 6
+
+char  num  prev_op  action                   stack
+'3'   3    '+'     (initial)
+'+'         '+'    push sign*num=+3   stk:[3]  num=0
+'2'   2    '+'
+'*'         '*'    push +2            stk:[3,2]  (prev=*)
+'2'   2    '*'
+'-'         '-'    pop 2, *num=2*2=4, push 4  stk:[3,4] prev='-'
+'1'   1    '-'
+end         '-'    push -1            stk:[3,4,-1]
+
+Sum: 3+4-1 = 6 ✓</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">int calculate_ii(const char *s) {
+    int stk[100001], top = 0;
+    int num = 0;
+    char prev_op = '+';   /* treat start as if preceded by '+' */
+
+    for (int i = 0; s[i]; i++) {
+        char c = s[i];
+        if (c >= '0') num = num * 10 + (c - '0');  /* build number */
+
+        if ((c == '+' || c == '-' || c == '*' || c == '/') || !s[i+1]) {
+            if (prev_op == '+') stk[top++] =  num;
+            if (prev_op == '-') stk[top++] = -num;
+            if (prev_op == '*') stk[top-1] *= num;
+            if (prev_op == '/') stk[top-1] /= num;
+            prev_op = c;
+            num = 0;
+        }
+    }
+    int ans = 0;
+    while (top > 0) ans += stk[--top];
+    return ans;
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+"14-3/2":  (14 - 1 = 13, since 3/2=1 in integer division)
+  prev='+',num=14 on '-': push 14. stk=[14]. prev='-',num=3 on '/': push -3. stk=[14,-3]. prev='/',num=2 on end: pop -3, /2=-1, push -1. stk=[14,-1]. sum=13 ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>For <code>*</code> and <code>/</code>, update <code>stk[top-1]</code> in-place (don't pop-push, just modify the top). This is equivalent to "apply immediately." The stack accumulates additive terms; multiplicative terms collapse into the most recent additive term.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Why do we initialise prev_op='+' before the loop starts?</li>
+      <li>For "2*3+4*5", what is the stack after processing each operator?</li>
+      <li>How would you extend this to handle parentheses (combine with ST25)?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Calculator II: +/- push ±num; */÷ modify stk[top-1] in-place; sum stack at end</div>
+    <div class="trigger-variants">
+      <li>prev_op starts as '+' so the first number is pushed with the right sign</li>
+      <li>Flush on operator or end-of-string (!s[i+1])</li>
+    </div>
+  </div>
+</div>
+
+<!-- ST27 -->
+<div class="card" id="st27">
+  <div class="card-header">
+    <span class="card-id">ST27</span>
+    <h2 class="card-title">Decode String with Stack</h2>
+    <span class="category-badge">Expression / Calculation</span>
+  </div>
+
+  <div class="background">
+    <p>A string is encoded as <code>k[str]</code> meaning str repeated k times, with possible nesting: <code>3[a2[b]]</code> = "abbabbabb". The stack handles nesting: when you see <code>[</code>, push the current string and current count; when you see <code>]</code>, pop the count and outer string, repeat the inner string, and append to the outer.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">LeetCode #394 — Decode String</div><div class="why">Nested repetition → stack for outer context</div>
+    <div class="sit">Compression format decoder with run-length nested encoding</div><div class="why">Embedded: decompress a compact command sequence</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">On '[': push (current_str, current_k) and reset. On ']': pop (outer_str, k), new_str = outer_str + k*current_str.</div>
+    <div class="ascii">
+Input: "3[a2[b]]"
+
+char  curr_str  k    action                         stack
+'3'   ""        3    build k=3
+'['   ""        3    push("", 3), reset curr=""      [("",3)]
+'a'   "a"       0    append to curr
+'2'   "a"       2    build k=2
+'['   "a"       2    push("a", 2), reset curr=""     [("",3),("a",2)]
+'b'   "b"       0
+']'   "b"       0    pop("a",2): curr = "a"+"b"*2 = "abb"
+                                                     [("",3)]
+']'   "abb"     0    pop("",3): curr = "" + "abb"*3 = "abbabbabb"
+                                                     []
+
+Result: "abbabbabb" ✓</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">/* simplified: assumes max depth 100, result fits in char[10001] */
+char *decode_string(const char *s) {
+    char *str_stk[100];   /* stack of partial strings */
+    int   k_stk[100];     /* stack of repeat counts */
+    int   top = 0;
+    char *curr = calloc(1, 10001);
+    int   k = 0;
+
+    for (; *s; s++) {
+        if (*s >= '0' && *s <= '9') {
+            k = k * 10 + (*s - '0');
+        } else if (*s == '[') {
+            k_stk[top]   = k;
+            str_stk[top] = strdup(curr);   /* save current string */
+            top++;
+            curr[0] = '\0';               /* reset curr for inner */
+            k = 0;
+        } else if (*s == ']') {
+            top--;
+            char *outer = str_stk[top];
+            int   rep   = k_stk[top];
+            char *inner = strdup(curr);
+            strcpy(curr, outer);
+            for (int i = 0; i < rep; i++) strcat(curr, inner);
+            free(inner); free(outer);
+        } else {
+            /* append character to curr */
+            int len = strlen(curr);
+            curr[len] = *s; curr[len+1] = '\0';
+        }
+    }
+    return curr;
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+"2[ab]3[x]":
+  k=2,'[': push("",2),curr="". 'a','b': curr="ab". ']': curr=""+"ab"*2="abab".
+  k=3,'[': push("abab",3),curr="". 'x': curr="x". ']': curr="abab"+"x"*3="ababxxx".
+  Result: "ababxxx" ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Reset <code>k = 0</code> after pushing on <code>[</code>. If you forget, the k from the outer level leaks into the inner level computation. Also: <code>strcat</code> on large repetitions is O(n²) — in production, build into a proper buffer with memcpy.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>What two things are pushed onto the stack when '[' is encountered?</li>
+      <li>For "10[a]", what is the result?</li>
+      <li>How many stack frames are active at peak depth in "2[3[4[x]]]"?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Decode string: on '[' push (curr, k) and reset; on ']' pop, curr = outer + k * inner</div>
+    <div class="trigger-variants">
+      <li>Reset k=0 and curr="" after each push</li>
+      <li>Build multi-digit k before '[' arrives</li>
+    </div>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 
 <script>hljs.highlightAll();</script>
