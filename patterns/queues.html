@@ -101,6 +101,500 @@ h2 { color: #58a6ff; font-size: 1.25rem; margin-bottom: 1rem; }
 </div>
 
 <!-- CARDS_START -->
+
+<!-- Q01 -->
+<div class="card" id="q01">
+  <div class="card-header">
+    <span class="card-id">Q01</span>
+    <h2 class="card-title">FIFO Intuition — What a Queue Is and When to Use It vs a Stack</h2>
+    <span class="category-badge">Fundamentals</span>
+  </div>
+
+  <div class="background">
+    <p>A queue is a container where the first item added is the first item removed — First In, First Out. Think of a supermarket checkout line: customers are served in the order they arrived. No cutting in front, no serving from the back. The item that has waited longest is always served next.</p>
+    <p>The critical choice — queue vs stack — determines your traversal order. A stack (LIFO) processes the most recently added item first, which drives depth-first search: you dive deep into one branch before exploring siblings. A queue (FIFO) processes the earliest-added item first, which drives breadth-first search: you fully explore all neighbours at distance 1 before moving to distance 2. Use a queue whenever "fairness" (order of arrival) or "shortest distance" matters.</p>
+    <p>In embedded systems, queues are fundamental infrastructure. UART receive buffers, CAN message queues, audio sample buffers, DMA ping-pong buffers, FreeRTOS task event queues — all are circular FIFO queues. Data arrives in order, it must be processed in order, and there must be no gaps or reordering. A stack would process the most recent data first and discard older data — exactly wrong for a serial communication buffer.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">UART RX ring buffer on a microcontroller</div><div class="why">Bytes arrive in order, must be processed in order — FIFO is mandatory</div>
+    <div class="sit">CAN message queue in automotive ECU firmware</div><div class="why">Messages processed in arrival order to maintain protocol correctness</div>
+    <div class="sit">FreeRTOS xQueueSend / xQueueReceive — task communication</div><div class="why">RTOS inter-task messaging uses FIFO queues natively</div>
+    <div class="sit">BFS shortest path on a graph or grid</div><div class="why">Queue enforces level-by-level exploration — stack would give DFS</div>
+    <div class="sit">Printer spooler / job scheduler</div><div class="why">Jobs served in submission order — fairness requires FIFO</div>
+    <div class="sit">Streaming data pipeline — sliding time window</div><div class="why">Evict old items from front, add new items to back</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Queue operations: enqueue (add to back), dequeue (remove from front), peek (read front without removing).</div>
+    <div class="ascii">
+FIFO property visualised:
+
+enqueue(A): front→[A]←back
+enqueue(B): front→[A][B]←back
+enqueue(C): front→[A][B][C]←back
+dequeue()→A: front→[B][C]←back
+dequeue()→B: front→[C]←back
+
+Stack vs Queue — same pushes, different orders:
+  push/enqueue: A, B, C
+  Stack pop: C, B, A  (LIFO — last in first out)
+  Queue deq: A, B, C  (FIFO — first in first out)
+
+Queue → BFS: nodes explored level by level, shortest path first
+Stack → DFS: nodes explored depth-first, path may not be shortest</div>
+    <div class="aha">Rule of thumb: if you need "nearest" or "shortest" → queue + BFS. If you need "deepest" or "all paths" → stack + DFS.</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">/* Minimal queue using a fixed array — template for all queue cards */
+#define MAXN 100001
+int q[MAXN];
+int head = 0, tail = 0;   /* head = front (dequeue here), tail = back (enqueue here) */
+
+void enqueue(int x)  { q[tail++] = x; }
+int  dequeue(void)   { return q[head++]; }
+int  peek(void)      { return q[head]; }
+int  empty(void)     { return head == tail; }
+int  size(void)      { return tail - head; }</code></pre>
+  </div>
+
+  <div class="dry-run">
+enqueue(1): q=[1], head=0, tail=1
+enqueue(2): q=[1,2], head=0, tail=2
+enqueue(3): q=[1,2,3], head=0, tail=3
+dequeue()→1: head=1, tail=3  (q[1..2] = [2,3])
+peek()→2: head unchanged
+size()→2: tail-head=3-1=2</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>The simple array queue above wastes space — head never goes back, so the front of the array becomes dead space after dequeues. For a fixed-size queue that reuses space, use a circular queue (Q02/Q03). For BFS where you never go back, the simple array queue is fine and fast.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>If you replace the queue with a stack in BFS, what traversal do you get instead?</li>
+      <li>Name two embedded systems where FIFO order is a hard correctness requirement.</li>
+      <li>What does it mean for a queue to be "empty" using the head/tail definition?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">When you need "first arrived processed first" or "shortest path" → queue (FIFO)</div>
+    <div class="trigger-variants">
+      <li>BFS = queue; DFS = stack — the data structure determines traversal order</li>
+      <li>Embedded UART/CAN/audio buffers: always FIFO circular queue</li>
+    </div>
+  </div>
+</div>
+
+<!-- Q02 -->
+<div class="card" id="q02">
+  <div class="card-header">
+    <span class="card-id">Q02</span>
+    <h2 class="card-title">Circular Queue — Array-Based, Head/Tail with Mod Wrap</h2>
+    <span class="category-badge">Fundamentals</span>
+  </div>
+
+  <div class="background">
+    <p>A circular queue (ring buffer) fixes the space-waste problem of a plain array queue: when tail reaches the end of the array, it wraps back to index 0. The array is treated as a ring — the slot after the last is the first. This allows a fixed-size buffer to be reused indefinitely without shifting or copying.</p>
+    <p>Ring buffers are the standard data structure for embedded communication buffers. The UART RX ISR enqueues bytes at <code>tail</code> (with no blocking — it just stores and returns). The main loop dequeues from <code>head</code>. Producer and consumer operate independently, separated by the ring. This is lock-free when there is one producer and one consumer (the single-producer single-consumer ring buffer, SPSC), because head and tail are written by different contexts.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">UART RX/TX ring buffer — ISR writes, main loop reads</div><div class="why">Fixed memory, no allocation, ISR-safe when SPSC</div>
+    <div class="sit">FreeRTOS stream buffer / message buffer internals</div><div class="why">Implemented as a ring buffer under the hood</div>
+    <div class="sit">Audio DSP circular buffer — continuous stream processing</div><div class="why">DMA fills half the ring while CPU processes the other half</div>
+    <div class="sit">CAN TX queue — messages buffered for transmission</div><div class="why">Peripheral sends at its own pace; software enqueues fast</div>
+    <div class="sit">LeetCode #622 — Design Circular Queue</div><div class="why">Interview version of the embedded staple</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Wrap using modulo: new_tail = (tail + 1) % capacity. The array index wraps around instead of going past the end.</div>
+    <div class="ascii">
+Capacity = 5 (indices 0-4)
+
+enqueue(A): buf=[A,_,_,_,_]  head=0 tail=1
+enqueue(B): buf=[A,B,_,_,_]  head=0 tail=2
+enqueue(C): buf=[A,B,C,_,_]  head=0 tail=3
+dequeue()→A: buf=[_,B,C,_,_]  head=1 tail=3
+dequeue()→B: buf=[_,_,C,_,_]  head=2 tail=3
+enqueue(D): buf=[_,_,C,D,_]  head=2 tail=4
+enqueue(E): buf=[_,_,C,D,E]  head=2 tail=0  ← wraps! (4+1)%5=0
+enqueue(F): buf=[F,_,C,D,E]  head=2 tail=1  ← wraps again
+
+dequeue()→C (head=2): buf=[F,_,_,D,E]  head=3
+dequeue()→D: head=4. dequeue()→E: head=0. dequeue()→F: head=1. Empty!</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">#define CAP 1024   /* must be power of 2 for fast modulo: & (CAP-1) */
+
+typedef struct {
+    int buf[CAP];
+    int head, tail, size;
+} CircQ;
+
+void cq_init(CircQ *q)         { q->head = q->tail = q->size = 0; }
+int  cq_empty(CircQ *q)        { return q->size == 0; }
+int  cq_full(CircQ *q)         { return q->size == CAP; }
+
+void cq_enqueue(CircQ *q, int x) {
+    q->buf[q->tail] = x;
+    q->tail = (q->tail + 1) % CAP;  /* wrap tail */
+    q->size++;
+}
+
+int cq_dequeue(CircQ *q) {
+    int val = q->buf[q->head];
+    q->head = (q->head + 1) % CAP;  /* wrap head */
+    q->size--;
+    return val;
+}
+
+int cq_peek(CircQ *q) { return q->buf[q->head]; }</code></pre>
+  </div>
+
+  <div class="dry-run">
+CAP=4. enqueue(1,2,3,4): full. head=0,tail=0,size=4.
+dequeue()→1: head=1,size=3. enqueue(5): buf=[5,2,3,4],tail=1,size=4.
+dequeue()→2: head=2,size=3. dequeue()→3: head=3. dequeue()→4: head=0. dequeue()→5: head=1. empty ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>When capacity is a power of 2, replace <code>% CAP</code> with <code>&amp; (CAP-1)</code> — bitwise AND is faster than modulo on embedded CPUs without hardware division. E.g. <code>(tail + 1) &amp; (CAP - 1)</code>. This is standard practice in embedded ring buffers where every cycle counts.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>If head == tail, is the queue empty or full? How does tracking size separately resolve this?</li>
+      <li>Why is a power-of-2 capacity preferred in embedded ring buffers?</li>
+      <li>In an SPSC ring buffer (ISR writes, main reads), why is no lock needed?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Circular queue: enqueue at tail, dequeue at head; wrap both with (idx+1) % CAP</div>
+    <div class="trigger-variants">
+      <li>Track size separately to distinguish full from empty when head==tail</li>
+      <li>Power-of-2 capacity → use &amp; (CAP-1) instead of %</li>
+    </div>
+  </div>
+</div>
+
+<!-- Q03 -->
+<div class="card" id="q03">
+  <div class="card-header">
+    <span class="card-id">Q03</span>
+    <h2 class="card-title">Circular Queue — Full vs Empty Distinction (The Off-by-One Trap)</h2>
+    <span class="category-badge">Fundamentals</span>
+  </div>
+
+  <div class="background">
+    <p>When head == tail in a circular queue, is the queue empty or full? Both states look identical if you only track head and tail. This is the fundamental ambiguity of circular queues. There are three standard resolutions: (1) track a separate size counter, (2) waste one slot so full is defined as <code>(tail+1)%CAP == head</code>, or (3) use a boolean flag.</p>
+    <p>Embedded UART ring buffer implementations almost universally use the size counter or the waste-one-slot approach. Getting this wrong is a silent, devastating bug: you either drop bytes on a "full" buffer that isn't actually full, or corrupt data by writing into a "not full" buffer that is.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">UART ring buffer data corruption — writing when buffer is actually full</div><div class="why">Classic embedded bug: head==tail ambiguity causes overwrite</div>
+    <div class="sit">LeetCode #622 — Design Circular Queue</div><div class="why">Interviewer specifically checks the full/empty edge case</div>
+    <div class="sit">Any ring buffer with a consumer and producer at the same index</div><div class="why">Without resolution: is the next operation a read or a write?</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Three resolutions side by side — pick one and be consistent.</div>
+    <div class="ascii">
+CAP=4 ring: indices [0,1,2,3]
+
+METHOD 1: separate size counter (used in Q02)
+  empty: size == 0
+  full:  size == CAP
+  Cost:  one extra integer
+
+METHOD 2: waste one slot (effective capacity = CAP-1)
+  empty: head == tail
+  full:  (tail + 1) % CAP == head
+  enqueue fills slot at tail then advances; never uses the slot just before head
+  Cost:  one wasted slot, but NO extra variable
+
+  Example CAP=5, effective cap=4:
+    [A,B,C,D,_]  head=0, tail=4  → full: (4+1)%5=0==head ✓
+    [A,B,C,_,_]  head=0, tail=3  → NOT full: (3+1)%5=4 ≠ 0
+
+METHOD 3: use a boolean 'full' flag
+  empty: head==tail && !full
+  full:  full flag == true
+  Cost:  one extra bool</div>
+    <div class="aha">Method 2 (waste one slot) is most common in embedded code: no extra state, just one less usable slot. Method 1 (size counter) is clearest and safest for general use.</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">/* Method 2: waste one slot — classic embedded idiom */
+#define CAP 5   /* effective capacity = 4 */
+
+typedef struct { int buf[CAP]; int head, tail; } RingBuf;
+
+void rb_init(RingBuf *r)  { r->head = r->tail = 0; }
+int  rb_empty(RingBuf *r) { return r->head == r->tail; }
+int  rb_full(RingBuf *r)  { return (r->tail + 1) % CAP == r->head; }
+
+int rb_enqueue(RingBuf *r, int x) {
+    if (rb_full(r)) return -1;           /* drop: no space */
+    r->buf[r->tail] = x;
+    r->tail = (r->tail + 1) % CAP;
+    return 0;
+}
+
+int rb_dequeue(RingBuf *r) {
+    if (rb_empty(r)) return -1;
+    int val = r->buf[r->head];
+    r->head = (r->head + 1) % CAP;
+    return val;
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+CAP=5 (max 4 items). enqueue(1,2,3,4): after 4th, tail=4, (4+1)%5=0=head → full=true.
+5th enqueue returns -1 (dropped) ✓.
+dequeue→1: head=1. now rb_full: (4+1)%5=0≠1 → not full.
+enqueue(5): buf[4]=5, tail=0. dequeue→2,3,4,5. head=tail=0 → empty ✓.</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>If you forget to handle the full case and overwrite, in an SPSC UART buffer the write pointer runs into the read pointer and corrupts the oldest unread byte. The receive handler silently drops or corrupts a character — this shows up as garbled serial output that disappears when you slow down the baud rate. Always guard enqueue with a full check.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>With method 2 (waste-one-slot), if CAP=8, what is the maximum number of items you can store?</li>
+      <li>Why does <code>head == tail</code> alone not tell you whether the queue is full?</li>
+      <li>Which method would you use in a safety-critical embedded system and why?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Full vs empty ambiguity: track size separately OR waste one slot (full = (tail+1)%CAP == head)</div>
+    <div class="trigger-variants">
+      <li>Method 2 (waste one slot) is the embedded idiom — no extra variable</li>
+      <li>Always guard enqueue with a full check — silent overwrite is catastrophic</li>
+    </div>
+  </div>
+</div>
+
+<!-- Q04 -->
+<div class="card" id="q04">
+  <div class="card-header">
+    <span class="card-id">Q04</span>
+    <h2 class="card-title">Deque — Insert and Delete from Both Ends</h2>
+    <span class="category-badge">Fundamentals</span>
+  </div>
+
+  <div class="background">
+    <p>A deque (double-ended queue) supports enqueue and dequeue from both the front and the back. It generalises both a stack (add/remove from same end) and a queue (add to one end, remove from the other). A circular array deque maintains two pointers — <code>front</code> and <code>back</code> — and allows O(1) operations on either end.</p>
+    <p>In C++, <code>std::deque</code> is the standard. In C, you implement it with a circular array or a doubly linked list. The circular array version has better cache performance; the doubly linked list version has no fixed capacity.</p>
+    <p>The deque is the backbone of the monotonic deque pattern (Q11–Q14) where you need to add to one end and remove from either end depending on conditions.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">Sliding window maximum/minimum — monotonic deque (Q12/Q13)</div><div class="why">Add new elements to back; evict expired front elements</div>
+    <div class="sit">0-1 BFS — 0-cost edges to front, 1-cost edges to back (Q09)</div><div class="why">Priority queue without heap using deque</div>
+    <div class="sit">Palindrome check on a stream — consume from both ends</div><div class="why">Compare front and back characters simultaneously</div>
+    <div class="sit">Undo/redo buffer — undo from back, redo from front</div><div class="why">Most recent actions at back; older actions at front</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">Circular array deque: front points to the first element; back points to the slot after the last. All four operations use modulo wrap.</div>
+    <div class="ascii">
+CAP=6. Initial: front=0, back=0, size=0
+
+push_back(A):   [A,_,_,_,_,_]  front=0, back=1, size=1
+push_back(B):   [A,B,_,_,_,_]  front=0, back=2, size=2
+push_front(Z):  [A,B,_,_,_,Z]  front=5, back=2, size=3
+                (front = (0-1+6)%6 = 5 → write buf[5]=Z, front=5)
+pop_front()→Z:  front=(5+1)%6=0, size=2
+pop_back()→B:   back=(2-1+6)%6=1, size=1
+peek_front()→A:  buf[front=0]=A</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">#define DCAP 100001
+
+typedef struct {
+    int buf[DCAP];
+    int front, back, size;
+} Deque;
+
+void dq_init(Deque *d)          { d->front = d->back = d->size = 0; }
+int  dq_empty(Deque *d)         { return d->size == 0; }
+
+void dq_push_back(Deque *d, int x) {
+    d->buf[d->back] = x;
+    d->back = (d->back + 1) % DCAP;
+    d->size++;
+}
+
+void dq_push_front(Deque *d, int x) {
+    d->front = (d->front - 1 + DCAP) % DCAP;  /* move front back */
+    d->buf[d->front] = x;
+    d->size++;
+}
+
+int dq_pop_front(Deque *d) {
+    int val = d->buf[d->front];
+    d->front = (d->front + 1) % DCAP;
+    d->size--;
+    return val;
+}
+
+int dq_pop_back(Deque *d) {
+    d->back = (d->back - 1 + DCAP) % DCAP;
+    int val = d->buf[d->back];
+    d->size--;
+    return val;
+}
+
+int dq_front(Deque *d) { return d->buf[d->front]; }
+int dq_back(Deque *d)  { return d->buf[(d->back - 1 + DCAP) % DCAP]; }</code></pre>
+  </div>
+
+  <div class="dry-run">
+push_back(1,2,3): front=0,back=3. back()=buf[2]=3. front()=buf[0]=1.
+push_front(0): front=DCAP-1, buf[DCAP-1]=0, size=4.
+pop_front()→0: front=0. pop_back()→3: back=2.
+Result: deque=[1,2], front=0,back=2 ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>When moving <code>front</code> backwards (push_front), use <code>(front - 1 + DCAP) % DCAP</code> — not just <code>(front - 1) % DCAP</code>. In C, <code>-1 % N</code> can be negative (implementation-defined before C99, defined as truncation toward zero in C99+). Adding DCAP before the mod guarantees a non-negative result.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>What is <code>dq_back()</code> reading: <code>buf[back]</code> or <code>buf[back-1]</code>? Why?</li>
+      <li>How would you implement a stack using only deque operations?</li>
+      <li>How would you implement a queue using only deque operations?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Deque: circular array with front/back; all four operations O(1) with modulo wrap</div>
+    <div class="trigger-variants">
+      <li>push_front: front = (front-1+CAP)%CAP — always add DCAP to avoid negative mod</li>
+      <li>back() reads buf[(back-1+CAP)%CAP] — back points past the last element</li>
+    </div>
+  </div>
+</div>
+
+<!-- Q05 -->
+<div class="card" id="q05">
+  <div class="card-header">
+    <span class="card-id">Q05</span>
+    <h2 class="card-title">Queue Using Two Stacks — How and Why It Works</h2>
+    <span class="category-badge">Fundamentals</span>
+  </div>
+
+  <div class="background">
+    <p>Implement a FIFO queue using only two LIFO stacks. The trick: one stack (inbox) receives all enqueues. When a dequeue is needed and the outbox is empty, pour everything from inbox into outbox — this reversal converts LIFO order into FIFO order. Subsequent dequeues are served directly from outbox until it empties again.</p>
+    <p>The amortised analysis: every element is moved at most once from inbox to outbox. So n enqueues and n dequeues total at most 2n push/pop operations — amortised O(1) each. This pattern appears in lock-free concurrent queues where inbox and outbox can be independently locked, reducing contention.</p>
+    <p>This card revisits the concept from stacks.html (ST30) but now from the queue perspective — emphasising why the double-reversal produces FIFO order.</p>
+  </div>
+
+  <div class="situations">
+    <div class="sit">LeetCode #232 — Implement Queue using Stacks</div><div class="why">Classic design question; tests understanding of reversal</div>
+    <div class="sit">Lock-free queue: two separate stacks, each with its own lock</div><div class="why">Enqueue and dequeue rarely contend — different stacks</div>
+    <div class="sit">Understanding why two reversals = identity</div><div class="why">A→B→A: two LIFO reversals produce original FIFO order</div>
+  </div>
+
+  <div class="logic-build">
+    <div class="aha">One reversal (inbox stack) → LIFO. Two reversals (pour into outbox) → FIFO again. Double-reversal restores original order.</div>
+    <div class="ascii">
+enqueue(1), enqueue(2), enqueue(3), dequeue, dequeue, enqueue(4), dequeue
+
+Step 1-3: enqueue(1,2,3)
+  inbox (bottom→top): [1, 2, 3]  outbox: []
+
+Step 4: dequeue — outbox empty → pour inbox into outbox:
+  pour: pop 3 push outbox, pop 2 push outbox, pop 1 push outbox
+  inbox: []   outbox (bottom→top): [3, 2, 1]
+  pop outbox → 1   ← FIFO! oldest element served first
+
+Step 5: dequeue — outbox non-empty → pop outbox → 2
+
+Step 6: enqueue(4)
+  inbox: [4]   outbox: [3]
+
+Step 7: dequeue — outbox non-empty → pop outbox → 3
+  (4 stays in inbox until outbox empties again)
+
+FIFO property holds: 1 first, then 2, then 3, then 4 ✓</div>
+  </div>
+
+  <div class="code-block">
+    <pre><code class="language-c">typedef struct {
+    int inbox[50001];  int in_top;
+    int outbox[50001]; int out_top;
+} TwoStackQ;
+
+void tsq_enqueue(TwoStackQ *q, int x) {
+    q->inbox[q->in_top++] = x;
+}
+
+int tsq_dequeue(TwoStackQ *q) {
+    if (q->out_top == 0) {
+        /* pour inbox into outbox — reverses order */
+        while (q->in_top > 0)
+            q->outbox[q->out_top++] = q->inbox[--q->in_top];
+    }
+    return q->outbox[--q->out_top];
+}
+
+int tsq_peek(TwoStackQ *q) {
+    if (q->out_top == 0)
+        while (q->in_top > 0)
+            q->outbox[q->out_top++] = q->inbox[--q->in_top];
+    return q->outbox[q->out_top - 1];
+}
+
+int tsq_empty(TwoStackQ *q) {
+    return q->in_top == 0 && q->out_top == 0;
+}</code></pre>
+  </div>
+
+  <div class="dry-run">
+enqueue(A,B,C): inbox=[A,B,C], in_top=3. outbox=[], out_top=0.
+dequeue: out empty → pour: outbox=[C,B,A], out_top=3. pop A → return A ✓
+dequeue: pop B → return B ✓. enqueue(D): inbox=[D].
+dequeue: pop C → return C ✓. outbox empty now.
+dequeue: pour inbox: outbox=[D]. pop D → return D ✓</div>
+
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha</div>
+    <p>Pour from inbox to outbox ONLY when outbox is empty. If you pour every dequeue, you mix items from both stacks. The lazy-transfer rule — pour only when empty — is what guarantees FIFO order is maintained across multiple enqueue/dequeue interleaving.</p>
+  </div>
+
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>What is the worst-case time for a single dequeue? When does it occur?</li>
+      <li>Why does the double-reversal (inbox stack → outbox stack) restore FIFO order?</li>
+      <li>Could you reverse the roles — dequeue from inbox, enqueue into outbox? What would break?</li>
+    </ol>
+  </div>
+
+  <div class="trigger-big">
+    <div class="trigger-main">Queue from two stacks: enqueue to inbox; dequeue pours inbox→outbox ONLY when outbox empty</div>
+    <div class="trigger-variants">
+      <li>Amortised O(1) — each element moved at most once</li>
+      <li>Two reversals = identity: LIFO→LIFO = FIFO</li>
+    </div>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 
 <script>hljs.highlightAll();</script>
