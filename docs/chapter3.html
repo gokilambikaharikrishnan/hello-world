@@ -1967,25 +1967,25 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
     <div class="subsection">
       <div class="subsection-title">Compression Fixtures — Controlled Pressure for Better Performance</div>
       <p>
-        Counterintuitively, applying controlled mechanical compression to prismatic LFP cells
-        <em>improves</em> performance and cycle life. This is because compression:
+        It sounds counterintuitive, but squeezing prismatic LFP cells with a controlled, steady
+        pressure actually <em>improves</em> their performance and helps them last longer. Here's why:
       </p>
       <ul style="color:var(--text-secondary); line-height:2; padding-left:1.5rem;">
-        <li>Maintains intimate contact between electrode layers, reducing contact resistance</li>
-        <li>Prevents electrode delamination as the cell breathes through charge/discharge cycles</li>
-        <li>Reduces the volume available for gas pockets to form within the jelly roll</li>
-        <li>Constrains the SEI layer growth by limiting physical expansion space</li>
+        <li>Keeps the electrode layers pressed tightly together, reducing the resistance between them</li>
+        <li>Stops the layers peeling apart as the cell expands and contracts through each cycle</li>
+        <li>Leaves less free space inside for gas bubbles to collect in the electrode stack</li>
+        <li>Slows SEI layer growth by limiting how much the anode can expand each cycle</li>
       </ul>
       <div class="formula-block">
         <span class="formula-label">Optimal Compression Pressure</span>
         <span class="formula-line">P_optimal = 10–30 kPa (1.5–4.4 PSI) for prismatic LFP 280Ah</span>
         <span class="formula-line">P_max = 100 kPa — above this, electrolyte expulsion and capacity loss</span>
         <span class="formula-caption">
-          Applied via end plates + tie rods or aluminium extrusion channel.
-          Belleville washers or spring plates maintain constant pressure as the cell swells.
-          Rigid fixtures with no compliance allow pressure to rise with swelling,
-          potentially exceeding P_max — always include spring compliance in the fixture design.
-          Target: fixture preload of 15 kPa at 50% SoC (equilibrium), allowing ±10 kPa range.
+          The pressure is applied using end-plates and tie-rods, or an aluminium channel that wraps around
+          the cell stack. Critically, the fixture must include springs (Belleville washers or spring plates)
+          so that pressure stays roughly constant even as the cells swell. A rigid, non-spring fixture
+          lets pressure build as the cells expand — eventually crushing them beyond P_max.
+          Design target: 15 kPa preload at 50% SoC (the midpoint), with a ±10 kPa range as cells breathe.
         </span>
       </div>
 
