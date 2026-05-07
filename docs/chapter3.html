@@ -1182,9 +1182,10 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
     <div class="subsection">
       <div class="subsection-title">Thermal Gradient Inside the Cell — Surface vs Core</div>
       <p>
-        Even with perfect external heat removal, a temperature gradient exists between the cell
-        core and its surface during high-rate operation. This gradient is governed by the cell's
-        thermal conductivity and geometry.
+        Even if you cool the outside of a cell perfectly, the inside still gets hotter than the
+        surface. Heat is generated deep in the electrode stack and has to travel outward through
+        the cell material — but that material is a poor heat conductor, so a temperature gap builds
+        up between the centre (core) and the outer casing (surface).
       </p>
       <div class="diagram-wrap">
         <div class="diagram-title">🌡 Temperature Profile Across a 280Ah Prismatic Cell at 1C Discharge</div>
@@ -1232,9 +1233,9 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <text x="550" y="175" text-anchor="middle" fill="#63b3ed" font-size="8" font-family="JetBrains Mono,monospace">Surface</text>
         </svg>
         <p class="diagram-caption">
-          At 1C discharge, the prismatic cell core is approximately 5–10°C hotter than its surface.
-          The NTC thermistor mounted on the surface reads T_ref while the active electrode stack runs hotter.
-          The BMS must add a thermal lag correction: T_core ≈ T_surface + ΔT_lag(I, thermal_R).
+          At a 1C discharge rate, the inside of the cell is roughly 5–10°C hotter than the outside.
+          Your temperature sensor (NTC) is glued to the surface, so it reads the cool side — not the
+          hot centre. The BMS has to add a correction to estimate how much hotter the core actually is.
         </p>
       </div>
 
@@ -1243,11 +1244,10 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <span class="formula-line">ΔT = Q_gen × R_thermal_cell</span>
         <span class="formula-line">R_thermal ≈ thickness / (2 × λ × Area)  for a slab geometry</span>
         <span class="formula-caption">
-          For a 280Ah prismatic cell: thickness ≈ 45mm, λ_radial ≈ 0.5 W/m·K, face area ≈ 0.04 m².
-          R_thermal ≈ 0.045 / (2 × 0.5 × 0.04) ≈ 1.125 K/W.
-          At 1C (Q_gen ≈ 39 W): ΔT ≈ 39 × 1.125 ≈ 44°C (across full thickness — actual is half this
-          for symmetric cooling → ~22°C). This is why surface NTC readings underestimate core temperature.
-          BMS over-temperature cutoff must be set conservatively to account for this lag.
+          For our 280Ah reference cell (45mm thick), the thermal resistance from core to surface is about
+          1.125 K/W. At 1C it generates ~39W of heat, giving a core-to-surface gap of up to ~22°C with
+          cooling on both faces. This is why the BMS sets its over-temperature cutoff conservatively —
+          the sensor on the outside always reads lower than the actual hottest point inside.
         </span>
       </div>
     </div>
