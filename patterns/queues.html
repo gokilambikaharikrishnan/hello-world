@@ -1069,6 +1069,319 @@ Path: hit→hot→dot→dog→cog (length 5)</div>
   </div>
 </div>
 
+
+<!-- Q11 -->
+<div class="card" id="q11">
+  <div class="card-header">
+    <span class="card-id">Q11</span>
+    <span class="card-title">Monotonic Deque Core Idea</span>
+    <span class="category-badge">Monotonic Deque</span>
+  </div>
+  <div class="background">
+    <p>A monotonic deque is a double-ended queue that is always kept sorted (increasing or decreasing). You pop from the <em>back</em> to maintain order when inserting a new element, and pop from the <em>front</em> to evict elements that have fallen outside a sliding window.</p>
+    <p><strong>How it differs from a monotonic stack:</strong> A stack only has one end. A deque adds a <em>front eviction</em> step — elements that are still in order but too old (outside the window) are removed from the front. This is the critical addition that makes sliding-window problems tractable.</p>
+  </div>
+  <div class="situations">
+    <strong>Reach for monotonic deque when</strong>
+    <span class="sit">Sliding window max or min</span>
+    <span class="why">Deque back: maintain order. Deque front: evict out-of-window elements.</span>
+    <span class="sit">Any query "max/min over last K elements" in O(n)</span>
+    <span class="why">Each element enters and leaves the deque at most once → O(n) total</span>
+    <span class="sit">Shortest subarray with sum ≥ K (negative numbers)</span>
+    <span class="why">Prefix-sum + monotonic deque front eviction when window condition met</span>
+  </div>
+  <div class="logic-build">
+    <p>Array [3,1,4,1,5,9,2,6], window size K=3. Sliding window MAXIMUM.</p>
+    <span class="aha">Deque stores INDICES. Before each push: pop back while arr[back] ≤ arr[new]. Evict front when front index ≤ i-K.</span>
+    <div class="ascii">
+i=0 val=3: dq=[]       push back → dq=[0]          max=—
+i=1 val=1: dq=[0]      1<3 no pop → push back       dq=[0,1]        max=—
+i=2 val=4: dq=[0,1]    4>1 pop 1, 4>3 pop 0 → push dq=[2]          max=arr[2]=4
+i=3 val=1: dq=[2]      1<4 no pop → push back       dq=[2,3]        max=arr[2]=4
+i=4 val=5: dq=[2,3]    5>1 pop 3, 5>4 pop 2 → push dq=[4]          max=arr[4]=5
+i=5 val=9: dq=[4]      9>5 pop 4 → push back        dq=[5]          max=arr[5]=9
+i=6 val=2: dq=[5]      evict? front=5, 5>6-3=3 ok  push back        dq=[5,6]        max=arr[5]=9
+i=7 val=6: dq=[5,6]    evict? front=5, 5>7-3=4 ok  6>2 pop 6       dq=[5,7]        max=arr[5]=9
+
+Results: [4,4,5,9,9,9]</div>
+    <span class="aha">Two operations on the deque: (1) pop-back to maintain order, (2) pop-front to evict stale elements.</span>
+  </div>
+  <pre><code class="language-c">/* Deque stores indices into arr[] */
+int dq[1024], dfront=0, dback=0; /* dback = one past last */
+
+void sliding_max(int *arr, int n, int k, int *out) {
+    dfront = dback = 0;
+    for (int i = 0; i < n; i++) {
+        /* evict front if outside window */
+        if (dfront < dback && dq[dfront] <= i-k)
+            dfront++;
+        /* maintain decreasing order: pop back */
+        while (dfront < dback && arr[dq[dback-1]] <= arr[i])
+            dback--;
+        dq[dback++] = i;
+        /* window is full starting at i=k-1 */
+        if (i >= k-1)
+            out[i-(k-1)] = arr[dq[dfront]];
+    }
+}
+</code></pre>
+  <div class="dry-run">
+arr=[3,1,4,1,5,9,2,6], k=3
+out=[4,4,5,9,9,9]  (6 values for n-k+1=6 windows)</div>
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha — deque stores indices, not values</div>
+    <p>You must store indices so you can check whether the front element is still within the window (<code>dq[front] &lt;= i-k</code>). If you stored values you'd lose the position information and couldn't do the eviction step.</p>
+  </div>
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>What two operations keep the deque correct? Pop-back (order), pop-front (window eviction).</li>
+      <li>Why store indices instead of values? To know if the front element has left the window.</li>
+      <li>What is the time complexity? O(n) — each element enters and exits the deque exactly once.</li>
+    </ol>
+  </div>
+  <div class="trigger-big">
+    <div class="trigger-main">Trigger: "sliding window max/min / range query in O(n)"</div>
+    <ul class="trigger-variants">
+      <li>deque of indices, decreasing (max) or increasing (min)</li>
+      <li>pop back to maintain order; pop front to evict old elements</li>
+      <li>front of deque = answer for current window</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Q12 -->
+<div class="card" id="q12">
+  <div class="card-header">
+    <span class="card-id">Q12</span>
+    <span class="card-title">Sliding Window Maximum</span>
+    <span class="category-badge">Monotonic Deque</span>
+  </div>
+  <div class="background">
+    <p>Given array of n integers, output the maximum of every window of size k. Naively O(nk); with a monotonic deque it's O(n) — each element is pushed and popped at most once.</p>
+  </div>
+  <div class="situations">
+    <strong>Reach for sliding window max when</strong>
+    <span class="sit">Max over a fixed-size window at every position</span>
+    <span class="why">Classic monotonic deque: decreasing order, front = current max</span>
+    <span class="sit">Real-time signal processing: peak in last N samples</span>
+    <span class="why">Embedded: maintain decreasing deque over ring buffer window</span>
+    <span class="sit">Jump game: can you reach cell i from any of last k cells?</span>
+    <span class="why">Max reachable distance in window → deque</span>
+  </div>
+  <div class="logic-build">
+    <p>arr=[2,3,4,2,6,2,5,1], k=4</p>
+    <div class="ascii">
+i=0 v=2 dq=[0]
+i=1 v=3 pop 0(2≤3) dq=[1]
+i=2 v=4 pop 1(3≤4) dq=[2]
+i=3 v=2           dq=[2,3]  → window [2,3,4,2]  max=arr[2]=4
+i=4 v=6 pop 3,pop2 dq=[4]   → window [3,4,2,6]  max=arr[4]=6
+i=5 v=2           dq=[4,5]  → window [4,2,6,2]  max=arr[4]=6
+  front=4, 4 > 5-4=1 ok, no evict
+i=6 v=5 pop 5(2≤5) dq=[4,6] → window [2,6,2,5]  max=arr[4]=6
+  front=4, 4 > 6-4=2 ok
+i=7 v=1           dq=[4,6,7]→ window [6,2,5,1]  max=arr[4]=6
+  front=4, 4 <= 7-4=3 → EVICT front, dq=[6,7]   max=arr[6]=5
+
+Output: [4,6,6,6,5]</div>
+    <span class="aha">At i=7 the front index 4 is exactly i-k=3 → it's outside; evict before reading answer.</span>
+  </div>
+  <pre><code class="language-c">int* max_sliding_window(int *nums, int n, int k, int *sz) {
+    int *out = malloc((n-k+1)*sizeof(int));
+    int dq[n], dfront=0, dback=0;
+    *sz = n-k+1;
+    for (int i=0; i<n; i++) {
+        if (dfront<dback && dq[dfront]<=i-k) dfront++;
+        while (dfront<dback && nums[dq[dback-1]]<=nums[i]) dback--;
+        dq[dback++]=i;
+        if (i>=k-1) out[i-k+1]=nums[dq[dfront]];
+    }
+    return out;
+}
+</code></pre>
+  <div class="dry-run">
+nums=[2,3,4,2,6,2,5,1],k=4 → [4,6,6,6,5]</div>
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha — evict BEFORE reading the answer</div>
+    <p>The eviction check (<code>dq[front] &lt;= i-k</code>) must happen before you read <code>nums[dq[front]]</code> as the window maximum. If you read first, you might output a stale element that is no longer in the window.</p>
+  </div>
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Which end gives the window max? Front of the deque (largest index of the remaining max).</li>
+      <li>When do you evict from front? When <code>dq[front] &lt;= i-k</code>.</li>
+      <li>When do you pop from back? When <code>nums[back] &lt;= nums[i]</code> (new element is at least as large).</li>
+    </ol>
+  </div>
+  <div class="trigger-big">
+    <div class="trigger-main">Trigger: "max of every window of size k"</div>
+    <ul class="trigger-variants">
+      <li>decreasing deque of indices</li>
+      <li>pop back when nums[back] ≤ nums[i]; evict front when out of window</li>
+      <li>output nums[dq[front]] for i ≥ k-1</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Q13 -->
+<div class="card" id="q13">
+  <div class="card-header">
+    <span class="card-id">Q13</span>
+    <span class="card-title">Sliding Window Minimum</span>
+    <span class="category-badge">Monotonic Deque</span>
+  </div>
+  <div class="background">
+    <p>Mirror of Q12. Maintain an <em>increasing</em> deque instead of decreasing. Pop back when the new element is <em>smaller or equal</em> than the current back. The front is always the window minimum.</p>
+  </div>
+  <div class="situations">
+    <strong>Reach for sliding window min when</strong>
+    <span class="sit">Min over a sliding window at every position</span>
+    <span class="why">Increasing deque: front = minimum of current window</span>
+    <span class="sit">Minimum cost reachable in last k steps</span>
+    <span class="why">DP optimisation: dp[i] = cost[i] + min(dp[i-k..i-1])</span>
+  </div>
+  <div class="logic-build">
+    <p>arr=[3,1,2,4,1,5], k=3</p>
+    <div class="ascii">
+i=0 v=3 dq=[0]
+i=1 v=1 pop 0(3≥1) dq=[1]
+i=2 v=2           dq=[1,2]   window[0..2] min=arr[1]=1
+i=3 v=4           dq=[1,2,3] window[1..3] min=arr[1]=1
+  front=1, 1>3-3=0 ok
+i=4 v=1 pop 3,2,1  dq=[4]   window[2..4] min=arr[4]=1
+  front was 1; evict? 1<=4-3=1 yes → evict first → dq=[4]
+i=5 v=5           dq=[4,5]   window[3..5] min=arr[4]=1
+
+Output: [1,1,1,1]</div>
+    <span class="aha">Only change from sliding-max: pop-back condition flips to >=, deque stays increasing.</span>
+  </div>
+  <pre><code class="language-c">int* min_sliding_window(int *nums, int n, int k, int *sz) {
+    int *out = malloc((n-k+1)*sizeof(int));
+    int dq[n], dfront=0, dback=0;
+    *sz = n-k+1;
+    for (int i=0; i<n; i++) {
+        if (dfront<dback && dq[dfront]<=i-k) dfront++;
+        /* INCREASING: pop back while back >= new */
+        while (dfront<dback && nums[dq[dback-1]]>=nums[i]) dback--;
+        dq[dback++]=i;
+        if (i>=k-1) out[i-k+1]=nums[dq[dfront]];
+    }
+    return out;
+}
+</code></pre>
+  <div class="dry-run">
+nums=[3,1,2,4,1,5],k=3 → [1,1,1,1]</div>
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha — only one line changes from sliding-max</div>
+    <p>The only difference is <code>&gt;=</code> instead of <code>&lt;=</code> in the back-pop condition. Everything else — eviction, output timing, index storage — is identical. It's easy to accidentally keep the wrong comparison and get max instead of min.</p>
+  </div>
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>What order does the deque maintain for sliding-min? Increasing (front = smallest).</li>
+      <li>Back-pop condition for min? Pop while <code>nums[back] &gt;= nums[i]</code>.</li>
+      <li>Back-pop condition for max? Pop while <code>nums[back] &lt;= nums[i]</code>.</li>
+    </ol>
+  </div>
+  <div class="trigger-big">
+    <div class="trigger-main">Trigger: "min of every window of size k"</div>
+    <ul class="trigger-variants">
+      <li>increasing deque of indices</li>
+      <li>pop back when nums[back] >= nums[i]</li>
+      <li>same eviction and output logic as sliding-max</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Q14 -->
+<div class="card" id="q14">
+  <div class="card-header">
+    <span class="card-id">Q14</span>
+    <span class="card-title">Shortest Subarray with Sum &ge; K</span>
+    <span class="category-badge">Monotonic Deque</span>
+  </div>
+  <div class="background">
+    <p>Find the minimum length subarray with sum ≥ K. With only positive numbers, two pointers work. With <em>negative numbers</em> allowed, two pointers break — you need prefix sums + a monotonic deque.</p>
+    <p>Key insight: prefix[j] - prefix[i] = sum(i..j-1). We want prefix[j] - prefix[i] ≥ K with j-i minimised. For each j, we want the largest i where prefix[i] ≤ prefix[j]-K — and i should be as large as possible (to minimise length). The deque stores a prefix-sum-increasing sequence of indices.</p>
+  </div>
+  <div class="situations">
+    <strong>Reach for this pattern when</strong>
+    <span class="sit">Min-length subarray sum ≥ K with negative numbers</span>
+    <span class="why">Two pointers fail on negatives; prefix sum + monotonic deque = O(n)</span>
+    <span class="sit">Max width window where some prefix condition holds</span>
+    <span class="why">General template: maintain monotonic prefix deque, pop front when condition met</span>
+  </div>
+  <div class="logic-build">
+    <p>nums=[2,-1,2], K=3</p>
+    <div class="ascii">
+prefix = [0, 2, 1, 3]
+         i=0 1  2  3
+
+For each j, pop front of dq while prefix[j]-prefix[dq[front]] >= K:
+  → candidate length = j - dq[front]; update ans; pop front (keep looking for shorter)
+
+j=0 prefix=0: dq=[]   push 0    dq=[0]
+j=1 prefix=2: dq=[0]  2-0=2<3  push 1    dq=[0,1]
+j=2 prefix=1: dq=[0,1] 1<2(back) pop 1   dq=[0]   push 2  dq=[0,2]
+j=3 prefix=3: dq=[0,2]
+  prefix[3]-prefix[0]=3>=3 → len=3-0=3 ans=3, pop 0
+  prefix[3]-prefix[2]=2<3  → done
+  push 3  dq=[2,3]
+
+Answer: 3 (subarray [2,-1,2])</div>
+    <span class="aha">Pop front when condition met AND keep popping — a longer window starting later might still be valid and shorter.</span>
+  </div>
+  <pre><code class="language-c">int shortest_subarray(int *nums, int n, int k) {
+    long long *pre = malloc((n+1)*sizeof(long long));
+    pre[0]=0;
+    for(int i=0;i<n;i++) pre[i+1]=pre[i]+nums[i];
+
+    int *dq=malloc((n+1)*sizeof(int));
+    int dfront=0,dback=0,ans=n+1;
+
+    for(int j=0;j<=n;j++){
+        /* pop front: valid windows, keep shortest */
+        while(dfront<dback && pre[j]-pre[dq[dfront]]>=k){
+            int len=j-dq[dfront++];
+            if(len<ans) ans=len;
+        }
+        /* maintain increasing prefix sums: pop back */
+        while(dfront<dback && pre[dq[dback-1]]>=pre[j])
+            dback--;
+        dq[dback++]=j;
+    }
+    free(pre); free(dq);
+    return ans<=n ? ans : -1;
+}
+</code></pre>
+  <div class="dry-run">
+nums=[2,-1,2],k=3
+pre=[0,2,1,3]
+j=3: pre[3]-pre[0]=3>=3, len=3, ans=3
+Result: 3</div>
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha — pop front AND keep scanning</div>
+    <p>When <code>pre[j]-pre[front] &gt;= K</code>, record the length, then pop the front and keep checking. A later (larger) front index gives a shorter subarray and might still satisfy the condition. Don't break after the first valid window.</p>
+  </div>
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Why does two-pointer fail with negatives? Adding a negative element can decrease the sum, making the window seem too small when it was already valid earlier.</li>
+      <li>What does the deque store? Indices into the prefix-sum array, in increasing prefix-sum order.</li>
+      <li>What does popping from the front accomplish? Records a valid window (sum ≥ K) and removes it since any future pop will only give a shorter window.</li>
+    </ol>
+  </div>
+  <div class="trigger-big">
+    <div class="trigger-main">Trigger: "shortest subarray sum ≥ K with negatives"</div>
+    <ul class="trigger-variants">
+      <li>build prefix sums; maintain increasing-prefix deque</li>
+      <li>pop front while pre[j]-pre[front] >= K, record length</li>
+      <li>pop back while pre[back] >= pre[j] before push</li>
+    </ul>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 
 <script>hljs.highlightAll();</script>
