@@ -2457,7 +2457,7 @@ T_min (°C)  | Max I_charge | Reason
           <div class="trace-label">Arrhenius Aging</div>
         </div>
         <div class="trace-arrow">→</div>
-        <div class="trace-right">Every 10°C over optimal doubles aging rate. Thermal management that reduces average operating temp by 5°C increases calendar life by ~40%. The economic argument for good thermal design.</div>
+        <div class="trace-right">Every 10°C above the optimal zone doubles how fast the cell ages. Dropping the average operating temperature by just 5°C extends calendar life by about 40%. This is the economic case for spending money on thermal management.</div>
       </div>
       <div class="trace-row">
         <div class="trace-left">
@@ -2465,7 +2465,7 @@ T_min (°C)  | Max I_charge | Reason
           <div class="trace-label">ΔT_pack &lt; 5°C</div>
         </div>
         <div class="trace-arrow">→</div>
-        <div class="trace-right">Temperature gradient causes differential aging — hot cells age 2–4× faster. Balancing cannot compensate for aging-driven imbalance. Uniform temperature is the only solution.</div>
+        <div class="trace-right">A large temperature spread across the pack means some cells age 2–4× faster than others. The BMS balancer cannot fix aging-driven imbalance — only uniform temperature can. Keep the spread below 5°C.</div>
       </div>
       <div class="trace-row">
         <div class="trace-left">
@@ -2473,7 +2473,7 @@ T_min (°C)  | Max I_charge | Reason
           <div class="trace-label">I_charge = 0 at &lt;0°C</div>
         </div>
         <div class="trace-arrow">→</div>
-        <div class="trace-right">Lithium plating below freezing forms dendrites → separator puncture → internal short → thermal runaway. This is an unconditional BMS rule — no exceptions for "gentle charge".</div>
+        <div class="trace-right">Charging below freezing deposits metallic lithium as spikes (dendrites) rather than inserting it cleanly. Dendrites punch through the separator and create an internal short that can trigger thermal runaway. No charge at all below 0°C — no exceptions.</div>
       </div>
       <div class="trace-row">
         <div class="trace-left">
@@ -2481,7 +2481,7 @@ T_min (°C)  | Max I_charge | Reason
           <div class="trace-label">Cell Swelling ~2%</div>
         </div>
         <div class="trace-arrow">→</div>
-        <div class="trace-right">LFP 280Ah expands ~0.9 mm per cycle. Pack fixtures need spring compliance. Irreversible swelling indicates gassing — early EOL indicator detectable by thickness measurement or strain gauge.</div>
+        <div class="trace-right">A 280Ah LFP cell swells about 0.9mm every charge cycle. Pack frames must use spring-loaded fixtures to absorb this. If the swelling is permanent (doesn't spring back), gas is building up inside — an early sign the cell is approaching end of life.</div>
       </div>
       <div class="trace-row">
         <div class="trace-left">
@@ -2489,7 +2489,7 @@ T_min (°C)  | Max I_charge | Reason
           <div class="trace-label">dT/dt Monitoring</div>
         </div>
         <div class="trace-arrow">→</div>
-        <div class="trace-right">Rate of temperature rise, not absolute temperature, is the early thermal runaway signal. dT/dt &gt; 1°C/s with no proportional current = exothermic reaction in progress. Requires 10Hz sampling minimum.</div>
+        <div class="trace-right">How fast temperature is rising matters more than the absolute reading. dT/dt above 1°C/s without a matching increase in current means an exothermic reaction is running inside the cell. Catch this early — it requires sampling temperature at least 10 times per second.</div>
       </div>
       <div class="trace-row">
         <div class="trace-left">
@@ -2497,7 +2497,7 @@ T_min (°C)  | Max I_charge | Reason
           <div class="trace-label">2-of-N Sensor Vote</div>
         </div>
         <div class="trace-arrow">→</div>
-        <div class="trace-right">Single failed NTC causes false alarm → UPS goes offline when needed most. Voting logic requires 2+ sensors to agree on warning threshold. Use 1-of-N for thermal runaway detection — no false negatives allowed.</div>
+        <div class="trace-right">One failed sensor can send the UPS offline at the worst possible moment. Require at least 2 sensors to agree before triggering a warning-level action. For thermal runaway detection, flip to 1-of-N: a single sensor seeing runaway-level dT/dt is enough — you cannot afford to miss it.</div>
       </div>
     </div>
   </section>
