@@ -1571,9 +1571,9 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
 
 <div class="rnd-block">
   <div class="rnd-label">⚗ R&amp;D Thinking — Why Thermal Runaway Is Unstoppable Once Started</div>
-  <p>The core problem isn't temperature — it's <strong>self-acceleration</strong>. Every joule of heat released by the separator breakdown drives more electrolyte decomposition, which releases more heat. The reaction rate doubles every ~10°C (Arrhenius). So by the time you detect 80°C, the cell is already committed to destruction in 200–400ms.</p>
-  <p>This is why the BMS can't "stop" thermal runaway. It can only <em>prevent</em> the conditions that start it (OVP, OTP, short circuit) and <em>contain</em> propagation by opening the pack contactor before adjacent cells are heated.</p>
-  <p>The 130°C separator melt is the point of no return — beyond that, the internal short is mechanical, not electrical. No firmware action can help.</p>
+  <p>The core problem isn't just heat — it's <strong>self-acceleration</strong>. Every bit of heat released speeds up the chemical reactions, which release even more heat. Reaction rates roughly double for every 10°C rise (Arrhenius law). So by the time you detect 80°C inside the cell, it's already committed to destroying itself in 200–400 milliseconds — far too fast for any firmware to respond.</p>
+  <p>This is why the BMS can't "stop" thermal runaway once it's started. Its only tools are: <em>prevent</em> the conditions that start it (cut off on over-voltage, over-temperature, or short circuit) and <em>contain</em> propagation by opening the pack contactor before neighbouring cells get too hot.</p>
+  <p>The 130°C separator melt is the point of no return. After that, the internal short is physical — the electrodes are literally touching. No software can undo that.</p>
 </div>
 <div class="pause-think">
   <div class="pt-label">⏸ Pause &amp; Think</div>
