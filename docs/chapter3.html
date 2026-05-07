@@ -1864,18 +1864,19 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="callout-body">
           <div class="callout-title">Surface Temperature Underestimates Core Temperature</div>
           <p>
-            At 1C discharge, the cell core is typically 5–15°C hotter than its surface.
-            An NTC on the cell surface reading 50°C may mean the cell core is at 60–65°C —
-            approaching the SEI decomposition zone. The BMS must apply a thermal lag correction
-            that is a function of current magnitude and cell thermal resistance:
+            At 1C discharge, the cell's interior is typically 5–15°C hotter than what the surface
+            sensor reads. If your surface sensor shows 50°C, the core might already be at 60–65°C —
+            dangerously close to the temperature where the SEI layer starts to break down.
+            The BMS must correct for this lag using a simple formula based on current and cell
+            thermal resistance:
           </p>
           <div style="font-family:var(--font-mono); font-size:0.82rem; background:rgba(0,0,0,0.3); padding:0.75rem; border-radius:4px; margin-top:0.5rem; color:var(--accent-orange);">
             T_core_est = T_surface + k_lag × I² × R_thermal_cell
           </div>
           <p style="margin-top:0.5rem;">
-            Where k_lag is an empirically determined correction factor (measured during cell
-            characterisation using a thermocouple inserted into a test cell core vs surface NTC).
-            Typical values: k_lag ≈ 0.08 K/A² for 280Ah prismatic LFP.
+            k_lag is a correction factor you measure once during cell testing — by inserting a
+            thermocouple into the centre of a test cell and comparing it with the surface sensor at
+            different currents. For a 280Ah prismatic LFP cell, k_lag ≈ 0.08 K/A².
           </p>
         </div>
       </div>
