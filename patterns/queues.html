@@ -1757,6 +1757,156 @@ first_unique('b')='c'</div>
   </div>
 </div>
 
+
+<!-- Q20 -->
+<div class="card" id="q20">
+  <div class="card-header">
+    <span class="card-id">Q20</span>
+    <span class="card-title">Reveal Cards in Increasing Order</span>
+    <span class="category-badge">Ordering / Simulation</span>
+  </div>
+  <div class="background">
+    <p>Given a deck of cards: repeatedly reveal the top card and move the next top card to the bottom. You want the revealed sequence to be in increasing order. Work backwards: simulate the queue process on indices to find what permutation of a sorted array achieves this.</p>
+  </div>
+  <div class="situations">
+    <strong>Reach for queue simulation when</strong>
+    <span class="sit">Reconstruct input order from a prescribed reveal sequence</span>
+    <span class="why">Simulate the reveal process on index positions, not values</span>
+    <span class="sit">Any "take from front, put one back" deck/queue puzzle</span>
+    <span class="why">Queue perfectly models the cyclic take-one, send-one-back operation</span>
+  </div>
+  <div class="logic-build">
+    <p>deck=[17,13,11,2,3,5,7], sorted=[2,3,5,7,11,13,17]</p>
+    <div class="ascii">
+Simulate index queue: [0,1,2,3,4,5,6]
+Round 1: take front idx=0, move idx=1 to back → q=[2,3,4,5,6,1]
+Round 2: take front idx=2, move idx=3 to back → q=[4,5,6,1,3]
+Round 3: take front idx=4, move idx=5 to back → q=[6,1,3,5]
+Round 4: take front idx=6, move idx=1 to back → q=[3,5,1]
+Round 5: take front idx=3, move idx=5 to back → q=[1,5]
+Round 6: take front idx=1, move idx=5 to back → q=[5]
+Round 7: take front idx=5
+
+Reveal order of indices: 0,2,4,6,3,1,5
+Assign sorted[0..6] to those positions:
+  pos[0]=2, pos[2]=3, pos[4]=5, pos[6]=7, pos[3]=11, pos[1]=13, pos[5]=17
+result: [2,13,3,11,5,17,7]</div>
+    <span class="aha">Simulate on indices, assign sorted values to the positions in simulation order.</span>
+  </div>
+  <pre><code class="language-c">#include &lt;stdlib.h&gt;
+int cmp(const void *a, const void *b){return *(int*)a-*(int*)b;}
+void reveal_cards(int *deck, int n, int *out) {
+    int sorted[n]; for(int i=0;i<n;i++) sorted[i]=deck[i];
+    qsort(sorted,n,sizeof(int),cmp);
+    int q[n], head=0, tail=0;
+    for(int i=0;i<n;i++) q[tail++]=i;  /* index queue */
+    for(int i=0;i<n;i++){
+        out[q[head++]]=sorted[i];       /* assign next sorted value */
+        if(head<tail) q[tail++]=q[head++]; /* move next to bottom */
+    }
+}
+</code></pre>
+  <div class="dry-run">
+n=7, sorted=[2,3,5,7,11,13,17]
+After simulation: out=[2,13,3,11,5,17,7]</div>
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha — simulate on indices, not values</div>
+    <p>If you simulate with values directly you'd need to sort after every insertion. Simulate with index positions instead: the index queue tells you which output slot each sorted value goes into.</p>
+  </div>
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>What does the index queue represent? The order in which output slots will be "revealed."</li>
+      <li>What do you assign to out[q[head]]? The next value from the sorted array.</li>
+      <li>What is the "move to bottom" step? Dequeue the next index and enqueue it at the back.</li>
+    </ol>
+  </div>
+  <div class="trigger-big">
+    <div class="trigger-main">Trigger: "arrange deck so reveal order is sorted"</div>
+    <ul class="trigger-variants">
+      <li>sort the values; simulate index queue</li>
+      <li>take front index → assign sorted[i] → move next index to back</li>
+      <li>O(n log n) for sort, O(n) simulation</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Q21 -->
+<div class="card" id="q21">
+  <div class="card-header">
+    <span class="card-id">Q21</span>
+    <span class="card-title">Senate Voting — Two Queues Greedy</span>
+    <span class="category-badge">Ordering / Simulation</span>
+  </div>
+  <div class="background">
+    <p>Senate has Radiant (R) and Dire (D) senators. Each senator can ban the next senator of the opposing party (by index, cyclically) or announce victory if no opponents remain. Simulate the banning process using two index queues — one per party — to find which party wins.</p>
+    <p>Greedy: a senator always bans the nearest future opponent, i.e., the smallest index still active among opponents. This maximises how long the winner's senators survive.</p>
+  </div>
+  <div class="situations">
+    <strong>Reach for two-queue greedy when</strong>
+    <span class="sit">Two competing groups alternately eliminating each other</span>
+    <span class="why">Queue preserves round order; greedy = always ban lowest-index opponent</span>
+    <span class="sit">Cyclic elimination with position tracking</span>
+    <span class="why">Re-enqueue survivors with incremented index to model next round</span>
+  </div>
+  <div class="logic-build">
+    <p>senate="RRDDD"</p>
+    <div class="ascii">
+R-queue: [0, 1]   D-queue: [2, 3, 4]
+
+Round: compare front of each queue
+  R=0, D=2 → 0<2, R wins: ban D[2], re-enqueue R at 5   R=[1] D=[3,4]
+  R=1, D=3 → 1<3, R wins: ban D[3], re-enqueue R at 6   R=[] D=[4]
+  (R empty) D wins? No — R=[6]
+  R=6, D=4 → 4<6, D wins: ban R[6], re-enqueue D at 7   R=[] D=[7]
+  R empty → Dire wins</div>
+    <span class="aha">The senator with the smaller index bans the other. Re-enqueue winner with index += n (next full round).</span>
+  </div>
+  <pre><code class="language-c">#include &lt;string.h&gt;
+/* returns 0='Radiant', 1='Dire' */
+int senate_winner(char *s) {
+    int n=strlen(s);
+    int rq[n*2],dq[n*2],rh=0,rt=0,dh=0,dt=0;
+    for(int i=0;i<n;i++){
+        if(s[i]=='R') rq[rt++]=i;
+        else          dq[dt++]=i;
+    }
+    while(rh<rt && dh<dt){
+        int r=rq[rh++], d=dq[dh++];
+        if(r<d) rq[rt++]=r+n;  /* R bans D, R survives */
+        else    dq[dt++]=d+n;  /* D bans R, D survives */
+    }
+    return rh==rt ? 1 : 0;   /* who still has senators? */
+}
+</code></pre>
+  <div class="dry-run">
+"RRDDD": R=[0,1] D=[2,3,4]
+0<2: R re-enq 5 → R=[1] D=[3,4]
+1<3: R re-enq 6 → R=[] D=[4]; wait R=[6]
+4<6: D re-enq 7 → R=[] D=[7]
+rh==rt → return 1 (Dire)</div>
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha — re-enqueue with index + n, not 0</div>
+    <p>When a senator survives and "wraps around" to the next round, enqueue them with index <code>i + n</code>. This keeps the comparison <code>r &lt; d</code> meaningful across rounds. If you reused index 0, senators from later rounds would appear to act before those in the current round.</p>
+  </div>
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>What does a senator with smaller index do? They act first and ban the opponent.</li>
+      <li>How do you model "next round"? Re-enqueue the surviving senator with index += n.</li>
+      <li>When does a party win? When the opposing queue is fully drained.</li>
+    </ol>
+  </div>
+  <div class="trigger-big">
+    <div class="trigger-main">Trigger: "cyclic senate / two groups eliminating each other"</div>
+    <ul class="trigger-variants">
+      <li>two index queues, one per group</li>
+      <li>smaller index bans larger; survivor re-enqueued at index+n</li>
+      <li>party with non-empty queue wins</li>
+    </ul>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 
 <script>hljs.highlightAll();</script>
