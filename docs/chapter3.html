@@ -1797,9 +1797,10 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <text x="490" y="170" text-anchor="middle" fill="#8b949e" font-size="8.5" font-family="Inter,sans-serif">Poor cooling → hot cells age 4× faster → capacity imbalance in 2 years</text>
         </svg>
         <p class="diagram-caption">
-          Left: well-cooled pack with &lt;5°C gradient — cells age uniformly. Right: poor thermal design
-          with 22°C gradient — red cells age 4× faster, creating increasing voltage imbalance that
-          balancing circuits cannot fully compensate. Target: ΔT_pack &lt; 5°C across all cells.
+          Left: a well-cooled pack with less than 5°C temperature spread — cells age at the same rate.
+          Right: a poorly designed pack with a 22°C spread — the hot (red) cells age four times faster,
+          gradually drifting out of balance even if the BMS is actively balancing them.
+          Design goal: keep the spread below 5°C across all cells at all times.
         </p>
       </div>
 
@@ -1810,10 +1811,10 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <span class="formula-line">Warning threshold: ΔT_pack &gt; 8°C → reduce load, increase cooling</span>
         <span class="formula-line">Alarm threshold: ΔT_pack &gt; 12°C → investigate thermal path failure</span>
         <span class="formula-caption">
-          BMS firmware computes ΔT_pack every measurement cycle and logs it as a health indicator.
-          A gradual increase in ΔT_pack over months (at the same load profile) indicates a deteriorating
-          thermal path — gap filler dry-out, blocked vent, or failing fan — before any cell temperature
-          exceeds the protection threshold.
+          The BMS calculates ΔT_pack every measurement cycle and logs it as a health indicator.
+          If ΔT_pack slowly grows over months (with the same load), that's a warning sign of a
+          deteriorating thermal path — maybe the gap-filler pad dried out, a vent got blocked, or
+          a fan is starting to fail — caught early, before any single cell crosses its temperature limit.
         </span>
       </div>
     </div>
