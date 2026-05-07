@@ -1686,8 +1686,9 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
     <div class="subsection">
       <div class="subsection-title">Active Cooling — Forced Air and Liquid</div>
       <p>
-        When passive cooling is insufficient — typically above 1C continuous discharge or
-        ambient temperatures above 35°C — active cooling is required.
+        When passive cooling can't keep up — usually when the discharge rate exceeds 1C continuously,
+        or when the surrounding air is already above 35°C — you need active cooling, which means
+        powered fans or a liquid cooling loop.
       </p>
 
       <div class="stat-grid" style="grid-template-columns:1fr 1fr; gap:1.25rem; margin:1.5rem 0;">
@@ -1722,13 +1723,13 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="callout-body">
           <div class="callout-title">BMS Must Control the Cooling System — Not Just Monitor</div>
           <p>
-            A common design mistake is to treat the BMS and the thermal management system as
-            separate subsystems with separate controllers. This creates a race condition:
-            the BMS detects overtemperature and cuts off the load, but the cooling system is
-            still running at full speed and may cool the pack below its charge temperature limit.
-            The BMS must send cooling commands (fan speed setpoint, coolant valve position) via
-            CAN or a dedicated thermal control interface. The BMS is the single authoritative
-            source of thermal state for the entire system.
+            A common design mistake is to treat the BMS and the cooling system as two completely
+            separate things with their own controllers. This creates a dangerous race condition:
+            the BMS sees the pack overheating and cuts the load — but the cooling system is still
+            blasting cold air and can push the cells below their minimum charge temperature limit.
+            The BMS must control the cooling directly (fan speed, coolant valve position) via CAN
+            or a dedicated interface. There should be one authority over the pack's thermal state:
+            the BMS.
           </p>
         </div>
       </div>
