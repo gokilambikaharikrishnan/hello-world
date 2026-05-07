@@ -1939,8 +1939,9 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         </div>
       </div>
       <p style="font-size:0.83rem; color:var(--text-muted); font-family:var(--font-mono); margin-top:0.5rem;">
-        ↑ Swelling comparison for 280Ah prismatic cells. Note: aged LFP approaches NMC new-cell swelling
-        as SEI growth contributes additional volume. Pack fixture design must accommodate aged-cell dimensions.
+        ↑ Swelling comparison for 280Ah prismatic cells. Notice that an aged LFP cell swells almost
+        as much as a brand-new NMC cell — the extra SEI layer that builds up over 2000 cycles takes
+        up real physical space. Pack brackets and end-plates must be sized for the largest (aged) case.
       </p>
 
       <div class="callout callout-warning">
@@ -1948,16 +1949,16 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="callout-body">
           <div class="callout-title">Irreversible Swelling — The Gassing Indicator</div>
           <p>
-            Cyclic swelling (charging → discharging) is normal and reversible. However,
-            <em>irreversible</em> swelling — where the cell thickness increases permanently over
-            cycles — indicates gas generation inside the cell. This is most commonly caused by:
-            (1) electrolyte oxidation at the cathode surface above 3.65V (overcharge),
-            (2) CO₂ generation from electrolyte reduction at the anode (continued SEI growth),
-            (3) water contamination in the electrolyte generating HF and H₂.
-            Irreversible swelling is detectable by periodic cell thickness measurement and is
-            an early indicator that the cell is approaching end of life. Some advanced BMS systems
-            include a mechanical strain sensor (strain gauge or load cell in the compression fixture)
-            that tracks cumulative swelling as a SOH indicator.
+            The swelling that happens every charge/discharge cycle is completely normal — the cell
+            returns to the same thickness each time. The problem is <em>irreversible</em> swelling,
+            where the cell gets permanently thicker over time. This means gas is being generated
+            inside the cell, most commonly from:
+            (1) overcharging above 3.65V (electrolyte breaks down at the cathode),
+            (2) the SEI layer continuing to grow on the anode (producing CO₂),
+            or (3) water contamination in the electrolyte (which generates corrosive HF gas).
+            Permanent swelling is an early warning that the cell is approaching end of life. Advanced
+            packs fit a strain gauge or load cell into the compression frame to track this as a
+            health metric — a slowly growing force reading means the cells are gassing.
           </p>
         </div>
       </div>
