@@ -2363,12 +2363,12 @@ T_min (°C)  | Max I_charge | Reason
         <div class="callout-body">
           <div class="callout-title">Low-Pass Filter Is Essential for dT/dt Measurement</div>
           <p>
-            Raw dT/dt computation (ΔT/Δt between consecutive samples) is noisy — sensor quantisation
-            noise on a 12-bit ADC at 100ms intervals produces phantom spikes that could trigger false
-            alarms. The exponential moving average filter (α = 0.2 in the code above) smooths the
-            derivative while maintaining response time under 1 second. Tune α carefully: too small
-            (too much smoothing) and the BMS misses fast thermal events; too large (no smoothing)
-            and noise triggers false disconnections.
+            Calculating dT/dt directly from raw sensor readings is noisy — tiny electrical noise on
+            the 12-bit ADC creates phantom temperature spikes every 100ms that look like rapid heating.
+            The exponential moving average filter (α = 0.2 in the code) smooths these out while still
+            responding within about 1 second to a real thermal event. Getting α right matters: set it
+            too low (too much smoothing) and the BMS responds too slowly to real runaway; too high
+            (too little smoothing) and electrical noise causes false disconnections.
           </p>
         </div>
       </div>
@@ -2377,9 +2377,11 @@ T_min (°C)  | Max I_charge | Reason
     <div class="subsection">
       <div class="subsection-title">Multi-Sensor Voting Logic — Preventing False Alarms</div>
       <p>
-        A single failed NTC (shorted or open) can produce a spurious temperature reading that
-        triggers unnecessary pack shutdown in a UPS application — exactly when the UPS is needed.
-        Production BMS firmware uses voting logic across multiple sensors:
+        A single faulty temperature sensor — shorted, open, or just drifted — can generate a
+        fake overtemperature reading and shut the pack down unnecessarily. In a UPS, that's the
+        worst possible outcome: the power fails exactly when the backup is needed. To guard against
+        this, production BMS firmware uses voting logic — it requires multiple sensors to agree
+        before triggering a protection action:
       </p>
       <div class="code-block">
 <span class="code-comment">/* Multi-sensor voting — require 2 of N sensors to agree on alarm
@@ -2394,10 +2396,11 @@ T_min (°C)  | Max I_charge | Reason
 }
       </div>
       <p>
-        For thermal runaway (Stage 1 or beyond), reduce to a 1-of-N vote — a single sensor detecting
-        runaway-level dT/dt should immediately disconnect, since the cost of a false positive (UPS
-        offline momentarily) is far less than the cost of ignoring a true positive (cell fire).
-        Only use 2-of-N voting for the lower warning thresholds where false positives are more likely.
+        For thermal runaway detection specifically, drop to a 1-of-N vote — any single sensor showing
+        runaway-level dT/dt should immediately disconnect the pack. A false positive (UPS briefly offline)
+        is a minor inconvenience; a missed true positive (cell fire) is catastrophic. Use 2-of-N
+        voting only for the lower warning thresholds, where false positives are common but consequences
+        are manageable.
       </p>
     </div>
   </section>
