@@ -2205,7 +2205,8 @@ T_min (°C)  | Max I_charge | Reason
     <div class="subsection">
       <div class="subsection-title">Temperature-Derated Charging — Linear Derating Curve</div>
       <p>
-        Between the warning and cutoff thresholds, the BMS applies a linear current derating:
+        Between the warning and hard cutoff temperatures, the BMS doesn't just switch off abruptly —
+        it smoothly reduces the allowed charge current using a linear derating curve:
       </p>
       <!-- Derating curve SVG -->
       <div class="diagram-wrap">
