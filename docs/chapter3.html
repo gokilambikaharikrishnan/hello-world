@@ -1488,9 +1488,9 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
     <div class="subsection">
       <div class="subsection-title">Cell-to-Cell Thermal Propagation in a Pack</div>
       <p>
-        Even if one cell undergoes thermal runaway, the pack does not have to. But without
-        design measures, it almost always does. Heat from the failed cell transfers to adjacent
-        cells, raising them toward their own Stage 1 threshold — creating a cascade.
+        One cell going into thermal runaway doesn't have to destroy the whole pack — but without
+        careful design, it usually does. Heat from the failed cell bakes the cells next to it,
+        pushing them toward their own runaway threshold, which then bakes the next cells, and so on.
       </p>
       <div class="diagram-wrap">
         <div class="diagram-title">🔥 Thermal Propagation in a 16-Cell Pack</div>
@@ -1538,10 +1538,10 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           </defs>
         </svg>
         <p class="diagram-caption">
-          Cell 7 (red) has entered thermal runaway. Heat radiates to cells 6 and 8 (orange/yellow), which
-          are being driven toward their own Stage 1 threshold. Cells farther away are still cool (blue/green).
-          Cell spacing ≥ 3mm, thermal gap-filler pads with low conductivity, and pyro fuses at each cell
-          can arrest propagation at cell 6/8 before the cascade goes pack-wide.
+          Cell 7 (red) has gone into thermal runaway. Heat is radiating into cells 6 and 8 (orange/yellow),
+          pushing them toward their own danger threshold. The cells further away are still cool (blue/green).
+          Proper cell spacing, insulating gap-filler pads, and pyro fuses at each cell can stop the
+          spread at cells 6 and 8 before it turns into a full pack failure.
         </p>
       </div>
 
