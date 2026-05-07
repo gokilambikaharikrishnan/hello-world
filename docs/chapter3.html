@@ -2274,10 +2274,10 @@ T_min (°C)  | Max I_charge | Reason
           <text x="253" y="47" text-anchor="middle" fill="rgba(72,187,120,0.6)" font-size="8" font-family="Inter,sans-serif">15–35°C</text>
         </svg>
         <p class="diagram-caption">
-          Charge current derating profile. The BMS linearly interpolates between key points and applies
-          the result as a current limit command to the charger via CAN or PWM signal.
-          The optimal zone (15–35°C) allows full C-rate. Outside this zone, rate is reduced to protect
-          either against lithium plating (cold) or accelerated SEI growth (hot).
+          How the BMS derates charge current with temperature. It smoothly interpolates between the
+          key setpoints and sends the resulting current limit to the charger via CAN or a PWM signal.
+          The green zone (15–35°C) is the sweet spot — full charge rate allowed. Below that, the rate
+          is reduced to avoid lithium plating; above that, it's reduced to slow down SEI growth.
         </p>
       </div>
     </div>
@@ -2285,10 +2285,10 @@ T_min (°C)  | Max I_charge | Reason
     <div class="subsection">
       <div class="subsection-title">Thermal Runaway Detection in BMS Firmware — dT/dt Monitoring</div>
       <p>
-        The most powerful early-warning signal for thermal runaway is the rate of temperature rise
-        (dT/dt). A cell beginning Stage 1 exothermic decomposition will show a temperature rise
-        that is independent of (or disproportionate to) the current — it rises even when no
-        external electrical cause is present.
+        The best early warning sign for thermal runaway is how fast the temperature is rising —
+        the dT/dt (rate of temperature rise). A cell entering Stage 1 decomposition will get hotter
+        faster than the current level alone can explain — the temperature climbs even without any
+        increase in load. That's the signature the BMS is looking for.
       </p>
       <div class="formula-block">
         <span class="formula-label">dT/dt Detection Thresholds</span>
@@ -2297,11 +2297,11 @@ T_min (°C)  | Max I_charge | Reason
         <span class="formula-line">Level 2 alarm:     dT/dt &gt; 1.0°C/s  (60°C/min) → disconnect pack immediately</span>
         <span class="formula-line">Thermal runaway:   dT/dt &gt; 2.0°C/s  (120°C/min) → alert fire suppression</span>
         <span class="formula-caption">
-          These thresholds apply to the maximum dT/dt reading across all sensors.
-          Joule heating at 2C in a healthy cell produces dT/dt ≈ 0.1°C/s at 25°C.
-          SEI decomposition onset (Stage 1) produces dT/dt ≈ 0.5–1°C/s with no proportional
-          current increase. This current-decoupled temperature rise is the definitive thermal
-          runaway signature the BMS must detect.
+          These thresholds apply to the fastest-rising sensor in the pack.
+          A healthy cell running at 2C generates heat slowly enough to produce only about 0.1°C/s
+          of temperature rise. When the SEI layer starts decomposing (Stage 1), you see 0.5–1°C/s
+          — without any matching increase in current. That disconnect between temperature rise and
+          current is the unmistakable thermal runaway signature the BMS is trained to catch.
         </span>
       </div>
 
