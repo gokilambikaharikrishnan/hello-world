@@ -595,6 +595,480 @@ dequeue: pour inbox: outbox=[D]. pop D → return D ✓</div>
   </div>
 </div>
 
+
+<!-- Q06 -->
+<div class="card" id="q06">
+  <div class="card-header">
+    <span class="card-id">Q06</span>
+    <span class="card-title">BFS Core Idea — Level-by-Level</span>
+    <span class="category-badge">BFS / Level-Order</span>
+  </div>
+  <div class="background">
+    <p>BFS explores a graph one "ring" at a time. Every node at distance d is fully processed before any node at distance d+1 is touched. The queue is the engine: enqueue a node, it will be processed later in arrival order.</p>
+    <p>The key discipline: mark a node <em>visited when you enqueue it</em>, not when you dequeue it. Otherwise the same node enters the queue multiple times and you get exponential blow-up.</p>
+  </div>
+  <div class="situations">
+    <strong>Reach for BFS when</strong>
+    <span class="sit">Shortest path in an unweighted graph</span>
+    <span class="why">Each BFS layer = one more edge; first time you reach the target = minimum edges</span>
+    <span class="sit">Level-order traversal of a tree</span>
+    <span class="why">Layer = tree depth; queue naturally groups siblings together</span>
+    <span class="sit">Connected-component discovery</span>
+    <span class="why">Flood-fill from any unvisited node until the queue drains</span>
+  </div>
+  <div class="logic-build">
+    <p>Graph: 0→1, 0→2, 1→3, 2→3, 3→4. Start at 0.</p>
+    <span class="aha">Queue state at every step (visited marked *):</span>
+    <div class="ascii">
+Enqueue 0*        queue: [0]
+Dequeue 0  →  enqueue 1*, 2*   queue: [1, 2]
+Dequeue 1  →  enqueue 3*        queue: [2, 3]
+Dequeue 2  →  3 already visited  queue: [3]
+Dequeue 3  →  enqueue 4*        queue: [4]
+Dequeue 4  →  no unvisited nbrs  queue: []
+
+BFS order: 0 1 2 3 4
+Distances: 0→0, 1→1, 2→1, 3→2, 4→3</div>
+    <span class="aha">Mark visited AT ENQUEUE TIME, not dequeue time.</span>
+  </div>
+  <pre><code class="language-c">#define MAXN 128
+void bfs(int adj[][MAXN], int n_nbrs[], int n, int src) {
+    int visited[MAXN] = {0};
+    int dist[MAXN];
+    int q[MAXN], head = 0, tail = 0;
+
+    visited[src] = 1;
+    dist[src] = 0;
+    q[tail++] = src;
+
+    while (head != tail) {
+        int u = q[head++];
+        for (int i = 0; i < n_nbrs[u]; i++) {
+            int v = adj[u][i];
+            if (!visited[v]) {
+                visited[v] = 1;
+                dist[v] = dist[u] + 1;
+                q[tail++] = v;   /* mark BEFORE enqueue */
+            }
+        }
+    }
+}
+</code></pre>
+  <div class="dry-run">
+src=0, n=5
+Step 1: dequeue 0, enqueue 1(d=1) 2(d=1)   q=[1,2]
+Step 2: dequeue 1, enqueue 3(d=2)            q=[2,3]
+Step 3: dequeue 2, 3 visited                 q=[3]
+Step 4: dequeue 3, enqueue 4(d=3)            q=[4]
+Step 5: dequeue 4, done                      q=[]
+dist[] = {0,1,1,2,3}</div>
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha — mark at enqueue, not dequeue</div>
+    <p>If you set visited[v]=1 only when you dequeue v, then v can be enqueued multiple times before it's ever dequeued. For a complete bipartite graph that's O(E) extra entries — O(n²) wasted work.</p>
+  </div>
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>What is the BFS distance to a node? Number of edges on the shortest path.</li>
+      <li>Why does BFS give shortest path in unweighted graphs? It explores all d-edge paths before any (d+1)-edge path.</li>
+      <li>When do you mark a node visited? At enqueue time.</li>
+    </ol>
+  </div>
+  <div class="trigger-big">
+    <div class="trigger-main">Trigger: "shortest path / level-order / flood-fill"</div>
+    <ul class="trigger-variants">
+      <li>enqueue src, mark visited, loop: dequeue u, enqueue unvisited neighbours marking them visited</li>
+      <li>dist[v] = dist[u] + 1 at enqueue time</li>
+      <li>queue drains = all reachable nodes processed</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Q07 -->
+<div class="card" id="q07">
+  <div class="card-header">
+    <span class="card-id">Q07</span>
+    <span class="card-title">BFS Shortest Path in a Grid</span>
+    <span class="category-badge">BFS / Level-Order</span>
+  </div>
+  <div class="background">
+    <p>A grid is just a graph where each cell (r,c) has up to 4 neighbours. BFS on a grid finds the shortest path (fewest steps) from a source cell to a target, treating blocked cells as absent edges.</p>
+    <p>Encode position as a single integer <code>r*COLS+c</code> to use a flat visited array and a simple queue of ints.</p>
+  </div>
+  <div class="situations">
+    <strong>Reach for grid BFS when</strong>
+    <span class="sit">Minimum moves to escape a maze</span>
+    <span class="why">BFS layer = move count; first time target is reached = minimum</span>
+    <span class="sit">Island area / connected cells (flood fill)</span>
+    <span class="why">Enqueue all unvisited same-value neighbours, count as you go</span>
+    <span class="sit">Distance from multiple sources (multi-source)</span>
+    <span class="why">Pre-load all sources into queue at dist=0, run one BFS</span>
+  </div>
+  <div class="logic-build">
+    <p>Grid (0=open, 1=wall), S=start (0,0), T=target (2,3):</p>
+    <div class="ascii">
+. . . .
+. 1 1 .
+. . . T
+
+BFS from (0,0):
+queue: [(0,0,d=0)]
+  deq (0,0) → enq (0,1,1) (1,0,1)       queue: [(0,1) (1,0)]
+  deq (0,1) → enq (0,2,2)               queue: [(1,0) (0,2)]
+  deq (1,0) → enq (2,0,2)               queue: [(0,2) (2,0)]
+  deq (0,2) → enq (0,3,3)               queue: [(2,0) (0,3)]
+  deq (2,0) → enq (2,1,3)               queue: [(0,3) (2,1)]
+  deq (0,3) → enq (1,3,4)               queue: [(2,1) (1,3)]
+  deq (2,1) → enq (2,2,4)               queue: [(1,3) (2,2)]
+  deq (1,3) → enq (2,3,5)=TARGET ✓</div>
+    <span class="aha">Shortest path to (2,3) = 5 steps.</span>
+  </div>
+  <pre><code class="language-c">#define R 3
+#define C 4
+int dr[] = {-1,1,0,0};
+int dc[] = {0,0,-1,1};
+
+int bfs_grid(int grid[R][C], int sr, int sc, int er, int ec) {
+    if (grid[sr][sc] || grid[er][ec]) return -1;
+    int visited[R][C] = {{0}};
+    int qr[R*C], qc[R*C], qd[R*C];
+    int head = 0, tail = 0;
+    visited[sr][sc] = 1;
+    qr[tail] = sr; qc[tail] = sc; qd[tail++] = 0;
+    while (head != tail) {
+        int r = qr[head], c = qc[head], d = qd[head++];
+        if (r == er && c == ec) return d;
+        for (int i = 0; i < 4; i++) {
+            int nr = r+dr[i], nc = c+dc[i];
+            if (nr>=0 && nr<R && nc>=0 && nc<C
+                && !grid[nr][nc] && !visited[nr][nc]) {
+                visited[nr][nc] = 1;
+                qr[tail]=nr; qc[tail]=nc; qd[tail++]=d+1;
+            }
+        }
+    }
+    return -1;
+}
+</code></pre>
+  <div class="dry-run">
+grid[1][1]=grid[1][2]=1 (walls)
+bfs_grid(grid,0,0,2,3) → 5</div>
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha — bounds check before visited check</div>
+    <p>Always check <code>nr>=0 && nr&lt;R && nc>=0 && nc&lt;C</code> first. Accessing <code>visited[nr][nc]</code> with an out-of-bounds index is undefined behaviour in C even if the value would be non-zero.</p>
+  </div>
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>How do you encode (r,c) as one int? r*COLS + c (or use separate arrays).</li>
+      <li>How many neighbours does a grid cell have? Up to 4 (or 8 for diagonal movement).</li>
+      <li>What does dist=d mean at dequeue time? Minimum steps from source to this cell.</li>
+    </ol>
+  </div>
+  <div class="trigger-big">
+    <div class="trigger-main">Trigger: "minimum steps in grid / maze / flood fill"</div>
+    <ul class="trigger-variants">
+      <li>4-directional delta arrays dr[], dc[]</li>
+      <li>bounds + wall + visited checks before enqueue</li>
+      <li>visited[nr][nc]=1 at enqueue, not dequeue</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Q08 -->
+<div class="card" id="q08">
+  <div class="card-header">
+    <span class="card-id">Q08</span>
+    <span class="card-title">Multi-Source BFS</span>
+    <span class="category-badge">BFS / Level-Order</span>
+  </div>
+  <div class="background">
+    <p>Sometimes you need the shortest distance from <em>any</em> of several sources to every cell. Running BFS from each source separately is O(S × N) — wasteful. Multi-source BFS pre-loads all sources into the queue at distance 0 and runs a single BFS pass: O(N).</p>
+    <p>Classic problems: 01 matrix (distance to nearest 0), walls and gates, rotting oranges.</p>
+  </div>
+  <div class="situations">
+    <strong>Reach for multi-source BFS when</strong>
+    <span class="sit">Distance to nearest source cell</span>
+    <span class="why">All sources enqueued at d=0; BFS expands outward simultaneously</span>
+    <span class="sit">Time until all cells are "infected" from multiple starting points</span>
+    <span class="why">Answer = max dist across all cells after BFS drains</span>
+    <span class="sit">Walls-and-gates fill</span>
+    <span class="why">Gates are sources (d=0); BFS fills empty rooms with gate distance</span>
+  </div>
+  <div class="logic-build">
+    <p>Grid: 0=fresh orange, 2=rotten, 1=empty. Find time to rot all.</p>
+    <div class="ascii">
+Initial:        After t=1:      After t=2:
+2 1 1           2 2 1           2 2 2
+1 1 0           2 1 0           2 2 0
+1 1 1           1 1 1           2 2 1
+
+Queue at start (all 2s): [(0,0,0)]
+t=1: deq(0,0)→enq (0,1,1)(1,0,1)   queue:[(0,1)(1,0)]
+t=2: deq(0,1)→enq(0,2,2)  deq(1,0)→enq(1,1 skipped 2,0)
+   ...
+Answer = max distance seen = 3 (not shown but works same way)</div>
+    <span class="aha">Pre-load ALL sources. One BFS visit = answer for that cell.</span>
+  </div>
+  <pre><code class="language-c">#define R 3
+#define C 3
+int dr[]={-1,1,0,0}, dc[]={0,0,-1,1};
+
+int oranges_rotting(int g[R][C]) {
+    int qr[R*C], qc[R*C], qt[R*C];
+    int head=0, tail=0, fresh=0, ans=0;
+    for (int r=0;r<R;r++) for (int c=0;c<C;c++) {
+        if (g[r][c]==2) { qr[tail]=r;qc[tail]=c;qt[tail++]=0; }
+        if (g[r][c]==1) fresh++;
+    }
+    while (head!=tail) {
+        int r=qr[head],c=qc[head],t=qt[head++];
+        for (int i=0;i<4;i++){
+            int nr=r+dr[i],nc=c+dc[i];
+            if(nr>=0&&nr<R&&nc>=0&&nc<C&&g[nr][nc]==1){
+                g[nr][nc]=2; fresh--;
+                qr[tail]=nr;qc[tail]=nc;qt[tail++]=t+1;
+                if(t+1>ans) ans=t+1;
+            }
+        }
+    }
+    return fresh==0 ? ans : -1;
+}
+</code></pre>
+  <div class="dry-run">
+All rotten cells pre-loaded at t=0.
+BFS expands; fresh-- each time a cell is rotted.
+If fresh==0 at end, return max time seen, else -1.</div>
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha — unreachable fresh cells</div>
+    <p>If a fresh orange is surrounded by empty cells (value 1 meaning walls in some problem variants), BFS can never reach it. Always check <code>fresh==0</code> before returning the time.</p>
+  </div>
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Why is multi-source BFS O(N) not O(S×N)? Each cell is visited at most once total.</li>
+      <li>How do you pre-load sources? Scan grid, enqueue every source cell at time/distance 0.</li>
+      <li>What's the answer for "time to infect all"? Max time value seen when queue drains.</li>
+    </ol>
+  </div>
+  <div class="trigger-big">
+    <div class="trigger-main">Trigger: "nearest source / all cells infected / walls and gates"</div>
+    <ul class="trigger-variants">
+      <li>scan grid → enqueue all sources at d=0</li>
+      <li>single BFS pass; each cell visited once</li>
+      <li>check unreachable cells at end</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Q09 -->
+<div class="card" id="q09">
+  <div class="card-header">
+    <span class="card-id">Q09</span>
+    <span class="card-title">0-1 BFS with Deque</span>
+    <span class="category-badge">BFS / Level-Order</span>
+  </div>
+  <div class="background">
+    <p>Standard BFS assumes all edges have equal cost. If edges cost either 0 or 1, you can still get O(V+E) shortest paths using a deque instead of a plain queue: cost-0 edges push to the <em>front</em>, cost-1 edges push to the <em>back</em>. This keeps the deque ordered by distance without a heap.</p>
+    <p>Think of it as a lazy Dijkstra for the binary-weight special case.</p>
+  </div>
+  <div class="situations">
+    <strong>Reach for 0-1 BFS when</strong>
+    <span class="sit">Grid where some moves are free and others cost 1</span>
+    <span class="why">Free moves (cost 0) go to deque front; paid moves go to back</span>
+    <span class="sit">Minimum cost path where cost ∈ {0,1}</span>
+    <span class="why">Deque maintains non-decreasing dist order without sorting</span>
+    <span class="sit">Shortest path with optional "teleport" edges</span>
+    <span class="why">Teleport = cost 0 (push front), walk = cost 1 (push back)</span>
+  </div>
+  <div class="logic-build">
+    <span class="aha">Why push cost-0 to front? Distance doesn't increase — process it at same level.</span>
+    <div class="ascii">
+dist[] = INF initially, dist[src]=0
+deque: [src]
+
+Dequeue front u:
+  for each neighbour v with edge cost w:
+    if dist[u]+w < dist[v]:
+      dist[v] = dist[u]+w
+      if w==0: push_front(v)   ← same distance level
+      if w==1: push_back(v)    ← next distance level
+
+Deque always has at most 2 distinct dist values at any time.
+Front = current level, back = next level.</div>
+  </div>
+  <pre><code class="language-c">#define MAXN 512
+#define INF 0x3f3f3f3f
+/* Circular deque */
+int dq[MAXN*2], dfront, dback;
+void dq_init(void){dfront=dback=MAXN;}
+void push_front(int v){dq[--dfront]=v;}
+void push_back(int v){dq[dback++]=v;}
+int pop_front(void){return dq[dfront++];}
+int empty(void){return dfront==dback;}
+
+void bfs01(int adj[][MAXN], int cost[][MAXN],
+           int n_nbrs[], int n, int src, int *dist) {
+    for(int i=0;i<n;i++) dist[i]=INF;
+    dist[src]=0;
+    dq_init(); push_back(src);
+    while(!empty()){
+        int u=pop_front();
+        for(int i=0;i<n_nbrs[u];i++){
+            int v=adj[u][i], w=cost[u][i];
+            if(dist[u]+w < dist[v]){
+                dist[v]=dist[u]+w;
+                if(w==0) push_front(v);
+                else     push_back(v);
+            }
+        }
+    }
+}
+</code></pre>
+  <div class="dry-run">
+Two nodes A(0)→B(cost 0)→C(cost 1).
+dist[A]=0, push_back A.
+Deq A → dist[B]=0 push_front B → dist[C]=1 push_back C.
+Deq B (front) → C already dist 1, no update.
+Deq C → done.
+dist = {0,0,1} ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha — revisiting nodes</div>
+    <p>Unlike plain BFS, a node can be added to the deque multiple times if a shorter path is found later. Always guard with <code>if dist[u]+w &lt; dist[v]</code> before pushing. You may also discard a dequeued node if its recorded dist is already better than what's stored.</p>
+  </div>
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Where does a cost-0 edge push? Front of deque (same distance level).</li>
+      <li>Where does a cost-1 edge push? Back of deque (next distance level).</li>
+      <li>Why is this O(V+E) not O((V+E)logV)? No heap — just a deque with O(1) push/pop.</li>
+    </ol>
+  </div>
+  <div class="trigger-big">
+    <div class="trigger-main">Trigger: "min cost path, edge cost 0 or 1"</div>
+    <ul class="trigger-variants">
+      <li>deque instead of queue; cost-0 → push_front; cost-1 → push_back</li>
+      <li>dist[v] updated only when strictly smaller</li>
+      <li>O(V+E), no heap needed</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Q10 -->
+<div class="card" id="q10">
+  <div class="card-header">
+    <span class="card-id">Q10</span>
+    <span class="card-title">Word Ladder — BFS on Word Graph</span>
+    <span class="category-badge">BFS / Level-Order</span>
+  </div>
+  <div class="background">
+    <p>Word ladder: transform <em>beginWord</em> to <em>endWord</em> by changing one letter at a time, each intermediate word must be in the dictionary. Minimum transformation sequence = BFS where each word is a node and edges connect words that differ by exactly one letter.</p>
+    <p>Generating neighbours by trying every 26-letter substitution at every position is O(L×26) per word — far cheaper than comparing all pairs O(N²×L).</p>
+  </div>
+  <div class="situations">
+    <strong>Reach for word-graph BFS when</strong>
+    <span class="sit">Minimum edit distance of exactly 1 per step</span>
+    <span class="why">BFS on implicit graph; no need to store all edges explicitly</span>
+    <span class="sit">Any "state space" where moves are bounded and unweighted</span>
+    <span class="why">Generate next states on the fly, use hash set for visited</span>
+    <span class="sit">Sliding puzzle / lock combination</span>
+    <span class="why">Same pattern: enumerate reachable states, BFS for min moves</span>
+  </div>
+  <div class="logic-build">
+    <p>beginWord="hit", endWord="cog", wordList={"hot","dot","dog","lot","log","cog"}</p>
+    <div class="ascii">
+Queue state (word, dist):
+[(hit,1)]
+Deq hit → try h_t,_it: hot ∈ list  → enq (hot,2)
+queue: [(hot,2)]
+Deq hot → dot∈list, lot∈list       → enq (dot,3)(lot,3)
+queue: [(dot,3)(lot,3)]
+Deq dot → dog∈list                  → enq (dog,4)
+queue: [(lot,3)(dog,4)]
+Deq lot → log∈list                  → enq (log,4)
+queue: [(dog,4)(log,4)]
+Deq dog → cog∈list                  → enq (cog,5) ← FOUND
+Answer = 5</div>
+    <span class="aha">Generate neighbours: replace each position with 'a'..'z', check hash set.</span>
+  </div>
+  <pre><code class="language-c">#include &lt;string.h&gt;
+#include &lt;stdlib.h&gt;
+#define MAXW 64
+#define DICTMAX 1024
+
+/* Simple open-addressing set for word strings */
+typedef struct { char w[MAXW]; int used; } Slot;
+Slot htab[DICTMAX*2];
+int hset_find(const char *w){
+    unsigned h=(unsigned)w[0]*31+w[1];
+    h%=(DICTMAX*2);
+    while(htab[h].used&&strcmp(htab[h].w,w))h=(h+1)%(DICTMAX*2);
+    return htab[h].used;
+}
+void hset_del(const char *w){
+    unsigned h=(unsigned)w[0]*31+w[1];
+    h%=(DICTMAX*2);
+    while(htab[h].used&&strcmp(htab[h].w,w))h=(h+1)%(DICTMAX*2);
+    if(htab[h].used) htab[h].used=0;
+}
+
+int word_ladder(char *begin, char *end,
+                char dict[][MAXW], int n) {
+    /* load dict into hash set */
+    for(int i=0;i<n;i++){
+        unsigned h=(unsigned)dict[i][0]*31+dict[i][1];
+        h%=(DICTMAX*2);
+        while(htab[h].used)h=(h+1)%(DICTMAX*2);
+        strcpy(htab[h].w,dict[i]); htab[h].used=1;
+    }
+    int L=strlen(begin);
+    char q[DICTMAX][MAXW]; int qd[DICTMAX], head=0,tail=0;
+    strcpy(q[tail],begin); qd[tail++]=1;
+    while(head!=tail){
+        char cur[MAXW]; strcpy(cur,q[head]);
+        int d=qd[head++];
+        for(int i=0;i<L;i++){
+            char orig=cur[i];
+            for(char c='a';c<='z';c++){
+                if(c==orig) continue;
+                cur[i]=c;
+                if(strcmp(cur,end)==0) return d+1;
+                if(hset_find(cur)){
+                    hset_del(cur); /* remove = mark visited */
+                    strcpy(q[tail],cur); qd[tail++]=d+1;
+                }
+            }
+            cur[i]=orig;
+        }
+    }
+    return 0;
+}
+</code></pre>
+  <div class="dry-run">
+word_ladder("hit","cog",dict,6) → 5
+Path: hit→hot→dot→dog→cog (length 5)</div>
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha — remove from dict to mark visited</div>
+    <p>Using a separate visited set means storing strings. The classic trick: remove a word from the dictionary when you enqueue it — that IS the visited marker, and it's cheap. If the problem requires the dict afterwards, copy it first.</p>
+  </div>
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>How do you generate neighbours without comparing all word pairs? Try each position × 26 letters.</li>
+      <li>Why remove the word from the dict when enqueuing? To prevent enqueuing the same word twice.</li>
+      <li>What does the BFS distance represent here? Number of transformation steps from beginWord.</li>
+    </ol>
+  </div>
+  <div class="trigger-big">
+    <div class="trigger-main">Trigger: "word ladder / min letter changes / state-space BFS"</div>
+    <ul class="trigger-variants">
+      <li>per-position substitution to generate neighbours O(L×26)</li>
+      <li>hash set for O(1) lookup; remove on enqueue = visited</li>
+      <li>BFS level = transformation count</li>
+    </ul>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 
 <script>hljs.highlightAll();</script>
