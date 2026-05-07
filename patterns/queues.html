@@ -1382,6 +1382,381 @@ Result: 3</div>
   </div>
 </div>
 
+
+<!-- Q15 -->
+<div class="card" id="q15">
+  <div class="card-header">
+    <span class="card-id">Q15</span>
+    <span class="card-title">Moving Average from Data Stream</span>
+    <span class="category-badge">Scheduling / Stream</span>
+  </div>
+  <div class="background">
+    <p>Maintain the average of the last k values from a stream. A circular buffer of size k acts as the window: each new value overwrites the oldest, and a running sum avoids recomputing the sum from scratch every call.</p>
+    <p>This is the embedded-systems pattern for low-pass filtering sensor data (ADC, temperature, IMU) without floating-point-heavy IIR filters.</p>
+  </div>
+  <div class="situations">
+    <strong>Reach for circular-buffer moving average when</strong>
+    <span class="sit">Rolling mean of last K sensor readings</span>
+    <span class="why">O(1) per sample: subtract oldest, add newest, divide by K</span>
+    <span class="sit">Smoothing a noisy data stream</span>
+    <span class="why">Fixed-size window, no allocation per sample</span>
+    <span class="sit">FreeRTOS task: filter ADC samples arriving via queue</span>
+    <span class="why">Ring buffer fits in stack/BSS; no heap needed</span>
+  </div>
+  <div class="logic-build">
+    <p>K=3, stream: 1, 10, 3, 5</p>
+    <div class="ascii">
+add(1):  buf=[1, 0, 0] sum=1   count=1  avg=1/1=1.0
+add(10): buf=[1,10, 0] sum=11  count=2  avg=11/2=5.5
+add(3):  buf=[1,10, 3] sum=14  count=3  avg=14/3=4.67
+add(5):  buf=[5,10, 3] sum=18  count=3  avg=18/3=6.0
+         ↑ index 0 overwritten (oldest), sum -= 1, sum += 5</div>
+    <span class="aha">subtract buf[head] before overwrite → running sum stays accurate in O(1).</span>
+  </div>
+  <pre><code class="language-c">typedef struct {
+    int   buf[512];
+    int   head, count, size;
+    long  sum;
+} MovAvg;
+
+void mavg_init(MovAvg *m, int k) {
+    m->head = m->count = m->sum = 0;
+    m->size = k;
+}
+double mavg_add(MovAvg *m, int val) {
+    if (m->count == m->size)
+        m->sum -= m->buf[m->head];   /* evict oldest */
+    else
+        m->count++;
+    m->buf[m->head] = val;
+    m->sum += val;
+    m->head = (m->head + 1) % m->size;
+    return (double)m->sum / m->count;
+}
+</code></pre>
+  <div class="dry-run">
+k=3: add(1)=1.0, add(10)=5.5, add(3)=4.67, add(5)=6.0</div>
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha — subtract before overwrite</div>
+    <p>Subtract <code>buf[head]</code> from the running sum <em>before</em> writing the new value to <code>buf[head]</code>. If you subtract after, you subtract the value you just wrote, not the value you're evicting.</p>
+  </div>
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Time per call? O(1) — no loop, just subtract/add to running sum.</li>
+      <li>When do you decrement count? Never — count only goes up until it reaches size.</li>
+      <li>When do you subtract the evicted element? Only when count == size (buffer is full).</li>
+    </ol>
+  </div>
+  <div class="trigger-big">
+    <div class="trigger-main">Trigger: "rolling average / last K values"</div>
+    <ul class="trigger-variants">
+      <li>circular buffer of size K + running sum</li>
+      <li>subtract buf[head] before overwrite when full</li>
+      <li>O(1) per add, O(1) space (fixed K)</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Q16 -->
+<div class="card" id="q16">
+  <div class="card-header">
+    <span class="card-id">Q16</span>
+    <span class="card-title">Hit Counter — Sliding Time Window</span>
+    <span class="category-badge">Scheduling / Stream</span>
+  </div>
+  <div class="background">
+    <p>Count hits in the last 300 seconds. Because time wraps modulo 300, you can use a circular array of 300 buckets: each bucket holds a (timestamp, count) pair. A bucket is valid only if its stored timestamp matches the current second.</p>
+    <p>This is the pattern behind rate limiters and sliding-window counters in embedded firmware and web servers.</p>
+  </div>
+  <div class="situations">
+    <strong>Reach for time-bucket hit counter when</strong>
+    <span class="sit">Count events in last N seconds (N fixed)</span>
+    <span class="why">Circular array of N buckets, O(N) init, O(1) hit/query</span>
+    <span class="sit">Rate limiter: reject if hits_in_window > threshold</span>
+    <span class="why">getHits() < threshold check in O(N) worst case</span>
+    <span class="sit">Firmware watchdog: how many CAN errors in last 1 s?</span>
+    <span class="why">N=1000 ms buckets, each slot = 1 ms count</span>
+  </div>
+  <div class="logic-build">
+    <p>Window = 300 s. hit(1), hit(2), hit(300), getHits(300)=3, hit(301), getHits(301)=3 (hit at t=1 expired)</p>
+    <div class="ascii">
+Bucket layout (300 slots, index = time % 300):
+slot[1%300=1]  = {ts=1,  cnt=1}
+slot[2%300=2]  = {ts=2,  cnt=1}
+slot[300%300=0]= {ts=300,cnt=1}
+
+getHits(300): sum all slots where ts > 300-300=0
+  → ts=1>0, ts=2>0, ts=300>0  sum=3 ✓
+
+hit(301): slot[301%300=1] → ts==1 ≠ 301 → reset to {ts=301,cnt=1}
+getHits(301): sum slots where ts > 301-300=1
+  → ts=2>1(yes), ts=301>1(yes), ts=300>1? 300>1 but 300<=301-1=300 NO
+  sum=2</div>
+    <span class="aha">Stale buckets (ts ≤ now-300) are reset lazily on next write; query skips them.</span>
+  </div>
+  <pre><code class="language-c">#define WIN 300
+typedef struct { int ts; int cnt; } Bucket;
+typedef struct { Bucket b[WIN]; } HitCounter;
+
+void hc_hit(HitCounter *h, int ts) {
+    int i = ts % WIN;
+    if (h->b[i].ts == ts) h->b[i].cnt++;
+    else { h->b[i].ts = ts; h->b[i].cnt = 1; }
+}
+int hc_get(HitCounter *h, int ts) {
+    int total = 0;
+    for (int i = 0; i < WIN; i++)
+        if (h->b[i].ts > ts - WIN)
+            total += h->b[i].cnt;
+    return total;
+}
+</code></pre>
+  <div class="dry-run">
+hit(1),hit(2),hit(300): b[1]={1,1} b[2]={2,1} b[0]={300,1}
+getHits(300)=3
+hit(301): b[1]={301,1}  (overwrites old ts=1)
+getHits(301): b[1].ts=301>1 ✓, b[2].ts=2 not>1 ✗, b[0].ts=300>1 ✓ → 2</div>
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha — getHits is O(WIN), not O(1)</div>
+    <p>Every call to <code>getHits</code> scans all WIN buckets. For WIN=300 that's fine; for WIN=10⁶ you'd need a different approach (sorted queue with eviction). Know the tradeoff before using this pattern.</p>
+  </div>
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>How many array slots do you need? Exactly WIN (one per second in the window).</li>
+      <li>How do you check if a bucket is stale? <code>b[i].ts &lt;= ts - WIN</code>.</li>
+      <li>When do you reset a bucket? On next <code>hit()</code> call to that slot when timestamps differ.</li>
+    </ol>
+  </div>
+  <div class="trigger-big">
+    <div class="trigger-main">Trigger: "count events in last N seconds"</div>
+    <ul class="trigger-variants">
+      <li>circular array of N (ts, count) buckets; index = time % N</li>
+      <li>hit: reset bucket if ts differs, else increment</li>
+      <li>getHits: sum all buckets with ts > now-N</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Q17 -->
+<div class="card" id="q17">
+  <div class="card-header">
+    <span class="card-id">Q17</span>
+    <span class="card-title">Number of Recent Calls</span>
+    <span class="category-badge">Scheduling / Stream</span>
+  </div>
+  <div class="background">
+    <p>Given calls arriving in strictly increasing timestamp order, return the count of calls in <code>[t-3000, t]</code> for each new call. A simple queue solves this: enqueue each timestamp, then dequeue from the front any timestamps older than <code>t-3000</code>. The queue size is the answer.</p>
+  </div>
+  <div class="situations">
+    <strong>Reach for queue-eviction pattern when</strong>
+    <span class="sit">Count of events in a sliding time window</span>
+    <span class="why">Queue of timestamps; evict from front when too old</span>
+    <span class="sit">Timestamps arrive in sorted order</span>
+    <span class="why">Only need to evict from the front — no sorting required</span>
+  </div>
+  <div class="logic-build">
+    <p>Calls at t=1, 100, 3001, 3002</p>
+    <div class="ascii">
+ping(1):    enq 1    q=[1]          evict none   count=1
+ping(100):  enq 100  q=[1,100]      evict none   count=2
+ping(3001): enq 3001 q=[1,100,3001] evict 1(1<1)? 1>=1 no. count=3
+ping(3002): enq 3002 q=[1,100,3001,3002]
+  evict front: 1 < 3002-3000=2? yes → deq 1
+  evict front: 100 < 2? no
+  q=[100,3001,3002]  count=3</div>
+    <span class="aha">Evict while q[front] &lt; t-3000. Queue size = answer.</span>
+  </div>
+  <pre><code class="language-c">#define MAXC 10001
+typedef struct {
+    int q[MAXC];
+    int head, tail;
+} RecentCounter;
+
+int ping(RecentCounter *rc, int t) {
+    rc->q[rc->tail++] = t;
+    while (rc->q[rc->head] < t - 3000)
+        rc->head++;
+    return rc->tail - rc->head;
+}
+</code></pre>
+  <div class="dry-run">
+ping(1)=1, ping(100)=2, ping(3001)=3, ping(3002)=3</div>
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha — strict less-than for eviction</div>
+    <p>Evict while <code>q[front] &lt; t - 3000</code>. The window is <code>[t-3000, t]</code> — inclusive on both ends. Using <code>&lt;=</code> would evict a call at exactly <code>t-3000</code>, which should still be counted.</p>
+  </div>
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Why doesn't this need a circular buffer? Timestamps only increase, so tail only moves forward.</li>
+      <li>What is the return value? <code>tail - head</code> = number of elements currently in queue.</li>
+      <li>Eviction condition? <code>q[head] &lt; t - 3000</code> (strict, because window includes t-3000).</li>
+    </ol>
+  </div>
+  <div class="trigger-big">
+    <div class="trigger-main">Trigger: "count calls in last 3000 ms / sliding window event count"</div>
+    <ul class="trigger-variants">
+      <li>enqueue each timestamp; evict front while too old</li>
+      <li>tail - head = count in window</li>
+      <li>works because timestamps are non-decreasing</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Q18 -->
+<div class="card" id="q18">
+  <div class="card-header">
+    <span class="card-id">Q18</span>
+    <span class="card-title">Task Scheduler with Cooldown</span>
+    <span class="category-badge">Scheduling / Stream</span>
+  </div>
+  <div class="background">
+    <p>Given tasks (each labeled A-Z) and a cooldown n, find the minimum time to execute all tasks. The same task cannot run again within n intervals. The greedy insight: always schedule the most-frequent remaining task. Idle if the most-frequent task is still on cooldown.</p>
+    <p>Formula shortcut: <code>ans = max(total_tasks, (max_freq - 1) * (n + 1) + count_of_max_freq_tasks)</code>. But understanding the queue simulation builds the intuition.</p>
+  </div>
+  <div class="situations">
+    <strong>Reach for cooldown scheduler when</strong>
+    <span class="sit">CPU task scheduling with cooldown</span>
+    <span class="why">Greedy: pack highest-frequency tasks first to minimise idle</span>
+    <span class="sit">Rate-limited API calls (same endpoint, min gap)</span>
+    <span class="why">Queue tasks by next-available time; pick earliest-available</span>
+    <span class="sit">FreeRTOS periodic task with minimum re-trigger interval</span>
+    <span class="why">Same pattern: track next-available tick per task type</span>
+  </div>
+  <div class="logic-build">
+    <p>Tasks=[A,A,A,B,B,B], n=2</p>
+    <div class="ascii">
+freq: A=3, B=3   max_freq=3, n=2
+
+Greedy schedule:
+time 1: A (freq A=2)
+time 2: B (freq B=2)
+time 3: idle (both on cooldown)
+time 4: A (freq A=1)
+time 5: B (freq B=1)
+time 6: idle
+time 7: A (freq A=0)
+time 8: B (freq B=0)
+Total = 8
+
+Formula: max(6, (3-1)*(2+1)+2) = max(6,8) = 8 ✓</div>
+    <span class="aha">Formula: (max_freq-1)*(n+1) + number_of_tasks_with_max_freq.</span>
+  </div>
+  <pre><code class="language-c">#include &lt;string.h&gt;
+int task_scheduler(char *tasks, int n_tasks, int n) {
+    int freq[26] = {0};
+    for (int i=0; i<n_tasks; i++) freq[tasks[i]-'A']++;
+    int max_f = 0;
+    for (int i=0; i<26; i++) if (freq[i]>max_f) max_f=freq[i];
+    int cnt_max = 0;
+    for (int i=0; i<26; i++) if (freq[i]==max_f) cnt_max++;
+    int formula = (max_f-1)*(n+1) + cnt_max;
+    return formula > n_tasks ? formula : n_tasks;
+}
+</code></pre>
+  <div class="dry-run">
+tasks="AAABBB", n=2
+freq[A]=3,freq[B]=3, max_f=3, cnt_max=2
+formula=(3-1)*(2+1)+2=8, n_tasks=6
+return max(8,6)=8</div>
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha — why max with n_tasks?</div>
+    <p>If n=0 (no cooldown), the formula gives <code>cnt_max</code> which could be less than <code>n_tasks</code>. Taking <code>max(formula, n_tasks)</code> handles this: you always need at least as many time slots as there are tasks.</p>
+  </div>
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>What's the formula? <code>max(n_tasks, (max_freq-1)*(n+1) + count_of_max_freq)</code>.</li>
+      <li>Why (max_freq-1)? The last group of max-freq tasks needs no trailing idle.</li>
+      <li>When does the formula equal n_tasks? When tasks are spread enough that no idle is needed.</li>
+    </ol>
+  </div>
+  <div class="trigger-big">
+    <div class="trigger-main">Trigger: "min time for tasks with cooldown n"</div>
+    <ul class="trigger-variants">
+      <li>count frequencies; find max_freq and how many tasks share it</li>
+      <li>ans = max(n_tasks, (max_freq-1)*(n+1)+cnt_max)</li>
+      <li>O(n) time, O(26) space</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Q19 -->
+<div class="card" id="q19">
+  <div class="card-header">
+    <span class="card-id">Q19</span>
+    <span class="card-title">First Unique Character in a Stream</span>
+    <span class="category-badge">Scheduling / Stream</span>
+  </div>
+  <div class="background">
+    <p>Process a stream of characters. After each character, return the first character that has appeared exactly once so far. A queue of candidates (characters with count=1) combined with a frequency array lets you maintain this in O(1) amortised per character.</p>
+    <p>The queue doesn't guarantee every element in it is unique — it may contain stale entries. The front is valid only if its frequency is still 1. Pop stale fronts lazily.</p>
+  </div>
+  <div class="situations">
+    <strong>Reach for queue + frequency array when</strong>
+    <span class="sit">First non-repeating character in a stream</span>
+    <span class="why">Queue preserves arrival order; freq array tracks duplicates</span>
+    <span class="sit">First element satisfying a condition that can become invalid later</span>
+    <span class="why">Lazy-eviction queue: pop front until valid element found</span>
+  </div>
+  <div class="logic-build">
+    <p>Stream: a, a, b, c, b</p>
+    <div class="ascii">
+char  freq[]    queue (candidates)   first-unique
+ a    [a=1]     [a]                  'a'
+ a    [a=2]     [a]  ← stale        pop a (freq[a]=2≠1), queue=[]  '#'
+ b    [a=2,b=1] [b]                  'b'
+ c    [a=2,b=1,c=1] [b,c]            'b'
+ b    [a=2,b=2,c=1] [b,c] ← b stale pop b (freq=2), front=c → 'c'</div>
+    <span class="aha">Enqueue every character. Pop front while freq[front] != 1. Front = answer (or '#' if empty).</span>
+  </div>
+  <pre><code class="language-c">#define MAXSTREAM 100001
+typedef struct {
+    int freq[26];
+    char q[MAXSTREAM];
+    int head, tail;
+} UniqueStream;
+
+char first_unique(UniqueStream *us, char c) {
+    us->freq[c-'a']++;
+    us->q[us->tail++] = c;
+    /* evict stale fronts */
+    while (us->head < us->tail
+           && us->freq[us->q[us->head]-'a'] != 1)
+        us->head++;
+    return us->head < us->tail ? us->q[us->head] : '#';
+}
+</code></pre>
+  <div class="dry-run">
+first_unique('a')='a'
+first_unique('a')='#'
+first_unique('b')='b'
+first_unique('c')='b'
+first_unique('b')='c'</div>
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha — lazy eviction, not eager</div>
+    <p>When a character's frequency exceeds 1, don't scan the queue to remove it. Instead, leave it in place and skip it lazily when it surfaces at the front. Eager removal from the middle of a queue is O(n); lazy eviction is O(1) amortised.</p>
+  </div>
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>What's stored in the queue? Every character in arrival order (including duplicates).</li>
+      <li>When do you evict from the front? When <code>freq[front] != 1</code>.</li>
+      <li>What do you return if no unique character exists? A sentinel like '#' or '\0'.</li>
+    </ol>
+  </div>
+  <div class="trigger-big">
+    <div class="trigger-main">Trigger: "first non-repeating in stream / first unique"</div>
+    <ul class="trigger-variants">
+      <li>freq[26] array + queue of all chars seen</li>
+      <li>enqueue each char, increment freq</li>
+      <li>pop front while freq[front] != 1; front = answer</li>
+    </ul>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 
 <script>hljs.highlightAll();</script>
