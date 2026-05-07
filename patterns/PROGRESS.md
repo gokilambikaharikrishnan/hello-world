@@ -10,7 +10,7 @@
 | strings.html | 44 | ✅ Done | 2026-05-04 |
 | linkedlist.html | 35 | ✅ Done | 2026-05-05 |
 | stacks.html | 32 | ✅ Done | 2026-05-06 |
-| queues.html | 22 | 🔄 Rework In Progress | 2026-05-06 |
+| queues.html | 24 | ✅ Done | 2026-05-07 |
 
 ---
 
@@ -371,51 +371,55 @@
 
 ---
 
-## queues.html — Rework Audit (All 22 Cards)
+## queues.html — All 24 Cards
 
 ### Fundamentals (Q01–Q05)
-- [ ] Q01 · FIFO Intuition — What a Queue Is and When to Use It vs a Stack
-- [ ] Q02 · Circular Queue — Array-Based, Head/Tail with Mod Wrap
-- [ ] Q03 · Circular Queue — Full vs Empty Distinction
-- [ ] Q04 · Deque — Insert/Delete from Both Ends
-- [ ] Q05 · Queue Using Two Stacks
+- [x] Q01 · FIFO Intuition — What a Queue Is and When to Use It vs a Stack
+- [x] Q02 · Circular Queue — Array-Based, Head/Tail with Mod Wrap
+- [x] Q03 · Circular Queue — Full vs Empty Distinction
+- [x] Q04 · Deque — Insert/Delete from Both Ends
+- [x] Q05 · Queue Using Two Stacks
 
 ### BFS / Level-Order (Q06–Q10)
-- [ ] Q06 · BFS Core Idea — Level-by-Level Expansion
-- [ ] Q07 · BFS Shortest Path in a Grid
-- [ ] Q08 · Multi-Source BFS
-- [ ] Q09 · 0-1 BFS with Deque
-- [ ] Q10 · Word Ladder — BFS on Word Graph
+- [x] Q06 · BFS Core Idea — Level-by-Level Expansion
+- [x] Q07 · BFS Shortest Path in a Grid
+- [x] Q08 · Multi-Source BFS
+- [x] Q09 · 0-1 BFS with Deque
+- [x] Q10 · Word Ladder — BFS on Word Graph
 
 ### Monotonic Deque (Q11–Q14)
-- [ ] Q11 · Monotonic Deque Core Idea
-- [ ] Q12 · Sliding Window Maximum
-- [ ] Q13 · Sliding Window Minimum
-- [ ] Q14 · Shortest Subarray with Sum at Least K
+- [x] Q11 · Monotonic Deque Core Idea
+- [x] Q12 · Sliding Window Maximum
+- [x] Q13 · Sliding Window Minimum
+- [x] Q14 · Shortest Subarray with Sum at Least K
 
 ### Scheduling / Stream (Q15–Q19)
-- [ ] Q15 · Moving Average from Data Stream
-- [ ] Q16 · Hit Counter — Sliding Time Window
-- [ ] Q17 · Number of Recent Calls
-- [ ] Q18 · Task Scheduler with Cooldown
-- [ ] Q19 · First Unique Character in a Stream
+- [x] Q15 · Moving Average from Data Stream
+- [x] Q16 · Hit Counter — Sliding Time Window
+- [x] Q17 · Number of Recent Calls
+- [x] Q18 · Task Scheduler with Cooldown
+- [x] Q19 · First Unique Character in a Stream
 
 ### Ordering / Simulation (Q20–Q21)
-- [ ] Q20 · Reveal Cards in Increasing Order
-- [ ] Q21 · Senate Voting — Two Queues Greedy
+- [x] Q20 · Reveal Cards in Increasing Order
+- [x] Q21 · Senate Voting — Two Queues Greedy
 
 ### Priority Queue (Q22–Q24)
-- [ ] Q22 · Kth Largest Element — Min Heap of Size K
-- [ ] Q23 · Merge K Sorted Streams
-- [ ] Q24 · Median from Data Stream — Two Heaps
+- [x] Q22 · Kth Largest Element — Min Heap of Size K
+- [x] Q23 · Merge K Sorted Streams
+- [x] Q24 · Median from Data Stream — Two Heaps
 
 ---
 
-## queues.html Rework Progress Log
+## queues.html Progress Log
 
 | Batch | Cards | Status |
 |-------|-------|--------|
-| Batch 1 | Q01–Q10 | ⏳ Next |
-| Batch 2 | Q11–Q24 | |
+| Batch 1 | Q01–Q05 | ✅ Done |
+| Batch 2 | Q06–Q10 | ✅ Done |
+| Batch 3 | Q11–Q14 | ✅ Done |
+| Batch 4 | Q15–Q19 | ✅ Done |
+| Batch 5 | Q20–Q21 | ✅ Done |
+| Batch 6 | Q22–Q24 | ✅ Done |
 
-**Currently reworking:** Q01 — FIFO Intuition
+**All 24 cards complete. Done 2026-05-07.**
