@@ -1261,11 +1261,11 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
     <div class="section-number">3.2</div>
     <h2 class="section-title">Thermal Runaway</h2>
     <p class="section-intro">
-      Thermal runaway is the defining failure mode of Li-ion batteries. It is not a gradual
-      degradation — it is a self-accelerating catastrophic event where exothermic reactions
-      generate more heat than the cell can dissipate, driving temperature higher, which
-      accelerates more reactions, in a feedback loop that cannot be stopped once triggered.
-      The BMS exists, in part, to ensure this loop never starts.
+      Thermal runaway is the worst thing that can happen to a lithium battery. It is not a slow
+      decline — it is a runaway chain reaction. Heat makes the cell hotter; the hotter the cell
+      gets, the faster it generates even more heat; which makes it hotter still. Once this loop
+      starts, it cannot be stopped. The battery burns itself up from the inside. The entire job
+      of the BMS is to make sure this chain reaction never begins.
     </p>
 
     <div class="callout callout-thermal">
@@ -1273,11 +1273,11 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
       <div class="callout-body">
         <div class="callout-title">Definition: Thermal Runaway</div>
         <p>
-          Thermal runaway occurs when the heat generation rate within a cell exceeds the heat
-          dissipation rate, and the resulting temperature rise further accelerates exothermic
-          reactions — creating a positive feedback loop (dQ_gen/dT &gt; dQ_diss/dT) that is
-          thermodynamically self-sustaining. Once initiated, no external intervention can prevent
-          the cell from consuming itself. Prevention — through the BMS — is the only strategy.
+          Thermal runaway happens when the cell produces heat faster than it can lose it — and the
+          extra heat speeds up the very reactions causing the heat. It's a vicious circle: more heat
+          → faster reactions → even more heat. Once it starts, nothing outside the cell can stop it.
+          The only winning move is to prevent it from starting in the first place, which is exactly
+          what the BMS is designed to do.
         </p>
       </div>
     </div>
