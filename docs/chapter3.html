@@ -1288,22 +1288,22 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="stat-card" style="--c: var(--accent-red);">
           <div class="stat-value" style="color:var(--accent-red); font-size:2rem;">⚡</div>
           <div class="stat-label" style="color:var(--accent-red);">Overcharge</div>
-          <div class="stat-desc">Above 3.65V/cell, lithium metal plates on anode, cathode becomes unstable. BMS OVP must fire before this.</div>
+          <div class="stat-desc">Push a cell above 3.65V and lithium starts depositing as metal rather than inserting cleanly — the cathode also becomes unstable. The BMS over-voltage protection must cut the charge before this point.</div>
         </div>
         <div class="stat-card">
           <div class="stat-value" style="color:var(--accent-orange); font-size:2rem;">🔥</div>
           <div class="stat-label" style="color:var(--accent-orange);">External Heat</div>
-          <div class="stat-desc">Adjacent cell TR, fire exposure, or failed heater above 60°C. Pack spacing and thermal barriers are the defense.</div>
+          <div class="stat-desc">A neighbouring cell going into runaway, a nearby fire, or a stuck heater can bake a healthy cell hot enough to trigger its own chain reaction. Physical spacing and firewall barriers between cells are the main defence.</div>
         </div>
         <div class="stat-card">
           <div class="stat-value" style="color:var(--accent-purple); font-size:2rem;">🔩</div>
           <div class="stat-label" style="color:var(--accent-purple);">Internal Short</div>
-          <div class="stat-desc">Dendrite penetrates separator, metallic short releases all stored energy internally. No external trigger — the most dangerous.</div>
+          <div class="stat-desc">Dendrites (metallic spikes that grow during repeated overcharge or fast charge) can punch through the separator and connect the two electrodes directly inside the cell. All stored energy dumps as heat in seconds — with no external warning.</div>
         </div>
         <div class="stat-card">
           <div class="stat-value" style="color:var(--accent-blue); font-size:2rem;">💥</div>
           <div class="stat-label" style="color:var(--accent-blue);">Mechanical Damage</div>
-          <div class="stat-desc">Crushing, nail penetration, or drop damage collapses cell layers, creating internal short. Detected by sudden IR drop.</div>
+          <div class="stat-desc">Crushing, a nail puncture, or a heavy drop can physically collapse the electrode layers inside the cell, creating the same kind of internal short as a dendrite. The BMS may see a sudden voltage drop or resistance change as the first warning.</div>
         </div>
       </div>
     </div>
