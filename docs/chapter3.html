@@ -1891,19 +1891,19 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
     <div class="section-number">3.4</div>
     <h2 class="section-title">Mechanical Considerations — Swelling, Compression, and Vibration</h2>
     <p class="section-intro">
-      Li-ion cells are not mechanically inert. Every charge and discharge cycle causes the
-      electrodes to physically expand and contract. Over thousands of cycles, this mechanical
-      stress accumulates, affecting cell health, inter-cell electrical contact, and the
-      structural integrity of the pack. The BMS cannot directly monitor swelling, but pack
-      mechanical design must account for it.
+      Lithium-ion cells aren't just chemical devices — they're also mechanical ones. Every time
+      you charge or discharge, the electrodes physically swell and shrink. Do this thousands of
+      times and the accumulated mechanical stress damages cell health, loosens electrical contacts
+      between cells, and can crack the pack structure. The BMS can't measure swelling directly,
+      but the pack's physical design has to be built around it.
     </p>
 
     <div class="subsection">
       <div class="subsection-title">LFP Electrode Swelling — The Lithiation Expansion</div>
       <p>
-        When Li⁺ intercalates into graphite during charging, the carbon lattice expands.
-        When it deintercalates during discharge, it contracts. This volume change is cyclic
-        and governed by the crystal lattice parameters of the electrode materials:
+        When the cell charges, lithium ions squeeze into the graphite anode — and this forces the
+        carbon crystal to expand, like packing more people into a crowd. When the cell discharges,
+        the lithium leaves and the graphite contracts again. This happens every single cycle:
       </p>
       <div class="formula-block">
         <span class="formula-label">Volume Change During Intercalation</span>
@@ -1912,9 +1912,10 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <span class="formula-line">Graphite anode: Li_x C₆ — expands ~10% at full lithiation (x=1)</span>
         <span class="formula-line">Net prismatic cell thickness change: ~2% (LFP) vs ~4–5% (NMC)</span>
         <span class="formula-caption">
-          A 280Ah prismatic cell with 45mm nominal thickness expands by ~0.9 mm from empty to full.
-          In a 16S pack with all cells expanding simultaneously, the total pack length change is
-          16 × 0.9 mm = 14.4 mm — nearly 1.5 cm. Mechanical fixtures must accommodate this.
+          Our 280Ah reference cell (45mm thick when empty) swells by about 0.9mm when fully charged.
+          In a 16-cell pack, all cells expand together — that's 16 × 0.9mm = 14.4mm of total
+          movement, nearly 1.5 cm. The pack's mounting frame and end-plates must be designed
+          to flex with this, or they'll crack or crush the cells.
         </span>
       </div>
 
