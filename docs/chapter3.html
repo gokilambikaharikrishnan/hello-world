@@ -2413,9 +2413,9 @@ T_min (°C)  | Max I_charge | Reason
     <div class="section-number">Summary</div>
     <h2 class="section-title">Chapter 3 Summary — The Thermal Physics Behind Every BMS Threshold</h2>
     <p class="section-intro">
-      Thermal and mechanical behaviour is not a peripheral concern — it is the direct physical
-      basis for the most critical safety features in the BMS. The following traces each key
-      concept to its firmware manifestation.
+      Thermal and mechanical physics aren't side topics — they are the direct physical foundation
+      for the BMS's most important safety features. The following traces each key concept from
+      physical reality to the firmware behaviour it drives.
     </p>
 
     <div class="trace-container">
@@ -2425,7 +2425,7 @@ T_min (°C)  | Max I_charge | Reason
           <div class="trace-label">Q_J = I² × R</div>
         </div>
         <div class="trace-arrow">→</div>
-        <div class="trace-right">Heat scales with I² not I — the reason high C-rates are thermally dangerous and why parallel cells dramatically reduce thermal load per cell.</div>
+        <div class="trace-right">Heat scales with current squared, not linearly. Doubling the current quadruples the heat. This is why high charge/discharge rates are thermally dangerous, and why adding cells in parallel dramatically reduces heat per cell.</div>
       </div>
       <div class="trace-row">
         <div class="trace-left">
@@ -2433,7 +2433,7 @@ T_min (°C)  | Max I_charge | Reason
           <div class="trace-label">Surface ≠ Core Temp</div>
         </div>
         <div class="trace-arrow">→</div>
-        <div class="trace-right">NTC reads 5–15°C below actual cell core temperature at 1C. BMS OT thresholds must be set conservatively (45°C surface = ~55°C core). Firmware applies T_core_est correction.</div>
+        <div class="trace-right">The surface sensor reads 5–15°C below the actual cell core temperature at 1C. A surface reading of 45°C might mean the core is already at 55°C. The BMS applies a correction formula to estimate core temperature from surface + current.</div>
       </div>
       <div class="trace-row">
         <div class="trace-left">
@@ -2441,7 +2441,7 @@ T_min (°C)  | Max I_charge | Reason
           <div class="trace-label">Stage 1 = Last Window</div>
         </div>
         <div class="trace-arrow">→</div>
-        <div class="trace-right">SEI decomposition at 90–120°C is the last point where BMS intervention can prevent thermal runaway. dT/dt &gt; 0.5°C/s detected while T &lt; 90°C means Stage 1 is starting. Disconnect immediately.</div>
+        <div class="trace-right">The SEI layer starts breaking down at 90–120°C — this is the last moment the BMS can intervene and stop full runaway. If dT/dt exceeds 0.5°C/s while temperature is still below 90°C, Stage 1 is just beginning. Disconnect immediately.</div>
       </div>
       <div class="trace-row">
         <div class="trace-left">
@@ -2449,7 +2449,7 @@ T_min (°C)  | Max I_charge | Reason
           <div class="trace-label">LFP — P–O Bond</div>
         </div>
         <div class="trace-arrow">→</div>
-        <div class="trace-right">544 kJ/mol P–O bond prevents oxygen release below 270°C. LFP thermal runaway is less catastrophic than NMC/NCA. No self-fuelling combustion chain. The physical basis for indoor ESS safety.</div>
+        <div class="trace-right">LFP's crystal bonds are strong enough (544 kJ/mol) to hold oxygen at temperatures below 270°C. No oxygen release means no self-feeding fire. This is the exact physical property that makes LFP safe for indoor use without special fire suppression.</div>
       </div>
       <div class="trace-row">
         <div class="trace-left">
