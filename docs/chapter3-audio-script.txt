@@ -785,4 +785,218 @@ than the core.
 ALEX: At one C, five to fifteen degrees cooler. The BMS applies the correction
 formula to estimate core temperature, and sets its hard cutoffs accordingly.
 
+--------------------------------------------------------------------------------
+SECTION 3.4 — MECHANICAL BEHAVIOUR: THE BATTERY THAT BREATHES
+--------------------------------------------------------------------------------
+
+BLAKE: Section Three-point-Four. Mechanical considerations. And this one
+genuinely surprised me when I first learned about it. These cells aren't just
+sitting there passively — they physically move.
+
+ALEX: Every single charge cycle. When the cell charges, the electrodes expand.
+When it discharges, they contract. It's like the cell is breathing.
+
+BLAKE: Why? What causes the expansion?
+
+ALEX: When lithium ions flow into the graphite anode during charging, they're
+inserting themselves into the carbon crystal lattice — squeezing between the
+layers of carbon atoms. This forces the lattice to expand. It's like trying
+to pack more books onto a shelf — the shelf gets wider to accommodate them.
+
+BLAKE: And when they leave during discharge?
+
+ALEX: The books leave, the shelf contracts. The graphite returns to its
+natural size. This happens every single cycle — over thousands and thousands
+of charge-discharge cycles.
+
+BLAKE: And the same thing happens at the cathode?
+
+ALEX: Yes, but with slightly different geometry. In LFP, the iron phosphate
+crystal changes volume by about six-point-eight percent as lithium moves in
+and out. The graphite anode changes by about ten percent at full lithiation.
+
+BLAKE: Ten percent? That's a lot.
+
+ALEX: It is. But for the whole assembled cell — the electrodes, separator,
+electrolyte, and casing all packed together — the net thickness change is
+more like two percent for LFP. Compare that to NMC, which is four to five
+percent. LFP has less mechanical stress per cycle, which is one of the
+reasons it has better cycle life.
+
+BLAKE: Let's put some real numbers on it for our reference cell.
+
+ALEX: Our two-eighty amp-hour prismatic LFP cell is forty-five millimetres
+thick when empty. At full charge, it's about forty-five-point-nine millimetres.
+That's roughly zero-point-nine millimetres of expansion.
+
+BLAKE: Less than a millimetre. That doesn't sound like much.
+
+ALEX: But now multiply it by sixteen cells in a series pack. Each cell expands
+zero-point-nine millimetres simultaneously. That's sixteen times zero-point-nine,
+which is fourteen-point-four millimetres of total expansion — nearly one-and-a-half
+centimetres of movement in the pack.
+
+BLAKE: The pack grows by one-and-a-half centimetres when you charge it.
+
+ALEX: And shrinks back when you discharge. Every day in a home ESS system. Over
+three-thousand cycles in a ten-year lifespan. The mounting frame, the end-plates,
+the busbars — all of it has to be designed to accommodate this movement or it
+will break.
+
+BLAKE: What happens if it's not designed for it?
+
+ALEX: The most common failure is the end-plates cracking, which allows the
+cells to expand freely and lose their compression — which hurts performance
+as we'll discuss in a moment. Or the busbars work-harden and crack from
+repeated flexing. Or the cells themselves develop internal layer separations
+as the electrode stack cycles between compressed and expanded states without
+proper support.
+
+--------------------------------------------------------------------------------
+IRREVERSIBLE SWELLING — THE HIDDEN HEALTH INDICATOR
+--------------------------------------------------------------------------------
+
+BLAKE: You mentioned there's a difference between normal swelling and
+irreversible swelling.
+
+ALEX: This is really important for state-of-health monitoring. Normal cyclic
+swelling — expand on charge, contract on discharge, back to baseline — is
+completely healthy. The problem is when a cell gets permanently thicker over
+time, never returning to its original baseline thickness.
+
+BLAKE: What causes permanent swelling?
+
+ALEX: Gas generation inside the cell. Three main causes. First, overcharging
+above three-point-six-five volts causes the electrolyte to oxidise at the
+cathode surface, producing gas. Second, the SEI layer continues to grow on
+the anode over thousands of cycles, consuming electrolyte and producing CO₂.
+Third, if there's any moisture contamination in the electrolyte, it reacts
+to form hydrofluoric acid and hydrogen gas.
+
+BLAKE: All of which fill up inside the sealed cell.
+
+ALEX: Right. The cell pouch or casing can't expand indefinitely, so internal
+pressure builds. The cell gets permanently fatter. And a permanently fatter
+cell is a cell that is accumulating degradation.
+
+BLAKE: Can you measure this?
+
+ALEX: Periodically measuring cell thickness is one approach — you'd need to
+do this with the cells removed from the pack. The more elegant approach is
+to fit a strain gauge or load cell into the compression fixture. As the cells
+gas and swell permanently, the force on the fixture increases. A slowly
+rising force reading over months tells you the cells are gassing, long before
+any voltage or capacity metric shows degradation.
+
+BLAKE: That's a pretty sophisticated health indicator.
+
+ALEX: It's one of the most direct physical measurements of cell health you can
+make. Because it catches gassing — which is the early stage of degradation —
+before it shows up in electrical measurements.
+
+--------------------------------------------------------------------------------
+COMPRESSION FIXTURES — WHY SQUEEZING IS ACTUALLY GOOD
+--------------------------------------------------------------------------------
+
+BLAKE: Now here's the counterintuitive part. You mentioned that applying
+controlled pressure to the cells actually improves performance.
+
+ALEX: Yes. This sounds wrong — you'd think clamping a cell tightly would
+damage it. But for prismatic LFP cells, controlled compression genuinely
+extends cycle life and improves capacity.
+
+BLAKE: Why?
+
+ALEX: Four reasons. First, compression keeps the electrode layers pressed
+tightly together. When they separate — even slightly — the resistance between
+them increases, and performance drops. Second, it prevents the layers from
+peeling apart as the cell breathes through each charge-discharge cycle.
+Repeated expansion and contraction without support causes delamination over
+time.
+
+BLAKE: Third?
+
+ALEX: Less free space inside for gas bubbles to accumulate in the electrode
+stack. If gas collects between layers, it creates dead zones where lithium
+can't move, reducing usable capacity. Fourth, limiting how much the anode
+can expand each cycle slows the growth rate of the SEI layer.
+
+BLAKE: So the compression fixture is actually part of the ageing management
+strategy, not just a structural component.
+
+ALEX: Exactly. And there's a specific target pressure. For a two-eighty
+amp-hour prismatic LFP cell, the optimal compression range is ten to thirty
+kilopascals — that's about one-point-five to four-point-four PSI. Very light
+pressure by engineering standards, but carefully controlled.
+
+BLAKE: What happens if the pressure gets too high?
+
+ALEX: Above a hundred kilopascals, you start forcing electrolyte out of the
+electrode pores. The liquid that lithium ions travel through gets squeezed
+out, reducing the cell's ability to deliver current. Capacity drops
+permanently.
+
+BLAKE: So you need a pressure range — not too little, not too much.
+
+ALEX: And you need to maintain that range as the cell swells. If you use
+rigid end-plates and tie-rods with no spring compliance, the pressure
+builds as the cells expand — potentially exceeding the maximum. You have to
+include spring elements — Belleville washers or spring plates — that absorb
+the expansion and keep pressure in the target range throughout the cell's
+state of charge swing.
+
+BLAKE: The design target is fifteen kilopascals preload at fifty percent
+state of charge — the midpoint — with a plus-or-minus ten kilopascal range
+as the cells breathe.
+
+ALEX: Right. So at zero percent state of charge, the cells are their smallest
+and the spring is under less compression — maybe five kilopascals. At full
+charge, the cells are at their largest and the spring is compressed further —
+maybe twenty-five kilopascals. You stay within the ten-to-thirty target range
+throughout.
+
+--------------------------------------------------------------------------------
+VIBRATION AND SHOCK — SURVIVING REAL-WORLD CONDITIONS
+--------------------------------------------------------------------------------
+
+BLAKE: And then there's the vibration issue. These packs don't live in a
+perfectly still laboratory.
+
+ALEX: No. During shipping, they're bounced around in trucks and warehouses.
+During installation, they might get dropped. Once installed, floor-mounted
+packs experience continuous low-frequency vibration from building mechanical
+systems.
+
+BLAKE: Are there actual test standards for this?
+
+ALEX: Several. IEC sixty-two-one-three-three covers general lithium battery
+testing. It includes a vibration test at seven to fifty hertz at one G —
+one times the force of gravity — for thirty minutes in each of three axes.
+And a shock test at a hundred G for six milliseconds in three directions.
+
+BLAKE: A hundred G shock. That's like a significant drop.
+
+ALEX: Yes. And for transport, there's UN thirty-eight-point-three — the
+international regulation for shipping lithium batteries. It covers vibration,
+shock, altitude changes, and thermal cycling. Any pack that's shipped by air
+has to pass these tests.
+
+BLAKE: From the BMS perspective, what fails in vibration testing?
+
+ALEX: Almost always the physical connections, not the firmware. Crimped
+cell-sense wires that aren't strain-relieved properly. Soldered joints that
+work-harden and crack. NTC thermistors whose leads fatigue and break. BMS
+connector bodies that loosen and increase contact resistance.
+
+BLAKE: What's the fix?
+
+ALEX: Use connectors rated for vibration environments. Molex MX-one-fifty or
+equivalent — these are connectors designed with positive retention, dual beams,
+and high insertion forces so they don't back out under vibration. Don't use
+the small hobby-grade JST or Dupont headers for anything in a production BMS.
+They're fine for prototyping, not for a pack that's going to bounce around
+in a truck for a week.
+
+
+
 
