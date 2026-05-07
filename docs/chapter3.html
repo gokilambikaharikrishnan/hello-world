@@ -1822,40 +1822,40 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
     <div class="subsection">
       <div class="subsection-title">NTC Placement Strategy — Where to Measure and Why</div>
       <p>
-        The accuracy of the BMS's thermal model depends entirely on where the temperature
-        sensors are placed. A single NTC on the PCB tells you almost nothing about cell
-        temperatures in a 16S pack.
+        The BMS's thermal model is only as good as where its sensors are placed. A single
+        temperature sensor on the circuit board tells you almost nothing about what's happening
+        inside the cells in a 16-cell pack. Placement matters enormously.
       </p>
       <div class="ntc-grid">
         <div class="ntc-card" style="--ntc-color: var(--accent-red);">
           <div class="ntc-position">Critical</div>
           <div class="ntc-name">Cell Midpoint Surface</div>
-          <div class="ntc-desc">Mounted flush against the large face of each cell, at mid-height. Captures the hottest surface point. Minimum 1 per every 2 cells.</div>
+          <div class="ntc-desc">Pressed flat against the large face of the cell at mid-height — this is where the surface temperature peaks. You need at least one sensor for every two cells.</div>
         </div>
         <div class="ntc-card" style="--ntc-color: var(--accent-orange);">
           <div class="ntc-position">Important</div>
           <div class="ntc-name">Positive Tab Junction</div>
-          <div class="ntc-desc">At or near the aluminium busbar-to-tab weld. Tab area carries full pack current — highest I²R heating site. Must not exceed 80°C.</div>
+          <div class="ntc-desc">Placed at or near where the busbar is welded to the cell tab. The tab carries the full pack current, making it the hottest electrical connection point. This spot must stay below 80°C.</div>
         </div>
         <div class="ntc-card" style="--ntc-color: var(--accent-yellow);">
           <div class="ntc-position">Important</div>
           <div class="ntc-name">Pack Inlet Air / Coolant</div>
-          <div class="ntc-desc">Measures incoming thermal environment. Used to compute delta-T available for cooling and to adjust fan/pump speed feed-forward.</div>
+          <div class="ntc-desc">Measures how warm the incoming air or coolant already is. The BMS uses this to figure out how much cooling headroom is available and to pre-adjust fan or pump speed.</div>
         </div>
         <div class="ntc-card" style="--ntc-color: var(--accent-yellow);">
           <div class="ntc-position">Important</div>
           <div class="ntc-name">Pack Outlet Air / Coolant</div>
-          <div class="ntc-desc">Measures heat rejection effectiveness. T_outlet − T_inlet × flow rate = actual heat removal rate. Used to verify cooling system performance.</div>
+          <div class="ntc-desc">Comparing outlet temperature to inlet temperature (multiplied by flow rate) tells you exactly how much heat the cooling system is actually removing. This is how the BMS verifies that cooling is working as expected.</div>
         </div>
         <div class="ntc-card" style="--ntc-color: var(--accent-blue);">
           <div class="ntc-position">Recommended</div>
           <div class="ntc-name">BMS PCB Ambient</div>
-          <div class="ntc-desc">On-board reference for BMS IC derating. AFE ICs have operating limits (typically −40°C to +85°C). PCB temperature correlates with enclosure interior.</div>
+          <div class="ntc-desc">A reference for the BMS chip itself — the AFE ICs have their own temperature limits (typically −40°C to +85°C) and this sensor tells the firmware whether the BMS electronics are getting too hot.</div>
         </div>
         <div class="ntc-card" style="--ntc-color: var(--accent-green);">
           <div class="ntc-position">Optional</div>
           <div class="ntc-name">Cell Bottom Centre</div>
-          <div class="ntc-desc">Best position to detect cell internal hot spots. Core-to-surface lag ≈ 30–120s at 1C. Bottom sensors respond faster than side sensors for prismatic cells.</div>
+          <div class="ntc-desc">The best spot to catch a developing hot spot inside the cell. The core heats up 30–120 seconds before the surface at 1C — bottom sensors pick this up faster than side sensors on prismatic cells.</div>
         </div>
       </div>
 
