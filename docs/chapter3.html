@@ -934,10 +934,10 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
     <div class="section-number">3.1</div>
     <h2 class="section-title">Heat Generation in Li-ion Cells</h2>
     <p class="section-intro">
-      Every Li-ion cell generates heat during charge and discharge. Understanding exactly where
-      that heat comes from — and how much — is the first step in designing thermal management
-      and setting BMS protection thresholds. There are three physically distinct heat sources,
-      and the BMS must know all three.
+      Every Li-ion cell produces heat when it charges or discharges. To design a safe battery
+      system and set the right protection limits, you need to know where that heat comes from
+      and how much of it to expect. There are three separate sources of heat inside the cell,
+      and all three matter to the BMS.
     </p>
 
     <!-- Animated heat source diagram -->
@@ -1002,26 +1002,25 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
     <div class="subsection">
       <div class="subsection-title">Source 1: Joule Heating — The Dominant Term</div>
       <p>
-        Joule heating is ohmic dissipation — electrical energy converted to heat as current flows
-        through the cell's internal resistance. It is the dominant heat source in almost all
-        practical conditions.
+        Joule heating is the heat produced when current flows through the cell's internal resistance
+        — the same reason a wire gets warm when electricity runs through it. It is the biggest
+        source of heat in almost all normal operating conditions.
       </p>
       <div class="formula-block">
         <span class="formula-label">Joule Heating Power</span>
         <span class="formula-line">Q_J = I² × R_internal  (Watts)</span>
         <span class="formula-line">Q_J = I² × (R₀ + R₁)  (simplified Thevenin model)</span>
         <span class="formula-caption">
-          Critical insight: power scales with I², not I. Doubling the current quadruples the heat.
-          This is the physical reason why high-C-rate operation is thermally dangerous.
-          A 280Ah cell with R₀ = 0.4 mΩ at 1C (280A) dissipates: Q = 280² × 0.4×10⁻³ = 31.4 W.
-          At 2C (560A): Q = 560² × 0.4×10⁻³ = 125.4 W — 4× more heat, not 2×.
+          The key point: heat grows with the square of the current, not the current itself.
+          Double the current → four times the heat. Our 280Ah cell at 1C (280 A) produces 31.4 W
+          of heat. At 2C (560 A) it produces 125.4 W — four times more, not two times.
         </span>
       </div>
       <p>
-        The I² relationship has a profound implication for pack design: <strong>parallel cells share
-        current</strong>, so a 1P pack at 2C and a 2P pack at 1C carry the same energy throughput,
-        but the 2P pack generates <em>one quarter</em> of the heat. This is why high-power applications
-        favor more parallel cells — the thermal load scales inversely with P².
+        This squared relationship matters for pack design too. If you add a second parallel cell,
+        the current splits between them — each cell carries half. Half the current means one quarter
+        the heat per cell. That is why high-power packs use more parallel cells: it cuts the
+        thermal load dramatically without changing the total energy delivered.
       </p>
 
       <div class="callout callout-physics">
