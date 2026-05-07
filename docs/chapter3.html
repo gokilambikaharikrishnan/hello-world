@@ -2159,23 +2159,23 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
     <div class="subsection">
       <div class="subsection-title">Undertemperature Charge Cutoff — Why 0°C is Absolute</div>
       <p>
-        Below 0°C, the BMS must block all charge current — not just derate, but completely prohibit.
-        This is the hardest and most important temperature-related protection rule.
+        Below 0°C, the BMS must block all charging — not reduce it, not slow it down, but stop it
+        completely. This is the single most important temperature rule in the entire firmware.
       </p>
       <div class="callout callout-danger">
         <div class="callout-icon">🧊</div>
         <div class="callout-body">
           <div class="callout-title">Charging Below 0°C = Lithium Plating = Dendritic Short Circuit Risk</div>
           <p>
-            Below 0°C, the graphite anode cannot intercalate Li⁺ fast enough.
-            The Li⁺ ions reaching the anode surface cannot enter the lattice and instead
-            deposit as metallic lithium (Li⁰). Unlike intercalated lithium, metallic lithium
-            grows as dendrites — needle-like structures that penetrate through the separator.
-            When a dendrite bridges anode to cathode, it creates a sudden internal short circuit
-            that can release the full stored energy in seconds, with potential for thermal runaway.
+            Below 0°C, the graphite anode can't absorb lithium ions fast enough during charging.
+            The ions arrive at the surface but can't squeeze into the crystal lattice in time —
+            so instead they deposit as solid metallic lithium on the surface. This metallic lithium
+            grows as thin needle-like spikes called dendrites. If a dendrite grows long enough to
+            punch through the separator and touch the cathode, you have a sudden internal short circuit
+            — all the stored energy dumps as heat in seconds, with thermal runaway a real possibility.
             <br><br>
-            <strong>The BMS rule is unconditional: I_charge = 0 when T_min_cell &lt; 0°C.</strong>
-            No exceptions, no "gentle charge", no "just 0.1C". Any charge current at sub-zero
+            <strong>The BMS rule is unconditional: charge current = 0 when any cell is below 0°C.</strong>
+            No exceptions. Not "just 0.1C". Not "gentle warm-up charge". Any charge at sub-zero
             temperatures risks dendrite formation.
           </p>
         </div>
@@ -2195,9 +2195,10 @@ T_min (°C)  | Max I_charge | Reason
   &gt;55       | 0.0C  (OFF)  | Electrolyte degradation risk</span>
       </div>
       <p>
-        This table is stored in BMS firmware as a lookup table indexed by T_min_cell (the lowest
-        temperature across all sensors). The charge current command is set to the minimum of
-        (charger-requested current) and (table value × Q_nom). The BMS enforces this, not the charger.
+        This table lives in the BMS firmware as a lookup, indexed by the coldest cell temperature
+        across all sensors. The maximum allowed charge current is whichever is smaller: what the
+        charger is asking for, or what the table allows at the current temperature. The BMS
+        enforces this limit — the charger doesn't get a vote.
       </p>
     </div>
 
