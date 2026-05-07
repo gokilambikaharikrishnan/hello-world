@@ -2125,17 +2125,18 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
     <div class="section-number">3.5</div>
     <h2 class="section-title">BMS Thermal Features — From Physics to Firmware</h2>
     <p class="section-intro">
-      Every temperature threshold in the BMS firmware has a physical derivation. This section
-      traces each protection threshold and control action back to the underlying electrochemistry
-      and thermal physics — so you understand not just <em>what</em> the numbers are, but
-      <em>why</em> they are what they are.
+      Every temperature number in BMS firmware has a real physical reason behind it. This section
+      traces each protection limit and control action back to the electrochemistry and physics that
+      justify it — so you understand not just <em>what</em> the thresholds are, but
+      <em>why they are set where they are</em>.
     </p>
 
     <div class="subsection">
       <div class="subsection-title">Overtemperature Charge Cutoff — Why 45°C</div>
       <p>
-        The OT charge cutoff is set at 45°C (warning) and 55°C (hard cutoff) for most LFP BMS
-        designs. This is not arbitrary — it is derived directly from SEI growth kinetics.
+        Most LFP BMS designs use 45°C as a charge warning and 55°C as a hard cutoff. These
+        numbers aren't guesses — they come directly from how fast the SEI layer grows at different
+        temperatures.
       </p>
       <div class="formula-block">
         <span class="formula-label">SEI Growth Rate vs Temperature</span>
