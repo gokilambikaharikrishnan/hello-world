@@ -1907,6 +1907,301 @@ rh==rt → return 1 (Dire)</div>
   </div>
 </div>
 
+
+<!-- Q22 -->
+<div class="card" id="q22">
+  <div class="card-header">
+    <span class="card-id">Q22</span>
+    <span class="card-title">Kth Largest — Min Heap of Size K</span>
+    <span class="category-badge">Priority Queue</span>
+  </div>
+  <div class="background">
+    <p><strong>Heap structure (read this before Q23/Q24):</strong> A binary heap is a complete binary tree stored in an array. For a min-heap, every parent ≤ its children. Index arithmetic: parent of i = (i-1)/2; children of i = 2i+1 and 2i+2. Insert = append + sift-up. Remove-min = swap root with last, shrink, sift-down. Both O(log n).</p>
+    <p>To maintain the Kth largest element in a stream: keep a min-heap of size K. The heap root is always the Kth largest. If a new element is larger than the root, replace the root and sift down.</p>
+  </div>
+  <div class="situations">
+    <strong>Reach for min-heap-of-size-K when</strong>
+    <span class="sit">Kth largest in a stream (online)</span>
+    <span class="why">Heap root = Kth largest; add/evict in O(log K)</span>
+    <span class="sit">Top-K largest elements from a huge dataset</span>
+    <span class="why">Keep only K elements in heap; scan once O(n log K)</span>
+    <span class="sit">Nearest K points to origin</span>
+    <span class="why">Max-heap of K distances; evict farthest when new point is closer</span>
+  </div>
+  <div class="logic-build">
+    <p>K=3, stream: 4, 5, 8, 2. Track Kth (3rd) largest.</p>
+    <div class="ascii">
+Min-heap array: root = smallest = Kth-largest
+
+add(4): heap=[4]           size=1
+add(5): heap=[4,5]         size=2
+add(8): heap=[4,5,8]       size=3  → root=4 (3rd largest)
+add(2): 2 < root(4) → ignore   root=4 ✓
+add(10): 10 > root(4) → replace root with 10, sift-down
+  heap=[5,10,8] sift-down: 5<10, swap? no. 5 stays root.
+  heap=[5,8,10] → root=5 (3rd largest of {4,5,8,10})
+
+Heap tree for [5,8,10]:
+     5
+    / \
+   8   10
+Parent always ≤ children → min at root.</div>
+    <span class="aha">Min-heap of size K: root = Kth largest. Evict root when new element > root.</span>
+  </div>
+  <pre><code class="language-c">/* Min-heap: heap[0] = minimum */
+typedef struct { int h[1024]; int sz; } MinHeap;
+
+static void sift_up(MinHeap *mh, int i) {
+    while (i > 0) {
+        int p = (i-1)/2;
+        if (mh->h[p] > mh->h[i]) {
+            int t=mh->h[p]; mh->h[p]=mh->h[i]; mh->h[i]=t;
+            i = p;
+        } else break;
+    }
+}
+static void sift_down(MinHeap *mh, int i) {
+    while (1) {
+        int m=i, l=2*i+1, r=2*i+2;
+        if (l<mh->sz && mh->h[l]<mh->h[m]) m=l;
+        if (r<mh->sz && mh->h[r]<mh->h[m]) m=r;
+        if (m==i) break;
+        int t=mh->h[m]; mh->h[m]=mh->h[i]; mh->h[i]=t;
+        i=m;
+    }
+}
+int kth_largest_add(MinHeap *mh, int k, int val) {
+    if (mh->sz < k) {
+        mh->h[mh->sz++] = val;
+        sift_up(mh, mh->sz-1);
+    } else if (val > mh->h[0]) {
+        mh->h[0] = val;
+        sift_down(mh, 0);
+    }
+    return mh->h[0];
+}
+</code></pre>
+  <div class="dry-run">
+k=3: add(4)→4, add(5)→4, add(8)→4, add(2)→4, add(10)→5
+heap after add(10): [5,8,10]  root=5=3rd largest ✓</div>
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha — sift-down after replacing root</div>
+    <p>When you overwrite the root (<code>heap[0] = val</code>), you must call <code>sift_down(0)</code> — the new root may be larger than its children, violating the heap property. Forgetting sift-down corrupts the heap silently.</p>
+  </div>
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Why a min-heap for Kth largest? The root (minimum of heap) = Kth largest overall.</li>
+      <li>Parent index formula? (i-1)/2.</li>
+      <li>Children of index i? 2i+1 (left) and 2i+2 (right).</li>
+    </ol>
+  </div>
+  <div class="trigger-big">
+    <div class="trigger-main">Trigger: "Kth largest in stream / top-K elements"</div>
+    <ul class="trigger-variants">
+      <li>min-heap of size K; root = Kth largest</li>
+      <li>new > root: overwrite root, sift-down</li>
+      <li>new <= root: ignore (not in top K)</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Q23 -->
+<div class="card" id="q23">
+  <div class="card-header">
+    <span class="card-id">Q23</span>
+    <span class="card-title">Merge K Sorted Streams</span>
+    <span class="category-badge">Priority Queue</span>
+  </div>
+  <div class="background">
+    <p>Given K sorted arrays (or linked lists), merge them into one sorted sequence. A min-heap of size K always holds the current minimum candidate from each stream. Each time you extract the global minimum, you push the next element from the same stream.</p>
+    <p>Total elements = N. Time: O(N log K). Space: O(K) for the heap.</p>
+  </div>
+  <div class="situations">
+    <strong>Reach for K-way merge when</strong>
+    <span class="sit">Merge K sorted files / database partitions</span>
+    <span class="why">External sort merge phase: heap of K file cursors</span>
+    <span class="sit">Merge K sorted linked lists</span>
+    <span class="why">Push head of each list; pop min, advance that list's cursor</span>
+    <span class="sit">Priority-queue based multi-source ordered output</span>
+    <span class="why">Same heap pattern; each stream keeps a cursor</span>
+  </div>
+  <div class="logic-build">
+    <p>3 streams: [1,4,7], [2,5,8], [3,6,9]</p>
+    <div class="ascii">
+Heap entry: (value, stream_id, index)
+Init: push (1,0,0),(2,1,0),(3,2,0)
+Min-heap:       1
+               / \
+              2   3
+
+Step 1: pop (1,s=0,i=0) → output 1, push (4,0,1)
+  heap: 2,3,4
+Step 2: pop (2,s=1,i=0) → output 2, push (5,1,1)
+  heap: 3,5,4
+Step 3: pop (3,s=2,i=0) → output 3, push (6,2,1)
+  heap: 4,5,6
+...
+Output: 1,2,3,4,5,6,7,8,9</div>
+    <span class="aha">Each pop gives global min. Push next element from same stream. Heap size stays K throughout.</span>
+  </div>
+  <pre><code class="language-c">#define MAXK 64
+typedef struct { int val, sid, idx; } Entry;
+Entry hp[MAXK]; int hsz=0;
+
+void heap_push(Entry e){
+    hp[hsz++]=e;
+    int i=hsz-1;
+    while(i>0){
+        int p=(i-1)/2;
+        if(hp[p].val>hp[i].val){Entry t=hp[p];hp[p]=hp[i];hp[i]=t;i=p;}
+        else break;
+    }
+}
+Entry heap_pop(void){
+    Entry top=hp[0]; hp[0]=hp[--hsz];
+    int i=0;
+    while(1){
+        int m=i,l=2*i+1,r=2*i+2;
+        if(l<hsz&&hp[l].val<hp[m].val)m=l;
+        if(r<hsz&&hp[r].val<hp[m].val)m=r;
+        if(m==i)break;
+        Entry t=hp[m];hp[m]=hp[i];hp[i]=t;i=m;
+    }
+    return top;
+}
+
+void merge_k(int streams[][8], int lens[], int k, int *out, int *out_len) {
+    hsz=0; *out_len=0;
+    for(int i=0;i<k;i++) if(lens[i]>0) heap_push((Entry){streams[i][0],i,0});
+    while(hsz>0){
+        Entry e=heap_pop();
+        out[(*out_len)++]=e.val;
+        if(e.idx+1<lens[e.sid])
+            heap_push((Entry){streams[e.sid][e.idx+1],e.sid,e.idx+1});
+    }
+}
+</code></pre>
+  <div class="dry-run">
+3 streams of 3 each (N=9, K=3)
+Output: 1,2,3,4,5,6,7,8,9
+Time: O(9 × log 3) ≈ 14 comparisons</div>
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha — check stream exhaustion before pushing</div>
+    <p>After popping entry (sid, idx), only push the next element if <code>idx+1 &lt; lens[sid]</code>. If you push without checking, you'll access out-of-bounds array memory and corrupt the heap with garbage values.</p>
+  </div>
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>What's in each heap entry? (value, stream_id, current_index).</li>
+      <li>Time complexity? O(N log K) — N pops each costing O(log K).</li>
+      <li>What if a stream is exhausted? Don't push; heap shrinks below K.</li>
+    </ol>
+  </div>
+  <div class="trigger-big">
+    <div class="trigger-main">Trigger: "merge K sorted lists/arrays"</div>
+    <ul class="trigger-variants">
+      <li>min-heap of (value, stream_id, index) size K</li>
+      <li>pop global min → output; push next from same stream</li>
+      <li>O(N log K) time, O(K) heap space</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Q24 -->
+<div class="card" id="q24">
+  <div class="card-header">
+    <span class="card-id">Q24</span>
+    <span class="card-title">Median from Data Stream — Two Heaps</span>
+    <span class="category-badge">Priority Queue</span>
+  </div>
+  <div class="background">
+    <p>Maintain the running median of a stream. One heap alone can't do it efficiently — you'd need to scan half the heap. The two-heap trick: a max-heap <em>lo</em> holds the lower half, a min-heap <em>hi</em> holds the upper half. Invariant: every element of lo ≤ every element of hi, and |lo.size - hi.size| ≤ 1. The median is then lo.top, hi.top, or their average.</p>
+  </div>
+  <div class="situations">
+    <strong>Reach for two-heap median when</strong>
+    <span class="sit">Median of a growing stream in O(log n) per insertion</span>
+    <span class="why">Two heaps keep lower/upper halves balanced; median is always at one/both tops</span>
+    <span class="sit">Median in a sliding window (harder variant)</span>
+    <span class="why">Same structure, add lazy-deletion for out-of-window elements</span>
+    <span class="sit">Find median of unsorted array efficiently</span>
+    <span class="why">Insert all elements with two-heap; median at top after all inserts</span>
+  </div>
+  <div class="logic-build">
+    <p>Stream: 1, 2, 3, 4, 5</p>
+    <div class="ascii">
+lo = max-heap (lower half), hi = min-heap (upper half)
+
+add(1): lo=[1]  hi=[]     lo.size=1 > hi.size+1? no  median=1.0
+add(2): push to lo=[2,1], lo.top=2>hi.top=∞? move: lo=[1] hi=[2]
+        sizes equal → median=(1+2)/2=1.5
+add(3): push to lo=[3,1], lo.top=3>hi.top=2? move: lo=[1,2]?
+        Actually: push to lo then balance:
+        lo=[3,1] hi=[2]  lo.size=2=hi.size+1? yes, ok
+        lo.top=3>hi.top=2 → pop lo(3) push hi → lo=[1] hi=[2,3]
+        hi.size > lo.size → pop hi(2) push lo → lo=[2,1] hi=[3]
+        median = lo.top = 2.0
+add(4): push to lo=[4,2,1] → lo.top=4>hi.top=3 → move: lo=[2,1] hi=[3,4]
+        sizes equal → median=(2+3)/2=2.5
+add(5): push to lo=[5,2,1] → balance → lo=[2,1] hi=[3,4,5]?
+        lo=[3,2,1] hi=[4,5]  median=lo.top=3.0</div>
+    <span class="aha">Always push to lo first. If lo.top > hi.top, move lo.top to hi. Then re-balance sizes: if |lo|-|hi| > 1, move top of larger to smaller.</span>
+  </div>
+  <pre><code class="language-c">/* Max-heap: negate values to use min-heap code */
+int lo[100001], hi[100001];   /* lo=max-heap (negated), hi=min-heap */
+int lo_sz=0, hi_sz=0;
+
+static void push_min(int *h,int *sz,int v){
+    h[(*sz)++]=v; int i=*sz-1;
+    while(i>0){int p=(i-1)/2;if(h[p]>h[i]){int t=h[p];h[p]=h[i];h[i]=t;i=p;}else break;}
+}
+static int pop_min(int *h,int *sz){
+    int top=h[0]; h[0]=h[--(*sz)];
+    int i=0;
+    while(1){int m=i,l=2*i+1,r=2*i+2;
+        if(l<*sz&&h[l]<h[m])m=l; if(r<*sz&&h[r]<h[m])m=r;
+        if(m==i)break; int t=h[m];h[m]=h[i];h[i]=t;i=m;}
+    return top;
+}
+/* lo stores negated values → pop_min(lo) gives max of lower half */
+void add_num(int num) {
+    push_min(lo, &lo_sz, -num);           /* push to lo (max-heap) */
+    if (hi_sz > 0 && -lo[0] > hi[0]) {   /* lo.max > hi.min: rebalance */
+        push_min(hi, &hi_sz, -pop_min(lo, &lo_sz));
+    }
+    if (lo_sz > hi_sz+1) push_min(hi,&hi_sz,-pop_min(lo,&lo_sz));
+    else if (hi_sz > lo_sz) push_min(lo,&lo_sz,-pop_min(hi,&hi_sz));
+}
+double find_median(void) {
+    if (lo_sz == hi_sz) return (-lo[0] + hi[0]) / 2.0;
+    return lo_sz > hi_sz ? -lo[0] : hi[0];
+}
+</code></pre>
+  <div class="dry-run">
+add(1),add(2),add(3),add(4),add(5)
+medians: 1.0, 1.5, 2.0, 2.5, 3.0</div>
+  <div class="gotcha">
+    <div class="gotcha-title">Gotcha — negate to simulate max-heap with min-heap code</div>
+    <p>C has no built-in heap. To make a max-heap using min-heap code: push <code>-val</code>, pop gives <code>-max</code>. Negate back to get the true maximum. This is a standard C trick — be careful never to mix negated and non-negated pushes into the same heap.</p>
+  </div>
+  <div class="confidence">
+    <div class="confidence-title">Confidence Check</div>
+    <ol>
+      <li>Which heap holds the lower half? lo (max-heap) — its top is the largest of the small half.</li>
+      <li>Which heap holds the upper half? hi (min-heap) — its top is the smallest of the large half.</li>
+      <li>When do you average the two tops? When both heaps have equal size (even total count).</li>
+    </ol>
+  </div>
+  <div class="trigger-big">
+    <div class="trigger-main">Trigger: "median of stream / running median"</div>
+    <ul class="trigger-variants">
+      <li>lo = max-heap (lower half), hi = min-heap (upper half)</li>
+      <li>always push to lo first; then cross-balance lo.top > hi.top; then size-balance</li>
+      <li>median = lo.top if sizes differ, else (lo.top + hi.top) / 2</li>
+    </ul>
+  </div>
+</div>
+
 <!-- CARDS_END -->
 
 <script>hljs.highlightAll();</script>
