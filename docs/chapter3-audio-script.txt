@@ -997,6 +997,264 @@ the small hobby-grade JST or Dupont headers for anything in a production BMS.
 They're fine for prototyping, not for a pack that's going to bounce around
 in a truck for a week.
 
+--------------------------------------------------------------------------------
+SECTION 3.5 — BMS THERMAL FIRMWARE: FROM PHYSICS TO PROTECTION RULES
+--------------------------------------------------------------------------------
+
+BLAKE: Okay. Final technical section — Section Three-point-Five. This is
+where we take all the physics we've learned and turn it into actual firmware
+decisions. Every number in the BMS code has a physical reason.
+
+ALEX: Yes, and I love this section because it makes explicit what's usually
+left implicit. When a BMS designer writes "charge cutoff at forty-five degrees",
+that number isn't arbitrary. It comes from a calculation.
+
+BLAKE: Let's go through the key thresholds one by one. Start with the most
+important one for normal operation — the overtemperature charge cutoff.
+
+ALEX: The overtemperature charge cutoff is set at forty-five degrees Celsius
+as a warning level and fifty-five degrees as the hard cutoff. And these numbers
+come from SEI growth kinetics.
+
+BLAKE: Explain the connection.
+
+ALEX: Remember the SEI layer — the protective film on the graphite anode.
+It grows slowly throughout the cell's life, and that growth consumes both
+lithium and electrolyte. Faster SEI growth means faster capacity fade means
+shorter cycle life. And SEI growth follows the Arrhenius relationship — it
+roughly doubles for every ten degrees of temperature increase.
+
+BLAKE: So at thirty-five degrees — the top of the optimal range — you have
+baseline SEI growth rate. Call that one-times.
+
+ALEX: At forty-five degrees, it's about two-point-one times baseline. That
+means the cell ages at double the rate if you charge it continuously at
+forty-five degrees. That's why it's a warning — you derate the charge current
+to reduce heat generation and keep the temperature from climbing further.
+
+BLAKE: At fifty-five degrees?
+
+ALEX: Four-point-three times baseline. SEI is growing more than four times
+faster than it should. At that rate, you're burning through cycle life so fast
+that continued charging is simply not acceptable. Hard cutoff.
+
+BLAKE: And why is the discharge cutoff higher — sixty degrees?
+
+ALEX: Because charging and discharging have different effects at the anode.
+During charging, lithium ions are being pushed into the graphite — right to the
+surface where the SEI forms. That's when SEI growth accelerates with temperature.
+During discharging, lithium leaves the graphite — the SEI isn't growing because
+the conditions for its formation aren't present. The limiting concern during
+discharge is electrolyte stability, which has a higher thermal limit.
+
+BLAKE: So you can discharge at higher temperatures than you can charge.
+
+ALEX: Right. The asymmetry is physically justified. Forty-five-degree charge
+warning, sixty-degree discharge limit.
+
+--------------------------------------------------------------------------------
+THE ABSOLUTE RULE — NO CHARGING BELOW ZERO DEGREES
+--------------------------------------------------------------------------------
+
+BLAKE: And now the other end of the temperature spectrum — the cold cutoff.
+This one is absolute.
+
+ALEX: This is the hardest rule in thermal firmware, and it has zero exceptions.
+Below zero degrees Celsius, charge current must be completely blocked — not
+reduced, not limited to point-one C, but zero.
+
+BLAKE: Why? What physically happens?
+
+ALEX: At low temperatures, the graphite anode becomes kinetically sluggish.
+Lithium ions arrive at the surface during charging but can't insert into the
+crystal lattice fast enough. They pile up on the surface and can't find a
+site to enter. So instead of inserting into the graphite, they deposit as
+metallic lithium on top of the graphite surface.
+
+BLAKE: And metallic lithium on the surface is bad.
+
+ALEX: Very bad. Metallic lithium doesn't stay as a smooth layer — it grows
+as dendrites. Needle-like crystalline spikes that keep growing with each
+charge cycle. The separator between the anode and cathode is only twenty to
+thirty microns thick — less than the diameter of a human hair. A dendrite
+that grows even slightly can puncture through it.
+
+BLAKE: And then you have an internal short circuit.
+
+ALEX: The full energy of the cell — all eight-hundred-and-six watt-hours at
+full charge for our reference cell — dumps as heat internally. Dendrite-induced
+internal shorts are particularly dangerous because they can happen suddenly,
+without any warning from the BMS, days or weeks after the cold charging event
+that caused the dendrite to form.
+
+BLAKE: So you charge below zero degrees, the dendrite forms but doesn't short yet.
+Then later, during normal cycling, it grows one more tiny amount and punctures
+the separator.
+
+ALEX: Yes. The cause and effect can be separated by weeks. Which is why there
+is absolutely no acceptable "gentle charge at zero point one C in cold weather"
+strategy. You must wait for the cells to warm up.
+
+BLAKE: The BMS temperature derating table.
+
+ALEX: Yes. The BMS stores a lookup table. Below zero degrees — zero current,
+no exceptions. Zero to five degrees — maximum zero-point-one C charge rate.
+Five to ten degrees — zero-point-two C. Ten to fifteen degrees — zero-point-five
+C. Fifteen to thirty-five degrees is the optimal zone — full one C charge
+rate allowed. Above thirty-five degrees, you start derating: zero-point-seven
+C at thirty-five to forty-five degrees, zero-point-three C at forty-five to
+fifty-five degrees. Above fifty-five degrees — zero, hard cutoff.
+
+BLAKE: And the BMS enforces this — the charger doesn't get to override it.
+
+ALEX: The BMS sends the allowed current as a command to the charger, usually
+via CAN bus. The charger must comply. The BMS is the authority.
+
+--------------------------------------------------------------------------------
+DERATING — LINEAR REDUCTION BETWEEN THRESHOLDS
+--------------------------------------------------------------------------------
+
+BLAKE: And between those thresholds, the reduction isn't a sudden step —
+it's a smooth curve.
+
+ALEX: Linear derating. Between the warning threshold and the hard cutoff, the
+BMS linearly interpolates the allowed current. So at forty-five degrees, you
+have full rate. At fifty-five degrees, zero rate. At fifty degrees — exactly
+halfway — you're allowed fifty percent of full rate. The charger ramps down
+smoothly rather than chopping on and off.
+
+BLAKE: Why is smooth derating better than a simple on-off cutoff?
+
+ALEX: Two reasons. First, it's gentler on the load — abrupt current steps
+cause voltage transients that stress the cells. Second, it allows the system
+to keep the cell just below the hard cutoff rather than alternating between
+full charge and complete stop. The BMS is trying to extract as much useful
+charging as possible while staying safe.
+
+--------------------------------------------------------------------------------
+dT/dt MONITORING — THE THERMAL RUNAWAY EARLY WARNING
+--------------------------------------------------------------------------------
+
+BLAKE: Now the most sophisticated temperature feature — dT/dt monitoring.
+This is where the BMS goes beyond just reading a number and starts watching
+for patterns.
+
+ALEX: Right. dT/dt is the rate of temperature rise — how many degrees per
+second the temperature is climbing. And this is the definitive early warning
+signal for thermal runaway.
+
+BLAKE: Why is the rate more useful than the absolute temperature?
+
+ALEX: Because normal Joule heating produces a predictable, current-proportional
+temperature rise. If you double the current, you expect roughly four times
+the heating rate — because of that I-squared relationship. But when an
+exothermic chemical reaction starts inside the cell — like SEI decomposition
+at Stage One — the temperature rises faster than the current alone can explain.
+
+BLAKE: The temperature is climbing without a matching increase in current.
+
+ALEX: That's the signature. A healthy cell running at two C at room temperature
+produces about zero-point-one degrees Celsius per second of temperature rise.
+When Stage One SEI decomposition begins, you see zero-point-five to one degree
+per second — without any increase in current. That mismatch is the thermal
+runaway warning.
+
+BLAKE: What does the BMS do with it?
+
+ALEX: Three alarm levels. Level One: dT/dt above zero-point-five degrees per
+second — reduce load, increase cooling, alert the host system. Something is
+wrong and you're trying to arrest it.
+
+BLAKE: Level Two?
+
+ALEX: dT/dt above one degree per second — disconnect the pack immediately.
+Open the main FETs. Latch a fault that requires manual reset. Send a
+CAN alert. The situation is critical and you're cutting off the energy source.
+
+BLAKE: Level Three?
+
+ALEX: dT/dt above two degrees per second — thermal runaway is in progress.
+In addition to everything at Level Two, if there's a fire suppression system
+connected, you trigger it. And you log everything for post-event analysis.
+
+BLAKE: Now, measuring dT/dt sounds simple — just take the temperature at
+two consecutive moments and divide by the time between them. But there's
+a catch.
+
+ALEX: A big catch. Temperature sensors on a twelve-bit analog-to-digital
+converter — which is typical for BMS designs — have quantisation noise.
+That means even if the temperature isn't changing, the readings jump around
+slightly due to electrical noise. At a sampling rate of ten times per second —
+which is what you need for good dT/dt detection — those tiny noise jumps
+look like very rapid temperature changes.
+
+BLAKE: Creating false alarms.
+
+ALEX: Right. You'd be triggering Level One or Level Two alarms randomly
+from noise. So you filter the dT/dt with an exponential moving average.
+In the firmware code, it's: new filtered dTdt equals zero-point-eight
+times the previous filtered value, plus zero-point-two times the new
+raw measurement.
+
+BLAKE: That zero-point-two weighting — is that always right?
+
+ALEX: You have to tune it. Reduce it and you get more smoothing but slower
+response — you might miss a fast thermal event. Increase it and you get
+faster response but more noise — you get false alarms. For the two-hundred-
+and-eighty amp-hour prismatic LFP, zero-point-two gives a response time of
+about one second while smoothing out the ADC noise effectively.
+
+--------------------------------------------------------------------------------
+MULTI-SENSOR VOTING — PROTECTING AGAINST SENSOR FAILURES
+--------------------------------------------------------------------------------
+
+BLAKE: And there's one more piece of firmware sophistication we should
+cover — voting logic.
+
+ALEX: Yes. Because a single temperature sensor can fail. Shorted sensors read
+full-scale — which looks like the pack is extremely hot. Open sensors read
+nothing or maximum. Either failure can trigger a false overtemperature alarm.
+
+BLAKE: And in a UPS, a false overtemperature alarm means the UPS shuts down.
+
+ALEX: At exactly the moment you need it. Power fails, UPS activates — and if
+a spurious thermal alarm fires at that moment, the UPS goes offline too.
+The very system that's supposed to protect you from power failures has just
+contributed to one.
+
+BLAKE: How does voting logic fix this?
+
+ALEX: Simple but effective. Instead of triggering a protection action when
+any single sensor exceeds the threshold, require at least two sensors to
+agree. If one sensor reads a hundred-and-thirty degrees but the other five
+sensors all read thirty degrees, you have a failed sensor, not a hot pack.
+No action.
+
+BLAKE: But what about thermal runaway? You don't want to require two sensors
+to agree before responding to that.
+
+ALEX: Exactly right, and this is the subtle part of the implementation.
+For warning-level events — temperatures at forty or forty-five degrees,
+mild dT/dt readings — use two-of-N voting. But for thermal runaway level
+events — dT/dt above one or two degrees per second — use one-of-N voting.
+Any single sensor detecting runaway-level temperature rise should immediately
+trigger disconnection.
+
+BLAKE: Because the cost of a false positive at the runaway level —
+
+ALEX: Is the UPS going offline briefly. Annoying.
+
+BLAKE: And the cost of a false negative at the runaway level —
+
+ALEX: Is a cell fire spreading through the pack. Catastrophic. The
+asymmetry of consequences tells you exactly where to set the voting threshold.
+
+BLAKE: One-of-N for runaway detection. Two-of-N for everything else.
+
+ALEX: That's the rule.
+
+
+
 
 
 
