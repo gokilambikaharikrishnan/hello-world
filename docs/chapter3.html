@@ -1026,17 +1026,19 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
       <div class="callout callout-physics">
         <div class="callout-icon">⚛</div>
         <div class="callout-body">
-          <div class="callout-title">Why R_internal Is Not a Single Resistor</div>
+          <div class="callout-title">Why Internal Resistance Is Made Up of Several Parts</div>
           <p>
-            The internal resistance seen during Joule heating is the sum of multiple contributions:
-            <br>• <strong>Electrolyte resistance</strong> — ionic conductivity of LiPF₆ in EC/DMC solvent
-            <br>• <strong>SEI resistance</strong> — Li⁺ transport through the anode passivation layer
-            <br>• <strong>Charge transfer resistance</strong> — activation energy for intercalation reactions
-            <br>• <strong>Contact resistance</strong> — cell tab, busbar, and terminal joints
-            <br>• <strong>Current collector resistance</strong> — copper foil (anode) and aluminium foil (cathode)
+            The cell's internal resistance is not one simple resistor — it is the combined effect of
+            several things happening at once:
+            <br>• <strong>Electrolyte resistance</strong> — how easily lithium ions move through the liquid between the electrodes
+            <br>• <strong>SEI resistance</strong> — how easily ions pass through the protective layer on the anode surface
+            <br>• <strong>Charge transfer resistance</strong> — the energy needed to push lithium in and out of the crystal
+            <br>• <strong>Contact resistance</strong> — friction at joints between the cell tabs, busbars, and terminals
+            <br>• <strong>Current collector resistance</strong> — the copper foil at the anode and aluminium foil at the cathode
             <br><br>
-            Of these, SEI resistance grows over the cell's life, and contact resistance varies with
-            temperature and assembly quality. The BMS's measured R₀ (from HPPC) is the sum of all these.
+            The SEI portion grows as the cell ages. Contact resistance varies with temperature and
+            how well the pack was assembled. When the BMS measures R₀ using a pulse test, it sees
+            all of these lumped together as one number.
           </p>
         </div>
       </div>
