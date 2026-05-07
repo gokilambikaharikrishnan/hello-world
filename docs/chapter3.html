@@ -1127,19 +1127,19 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
     <div class="subsection">
       <div class="subsection-title">Source 2: Electrochemical Reaction Heat</div>
       <p>
-        When current flows and the terminal voltage deviates from the OCV, additional heat is generated
-        by the irreversibility of the electrochemical reactions. This is sometimes called the
-        <em>polarisation heat</em> or <em>overpotential dissipation</em>.
+        The second heat source comes from the electrochemical reactions themselves. No chemical
+        reaction is perfectly efficient — some of the energy that goes in (or comes out) gets
+        lost as heat. You can measure this by comparing the actual terminal voltage to the
+        resting OCV: the gap between them represents energy being wasted as heat.
       </p>
       <div class="formula-block">
         <span class="formula-label">Reaction Heat Power</span>
         <span class="formula-line">Q_rxn = I × η_total  where η_total = V_terminal − OCV</span>
-        <span class="formula-line">During discharge (I &gt; 0): V_terminal &lt; OCV → η &lt; 0 → heat generated</span>
-        <span class="formula-line">During charge  (I &lt; 0): V_terminal &gt; OCV → η &gt; 0 → heat generated</span>
+        <span class="formula-line">During discharge (I &gt; 0): V_terminal &lt; OCV → heat generated</span>
+        <span class="formula-line">During charge  (I &lt; 0): V_terminal &gt; OCV → heat generated</span>
         <span class="formula-caption">
-          The overpotential η includes activation overpotential (charge transfer at electrode surface)
-          and concentration overpotential (diffusion limitation). For LFP at moderate C-rates, this
-          term is approximately 10–20 mV per cell, contributing 3–6 W at 280A — small but not negligible.
+          For LFP at moderate charge rates, this gap is about 10–20 mV per cell — contributing
+          roughly 3–6 W at 280 A. Small compared to Joule heating, but adds up across 16 cells.
         </span>
       </div>
     </div>
@@ -1147,34 +1147,33 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
     <div class="subsection">
       <div class="subsection-title">Source 3: Entropic Heat — The Reversible Component</div>
       <p>
-        Entropy changes during intercalation reactions produce a reversible heat exchange between
-        the cell and its environment. Unlike Joule and reaction heat (always heat out), entropic heat
-        can either heat or cool the cell depending on SoC:
+        The third heat source is caused by entropy changes as lithium moves in and out of the
+        crystal. Unlike the first two sources — which always produce heat — this one can go
+        either way: it can add heat or actually absorb heat from the surroundings, depending
+        on the cell's charge level.
       </p>
       <div class="formula-block">
         <span class="formula-label">Entropic Heat</span>
         <span class="formula-line">Q_S = I × T × (dU/dT)</span>
         <span class="formula-caption">
-          dU/dT = entropic coefficient (∂OCV/∂T), measured in V/K. For LFP:
-          dU/dT ≈ +0.1 to −0.3 mV/K depending on SoC — changes sign across the plateau.
-          At T = 298K and I = 280A, Q_S ≈ 280 × 298 × 0.0002 ≈ 16.7 W — comparable to reaction heat.
-          Positive dU/dT means cell absorbs heat during discharge (endothermic — self-cooling).
-          Negative dU/dT means cell releases additional heat (adds to Joule heating).
-          Advanced thermal models in BMS firmware include the entropic term for precise temperature prediction.
+          dU/dT is how much the resting voltage changes with temperature — about +0.1 to −0.3 mV
+          per degree Kelvin for LFP, and it changes sign across the charge range. At room temperature
+          (298 K) and 280 A: Q_S ≈ 16.7 W. Positive means the cell absorbs heat (self-cooling).
+          Negative means it adds heat on top of Joule heating. Advanced BMS thermal models include
+          this term for accurate temperature prediction.
         </span>
       </div>
 
       <div class="callout callout-info">
         <div class="callout-icon">🧊</div>
         <div class="callout-body">
-          <div class="callout-title">LFP Self-Cooling Effect at Low SoC</div>
+          <div class="callout-title">LFP's Mild Self-Cooling at Mid Charge Levels</div>
           <p>
-            Between 20–50% SoC, LFP has a slightly positive dU/dT, meaning the cell is slightly
-            endothermic during discharge — it absorbs heat from its surroundings, slightly offsetting
-            Joule heating. This is one reason why LFP cells run cooler than NMC at moderate rates in
-            the mid-SoC range. The effect is small (a few watts) but measurable in precision calorimetry
-            and is why some BMS firmware implementations include an SoC-dependent entropic offset
-            in their thermal model.
+            Between 20–50% state of charge, LFP actually absorbs a small amount of heat from
+            its surroundings during discharge — partially cancelling the Joule heating. This is
+            one reason LFP runs slightly cooler than NMC at moderate rates in the mid-range.
+            The effect is only a few watts but is measurable, and is why some BMS firmware
+            includes a state-of-charge-dependent thermal correction in its temperature model.
           </p>
         </div>
       </div>
