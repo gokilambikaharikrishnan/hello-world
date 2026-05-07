@@ -272,3 +272,271 @@ ALEX: It's more complicated than just sticking a thermistor on and reading
 the number. You have to know what you're measuring and what you're
 not measuring.
 
+--------------------------------------------------------------------------------
+SECTION 3.2 — THERMAL RUNAWAY: THE MOST DANGEROUS THING THAT CAN HAPPEN
+--------------------------------------------------------------------------------
+
+BLAKE: Okay. Section three-point-two. Thermal runaway. I've been dreading
+this section in a good way because it's genuinely alarming physics.
+
+ALEX: It is. And I want to start with the definition, because the word
+"runaway" is very deliberate.
+
+BLAKE: Let's hear it.
+
+ALEX: Thermal runaway is what happens when a cell produces heat faster than
+it can lose heat — and the extra heat accelerates the reactions that produce
+even more heat. It's a positive feedback loop. More heat makes things hotter.
+Hotter things generate more heat. More heat makes things even hotter still.
+
+BLAKE: And at some point you can't stop it.
+
+ALEX: That's the defining characteristic. Once the loop is established, no
+external action can stop it. The cell will consume itself. Prevention is the
+only strategy. That is literally the entire reason the BMS exists.
+
+BLAKE: That's a strong statement.
+
+ALEX: It's true though. Every overvoltage protection, every temperature
+cutoff, every current limit in the BMS firmware — all of it ultimately exists
+to prevent this one event.
+
+BLAKE: So what triggers it? What starts the loop?
+
+ALEX: There are four main triggers. First: overcharging. If you push a cell
+above three-point-six-five volts per cell, lithium starts depositing as
+metallic lithium rather than inserting into the graphite properly. The cathode
+also becomes chemically unstable at that voltage. The BMS over-voltage
+protection has to cut the charge before this point.
+
+BLAKE: The second trigger?
+
+ALEX: External heat. A neighbouring cell that's already in runaway can bake
+the cells next to it. A fire in the room. A stuck heater element. If any
+external heat source pushes the cell above about sixty degrees Celsius for
+sustained periods, it can start the cascade.
+
+BLAKE: Third?
+
+ALEX: Internal short circuit. This is the scariest one because there's no
+external cause. Tiny metallic spikes — called dendrites — can grow on the
+graphite anode over time, especially if the cell has been overcharged or
+charged at sub-zero temperatures. If a dendrite grows long enough to punch
+through the thin plastic separator and touch the cathode on the other side,
+you have a direct metal-to-metal connection between the two electrodes
+inside the cell.
+
+BLAKE: And that means...
+
+ALEX: All the stored energy in the cell dumps as heat, internally, in
+seconds. No current flowing through the external circuit — just a sudden
+internal short that turns two-hundred-and-eighty amp-hours of stored energy
+into pure heat right inside the cell. The BMS may see a voltage collapse,
+but by then it's too late.
+
+BLAKE: No way to prevent it once the dendrite forms and punctures.
+
+ALEX: No way. Which is why the BMS works so hard to prevent the conditions
+that allow dendrites to grow in the first place — no overcharge, no charging
+at freezing temperatures, no excessive high-current charge events.
+
+BLAKE: And the fourth trigger?
+
+ALEX: Mechanical damage. Crushing the cell, puncturing it with a nail,
+dropping it hard enough to deform the casing — all of these can physically
+collapse the electrode layers inside, creating the same kind of internal
+short as a dendrite. The BMS might detect a sudden change in internal
+resistance as the first warning, but again, by the time the short forms,
+the cascade is starting.
+
+--------------------------------------------------------------------------------
+THE THREE-STAGE CASCADE — UNDERSTANDING EACH MOMENT
+--------------------------------------------------------------------------------
+
+BLAKE: Okay, so the loop starts. What actually happens inside the cell?
+Walk me through the physics step by step.
+
+ALEX: Thermal runaway doesn't happen all at once. It unfolds in three
+distinct stages, each one hotter than the last, each one triggering the next.
+And knowing where you are in the cascade tells you whether you can still
+stop it.
+
+BLAKE: Stage zero?
+
+ALEX: Stage zero is just normal operation. Twenty-five to sixty degrees
+Celsius. Heat from Joule heating and chemistry is being produced and removed
+by the cooling system. The BMS is watching temperature, voltage, and current
+continuously. This is the wide-open intervention window — anything going
+wrong should be caught and fixed here.
+
+BLAKE: That's the safe zone.
+
+ALEX: Right. And the whole design philosophy is to keep every cell in
+Stage Zero all the time.
+
+BLAKE: Stage one.
+
+ALEX: Stage one starts when the cell temperature crosses about ninety to
+a hundred-and-twenty degrees Celsius. At that temperature, something
+called the SEI layer starts to break apart.
+
+BLAKE: The SEI layer — we covered this in Chapter Two. That's the protective
+coating on the graphite anode.
+
+ALEX: Exactly. It forms naturally during the first few charge cycles and
+it's actually essential — without it, the electrolyte would just decompose
+on the graphite surface. But at around ninety degrees, it starts to
+decompose itself. And the decomposition is exothermic — it releases heat.
+
+BLAKE: So the cell is now generating extra heat beyond just Joule heating.
+
+ALEX: Yes. And that extra heat raises the temperature, which accelerates
+the decomposition, which produces more heat. The loop has started. CO and
+CO₂ gas are produced — which raises pressure inside the cell.
+
+BLAKE: Can the BMS detect this?
+
+ALEX: Yes, and this is crucial — Stage One is the last moment where BMS
+intervention can stop the cascade. The temperature is rising at maybe
+half a degree to two degrees per minute at Stage One onset. That's slow
+enough to detect and fast enough to act on. The BMS can cut the load,
+activate full cooling, and send alerts to the host system.
+
+BLAKE: So Stage One is the warning stage. The last checkpoint.
+
+ALEX: Yes. If the BMS catches it at Stage One, you can potentially walk
+away with a very hot pack but no fire. Miss it, and you're in Stage Two.
+
+BLAKE: Stage two.
+
+ALEX: Stage two is the point of no return. The temperature hits somewhere
+between a hundred-and-thirty and a hundred-and-sixty degrees Celsius —
+and at that temperature, the separator melts.
+
+BLAKE: The separator — the thin sheet between the anode and cathode.
+
+ALEX: Yes. It's a thin polyolefin plastic — polyethylene or polypropylene —
+with a melting point in that range. When it melts, it collapses. The anode
+and cathode are now in direct physical contact. That's a permanent internal
+short circuit.
+
+BLAKE: And all the stored energy...
+
+ALEX: All of it dumps as heat, internally, right now. For our two-eighty
+amp-hour cell at ninety percent charge, that's about eight-hundred-and-six
+watt-hours of energy — all released as heat inside the cell in seconds to
+minutes. Think about what that means physically — eight-hundred watt-hours
+is enough to run a microwave oven for forty minutes, released inside a
+metal can in seconds.
+
+BLAKE: That's terrifying.
+
+ALEX: And at Stage Two, nothing the BMS does matters anymore. The internal
+short is physical — the electrodes are literally touching. No firmware
+action can un-touch them.
+
+BLAKE: So Stage Two is game over.
+
+ALEX: For that cell, yes. The question now is whether the fire spreads to
+the rest of the pack.
+
+BLAKE: Stage three.
+
+ALEX: Stage three is where LFP and NMC diverge dramatically — and this is
+where the real story of why LFP is chosen for indoor systems gets told.
+
+BLAKE: Walk me through it.
+
+ALEX: In NMC and NCA chemistries — which are common in electric vehicles
+and some consumer electronics — the cathode material is a layered oxide.
+At around a hundred-and-eighty degrees Celsius, this layered oxide structure
+breaks down and releases free oxygen.
+
+BLAKE: Oxygen from inside the cell.
+
+ALEX: Yes. And that free oxygen reacts with the liquid electrolyte — which
+is an organic solvent and is flammable. You now have oxygen and fuel in
+direct contact at very high temperature. The result is a self-feeding
+combustion reaction inside the cell — venting, fire, potentially explosion.
+And if one cell does this in a sixteen-cell pack, the heat and flame jump
+to adjacent cells, which then do the same thing. A cascade that can consume
+the entire pack in seconds.
+
+BLAKE: That's the battery fires you see on the news.
+
+ALEX: Exactly. EV fires, phone fires, hoverboard fires — often Stage Three
+NMC or NCA chemistry reaching that oxygen-release temperature.
+
+BLAKE: And LFP?
+
+ALEX: LFP's crystal structure is fundamentally different. It has what's called
+an olivine structure — and the oxygen atoms in the crystal are held by
+phosphate groups. The bond between phosphorus and oxygen in that crystal
+has a dissociation energy of five-hundred-and-forty-four kilojoules per mole.
+That's an extremely strong bond.
+
+BLAKE: Strong enough to survive extremely high temperatures.
+
+ALEX: Even at two-hundred-and-seventy degrees Celsius — which is Stage Three
+for LFP — this bond does not break. The oxygen is never released from the
+crystal. Without oxygen release, there is no combustion chain reaction.
+
+BLAKE: So LFP Stage Three is... what?
+
+ALEX: The cell vents — hot gas and electrolyte vapour come out. Unpleasant.
+Potentially dangerous if you're standing right next to it. But there is no
+self-feeding fire. No explosion. The event is locally contained in a way
+that NMC Stage Three simply is not.
+
+BLAKE: And that's not just a nice-to-have — it's why building codes and
+insurance policies treat LFP differently from NMC.
+
+ALEX: In many jurisdictions, LFP is specifically permitted for indoor
+residential installations — home energy storage systems — without requiring
+dedicated fire suppression systems. NMC in the same application often
+requires sprinklers, flame barriers, and gas venting infrastructure that
+can add tens of thousands of dollars to an installation.
+
+BLAKE: So the phosphorus-oxygen bond is literally worth thousands of dollars
+in installation cost.
+
+ALEX: And potentially priceless in terms of lives.
+
+--------------------------------------------------------------------------------
+CELL-TO-CELL PROPAGATION — WHEN ONE BAD CELL THREATENS THE PACK
+--------------------------------------------------------------------------------
+
+BLAKE: So one cell goes into thermal runaway. Does the pack survive?
+
+ALEX: It depends entirely on the pack design. Without intentional mitigation,
+heat from the failed cell radiates into the neighbouring cells, pushing them
+toward Stage One. They start their own cascade, which heats the cells next
+to them, and so on. A pack-wide fire can happen in seconds.
+
+BLAKE: So what does good design look like?
+
+ALEX: Several things. First, cell spacing — leaving at least three millimetres
+of air gap between adjacent cells. Air is a thermal insulator, and that gap
+slows the heat transfer significantly. Second, thermal gap-filler pads made
+of low-conductivity materials — things like vermiculite or ceramic pads at
+zero-point-three to zero-point-five watts per metre-kelvin — placed between
+cells to further slow heat transfer. Third, pyro fuses at each cell terminal
+— these are fuses designed to blow in microseconds, disconnecting a failed
+cell electrically so it can't short-circuit its neighbours while it vents.
+
+BLAKE: And the BMS?
+
+ALEX: The BMS's early detection is critical. If it catches Stage One — the
+temperature rising faster than current alone can explain — and disconnects
+the pack before Stage Two, the failed cell goes through thermal runaway but
+the adjacent cells never get hot enough to start their own cascade.
+
+BLAKE: So the BMS is the last line of defence against a one-cell failure
+becoming a pack-level catastrophe.
+
+ALEX: Exactly. And this is why dT/dt monitoring — tracking how fast
+temperature is rising, not just the absolute temperature — is so critical.
+We'll come back to that in detail in Section Three-point-Five.
+
+
+
