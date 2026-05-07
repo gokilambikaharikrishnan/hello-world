@@ -2058,9 +2058,10 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
     <div class="subsection">
       <div class="subsection-title">Vibration and Shock — UPS and Home ESS Requirements</div>
       <p>
-        UPS and home ESS systems face mechanical stress during shipping, installation, and
-        (for floor-mounted systems) from building floor vibration. Standards define the
-        mechanical test requirements:
+        UPS and home ESS packs go through physical stress before they even arrive at the installation
+        site — vibration during shipping, rough handling during installation, and (for floor-mounted
+        systems) constant low-level building vibration once in service. Industry standards specify
+        exactly what tests a pack must survive:
       </p>
       <div class="comparison-table-wrap">
         <table class="comparison-table">
@@ -2107,10 +2108,11 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         </table>
       </div>
       <p>
-        From a BMS perspective, vibration and shock tests stress the <em>electrical connections</em>
-        more than the firmware. Cell-sense wire crimp connections, balancing lead resistors, and
-        NTC mounting are the typical failure points. Use Molex MX150 or equivalent vibration-rated
-        connectors, not standard JST or Dupont headers, for any wire in the BMS assembly.
+        From the BMS's perspective, vibration and shock testing mostly stress the <em>physical
+        connections</em> rather than the firmware. The typical failure points are crimped cell-sense
+        wires, balancing lead connections, and NTC mounts coming loose. Use proper vibration-rated
+        connectors (such as Molex MX150) — not the hobby-grade JST or Dupont headers — for any
+        wiring inside the BMS assembly.
       </p>
     </div>
   </section>
