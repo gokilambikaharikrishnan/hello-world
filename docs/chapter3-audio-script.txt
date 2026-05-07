@@ -1253,6 +1253,191 @@ BLAKE: One-of-N for runaway detection. Two-of-N for everything else.
 
 ALEX: That's the rule.
 
+--------------------------------------------------------------------------------
+CHAPTER SUMMARY — TEN PHYSICAL PRINCIPLES EVERY BMS DESIGNER MUST KNOW
+--------------------------------------------------------------------------------
+
+BLAKE: Let's pull it all together. What are the essential takeaways
+from Chapter Three?
+
+ALEX: Ten physical principles. These aren't rules someone made up — each one
+traces directly back to a physical law or mechanism.
+
+BLAKE: Number one.
+
+ALEX: Heat scales with current squared, not linearly. Double the current,
+quadruple the heat. This is why high C-rates are thermally dangerous, and
+why adding cells in parallel reduces heat per cell so dramatically. The I-squared
+relationship governs everything in thermal design.
+
+BLAKE: Number two.
+
+ALEX: The surface sensor reads five to fifteen degrees cooler than the cell
+core at one C-rate. Your BMS is always measuring the outside and inferring
+the inside. Set your protection thresholds conservatively to account for
+this lag. Apply the core temperature correction formula in firmware.
+
+BLAKE: Number three.
+
+ALEX: Stage One — SEI decomposition at ninety to a hundred-and-twenty degrees —
+is the last moment BMS intervention can prevent full thermal runaway. Catching
+dT/dt above zero-point-five degrees per second while the cell is still below
+ninety degrees means Stage One is just starting. Disconnect immediately.
+Miss this window and you're in Stage Two.
+
+BLAKE: Number four.
+
+ALEX: LFP's olivine crystal holds oxygen with a five-hundred-and-forty-four
+kilojoule-per-mole bond. Even at two-hundred-and-seventy degrees, those bonds
+don't break. No oxygen release means no self-feeding fire. This is the physical
+property that makes LFP the right chemistry for indoor installations.
+
+BLAKE: Number five.
+
+ALEX: Every ten degrees above the optimal range doubles the aging rate. The
+economic case for thermal management is overwhelming — reducing average operating
+temperature by just five degrees extends calendar life by about forty percent.
+Over ten years and multiple pack replacement cycles, this is tens of thousands
+of dollars.
+
+BLAKE: Number six.
+
+ALEX: Temperature gradients cause differential aging. Hot cells age two to four
+times faster than cool cells. The cell balancer cannot compensate — it can only
+balance state of charge, not capacity. Keep the temperature spread below five
+degrees across all cells.
+
+BLAKE: Number seven.
+
+ALEX: Charge current must be zero below zero degrees Celsius. No exceptions.
+Below freezing, lithium deposits as metallic spikes rather than inserting into
+graphite. Those spikes grow into dendrites that can puncture the separator
+weeks later. The cause-and-effect chain is not immediate — which makes it even
+more dangerous to ignore.
+
+BLAKE: Number eight.
+
+ALEX: LFP prismatic cells expand about zero-point-nine millimetres per cycle.
+Pack fixtures must include spring compliance to maintain controlled compression.
+Irreversible swelling — cells that don't return to baseline thickness — indicates
+gas generation and approaching end of life. A strain gauge in the compression
+fixture gives you this information in real time.
+
+BLAKE: Number nine.
+
+ALEX: dT/dt — the rate of temperature rise — is a more powerful thermal runaway
+signal than absolute temperature. A cell heating at two degrees per second without
+a matching current increase is experiencing an internal exothermic reaction.
+This requires ten-hertz sampling minimum and a filtered derivative in firmware.
+
+BLAKE: Number ten.
+
+ALEX: Sensor voting logic is essential. Two-of-N voting for warning-level events
+protects against single sensor failures. One-of-N voting for thermal runaway
+detection — the cost of a missed runaway is always greater than the cost of
+a brief false alarm.
+
+--------------------------------------------------------------------------------
+QUICK REFERENCE — KEY NUMBERS TO REMEMBER
+--------------------------------------------------------------------------------
+
+BLAKE: Rapid-fire reference. These numbers belong in your memory if you're
+working with LFP BMS.
+
+ALEX: SEI decomposition onset — ninety to a hundred-and-twenty degrees Celsius.
+Stage One. Last BMS window.
+
+BLAKE: Separator melt point.
+
+ALEX: A hundred-and-thirty to a hundred-and-sixty degrees. Stage Two. Irreversible.
+
+BLAKE: LFP Stage Three threshold.
+
+ALEX: Two-hundred-and-seventy degrees. No oxygen release. Cell vents but no fire.
+
+BLAKE: NMC Stage Three.
+
+ALEX: A hundred-and-eighty degrees. Oxygen releases. Self-feeding combustion.
+
+BLAKE: Overtemperature charge warning and cutoff.
+
+ALEX: Forty-five degrees warning — derate starts. Fifty-five degrees hard cutoff.
+
+BLAKE: Undertemperature charge cutoff.
+
+ALEX: Zero degrees. Absolute. No charge. Not even a trickle.
+
+BLAKE: Optimal cell temperature range.
+
+ALEX: Fifteen to thirty-five degrees Celsius. Full rate, minimum aging.
+
+BLAKE: Pack temperature spread target.
+
+ALEX: Below five degrees across all cells. Warning at eight. Investigate at twelve.
+
+BLAKE: dT/dt alarm levels.
+
+ALEX: Zero-point-five degrees per second — Level One, reduce load. One degree
+per second — Level Two, disconnect. Two degrees per second — Level Three,
+thermal runaway, trigger suppression.
+
+BLAKE: Target compression for LFP prismatic.
+
+ALEX: Ten to thirty kilopascals. Maximum a hundred before damage.
+
+BLAKE: Cell expansion per cycle for two-eighty amp-hour LFP.
+
+ALEX: Approximately zero-point-nine millimetres. Two percent of cell thickness.
+
+--------------------------------------------------------------------------------
+CLOSING
+--------------------------------------------------------------------------------
+
+BLAKE: That's Chapter Three complete. And this chapter changed how I think
+about batteries.
+
+ALEX: How so?
+
+BLAKE: Before this I thought of a battery as a black box. Electricity in,
+electricity out. Now I see it as a dynamic physical system. It breathes with
+every cycle. It heats from the inside while the sensor reads the outside.
+It has a knife-edge between normal and catastrophic — and the BMS is the
+thing standing at that edge.
+
+ALEX: And every threshold in the BMS firmware is justified by a physical
+mechanism. Nothing is arbitrary.
+
+BLAKE: Chapter Four takes us into the hardware that implements all of this.
+The AFE chips, the protection FETs, the gate drivers, the current sensors,
+the MCU — from physical laws to silicon.
+
+ALEX: From electrodes to transistors.
+
+BLAKE: Thanks for listening. Stay curious, stay safe.
+
+ALEX: And remember — zero charge below zero degrees. Always.
+
+[OUTRO MUSIC]
+
+================================================================================
+END OF CHAPTER 3 AUDIO SCRIPT
+Estimated runtime: 55 to 65 minutes
+Sections covered:
+  - Introduction and series context
+  - 3.1  Three heat sources + core vs surface thermal gradient
+  - 3.2  Thermal runaway: four triggers, three-stage cascade, LFP vs NMC at
+         Stage Three, cell-to-cell propagation and pack-level mitigation
+  - 3.3  Thermal management: Arrhenius aging, passive and active cooling,
+         temperature uniformity, NTC sensor placement strategy
+  - 3.4  Mechanical: electrode breathing, swelling numbers, irreversible gassing
+         as health indicator, compression fixture design, vibration standards
+  - 3.5  BMS thermal firmware: OT/UT charge cutoffs with physical justification,
+         temperature derating table, dT/dt monitoring and filter tuning,
+         multi-sensor voting logic
+  - Summary: 10 physical principles
+  - Quick reference: all critical thresholds and numbers
+================================================================================
+
 
 
 
