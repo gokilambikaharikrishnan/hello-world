@@ -1438,12 +1438,12 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
             <div class="cascade-temp">130–160°C</div>
             <div class="cascade-title">Polyolefin Separator Melts — Internal Short Circuit Forms</div>
             <div class="cascade-desc">
-              The PE/PP separator (melting point 130–160°C) collapses, allowing direct contact
-              between anode and cathode. This creates a permanent internal short circuit that
-              discharges all remaining stored energy as heat in the electrode stack.
-              At this point, <strong>thermal runaway is irreversible</strong>. The energy release
-              is approximately: E = Q_stored × V_nom = e.g. 280Ah × 0.9 SoC × 3.2V = 806 Wh — all
-              released as heat in seconds to minutes. No BMS action can stop this stage.
+              The thin plastic sheet (separator) that keeps the positive and negative electrodes apart
+              melts at 130–160°C. Once it collapses, the two electrodes touch — creating a permanent
+              short circuit inside the cell. All the stored energy now dumps as heat, right inside the
+              cell stack. For our 280Ah reference cell at 90% charge that's over 800 Wh — released in
+              seconds to minutes. <strong>At this point, thermal runaway is irreversible.</strong>
+              There is nothing the BMS can do — it's physically over.
             </div>
           </div>
         </div>
@@ -1455,12 +1455,12 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
             <div class="cascade-temp">180–250°C</div>
             <div class="cascade-title">Layered Oxide Cathode Releases Oxygen — Fire and Explosion Risk</div>
             <div class="cascade-desc">
-              In NMC and NCA, the layered oxide cathode (LiNiMnCoO₂) undergoes oxygen release:
-              LiNiO₂ → LiNiO₂₋ₓ + x/2 O₂. This free oxygen reacts violently with organic
-              electrolyte solvents (EC, DMC), creating a self-fuelling combustion reaction.
-              Result: venting, fire, and potentially explosion. Cell-to-cell propagation in a pack
-              occurs in seconds. This is why NMC packs require flame-retardant separators,
-              ceramic coatings, and gas venting channels — all absent from LFP designs.
+              In NMC and NCA chemistries, the cathode crystal falls apart at high temperatures and
+              releases pure oxygen. That oxygen then reacts explosively with the liquid electrolyte
+              (which is flammable) — creating a self-feeding fire inside the cell. The result is
+              venting, sustained fire, and potentially an explosion that can jump to neighbouring cells
+              in seconds. This is why NMC packs need flame-retardant separators, ceramic coatings,
+              and dedicated gas venting channels — none of which are needed in LFP packs.
             </div>
           </div>
         </div>
@@ -1472,14 +1472,13 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
             <div class="cascade-temp">270°C+</div>
             <div class="cascade-title">Olivine Structure Prevents Oxygen Release — No Combustion Chain</div>
             <div class="cascade-desc">
-              LiFePO₄ has an olivine crystal structure where PO₄³⁻ polyanions are covalently bonded to
-              Fe²⁺ with a P–O bond dissociation energy of 544 kJ/mol. Even at 270°C, this bond does not
-              break — oxygen is never released from the crystal lattice.
-              Without oxygen release, there is no combustion chain reaction. LFP thermal runaway at Stage 3
-              results in cell venting and electrolyte vapour release, but not sustained fire.
-              <strong>This is the physical reason LFP is the chemistry of choice for indoor UPS and home ESS.</strong>
-              Insurance and building codes in many jurisdictions specifically permit LFP but not NMC
-              for residential installations without additional fire suppression.
+              LFP's olivine crystal structure holds oxygen so tightly (bond energy: 544 kJ/mol) that
+              even at 270°C the bonds don't break — so oxygen is never released. Without oxygen, there
+              is no combustion chain reaction. If an LFP cell does reach full runaway, you get cell
+              venting and electrolyte vapour — unpleasant, but not a sustained fire.
+              <strong>This physical difference is why LFP is the standard chemistry for indoor UPS and home energy storage.</strong>
+              Many building codes and insurance policies specifically allow LFP but require additional
+              fire suppression for NMC in residential settings.
             </div>
           </div>
         </div>
