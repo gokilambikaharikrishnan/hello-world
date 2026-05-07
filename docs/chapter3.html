@@ -2145,12 +2145,13 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <span class="formula-line">At 45°C (318K):  relative rate = exp(−50000 / 8.314 / 318) ≈ 2.1 × reference</span>
         <span class="formula-line">At 55°C (328K):  relative rate = exp(−50000 / 8.314 / 328) ≈ 4.3 × reference</span>
         <span class="formula-caption">
-          Charging accelerates SEI growth because it drives Li⁺ to the graphite surface where SEI
-          forms. Above 45°C, SEI growth rate doubles → cycle life is halved if sustained.
-          The 45°C warning threshold gives the BMS time to derate before reaching the hard cutoff.
-          Above 55°C, SEI growth is 4× baseline — continued charging is unacceptable.
-          Note: discharge is allowed up to 60°C because during discharge, Li⁺ leaves the graphite
-          (no SEI growth opportunity) and only electrolyte decomposition is the limiting concern.
+          Charging is what drives SEI growth, because it pushes lithium ions into the graphite surface
+          where the SEI forms. Above 45°C, this growth rate doubles — which means cycle life is halved
+          if you keep charging at that temperature. The 45°C warning gives the BMS time to slow down
+          before hitting the hard cutoff. Above 55°C, SEI is growing four times faster than baseline —
+          continued charging is unacceptable. Importantly, discharge is allowed up to 60°C, because
+          discharging pulls lithium out of the graphite (no SEI formation opportunity) — the only
+          concern then is electrolyte stability, which has a higher limit.
         </span>
       </div>
     </div>
