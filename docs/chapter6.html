@@ -2440,7 +2440,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <div class="timing-badge">60s</div>
           <div class="timing-body">
             <div class="timing-title">NVM SoC Checkpoint — Persistence layer</div>
-            Write current SoC, timestamp, and fault count to NVM (EEPROM) using wear-leveled circular page. This is the recovery point if backup SRAM fails. Worst-case SoC drift after power loss: 60s × max_current / total_capacity = small % for large packs. At 1C discharge, a 280Ah pack drifts ~0.006% per second = 0.36% per minute.
+            Every 60 seconds the BMS saves the SoC, timestamp, and fault count to EEPROM (the slower but longer-term storage). This is the fallback recovery point in case both power and backup SRAM are lost. Worst case: if power fails right before a 60s write, the BMS wakes up with a SoC reading that is at most 60 seconds out of date. At a 1C discharge rate on a 280Ah pack, that is only 0.36% error — acceptable for almost any application.
           </div>
         </div>
         <div class="timing-card">
