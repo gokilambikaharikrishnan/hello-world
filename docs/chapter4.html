@@ -1570,8 +1570,10 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
 
     <div class="subsection">
       <div class="subsection-title">AFE-to-MCU Communication — SPI Daisy Chain for Multi-AFE Systems</div>
-      <p>A single AFE IC handles 12–16 cells. A 32S pack needs two AFEs. The daisy-chain
-      topology lets the MCU communicate with all AFEs through a single SPI port:</p>
+      <p>A single AFE chip can monitor 12–16 cells. A 32-cell pack would need two of them.
+      Rather than wiring up separate communication lines to each chip, a daisy-chain lets
+      them share a single SPI bus — the MCU talks to the first chip, which passes the message
+      along to the second, and results come back the same way:</p>
       <div class="code-block">
 <span class="cm">/* SPI daisy chain read — two AFE ICs, 16 cells each
    MCU sends command to AFE1; AFE1 forwards to AFE2;
@@ -1604,12 +1606,13 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="callout-icon">⚠</div>
         <div class="callout-body">
           <div class="callout-title">Watchdog Is a Safety-Critical Feature — Do Not Disable</div>
-          <p>The AFE watchdog timer opens the main FETs if the MCU stops petting it within the timeout
-          window (typically 1–2s). This is a critical safety feature: if the MCU crashes, hangs, or
-          enters an infinite loop, the watchdog ensures the pack disconnects rather than remaining
-          connected with no active protection. Never disable the watchdog during debug — instead, increase
-          the timeout temporarily. In production firmware, the watchdog pet must be in the highest-priority
-          task with a hardware timer, not a software delay loop that can be blocked.</p>
+          <p>The AFE watchdog timer opens the main FETs if the MCU stops sending it a "I'm alive"
+          signal within the timeout window — typically one to two seconds. This is a critical safety
+          feature: if the MCU crashes, hangs, or gets stuck in an infinite loop, the watchdog ensures
+          the pack automatically disconnects rather than sitting connected with no active protection.
+          Never disable the watchdog during development — instead, increase the timeout temporarily.
+          In production firmware, the watchdog reset must be called from the highest-priority task,
+          timed by a hardware timer — not buried in a software loop that could be blocked by other code.</p>
         </div>
       </div>
     </div>
