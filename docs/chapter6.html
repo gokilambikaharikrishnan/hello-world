@@ -541,10 +541,13 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
       <div class="section-label">Section 6.1</div>
       <h2 class="section-title">BMS Requirement Traceability</h2>
       <p class="section-intro">
-        Every component in a BMS exists because of a specific battery physics problem. There is no
-        unnecessary hardware. Understanding this traceability is the foundation of good BMS design —
-        it tells you why each module exists, what it must do, and what happens if it fails.
-        This section maps the complete chain from battery weakness to silicon implementation.
+        Every component in a BMS exists because of a specific battery physics problem — nothing
+        is there by accident. The AFE chip exists because cell voltages must be measured precisely.
+        The MCU exists because protection decisions need a programmable brain. The CAN bus exists
+        because the battery needs to report its state to the inverter. Understanding this
+        cause-and-effect chain — which weakness requires which hardware — is what separates a
+        design that is understood from one that is just copied from a reference schematic.
+        This section maps the full chain from battery limitation to silicon implementation.
       </p>
 
       <!-- Master Traceability SVG -->
