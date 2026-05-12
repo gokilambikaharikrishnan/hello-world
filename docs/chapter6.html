@@ -3058,17 +3058,13 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="arch-block">
           <div class="arch-block-title">SoP — State of Power</div>
           <div class="arch-block-body">
-            SoP answers: <em>"What is the maximum charge and discharge power right now?"</em>
-            It sets the charge/discharge current limits communicated to the inverter via CAN 0x351.
+            SoP asks: <em>"How much power can this battery safely push right now?"</em> It is the answer the BMS sends to the inverter via CAN 0x351 every second, telling it the current ceiling for both charging and discharging.
             <br><br>
             <strong style="color:var(--arch-violet);">P_chg_max = min(I_cc, I_cv, I_T_derate) × V_pack</strong>
             <br><br>
-            Where I_T_derate = I_max × derate(T):
-            −20°C: 0.2C max, 0°C: 0.5C, 25°C: 1C, 45°C: 0.8C (heat protection).
+            Temperature squeezes the limit hard: at −20°C the BMS allows only 0.2C, at 0°C only 0.5C, at 25°C the full 1C, and at 45°C it backs off to 0.8C to avoid heat damage.
             <br><br>
-            SoP is also SoC-limited: below SoC=10%, discharge limit reduces linearly
-            to 0 at SoC=5% (prevents cell reversal). Above SoC=95%, charge limit
-            reduces to 0.2C (prevents lithium plating).
+            SoC also clamps the limits: below 10% SoC the discharge limit tapers linearly to zero at 5% (to avoid reversing a cell and destroying it). Above 95% SoC the charge limit drops to 0.2C to prevent lithium plating on an almost-full cell.
           </div>
         </div>
       </div>
