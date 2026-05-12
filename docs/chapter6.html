@@ -2224,9 +2224,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
     <div class="section-inner">
       <h3 class="subsection-title" style="font-size:1.4rem;margin-top:0;">BMS State Machine — Interactive</h3>
       <p style="color:var(--text-muted);font-size:0.95rem;line-height:1.75;max-width:820px;margin-bottom:1rem;">
-        The BMS state machine is the top-level coordinator. Every firmware module reports to the state
-        machine; every hardware action is authorised by it. Click any state to see exactly what happens
-        inside — entry actions, active monitoring, and exit transitions.
+        Think of the state machine as the BMS's master controller. Every other firmware module (measurement, protection, balancing, communication) runs underneath it and reports to it. The state machine decides what the BMS is allowed to do at any given moment — and nothing happens without its permission. Click any state box below to see exactly what the BMS does when it is in that state, including what triggers it to move to the next state.
       </p>
 
       <!-- State machine SVG (overview) -->
