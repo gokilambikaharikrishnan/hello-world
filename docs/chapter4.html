@@ -645,20 +645,24 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
 
     <div class="subsection">
       <div class="subsection-title">Voltage Measurement Accuracy — Why 16-bit AFE Matters</div>
-      <p>The OVP and UVP thresholds are tight windows. OVP fires at 3.65V; normal full charge
-      is 3.65V — only a few millivolts separate "charged" from "fault". The AFE must measure
-      with enough resolution to avoid both false positives and missed faults.</p>
+      <p>The OVP and UVP thresholds are very tight. OVP fires at 3.65V — the same value as
+      the normal full-charge target. Just a few millivolts separate "correctly charged" from
+      "fault condition". That means the AFE (the measurement chip) must be extremely precise —
+      accurate enough to tell the difference without false alarms or missed faults.</p>
       <div class="formula-block">
         <span class="formula-label">AFE Resolution Calculation</span>
         <span class="formula-line">Full voltage range per cell: 2.0V to 4.0V = 2.0V span</span>
         <span class="formula-line">12-bit ADC: 2.0V / 4096 = 0.49 mV/LSB  →  ±1 mV accuracy (2 LSB)</span>
         <span class="formula-line">16-bit ADC: 2.0V / 65536 = 0.031 mV/LSB  →  ±0.1 mV accuracy</span>
         <span class="formula-caption">
-          A 12-bit measurement gives ±1 mV. In the LFP plateau where dOCV/dSoC ≈ 0.2 mV/%, 
-          this ±1 mV translates to ±5% SoC uncertainty. A 16-bit ADC reduces this to ±0.5% SoC —
-          critical for accurate balancing decisions. Production AFE ICs (TI BQ76952, ADI LTC6813)
-          use 16-bit delta-sigma ADCs with integrated calibration references to achieve
-          ±1.0 mV absolute accuracy across temperature.
+          ADC stands for analog-to-digital converter — the part of the chip that turns a voltage
+          reading into a number the microcontroller can use. A 12-bit ADC splits the 2V measurement
+          range into 4,096 steps, giving about 0.5 millivolts per step. In LFP's very flat charge
+          curve, that ±1mV uncertainty translates to ±5% state-of-charge error — enough to make
+          balancing decisions wrong. A 16-bit ADC uses 65,536 steps instead, giving about 0.031mV
+          per step and ±0.5% SoC accuracy. Production AFE chips like the TI BQ76952 and ADI LTC6813
+          use 16-bit converters with built-in calibration references to hit ±1.0mV accuracy even
+          as temperature changes.
         </span>
       </div>
     </div>
