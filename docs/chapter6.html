@@ -3147,7 +3147,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
 
         <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--arch-purple);border-radius:var(--radius);padding:1.2rem;">
           <div style="color:var(--arch-purple);font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">⑤ SoC Must Never Be Lost</div>
-          <div style="color:var(--text-muted);font-size:13px;line-height:1.6;">Three-tier persistence: backup SRAM (1s resolution, instantaneous recovery), NVM checkpoint (60s resolution), OCV re-init (fallback, inaccurate on LFP plateau). Without BSRAM, every power cycle degrades SoC accuracy.</div>
+          <div style="color:var(--text-muted);font-size:13px;line-height:1.6;">The BMS saves SoC to three places with different speeds: backup SRAM every 1 second (instant recovery, no EEPROM wear), EEPROM every 60 seconds (survives total power loss), and as an OCV reading fallback (slow and inaccurate on LFP's flat plateau). Without backup SRAM, every unexpected power cut leaves the BMS guessing the SoC from a 60-second-old snapshot — or worse.</div>
         </div>
 
         <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--arch-purple);border-radius:var(--radius);padding:1.2rem;">
