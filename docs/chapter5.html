@@ -703,11 +703,11 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="callout-body">
           <div class="callout-title">Five Red Flags on Cell Datasheets</div>
           <ul>
-            <li><strong>Capacity measured at C/5 not C/10:</strong> C/5 gives higher apparent capacity than the IEC standard C/10 — inflated numbers. Verify test condition in footnotes.</li>
-            <li><strong>Cycle life at partial DoD:</strong> "5000 cycles" claimed at 20% DoD is not comparable to "3000 cycles" at 100% DoD. Always compare at same DoD.</li>
-            <li><strong>No temperature derating curves:</strong> Legitimate datasheets include capacity vs temperature graphs. Absence means the manufacturer hasn't tested, or is hiding poor cold performance.</li>
-            <li><strong>No self-discharge figure:</strong> Required by IEC 61960. Absence is non-compliance.</li>
-            <li><strong>Capacity measured at T=25°C vs T=20°C:</strong> IEC standard is 20°C. Measuring at 25°C gives ~1–2% higher capacity. Small but worth noting when comparing cells.</li>
+            <li><strong>Capacity tested at C/5 instead of C/10:</strong> The IEC standard is C/10 (a slow, gentle discharge). C/5 is twice as fast and gives a slightly higher apparent capacity. A datasheet using C/5 is showing inflated numbers. Always check the footnotes for the test rate.</li>
+            <li><strong>Cycle life quoted at partial depth of discharge:</strong> "5000 cycles" at 20% DoD (barely using the battery) is not the same as "3000 cycles" at 100% DoD (fully draining it each time). Shallower cycling always gives more cycles. Only compare cycle life figures measured at the same DoD.</li>
+            <li><strong>No temperature derating curves:</strong> A proper datasheet shows how much capacity is available at different temperatures — −20°C, 0°C, 20°C, 60°C. If those graphs are missing, the manufacturer either hasn't tested properly or is hiding poor cold-weather performance.</li>
+            <li><strong>No self-discharge figure:</strong> IEC 61960 explicitly requires this. If it's absent, the manufacturer is not complying with the standard — which raises questions about what else they haven't tested.</li>
+            <li><strong>Capacity measured at 25°C instead of 20°C:</strong> The IEC reference temperature is 20°C. Testing at 25°C gives about 1–2% higher capacity, because warmer cells perform slightly better. It's a small difference but worth knowing when you're comparing cells from different suppliers side by side.</li>
           </ul>
         </div>
       </div>
