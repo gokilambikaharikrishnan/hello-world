@@ -3132,7 +3132,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
 
         <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--arch-purple);border-radius:var(--radius);padding:1.2rem;">
           <div style="color:var(--arch-purple);font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">② The AFE is the Safety Core</div>
-          <div style="color:var(--text-muted);font-size:13px;line-height:1.6;">The AFE IC — not the MCU — is the primary safety device. Its hardware SCD comparator operates in microseconds; its watchdog operates independently of firmware. Never design a BMS where the MCU is the only protection path.</div>
+          <div style="color:var(--text-muted);font-size:13px;line-height:1.6;">The AFE chip — not the microcontroller — is the last line of defence. Its short-circuit comparator reacts in microseconds, without waiting for any software. Its watchdog can shut down the system even if firmware is frozen. If the MCU is the only protection path and it crashes, nothing catches the fault. Always keep hardware protection independent of software.</div>
         </div>
 
         <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--arch-purple);border-radius:var(--radius);padding:1.2rem;">
