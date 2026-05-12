@@ -2494,12 +2494,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <div class="arch-block">
             <div class="arch-block-title">Coulomb Counting Precision</div>
             <div class="arch-block-body">
-              Tesla uses 500μΩ precision shunt resistors with 24-bit ADCs for current measurement —
-              far beyond the typical 16-bit, 1mΩ approach. At 500μΩ and 500A peak current, the shunt
-              voltage is 250mV — large enough for precise measurement. The 24-bit ADC gives ~15nV
-              resolution, translating to ~30mA current resolution at the shunt. Over a 100kWh pack,
-              this precision compounds into SoC accuracy well below ±1% — enabling the "you have
-              3 miles of range left" reliability that customers depend on for navigation routing.
+              Most BMS designs use a 1mΩ shunt with a 16-bit ADC to measure current. Tesla uses a 500μΩ shunt with a 24-bit ADC — twice the hardware precision, 256× more resolution in the digitiser. At 500A peak, the 500μΩ shunt produces 250mV — a large, easy-to-measure signal. The 24-bit ADC resolves that to about 30mA steps. Over hundreds of charge-discharge cycles, this precision accumulates into SoC accuracy below ±1% — the reason Tesla can tell a driver "you have 3 miles of range left" and be right.
             </div>
           </div>
           <div class="arch-block">
