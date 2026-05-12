@@ -1012,10 +1012,14 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
     <div class="section-inner">
       <h3 class="subsection-title" style="font-size:1.4rem;margin-top:0;">AFE Layer — Deep Dive</h3>
       <p style="color:var(--text-muted);font-size:0.95rem;line-height:1.75;max-width:820px;margin-bottom:1.5rem;">
-        The Analog Front End IC is the most safety-critical component in the BMS. It sits between the high-voltage
-        cell stack and the low-voltage MCU, performing differential cell voltage measurement, temperature reading,
-        short-circuit detection, and balancing FET control — all simultaneously, all on every cell, all with
-        galvanic isolation to protect the MCU.
+        The AFE IC is the most safety-critical chip in the entire BMS — it is the BMS's eyes
+        and ears. It sits between the high-voltage battery stack (up to 58V) and the low-voltage
+        microcontroller (3.3V), and it handles four jobs simultaneously: measuring each cell's
+        individual voltage, reading all the temperature sensors, detecting short-circuit faults,
+        and controlling the individual balancing resistors. It does all of this with galvanic
+        isolation — meaning the high-voltage battery side and the low-voltage MCU side are
+        electrically separated, so a wiring fault on the battery side cannot destroy the
+        microcontroller or create a shock hazard on the logic side.
       </p>
 
       <!-- AFE internals animated SVG -->
