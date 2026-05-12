@@ -2205,7 +2205,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <div class="timing-badge">&lt; 1s</div>
           <div class="timing-body">
             <div class="timing-title">Under-Voltage / Temperature Protection — Firmware path</div>
-            UVP and OTP/UTP use 1s response time because the underlying mechanisms (Cu dissolution, thermal runaway initiation) develop over seconds. Using 100ms here would cause false trips from load steps. OTP threshold: 55°C charge cutoff (firmware). FET opens within one measurement-loop cycle after threshold exceeded.
+            Under-voltage (too-empty cell) and temperature faults are allowed a full second to respond because the underlying chemistry moves slower. A cell going below 2.5V won't dissolve its copper current collector instantly — it takes seconds. Likewise, thermal runaway doesn't start the moment a cell touches 55°C. Using a faster response here (like 100ms) would cause false shutdowns every time a large load causes a brief voltage dip. The 1s window filters those out while still protecting against real damage.
           </div>
         </div>
         <div class="timing-card">
