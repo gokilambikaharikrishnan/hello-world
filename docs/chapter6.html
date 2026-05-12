@@ -2412,7 +2412,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <div class="timing-badge">&lt; 1ms</div>
           <div class="timing-body">
             <div class="timing-title">Hardware Interrupt Layer — SCD, AFE FAULT pin</div>
-            AFE SCD comparator fires hardware interrupt to MCU. MCU ISR confirms fault, latches state. No measurement loop involvement — this path bypasses all software. AFE also opens FET autonomously. MCU ISR sets a flag for the 10ms loop to log and broadcast.
+            The AFE detects a short circuit in hardware and instantly fires an interrupt to the MCU — bypassing all software loops entirely. The MCU's interrupt handler latches the fault in under 1ms. Meanwhile the AFE has already opened the FET on its own, without waiting for any code to run. The interrupt just tells the 10ms loop "log this and broadcast the alarm."
           </div>
         </div>
         <div class="timing-card">
