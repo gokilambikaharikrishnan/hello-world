@@ -1156,9 +1156,9 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
 </style>
 <div class="rnd-block">
   <div class="rnd-label">⚗ R&amp;D Thinking — Why Passive Balancing Wastes Energy (and Why That's OK)</div>
-  <p>Passive balancing bleeds off excess charge as heat through a resistor. A 100mΩ bleed resistor at 50mA dissipates 0.25mW — tiny. Over a full 10-hour balance session that's 9 joules, or about 0.002% of the pack's energy. The "waste" argument is mostly theoretical.</p>
-  <p>The real trade-off: active balancing (flying capacitor, inductive) adds complexity, failure modes, and BOM cost. For stationary ESS at 0.1C or less, passive is almost always correct. Active balancing pays off only at high C-rates (>0.5C continuous) where cell-to-cell current mismatch causes measurable capacity loss.</p>
-  <p>Bottom line: choose balancing complexity proportional to your cycle rate and pack utilisation window.</p>
+  <p>Passive balancing burns off excess charge as heat through a resistor. At 50mA through a balancing resistor, it dissipates 0.25mW — barely measurable. Over a 10-hour balance session that's only 9 joules wasted, or about 0.002% of the pack's total energy. The "inefficiency" complaint is mostly theoretical for stationary storage.</p>
+  <p>The real trade-off is complexity vs. need. Active balancing (which moves energy between cells using inductors or capacitors rather than wasting it as heat) adds more circuitry, more ways to fail, and more cost. For a home ESS cycling at 0.1C or less, passive balancing is almost always the right call. Active balancing only really pays off at high C-rates above 0.5C continuous, where cell-to-cell current mismatch causes measurable capacity loss during each cycle.</p>
+  <p>Rule of thumb: choose your balancing complexity in proportion to how hard and how often you cycle the pack.</p>
 </div>
 <div class="pause-think">
   <div class="pt-label">⏸ Pause &amp; Think</div>
