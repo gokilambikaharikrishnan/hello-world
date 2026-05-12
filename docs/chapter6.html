@@ -1908,13 +1908,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="arch-block">
           <div class="arch-block-title">Calendar Aging via RTC</div>
           <div class="arch-block-body">
-            The BMS logs temperature samples (every 60s) and accumulates time-at-temperature bins.
-            At each SoH update (hourly), the Arrhenius factor is applied:
-            <strong style="color:var(--arch-violet);">k_age = A × exp(−Ea / R·T)</strong>.
-            The integral of k_age over calendar time gives the total calendar aging contribution.
-            This is added to cycle aging (from cycle counting) to give total SoH degradation.
-            Without RTC, only cycle aging is tracked — calendar aging (significant for storage)
-            is completely invisible.
+            Every 60 seconds the BMS logs the temperature. Once an hour it uses those temperature readings to calculate how much the battery aged due to heat — using a chemistry formula called the Arrhenius equation: <strong style="color:var(--arch-violet);">k_age = A × exp(−Ea / R·T)</strong>. Think of k_age as a "speed of aging" — hotter temperature means the number gets bigger and the battery degrades faster. Without an RTC, the BMS can only count charge cycles. Calendar aging (heat over time when not in use) stays completely hidden — and for batteries kept in hot environments, that can be the bigger threat.
           </div>
         </div>
       </div>
