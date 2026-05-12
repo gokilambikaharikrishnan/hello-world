@@ -3127,7 +3127,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
 
         <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--arch-purple);border-radius:var(--radius);padding:1.2rem;">
           <div style="color:var(--arch-purple);font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">① Physics Drives Architecture</div>
-          <div style="color:var(--text-muted);font-size:13px;line-height:1.6;">Every BMS module exists because a battery physics problem requires it. Remove the physics chain, and the architecture becomes arbitrary. Start with the traceability matrix, not the BOM.</div>
+          <div style="color:var(--text-muted);font-size:13px;line-height:1.6;">Every BMS module exists because a specific battery physics problem requires it. The AFE exists because cells need per-cell voltage monitoring. The NVM exists because SoC must survive power cuts. Once you understand the physics, the architecture becomes obvious. Start with the traceability matrix and let the hardware follow.</div>
         </div>
 
         <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--arch-purple);border-radius:var(--radius);padding:1.2rem;">
