@@ -1434,9 +1434,11 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
     <div class="section-number">4.5</div>
     <h2 class="section-title">Analog Front-End (AFE) Architecture</h2>
     <p class="section-intro">
-      The AFE IC is the BMS's sensory system — the silicon that translates raw cell voltages,
-      pack current, and temperatures into digital data the MCU can act on. Without a precision
-      AFE, every algorithm in this book is running on garbage data.
+      The AFE (Analog Front-End) IC is the BMS's sensory system — a dedicated chip that measures
+      raw cell voltages, pack current, and temperatures, and converts those analog signals into
+      digital numbers the microcontroller can use. If this chip gives bad readings, every algorithm
+      in the BMS is making decisions based on wrong data. It's the most important measurement device
+      in the entire system.
     </p>
 
     <div class="subsection">
@@ -1535,30 +1537,33 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           </line>
         </svg>
         <p class="diagram-caption">
-          AFE IC internal blocks. Animated lines show active data paths. Cell voltages enter the
-          multiplexer which feeds the 16-bit ΔΣ ADC. Hardware comparators fire the ALERT pin and
-          gate driver directly for fast faults. All data aggregates in the digital core and is read
-          by the MCU over SPI at 1–10 kHz.
+          Inside the AFE IC: cell voltages enter a multiplexer (a switching network that selects
+          one cell at a time) which feeds into the 16-bit delta-sigma ADC for precise measurement.
+          Hardware comparators watch for fast fault conditions and fire the ALERT pin and gate
+          driver directly — bypassing the MCU entirely for speed. All data is collected in the
+          digital core and the MCU reads it out over SPI at one to ten thousand times per second.
         </p>
       </div>
     </div>
 
     <div class="subsection">
       <div class="subsection-title">Cell Voltage Measurement — Flying Capacitor and Delta-Sigma ADC</div>
-      <p>Measuring cell voltages in a series string presents a fundamental challenge: the cells
-      sit at successively higher common-mode voltages (cell 1 at 0–3.65V, cell 16 at ~54–58V).
-      The AFE must measure each cell's <em>differential</em> voltage on top of a high common-mode rail.</p>
+      <p>Measuring individual cell voltages in a series string is trickier than it sounds. In a
+      16-cell pack, cell 1 sits at 0–3.65V above ground. Cell 16 sits at roughly 54–58V above
+      ground. The AFE has to measure each cell's own voltage (a few volts) while ignoring the
+      very high voltage of the bus it's sitting on top of.</p>
 
       <div class="callout callout-elec">
         <div class="callout-icon">⚡</div>
         <div class="callout-body">
           <div class="callout-title">Flying Capacitor Measurement Technique</div>
-          <p>The AFE multiplexer connects a small sampling capacitor (the "flying capacitor", ~50 pF)
-          across each cell in sequence. The capacitor charges to the cell's differential voltage,
-          then the MUX disconnects it from the cell bus and connects it to the ADC input —
-          which now sees only a low-voltage signal equal to V_cell, isolated from the high common-mode.
-          The ΔΣ ADC then digitises this with 16-bit resolution over a conversion window of ~1ms.
-          Total scan time for 16 cells: 16 × 1ms = 16ms — fast enough for 60Hz fault detection.</p>
+          <p>The AFE's multiplexer briefly connects a tiny sampling capacitor (called the "flying
+          capacitor", about 50 picofarads) across one cell at a time. The capacitor charges up
+          to exactly that cell's voltage. Then the multiplexer disconnects it from the battery bus
+          and connects it to the ADC input — which now only sees the small cell voltage, completely
+          isolated from the high-voltage bus behind it. The 16-bit delta-sigma ADC then digitises
+          this reading over about 1ms. To scan all 16 cells: 16 × 1ms = 16ms total — fast enough
+          to catch fault conditions at 60 times per second.</p>
         </div>
       </div>
     </div>
