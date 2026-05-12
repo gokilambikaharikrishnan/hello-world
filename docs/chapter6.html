@@ -2447,7 +2447,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <div class="timing-badge">1 hour</div>
           <div class="timing-body">
             <div class="timing-title">SoH Update + Calendar Aging — Long-term tracking</div>
-            Compute full-cycle-equivalent count. Apply Arrhenius aging from current temperature. Update SoH estimate. Write SoH + cycle count to NVM. Transmit CAN 0x370 (cycle count). Log periodic SoH entry. This is the data the service engineer downloads to assess battery health.
+            Once an hour the BMS runs its long-term health calculations. It adds up today's partial charges into a full-cycle-equivalent count. It applies the temperature-based Arrhenius aging factor accumulated since the last hour. It then updates the SoH estimate, saves it to EEPROM, and sends a CAN message with the updated cycle count. This hourly record is what a service engineer looks at to decide whether the battery needs replacement.
           </div>
         </div>
       </div>
