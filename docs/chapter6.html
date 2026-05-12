@@ -2800,9 +2800,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
       <div class="section-label">Section 6.5</div>
       <h2 class="section-title">Communication Stack Deep Dive</h2>
       <p class="section-intro">
-        A BMS typically implements three communication interfaces: CAN (inverter/charger host), SMBus
-        (smart battery standard for simple chargers), and UART (debug and field service). Each protocol
-        serves a distinct purpose and no one protocol does everything.
+        A production BMS usually speaks three different communication languages. CAN is the primary link to the inverter and charger — fast, noise-immune, and the industry standard for energy storage. SMBus is an older, simpler interface used by laptop-style chargers and UPS systems. UART is for engineers in the field — plugging in a laptop to read logs, run diagnostics, or update firmware. No single protocol handles all three jobs well, which is why all three coexist.
       </p>
 
       <!-- SMBus Smart Battery -->
