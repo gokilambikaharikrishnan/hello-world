@@ -1284,11 +1284,15 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="arch-block">
           <div class="arch-block-title">Flash Requirements</div>
           <div class="arch-block-body">
-            Code size for a complete BMS firmware: 64–128KB typical. Breakdown: RTOS kernel (~12KB
-            for FreeRTOS), BMS application code (~40KB), OCV lookup table (400B), NVM driver (~4KB),
-            CAN stack (~8KB), calibration data in Flash (2KB). Always leave 25% Flash free for
-            firmware updates (OTA or bench-programmed). NVM sectors require separate Flash pages to
-            avoid code corruption during write. Minimum recommended: 256KB Flash.
+            Flash is the permanent storage where the firmware code itself lives. A complete BMS
+            firmware is typically 64–128KB. The breakdown: the FreeRTOS operating system kernel
+            takes about 12KB; the main BMS application code takes about 40KB; the OCV lookup
+            table is 400 bytes; the NVM storage driver is about 4KB; the CAN communication stack
+            is about 8KB; calibration data takes 2KB. Always leave at least 25% of Flash empty
+            for future firmware updates — both over-the-air updates and bench programming need
+            that buffer space. Data storage (NVM) must use separate Flash pages from the code,
+            because writing to Flash while code is running can corrupt it. Minimum recommended
+            size: 256KB Flash.
           </div>
         </div>
         <div class="arch-block">
