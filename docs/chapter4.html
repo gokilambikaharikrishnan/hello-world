@@ -1738,7 +1738,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <div class="trace-label">Cells Drift Apart Over Cycles</div>
         </div>
         <div class="trace-arrow">→</div>
-        <div class="trace-right">Passive balancing during CV phase — 5–200mA bleed through R_bal. LFP plateau means balancing only works at top or bottom of charge. Monthly full-charge cycle mandatory.</div>
+        <div class="trace-right">Passive balancing runs during the constant-voltage charge phase — bleeding 5–200mA through a resistor from whichever cells are highest. LFP's flat voltage curve means balancing only works at the top or bottom of charge. If the pack never reaches 100%, schedule a monthly full-charge balancing cycle.</div>
       </div>
       <div class="trace-row">
         <div class="trace-left">
@@ -1746,7 +1746,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <div class="trace-label">Body Diode Allows Current Bypass</div>
         </div>
         <div class="trace-arrow">→</div>
-        <div class="trace-right">Back-to-back MOSFETs (common source). Both FETs must open to fully isolate pack. Each FET's body diode faces opposite direction — single FET open is insufficient.</div>
+        <div class="trace-right">Two back-to-back MOSFETs sharing a common-source node. Every MOSFET has a built-in body diode that allows current to flow backwards even when the gate is off. With both FETs facing opposite directions, opening only one is not enough — current can still sneak through the other's body diode. Both must open simultaneously to isolate the pack.</div>
       </div>
       <div class="trace-row">
         <div class="trace-left">
@@ -1754,7 +1754,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <div class="trace-label">MCU Crash Leaves Pack Live</div>
         </div>
         <div class="trace-arrow">→</div>
-        <div class="trace-right">AFE watchdog timer — opens FETs if MCU stops petting within 2s. Safety-critical feature. Must be petted from highest-priority hardware timer task.</div>
+        <div class="trace-right">AFE watchdog timer — opens the main FETs and disconnects the pack if the MCU stops sending its "alive" signal within 2 seconds. If the MCU crashes or hangs, the pack safely disconnects rather than staying live with no protection. The watchdog reset must run from the highest-priority hardware timer task.</div>
       </div>
       <div class="trace-row">
         <div class="trace-left">
@@ -1762,7 +1762,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <div class="trace-label">High Common-Mode Voltage</div>
         </div>
         <div class="trace-arrow">→</div>
-        <div class="trace-right">Flying capacitor multiplexer in AFE measures each cell differentially, isolated from the high common-mode rail. 16-bit ΔΣ ADC gives 100μV resolution — ±5% SoC accuracy in plateau.</div>
+        <div class="trace-right">The AFE's flying capacitor multiplexer samples each cell's voltage one at a time, completely isolated from the high-voltage bus. The 16-bit delta-sigma ADC gives about 100μV resolution — translating to roughly ±0.5% SoC accuracy even on LFP's flat voltage curve.</div>
       </div>
       <div class="trace-row">
         <div class="trace-left">
