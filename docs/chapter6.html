@@ -3152,7 +3152,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
 
         <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--arch-purple);border-radius:var(--radius);padding:1.2rem;">
           <div style="color:var(--arch-purple);font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">⑥ NVM Requires Wear Leveling</div>
-          <div style="color:var(--text-muted);font-size:13px;line-height:1.6;">60s SoC writes × 10 years = 5.25M writes. Without wear leveling, a single EEPROM address wears out in 5 years. Rotate across 16+ pages, protect every record with CRC-16, always validate on startup.</div>
+          <div style="color:var(--text-muted);font-size:13px;line-height:1.6;">Writing SoC every 60 seconds for 10 years means 5.25 million writes. EEPROM cells are typically rated for 100,000 writes per address — without wear leveling, a single cell wears out in under 2 years. Rotating writes across 16+ pages spreads the wear evenly. Always protect every saved record with CRC-16 and validate it on startup before trusting it.</div>
         </div>
 
         <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--arch-purple);border-radius:var(--radius);padding:1.2rem;">
