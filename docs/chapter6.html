@@ -3137,7 +3137,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
 
         <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--arch-purple);border-radius:var(--radius);padding:1.2rem;">
           <div style="color:var(--arch-purple);font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">③ Dedicated MCU, Always</div>
-          <div style="color:var(--text-muted);font-size:13px;line-height:1.6;">Sharing an MCU between BMS and inverter creates priority conflicts that can delay safety-critical measurements. A $2 dedicated MCU is cheap insurance against a $200 warranty claim.</div>
+          <div style="color:var(--text-muted);font-size:13px;line-height:1.6;">When the BMS shares a microcontroller with the inverter, the inverter's code can hog CPU time and delay the 10ms safety measurement loop — the loop that catches overvoltage before a cell is damaged. A dedicated BMS MCU costs about $2. The warranty claim it prevents can cost $200 or more. Use a dedicated MCU.</div>
         </div>
 
         <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--arch-purple);border-radius:var(--radius);padding:1.2rem;">
