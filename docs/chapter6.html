@@ -1600,11 +1600,14 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="arch-block">
           <div class="arch-block-title">BMS Silent Timeout</div>
           <div class="arch-block-body">
-            UL 1973 requires the host (inverter) to detect BMS silence within 5 seconds. Implement
-            this in the inverter firmware: if no CAN message from BMS ID 0x355 received in &gt;5s,
-            the inverter must cease charging/discharging and raise an alarm. The BMS also monitors
-            this in reverse — if CAN TX fails continuously (bus-off state), it logs a communication
-            fault and opens FETs after a configurable timeout (default: 30s to allow bus recovery).
+            UL 1973 certification requires that the inverter (the host system) must notice within
+            5 seconds if the BMS stops talking. If the inverter hasn't received a CAN message from
+            BMS ID 0x355 in more than 5 seconds, it must stop all charging and discharging and raise
+            an alarm — because a silent BMS means no active protection. The BMS also watches in the
+            other direction: if CAN transmission has been failing continuously (the bus-off state),
+            it logs a communication fault internally. If the bus stays dead for longer than a
+            configurable timeout (default 30 seconds, to allow bus recovery), the BMS opens the FETs
+            and isolates the pack as a precaution.
           </div>
         </div>
         <div class="arch-block">
