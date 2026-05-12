@@ -2473,11 +2473,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
             <div class="arch-block">
               <div class="arch-block-title">Cell-Level Fusing (Invar Wire)</div>
               <div class="arch-block-body">
-                Tesla uses thin nichrome/invar wire fuses bonded directly to each cell — one per cell.
-                If a cell shorts internally, the wire fuse for that cell melts and electrically disconnects
-                it from the pack. The pack continues operating at slightly reduced capacity rather than failing
-                catastrophically. In a 4680 pack with 960 cells, losing 10 cells is &lt;1% capacity degradation.
-                This is true Tier 1 protection — below even the BMS layer.
+                Tesla solders a hair-thin invar wire fuse directly to each individual cell — one wire per cell. If a cell develops an internal short and starts pulling too much current, its wire fuse melts and disconnects just that one cell. The rest of the pack keeps working. In a 4680-format pack with 960 cells, losing 10 bad cells is less than 1% capacity loss — the pack degrades gracefully instead of failing catastrophically. This protection happens at the hardware level, below even the BMS.
               </div>
             </div>
             <div class="arch-block">
