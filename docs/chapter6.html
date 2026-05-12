@@ -1585,11 +1585,16 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="arch-block">
           <div class="arch-block-title">Error Counters (TEC / REC)</div>
           <div class="arch-block-body">
-            Every CAN node maintains a Transmit Error Counter (TEC) and Receive Error Counter (REC).
-            Each detected error increments the counter; successful frames decrement it. States:
-            Error Active (TEC/REC &lt;96) → Error Passive (TEC/REC 96–127) → Bus-Off (TEC ≥128).
-            In Bus-Off, the node disconnects from the bus and waits for 128 × 11 recessive bits
-            before re-joining. This prevents one faulty node from destroying the entire bus.
+            Every CAN device keeps two error counters: a Transmit Error Counter (TEC) and a Receive
+            Error Counter (REC). Every time a device detects an error — a garbled message, a
+            timing violation, a CRC mismatch — its counter goes up. Every successful message
+            brings it back down. Three states exist: Error Active (TEC/REC below 96) is normal
+            operation. Error Passive (96–127) means the device has seen repeated errors and
+            is being more cautious — it can still communicate but signals errors differently.
+            Bus-Off (TEC at 128 or above) means the device completely disconnects from the bus
+            and waits for 128 × 11 clean bits before trying to reconnect. This self-isolation
+            mechanism prevents one broken device from flooding the bus with error frames and
+            taking down every other device connected to it.
           </div>
         </div>
         <div class="arch-block">
