@@ -3182,7 +3182,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
 
         <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--arch-purple);border-radius:var(--radius);padding:1.2rem;">
           <div style="color:var(--arch-purple);font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">⑫ Timing is Physics</div>
-          <div style="color:var(--text-muted);font-size:13px;line-height:1.6;">&lt;500μs for SCD (copper melts in ms). 10ms for OVP (Li plating starts in seconds). 100ms for SoC (load step response). 1s for balancing. 60s for NVM. 1hr for SoH. Each timing layer is set by the physics of the failure it prevents.</div>
+          <div style="color:var(--text-muted);font-size:13px;line-height:1.6;">Every timing deadline is set by physics, not preference. Short-circuit: react in &lt;500μs because copper bus bars melt in milliseconds. OVP: react in &lt;10ms because lithium plating starts in seconds. SoC update: 100ms because load steps happen fast. Balancing: 1s is fine because imbalance is slow. NVM save: 60s. SoH: 1 hour. Understand the physics, and the timing falls out naturally.</div>
         </div>
 
       </div>
