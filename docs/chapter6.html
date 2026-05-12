@@ -1256,12 +1256,15 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="arch-block">
           <div class="arch-block-title">Core Clock Speed Requirements</div>
           <div class="arch-block-body">
-            A 48–168 MHz Cortex-M0+ to M4 is sufficient for most BMS applications. The EKF SoC
-            algorithm (Chapter 2) requires floating-point matrix operations; an FPU (Cortex-M4F or
-            M7F) eliminates software floating-point overhead. Rule of thumb: measure CPU load at
-            peak — measurement + protection + SoC + CAN TX should consume less than 60% CPU budget,
-            leaving headroom for balancing, logging, and future features. Never design at 95% CPU
-            utilisation — debugging interrupt latency issues at 3am is expensive.
+            A processor running at 48–168 MHz (Cortex-M0+ to M4 family) is enough for most BMS
+            applications. If you're implementing the advanced Extended Kalman Filter SoC algorithm
+            covered in chapter 2, you need a chip with a hardware floating-point unit (FPU) —
+            a Cortex-M4F or M7F. Without an FPU, every floating-point calculation goes through slow
+            software emulation, making the EKF about ten times slower. The practical rule: when you
+            measure your system's peak CPU usage — all BMS tasks running simultaneously — it should
+            use less than 60% of the available CPU time. The remaining 40% is breathing room for
+            balancing, logging, and future software updates. Never design at 95% CPU — you will regret
+            it when you're debugging a timing problem at 3am before a customer deadline.
           </div>
         </div>
         <div class="arch-block">
