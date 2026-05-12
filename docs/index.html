@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>LFP BMS OVERVIEW</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Space+Grotesk:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:       #050507;
+  --bg2:      #080810;
+  --bg3:      #0c0c18;
+  --panel:    rgba(0,245,255,0.03);
+  --border:   rgba(0,245,255,0.18);
+  --border2:  rgba(0,245,255,0.08);
+  --cyan:     #00F5FF;
+  --blue:     #0A84FF;
+  --amber:    #FFC857;
+  --green:    #00FF88;
+  --red:      #FF2D55;
+  --text:     #EAEAEA;
+  --muted:    rgba(234,234,234,0.45);
+  --mono:     'JetBrains Mono', monospace;
+  --head:     'Orbitron', sans-serif;
+  --body:     'Space Grotesk', sans-serif;
+  --glow:     0 0 20px rgba(0,245,255,0.25);
+  --glow-lg:  0 0 40px rgba(0,245,255,0.3);
+}
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html { scroll-behavior:smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+/* micro grid bg */
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background-image:
+    linear-gradient(rgba(0,245,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,245,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events:none; z-index:0;
+}
+
+/* scanlines */
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px);pointer-events:none;z-index:1;}
+/* scrollbar */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(0,245,255,0.3);border-radius:2px;}
+/* scroll progress */
+#hud-progress{position:fixed;top:0;left:0;height:2px;width:0%;background:linear-gradient(90deg,var(--cyan),var(--blue));z-index:9999;transition:width 0.1s;box-shadow:0 0 8px var(--cyan);}
+/* topbar */
+#topbar{position:fixed;top:0;left:0;width:100%;background:rgba(5,5,7,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border2);padding:0 2rem;height:48px;display:flex;align-items:center;justify-content:space-between;z-index:900;font-family:var(--mono);font-size:0.7rem;}
+.topbar-left{color:var(--cyan);letter-spacing:0.12em;}
+.topbar-right{display:flex;gap:1.5rem;}
+.topbar-chip{color:var(--muted);letter-spacing:0.1em;padding:0.2rem 0.6rem;border:1px solid var(--border2);font-size:0.65rem;}
+.topbar-chip.online{color:var(--green);border-color:rgba(0,255,136,0.3);}
+
+
+/* hero */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:6rem 2rem 4rem;position:relative;z-index:2;}
+.hero-eyebrow{font-family:var(--mono);font-size:0.7rem;letter-spacing:0.25em;color:var(--cyan);opacity:0.7;margin-bottom:1.5rem;text-transform:uppercase;}
+.hero-title{font-family:var(--head);font-size:clamp(3rem,9vw,7rem);font-weight:900;letter-spacing:0.04em;line-height:1;color:#fff;text-shadow:0 0 60px rgba(0,245,255,0.4);margin-bottom:0.5rem;}
+.hero-title span{color:var(--cyan);text-shadow:var(--glow-lg);}
+.hero-sub-title{font-family:var(--head);font-size:clamp(1rem,3vw,1.8rem);font-weight:400;letter-spacing:0.15em;color:rgba(0,245,255,0.6);margin-bottom:2rem;}
+.hero-desc{max-width:600px;color:var(--muted);font-size:0.95rem;line-height:1.8;margin-bottom:3rem;}
+/* hero corner brackets */
+.hero-panel{position:relative;padding:2rem;border:1px solid var(--border2);}
+.hero-panel::before,.hero-panel::after{content:'';position:absolute;width:20px;height:20px;border-color:var(--cyan);border-style:solid;}
+.hero-panel::before{top:-1px;left:-1px;border-width:2px 0 0 2px;}
+.hero-panel::after{bottom:-1px;right:-1px;border-width:0 2px 2px 0;}
+/* stats row */
+.hero-stats{display:flex;gap:0;border:1px solid var(--border);margin-bottom:2.5rem;overflow:hidden;}
+.hstat{padding:1.2rem 2rem;text-align:center;border-right:1px solid var(--border);position:relative;background:var(--panel);flex:1;}
+.hstat:last-child{border-right:none;}
+.hstat-val{font-family:var(--head);font-size:2rem;font-weight:700;color:var(--cyan);display:block;line-height:1;text-shadow:var(--glow);}
+.hstat-lbl{font-family:var(--mono);font-size:0.6rem;letter-spacing:0.15em;color:var(--muted);text-transform:uppercase;margin-top:0.3rem;display:block;}
+
+
+/* section headers */
+.s-label{font-family:var(--mono);font-size:0.65rem;letter-spacing:0.25em;color:var(--cyan);opacity:0.6;text-transform:uppercase;margin-bottom:0.5rem;}
+.s-title{font-family:var(--head);font-size:clamp(1.5rem,4vw,2.5rem);font-weight:700;letter-spacing:0.06em;color:#fff;margin-bottom:0.5rem;}
+.s-line{height:1px;background:linear-gradient(90deg,var(--cyan),transparent);margin-bottom:3rem;opacity:0.3;}
+/* chapter grid */
+.chapters-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:1px;background:var(--border2);border:1px solid var(--border2);margin-bottom:4rem;}
+.chapter-card{background:var(--bg2);padding:1.8rem;text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:1rem;position:relative;transition:background 0.2s,box-shadow 0.2s;overflow:hidden;}
+.chapter-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:currentColor;opacity:0;transition:opacity 0.2s;}
+.chapter-card:hover{background:var(--bg3);box-shadow:inset 0 0 40px rgba(0,245,255,0.04);}
+.chapter-card:hover::before{opacity:1;}
+.chapter-card.hidden{display:none;}
+/* card header */
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;}
+.card-num{font-family:var(--mono);font-size:0.65rem;letter-spacing:0.15em;color:var(--muted);}
+.card-status{font-family:var(--mono);font-size:0.6rem;letter-spacing:0.1em;padding:0.15rem 0.5rem;border:1px solid;display:flex;align-items:center;gap:0.3rem;}
+.card-status.online{color:var(--green);border-color:rgba(0,255,136,0.3);}
+.card-status::before{content:'●';font-size:0.5rem;}
+/* card body */
+.card-title{font-family:var(--head);font-size:1.1rem;font-weight:700;letter-spacing:0.04em;line-height:1.3;margin-bottom:0.3rem;}
+.card-tagline{font-size:0.82rem;color:var(--muted);line-height:1.6;}
+/* chips */
+.topic-list{list-style:none;display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:auto;}
+.topic-chip{font-family:var(--mono);font-size:0.62rem;padding:0.15rem 0.5rem;background:rgba(0,245,255,0.04);border:1px solid var(--border2);color:rgba(234,234,234,0.5);letter-spacing:0.05em;}
+/* card footer */
+.card-foot{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border2);padding-top:1rem;margin-top:0.5rem;}
+.card-meta{font-family:var(--mono);font-size:0.65rem;color:var(--muted);letter-spacing:0.06em;}
+.card-cta{font-family:var(--mono);font-size:0.7rem;letter-spacing:0.12em;padding:0.3rem 0.9rem;border:1px solid currentColor;transition:background 0.15s,color 0.15s;}
+.chapter-card:hover .card-cta{background:currentColor;color:#000;}
+
+
+/* search */
+.search-wrap{position:relative;width:min(520px,90vw);margin:0 auto 3rem;}
+.search-label{font-family:var(--mono);font-size:0.62rem;letter-spacing:0.2em;color:var(--cyan);opacity:0.6;margin-bottom:0.5rem;display:block;}
+.search-inner{position:relative;display:flex;align-items:center;}
+.search-prefix{position:absolute;left:1rem;font-family:var(--mono);font-size:0.8rem;color:var(--cyan);opacity:0.5;pointer-events:none;}
+#search{width:100%;background:rgba(0,245,255,0.03);border:1px solid var(--border);padding:0.8rem 1rem 0.8rem 2.5rem;color:#fff;font-family:var(--mono);font-size:0.85rem;outline:none;letter-spacing:0.05em;transition:border-color 0.2s,box-shadow 0.2s;}
+#search::placeholder{color:rgba(234,234,234,0.2);}
+#search:focus{border-color:var(--cyan);box-shadow:0 0 20px rgba(0,245,255,0.1);}
+/* pov grid */
+.pov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1px;background:var(--border2);border:1px solid var(--border2);margin-bottom:4rem;}
+.pov-card{background:var(--bg2);padding:1.5rem;position:relative;text-decoration:none;color:inherit;transition:background 0.2s;}
+.pov-card:hover{background:var(--bg3);}
+.pov-badge{font-family:var(--mono);font-size:0.6rem;letter-spacing:0.12em;color:var(--amber);border:1px solid rgba(255,200,87,0.3);padding:0.15rem 0.5rem;display:inline-block;margin-bottom:0.8rem;}
+.pov-icon{font-size:1.8rem;margin-bottom:0.6rem;display:block;}
+.pov-title{font-family:var(--head);font-size:1rem;font-weight:700;letter-spacing:0.05em;margin-bottom:0.4rem;}
+.pov-desc{font-size:0.8rem;color:var(--muted);line-height:1.6;}
+/* progress section */
+.progress-panel{border:1px solid var(--border);padding:1.5rem;margin:2rem 0;position:relative;background:var(--panel);}
+.progress-panel-label{font-family:var(--mono);font-size:0.65rem;letter-spacing:0.2em;color:var(--cyan);margin-bottom:1rem;display:block;}
+.prog-track{height:2px;background:rgba(255,255,255,0.08);margin:0.8rem 0;position:relative;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--cyan));width:0;transition:width 2s cubic-bezier(.16,1,.3,1);box-shadow:0 0 8px var(--cyan);}
+.prog-modules{display:flex;gap:0.8rem;flex-wrap:wrap;margin-top:0.8rem;}
+.prog-mod{font-family:var(--mono);font-size:0.62rem;color:var(--green);letter-spacing:0.08em;}
+/* container */
+.container{max-width:1200px;margin:0 auto;padding:0 2rem;position:relative;z-index:2;}
+.section-wrap{padding:4rem 0 2rem;}
+/* reveal */
+.reveal{opacity:0;transform:translateY(16px);transition:opacity 0.5s ease,transform 0.5s ease;}
+.reveal.visible{opacity:1;transform:none;}
+/* footer */
+.site-footer{border-top:1px solid var(--border2);padding:3rem 2rem;text-align:center;position:relative;z-index:2;}
+.footer-logo{font-family:var(--head);font-size:1.5rem;letter-spacing:0.12em;color:var(--cyan);text-shadow:var(--glow);margin-bottom:0.5rem;}
+.footer-sub{font-family:var(--mono);font-size:0.7rem;color:var(--muted);letter-spacing:0.08em;margin-bottom:1.5rem;}
+.footer-links{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;}
+.footer-links a{font-family:var(--mono);font-size:0.7rem;color:var(--muted);text-decoration:none;letter-spacing:0.08em;padding:0.2rem 0.5rem;border:1px solid var(--border2);transition:color 0.15s,border-color 0.15s;}
+.footer-links a:hover{color:var(--cyan);border-color:var(--border);}
+/* back to top */
+#btt{position:fixed;bottom:2rem;right:2rem;background:transparent;border:1px solid var(--cyan);color:var(--cyan);width:40px;height:40px;font-family:var(--mono);font-size:1rem;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:999;transition:all 0.2s;box-shadow:var(--glow);}
+#btt:hover{background:var(--cyan);color:#000;}
+#btt.show{display:flex;}
+@media(max-width:640px){.chapters-grid{grid-template-columns:1fr}.hero-stats{flex-direction:column}}
+
+</style>
+</head>
+<body>
+<!-- PLACEHOLDER - building in chunks -->
+
+<div id="hud-progress"></div>
+<button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+
+<!-- HERO -->
+<section class="hero">
+  <h1 class="hero-title">LFP <span>BMS</span></h1>
+  <div class="hero-sub-title">KNOWLEDGE BASE</div>
+  <p class="hero-desc">Not a textbook. Not a datasheet. This is the big picture — starting from the lithium iron phosphate cell itself and building upward, one layer at a time, to understand exactly why a BMS exists and what it has to get right. If you want deep theory, the internet has you covered. This was built for a different reason: a genuine obsession with visual, animated learning and wanting to see how it all connects in one place. Personalized, nerdy, and made for fun. Built with Claude — and it shows.</p>
+
+  <div class="hero-stats">
+    <div class="hstat"><span class="hstat-val" data-target="10" data-suffix="">0</span><span class="hstat-lbl">MODULES</span></div>
+    <div class="hstat"><span class="hstat-val" data-target="22" data-suffix="K+">0</span><span class="hstat-lbl">LINES</span></div>
+    <div class="hstat"><span class="hstat-val" data-target="40" data-suffix="+">0</span><span class="hstat-lbl">DIAGRAMS</span></div>
+    <div class="hstat"><span class="hstat-val" data-target="100" data-suffix="%">0</span><span class="hstat-lbl">COMPLETE</span></div>
+  </div>
+
+</section>
+
+<!-- CHAPTERS -->
+<div class="container section-wrap">
+
+  <div class="chapters-grid">
+    <a href="chapter1.html" class="chapter-card reveal" style="color:#FFC857;">
+      <div class="card-head"><span class="card-num">MODULE_01</span></div>
+      <div><div class="card-title">Chemistry &amp; Why LFP</div>
+      <div class="card-tagline">From Volta's pile to olivine crystal. P–O bond physics (544 kJ/mol), thermal runaway threshold 270°C, 3000–5000 cycle life mechanisms. The foundational argument for LFP.</div></div>
+      <ul class="topic-list"><li class="topic-chip">Olivine structure</li><li class="topic-chip">P–O bond</li><li class="topic-chip">Cycle life</li><li class="topic-chip">Calendar aging</li><li class="topic-chip">LFP vs NMC</li></ul>
+      <div class="card-foot"><span class="card-meta">⏱ ~35 min &nbsp;·&nbsp; 3,092 lines</span><span class="card-cta" style="color:#FFC857;border-color:#FFC857;">ACCESS →</span></div>
+    </a>
+    <a href="chapter2.html" class="chapter-card reveal" style="color:#0A84FF;">
+      <div class="card-head"><span class="card-num">MODULE_02</span></div>
+      <div><div class="card-title">Cell Physics &amp; SoX</div>
+      <div class="card-tagline">Intercalation electrochemistry, Nernst equation, ECM modelling, EKF SoC estimation, Arrhenius calendar aging. 9 worked numerical examples with full calculations.</div></div>
+      <ul class="topic-list"><li class="topic-chip">Li+ intercalation</li><li class="topic-chip">Nernst</li><li class="topic-chip">EKF SoC</li><li class="topic-chip">Arrhenius</li><li class="topic-chip">OCV curve</li></ul>
+      <div class="card-foot"><span class="card-meta">⏱ ~55 min &nbsp;·&nbsp; 4,012 lines</span><span class="card-cta" style="color:#0A84FF;border-color:#0A84FF;">ACCESS →</span></div>
+    </a>
+    <a href="chapter3.html" class="chapter-card reveal" style="color:#FF6B35;">
+      <div class="card-head"><span class="card-num">MODULE_03</span></div>
+      <div><div class="card-title">Thermal Management</div>
+      <div class="card-tagline">Joule heating, entropic heat, 5-stage thermal runaway cascade, LFP vs NMC propagation, NTC placement, dT/dt firmware logic with derating curves.</div></div>
+      <ul class="topic-list"><li class="topic-chip">I²R heating</li><li class="topic-chip">Thermal runaway</li><li class="topic-chip">dT/dt logic</li><li class="topic-chip">NTC placement</li><li class="topic-chip">Derating</li></ul>
+      <div class="card-foot"><span class="card-meta">⏱ ~18 min &nbsp;·&nbsp; 2,579 lines</span><span class="card-cta" style="color:#FF6B35;border-color:#FF6B35;">ACCESS →</span></div>
+    </a>
+    <a href="chapter4.html" class="chapter-card reveal" style="color:#00F5FF;">
+      <div class="card-head"><span class="card-num">MODULE_04</span></div>
+      <div><div class="card-title">Protection &amp; AFE</div>
+      <div class="card-tagline">OVP/UVP/OCP/SCP response hierarchy, back-to-back MOSFET topology, pre-charge sequencing, flying-capacitor AFE internals. BQ76952 vs LTC6813.</div></div>
+      <ul class="topic-list"><li class="topic-chip">SCD &lt;500μs</li><li class="topic-chip">MOSFET topology</li><li class="topic-chip">Pre-charge</li><li class="topic-chip">BQ76952</li><li class="topic-chip">Balancing</li></ul>
+      <div class="card-foot"><span class="card-meta">⏱ ~15 min &nbsp;·&nbsp; 1,782 lines</span><span class="card-cta" style="color:#00F5FF;border-color:#00F5FF;">ACCESS →</span></div>
+    </a>
+    <a href="chapter5.html" class="chapter-card reveal" style="color:#00FF88;">
+      <div class="card-head"><span class="card-num">MODULE_05</span></div>
+      <div><div class="card-title">Standards &amp; Compliance</div>
+      <div class="card-tagline">IEC 62133, IEC 61960, UL 1973, UN 38.3 — test requirements, mandatory BMS features, filterable compliance matrix across 14 BMS functions × 6 standards.</div></div>
+      <ul class="topic-list"><li class="topic-chip">IEC 62619</li><li class="topic-chip">UL 1973</li><li class="topic-chip">UN 38.3</li><li class="topic-chip">NFPA 855</li><li class="topic-chip">Compliance matrix</li></ul>
+      <div class="card-foot"><span class="card-meta">⏱ ~15 min &nbsp;·&nbsp; 1,727 lines</span><span class="card-cta" style="color:#00FF88;border-color:#00FF88;">ACCESS →</span></div>
+    </a>
+    <a href="chapter6.html" class="chapter-card reveal" style="color:#BF5AF2;">
+      <div class="card-head"><span class="card-num">MODULE_06</span></div>
+      <div><div class="card-title">BMS Architecture</div>
+      <div class="card-tagline">Full hardware design: AFE, MCU peripherals, CAN bus (0x351–0x380), NVM wear-leveling, backup SRAM. 11-state interactive firmware machine. Tesla/BYD/CATL teardown.</div></div>
+      <ul class="topic-list"><li class="topic-chip">BQ76952 AFE</li><li class="topic-chip">STM32 MCU</li><li class="topic-chip">PYLON CAN</li><li class="topic-chip">11-state machine</li><li class="topic-chip">SOX</li></ul>
+      <div class="card-foot"><span class="card-meta">⏱ ~22 min &nbsp;·&nbsp; 3,245 lines</span><span class="card-cta" style="color:#BF5AF2;border-color:#BF5AF2;">ACCESS →</span></div>
+    </a>
+    <a href="chapter7.html" class="chapter-card reveal" style="color:#FFD60A;border:1px solid rgba(255,214,10,0.4);">
+      <div class="card-head"><span class="card-num">MODULE_07</span></div>
+      <div><div class="card-title">UPS &amp; Home ESS</div>
+      <div class="card-tagline">Everything applied to real products. Float charging physics (3.39V/cell), backup time formulas, ESS vs EV BMS differences, NFPA 855 indoor installation, full system energy flow.</div></div>
+      <ul class="topic-list"><li class="topic-chip">Float 3.39V/cell</li><li class="topic-chip">&lt;10ms switchover</li><li class="topic-chip">20–90% SoC</li><li class="topic-chip">NFPA 855</li><li class="topic-chip">EV vs ESS</li></ul>
+      <div class="card-foot"><span class="card-meta">⏱ ~20 min &nbsp;·&nbsp; 2,048 lines</span><span class="card-cta" style="color:#FFD60A;border-color:#FFD60A;">ACCESS →</span></div>
+    </a>
+    <a href="chapter8.html" class="chapter-card reveal" style="color:#FFC857;border:1px solid rgba(255,200,87,0.35);">
+      <div class="card-head"><span class="card-num">MODULE_08</span></div>
+      <div><div class="card-title">BMS Hardware Design</div>
+      <div class="card-tagline">AFE selection (BQ76952 vs LTC6813), STM32 family guide, MCU peripheral checklist, high-voltage isolation, PCB layout rules. The embedded engineer's hardware decision guide.</div></div>
+      <ul class="topic-list"><li class="topic-chip">AFE selection</li><li class="topic-chip">STM32 guide</li><li class="topic-chip">Shunt vs Hall</li><li class="topic-chip">HV isolation</li><li class="topic-chip">PCB layout</li></ul>
+      <div class="card-foot"><span class="card-meta">⏱ ~25 min &nbsp;·&nbsp; 565+ lines</span><span class="card-cta" style="color:#FFC857;border-color:#FFC857;">ACCESS →</span></div>
+    </a>
+    <a href="chapter9.html" class="chapter-card reveal" style="color:#00FF88;border:1px solid rgba(0,255,136,0.35);">
+      <div class="card-head"><span class="card-num">MODULE_09</span></div>
+      <div><div class="card-title">BMS Firmware Architecture</div>
+      <div class="card-tagline">Layered firmware design for STM32 BMS — MISRA-C guidelines, 7 functional modules with C code (measurement, protection, SoC, balancing, CAN, NVM, event logger), memory map, and HIL testing.</div></div>
+      <ul class="topic-list"><li class="topic-chip">MISRA-C</li><li class="topic-chip">Layered arch</li><li class="topic-chip">Coulomb counter</li><li class="topic-chip">PYLON CAN</li><li class="topic-chip">HIL testing</li></ul>
+      <div class="card-foot"><span class="card-meta">⏱ ~40 min &nbsp;·&nbsp; 1100+ lines</span><span class="card-cta" style="color:#00FF88;border-color:#00FF88;">ACCESS →</span></div>
+    </a>
+  </div>
+</div>
+
+<!-- CH10 CARD -->
+<div style="padding:0 0 0 0;background:var(--bg);">
+<div class="container" style="padding:0;">
+  <div class="chapters-grid" style="border-top:none;">
+    <a href="chapter10.html" class="chapter-card reveal" style="color:#00CFFF;border:1px solid rgba(0,207,255,0.35);">
+      <div class="card-head"><span class="card-num">MODULE_10</span></div>
+      <div><div class="card-title">Sustainable Energy &amp; Future of BMS</div>
+      <div class="card-tagline">Global energy transition, LFP sustainability (no cobalt), second-life batteries, grid-scale ESS hierarchy, solid-state &amp; Na-ion BMS changes, AI/ML SoH, V2G bidirectional charging.</div></div>
+      <ul class="topic-list"><li class="topic-chip">V2G</li><li class="topic-chip">Solid-State</li><li class="topic-chip">Na-ion</li><li class="topic-chip">AI/ML SoH</li><li class="topic-chip">Grid Scale</li></ul>
+      <div class="card-foot"><span class="card-meta">⏱ ~35 min &nbsp;·&nbsp; 925+ lines</span><span class="card-cta" style="color:#00CFFF;border-color:#00CFFF;">ACCESS →</span></div>
+    </a>
+  </div>
+</div>
+</div>
+
+<!-- SYSTEM_OVERVIEW CARD -->
+<div style="padding:2rem 0 0 0;background:linear-gradient(180deg,var(--bg) 0%,rgba(0,245,255,0.03) 100%);">
+<div class="container" style="padding:0;">
+  <div class="chapters-grid" style="border-top:1px solid rgba(0,245,255,0.15);">
+    <a href="SYSTEM_OVERVIEW.html" class="chapter-card reveal" style="color:#00F5FF;border:2px solid rgba(0,245,255,0.5);background:rgba(0,245,255,0.04);position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#FFC857,#00F5FF,#00FF88,#A855F7,#FF6B35);animation:hud-scan 4s linear infinite;opacity:0.7"></div>
+      <div class="card-head"><span class="card-num">SYSTEM OVERVIEW</span></div>
+      <div><div class="card-title" style="font-size:1.2rem">How A BMS Actually Works — Complete System View</div>
+      <div class="card-tagline">The page that connects all 10 chapters into one signal chain. Cell → Sense → Filter → SoC/SoH → Protection → FET → CAN → Cloud. Real operation flow, 3 signal examples, chapter map, firmware scheduler, intuition, and a full charge scenario walkthrough.</div></div>
+      <ul class="topic-list">
+        <li class="topic-chip" style="border-color:rgba(0,245,255,0.4);color:#00F5FF">All 10 Chapters</li>
+        <li class="topic-chip" style="border-color:rgba(0,255,136,0.4);color:#00FF88">Signal Flow</li>
+        <li class="topic-chip" style="border-color:rgba(255,200,87,0.4);color:#FFC857">Real Scenario</li>
+        <li class="topic-chip" style="border-color:rgba(168,85,247,0.4);color:#A855F7">Firmware View</li>
+        <li class="topic-chip" style="border-color:rgba(255,107,53,0.4);color:#FF6B35">Chapter Map</li>
+      </ul>
+      <div class="card-foot"><span class="card-meta">⏱ ~25 min &nbsp;·&nbsp; 1639+ lines &nbsp;·&nbsp; 8 animated SVGs</span><span class="card-cta" style="color:#00F5FF;border-color:#00F5FF;font-weight:700;">ENTER OVERVIEW →</span></div>
+    </a>
+  </div>
+</div>
+</div>
+
+
+
+
+
+<script>
+// scroll progress + back to top
+const prog = document.getElementById('hud-progress');
+const btt = document.getElementById('btt');
+window.addEventListener('scroll', () => {
+  const s = document.documentElement.scrollTop;
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  if(prog) prog.style.width = (s/h*100) + '%';
+  if(btt) btt.classList.toggle('show', s > 400);
+});
+
+// counter animation
+function animCount(el) {
+  const target = parseInt(el.dataset.target);
+  const suffix = el.dataset.suffix || '';
+  let cur = 0; const step = target / 50;
+  const t = setInterval(() => {
+    cur = Math.min(cur + step, target);
+    el.textContent = Math.floor(cur) + suffix;
+    if(cur >= target) clearInterval(t);
+  }, 25);
+}
+setTimeout(() => document.querySelectorAll('[data-target]').forEach(animCount), 400);
+
+// progress bar
+setTimeout(() => { const p = document.getElementById('main-progress'); if(p) p.style.width='100%'; }, 600);
+
+// reveal on scroll
+const obs = new IntersectionObserver((entries) => {
+  entries.forEach((e, i) => {
+    if(e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('visible'), i * 60);
+      obs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+// search
+const searchMap = {
+  'chapter1.html': 'chemistry lfp olivine thermal runaway cycle p-o bond aging nmc lead acid',
+  'chapter2.html': 'soc soh intercalation nernst ecm ekf hppc ocv arrhenius sei coulomb',
+  'chapter3.html': 'thermal heat joule i2r runaway ntc derating gradient cooling',
+  'chapter4.html': 'protection ovp uvp ocp scp mosfet afe bq76952 balancing pre-charge',
+  'chapter5.html': 'standards iec 62619 ul 1973 un 38.3 nfpa 855 compliance matrix',
+  'chapter6.html': 'architecture bms state machine can pylon nvm rtc event log',
+  'chapter7.html': 'ups ess float 3.39v switchover home solar tou nfpa ev backup',
+  'chapter8.html': 'hardware afe stm32 mcu afE bq76952 ltc6813 pcb isolation shunt hall mosfet schematic',
+  'chapter9.html': 'firmware architecture misra c layered hal driver middleware application soc coulomb balancing can pylon nvm event log testing hil unit test stm32',
+  'chapter10.html': 'sustainable energy storage future bms lfp cobalt second life grid scale v2g vehicle grid solid state sodium ion ai ml soh digital twin cybersecurity',
+  'SYSTEM_OVERVIEW.html': 'system overview bms signal chain how bms works pipeline cell sensing afe adc filter kalman soc soh protection state machine fet control can bus firmware embedded real operation flow overvoltage overtemperature low soc scenario all chapters connected'
+};
+document.getElementById('search').addEventListener('input', function() {
+  const q = this.value.toLowerCase().trim();
+  document.querySelectorAll('.chapter-card').forEach(card => {
+    const href = card.getAttribute('href');
+    const match = !q || (searchMap[href]||'').includes(q)
+      || card.textContent.toLowerCase().includes(q);
+    card.classList.toggle('hidden', !match);
+  });
+});
+</script>
+
+
+<script>
+
+// boot sequence text reveal
+(function(){
+  const el = document.querySelector('.hero-eyebrow');
+  if(!el) return;
+  const txt = el.textContent; el.textContent = '';
+  let i = 0;
+  const t = setInterval(()=>{ el.textContent += txt[i++]; if(i>=txt.length) clearInterval(t); }, 40);
+})();
+</script>
+
+</body>
+</html>

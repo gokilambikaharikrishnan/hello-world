@@ -1,0 +1,1545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Chapter 9: BMS Firmware Architecture | LFP BMS Knowledge Base</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-deep:       #07090f;
+  --bg-card:       #0d1117;
+  --bg-elevated:   #161b22;
+  --border:        rgba(255,255,255,0.07);
+  --border-med:    rgba(255,255,255,0.12);
+  --text-primary:  #e6edf3;
+  --text-secondary:#8b949e;
+  --text-muted:    #484f58;
+  --accent:        #34d399;
+  --accent-amber:  #f6ad55;
+  --accent-blue:   #63b3ed;
+  --accent-red:    #fc8181;
+  --accent-cyan:   #00d9ff;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --sidebar-w: 260px;
+  --radius: 8px;
+  --radius-lg: 14px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg-deep); color: var(--text-primary); font-family: var(--font-sans); font-size: 16px; line-height: 1.7; display: block; }
+
+.page-wrapper { display: flex; min-height: calc(100vh - 44px); margin-top: 44px; }
+
+.sidebar { width: var(--sidebar-w); min-width: var(--sidebar-w); background: var(--bg-card); border-right: 1px solid var(--border); position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 1.5rem 0; flex-shrink: 0; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border-med); border-radius: 2px; }
+.sidebar-logo { padding: 0 1.25rem 1.25rem; border-bottom: 1px solid var(--border); margin-bottom: 1rem; }
+.sidebar-logo-text { font-size: 0.7rem; font-family: var(--font-mono); color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; }
+.sidebar-title { font-size: 0.85rem; color: var(--text-primary); font-weight: 600; margin-top: 0.25rem; }
+.sidebar-nav-label { font-size: 0.65rem; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted); padding: 0.75rem 1.25rem 0.3rem; }
+.sidebar-link { display: flex; align-items: center; gap: 0.6rem; padding: 0.45rem 1.25rem; font-size: 0.82rem; color: var(--text-secondary); text-decoration: none; transition: all 0.18s; border-left: 2px solid transparent; }
+.sidebar-link:hover { color: var(--text-primary); background: var(--bg-elevated); }
+.sidebar-link.active { color: var(--accent); border-left-color: var(--accent); background: rgba(52,211,153,0.06); }
+.dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.5; flex-shrink: 0; }
+.sidebar-link.active .dot { opacity: 1; }
+.sidebar-sub { padding-left: 2.5rem; font-size: 0.76rem; }
+
+.main-content { flex: 1; min-width: 0; }
+
+/* Hero */
+.hero { padding: 4rem 3rem 3rem; background: linear-gradient(135deg, rgba(52,211,153,0.07) 0%, rgba(52,211,153,0.02) 40%, transparent 100%); border-bottom: 1px solid var(--border); position: relative; overflow: hidden; }
+.hero::before { content: ''; position: absolute; top: -60px; right: -60px; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(circle, rgba(52,211,153,0.1) 0%, transparent 70%); pointer-events: none; }
+.hero-eyebrow { font-size: 0.7rem; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.14em; color: var(--accent); background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.25); padding: 0.3rem 0.75rem; border-radius: 20px; display: inline-flex; margin-bottom: 0.75rem; }
+.hero-title { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; line-height: 1.15; margin-bottom: 0.75rem; background: linear-gradient(135deg, #6ee7b7 0%, #34d399 50%, #e6edf3 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.hero-subtitle { font-size: 1.05rem; color: var(--text-secondary); max-width: 650px; line-height: 1.7; margin-bottom: 1.5rem; }
+.hero-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+.hero-stat { text-align: center; }
+.hero-stat span { font-size: 1.5rem; font-weight: 800; font-family: var(--font-mono); color: var(--accent); display: block; line-height: 1.1; }
+.hero-stat { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+/* Sections */
+.section { padding: 3rem; border-top: 1px solid var(--border); }
+.section-eyebrow { font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.5rem; font-weight: 700; display: block; }
+.section-title { font-size: 1.75rem; font-weight: 800; line-height: 1.2; margin-bottom: 0.5rem; color: var(--text-primary); }
+.section-intro { font-size: 1rem; color: var(--text-secondary); max-width: 750px; line-height: 1.8; margin-bottom: 2rem; }
+h3.sub-title { font-size: 1.05rem; font-weight: 700; color: var(--accent); margin: 2rem 0 1rem; padding-left: 0.75rem; border-left: 3px solid var(--accent); }
+
+/* Typography */
+p { color: var(--text-secondary); font-size: 0.95rem; line-height: 1.8; margin-bottom: 0.8rem; }
+strong { color: var(--text-primary); font-weight: 600; }
+pre, code { font-family: var(--font-mono); }
+pre { background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--accent); padding: 1.5rem; color: rgba(52,211,153,0.85); font-size: 0.78rem; overflow-x: auto; margin: 1.5rem 0; border-radius: 4px; }
+code { background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.2); border-radius: 3px; padding: 0.1em 0.4em; font-size: 0.82em; color: var(--accent); }
+pre code { background: none; border: none; padding: 0; color: inherit; }
+
+/* Callouts */
+.callout { border-radius: var(--radius); padding: 1.1rem 1.4rem; margin: 1.2rem 0; border: 1px solid; }
+.callout-title { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 700; margin-bottom: 0.4rem; display: block; }
+.callout-info    { background: rgba(99,179,237,0.06);  border-color: rgba(99,179,237,0.25); }
+.callout-info    .callout-title { color: var(--accent-blue); }
+.callout-warn    { background: rgba(246,173,85,0.06);  border-color: rgba(246,173,85,0.25); }
+.callout-warn    .callout-title { color: var(--accent-amber); }
+.callout-warning { background: rgba(246,173,85,0.06);  border-color: rgba(246,173,85,0.25); }
+.callout-warning .callout-title { color: var(--accent-amber); }
+.callout-danger  { background: rgba(252,129,129,0.06); border-color: rgba(252,129,129,0.25); }
+.callout-danger  .callout-title { color: var(--accent-red); }
+.callout-success { background: rgba(52,211,153,0.06);  border-color: rgba(52,211,153,0.25); }
+.callout-success .callout-title { color: var(--accent); }
+.callout p { margin: 0; font-size: 0.88rem; }
+
+/* Tables */
+table { border-collapse: collapse; width: 100%; border: 1px solid var(--border); margin: 1.2rem 0; font-size: 0.85rem; }
+th { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; background: rgba(52,211,153,0.06); color: var(--accent); padding: 0.65rem 0.8rem; font-weight: 600; border-bottom: 1px solid var(--border-med); text-align: left; }
+td { padding: 0.55rem 0.8rem; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+tr:hover td { background: rgba(52,211,153,0.03); }
+.badge { display: inline-block; font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.15em 0.5em; border-radius: 3px; font-weight: 700; }
+.badge-green  { background: rgba(52,211,153,0.12); color: var(--accent); border: 1px solid rgba(52,211,153,0.3); }
+.badge-amber  { background: rgba(246,173,85,0.12); color: var(--accent-amber); border: 1px solid rgba(246,173,85,0.3); }
+.badge-blue   { background: rgba(99,179,237,0.12); color: var(--accent-blue); border: 1px solid rgba(99,179,237,0.3); }
+
+/* Cards */
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(260px,1fr)); gap: 1rem; margin: 1.2rem 0; }
+.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.4rem; }
+.card:hover { background: var(--bg-elevated); border-color: var(--border-med); }
+.card-label { font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.5rem; opacity: 0.8; }
+.card-title { font-size: 0.95rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.6rem; }
+.card-body { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.6; }
+
+/* Arch layers */
+.arch-layer { border: 1px solid var(--border); border-radius: var(--radius); margin: 0.6rem 0; overflow: hidden; }
+.arch-layer-header { display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem 1.2rem; font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.arch-layer-body { padding: 0.8rem 1.2rem 1rem; font-size: 0.84rem; color: var(--text-secondary); border-top: 1px solid var(--border); }
+.layer-app { background: rgba(52,211,153,0.05); border-color: rgba(52,211,153,0.2); }
+.layer-app .arch-layer-header { color: var(--accent); }
+.layer-mid { background: rgba(99,179,237,0.05); border-color: rgba(99,179,237,0.2); }
+.layer-mid .arch-layer-header { color: var(--accent-blue); }
+.layer-drv { background: rgba(246,173,85,0.05); border-color: rgba(246,173,85,0.2); }
+.layer-drv .arch-layer-header { color: var(--accent-amber); }
+.layer-hal { background: rgba(0,217,255,0.05); border-color: rgba(0,217,255,0.2); }
+.layer-hal .arch-layer-header { color: var(--accent-cyan); }
+
+/* Footer */
+.chapter-footer { padding: 2rem 3rem; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; background: var(--bg-card); }
+.nav-btn { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.1em; padding: 0.55rem 1.2rem; border: 1px solid rgba(52,211,153,0.3); color: var(--accent); background: rgba(52,211,153,0.05); text-decoration: none; border-radius: var(--radius); transition: background 0.18s; display: inline-block; }
+.nav-btn:hover { background: rgba(52,211,153,0.12); }
+
+/* Reveal */
+.reveal { opacity: 0; transform: translateY(14px); transition: opacity 0.5s, transform 0.5s; }
+.reveal.visible { opacity: 1; transform: none; }
+
+/* Progress bar */
+#hud-progress { position: fixed; top: 0; left: 0; height: 2px; width: 0%; background: var(--accent); z-index: 9999; pointer-events: none; }
+
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .main-content { padding: 2rem 1.5rem; }
+}
+</style>
+</head>
+<body>
+
+<div id="hud-progress"></div>
+<div id="ch-topbar" style="position:fixed;top:0;left:0;width:100%;height:44px;background:rgba(7,9,15,0.94);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;z-index:9000;font-family:'JetBrains Mono',monospace;font-size:0.65rem;">
+  <span style="color:rgba(52,211,153,0.65);letter-spacing:0.15em;">// LFP-BMS-KB &nbsp;·&nbsp; CH 09 — FIRMWARE ARCH</span>
+  <div style="display:flex;gap:1rem;">
+    <span style="color:rgba(52,211,153,0.7);letter-spacing:0.1em;">● ONLINE</span>
+    <a href="index.html" style="color:rgba(52,211,153,0.4);text-decoration:none;letter-spacing:0.1em;">← INDEX</a>
+    <span style="color:rgba(255,255,255,0.25);letter-spacing:0.1em;">CH 09/10</span>
+  </div>
+</div>
+<script>
+(function(){
+  var p=document.getElementById('hud-progress');
+  window.addEventListener('scroll',function(){
+    var s=document.documentElement.scrollTop,h=document.documentElement.scrollHeight-window.innerHeight;
+    if(p&&h>0)p.style.width=(s/h*100)+'%';
+  },{passive:true});
+})();
+</script>
+
+<div class="page-wrapper">
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-text">BMS Knowledge Base</div>
+    <div class="sidebar-title">Firmware Architecture</div>
+  </div>
+  <div class="sidebar-nav-label">Chapters</div>
+  <a class="sidebar-link" href="chapter1.html"><span class="dot"></span> Ch 1: Li-ion & LFP</a>
+  <a class="sidebar-link" href="chapter2.html"><span class="dot"></span> Ch 2: Cell Physics</a>
+  <a class="sidebar-link" href="chapter3.html"><span class="dot"></span> Ch 3: Thermal</a>
+  <a class="sidebar-link" href="chapter4.html"><span class="dot"></span> Ch 4: Protection</a>
+  <a class="sidebar-link" href="chapter5.html"><span class="dot"></span> Ch 5: Standards</a>
+  <a class="sidebar-link" href="chapter6.html"><span class="dot"></span> Ch 6: Architecture</a>
+  <a class="sidebar-link" href="chapter7.html"><span class="dot"></span> Ch 7: UPS & ESS</a>
+  <a class="sidebar-link" href="chapter8.html"><span class="dot"></span> Ch 8: Hardware</a>
+  <a class="sidebar-link" href="chapter10.html"><span class="dot"></span> Ch 10: Future</a>
+  <a class="sidebar-link" href="SYSTEM_OVERVIEW.html"><span class="dot"></span> System Overview</a>
+
+  <div class="sidebar-nav-label">Sections</div>
+  <a class="sidebar-link sidebar-sub" href="#s91"><span class="dot"></span>9.1 Philosophy</a>
+  <a class="sidebar-link sidebar-sub" href="#s92"><span class="dot"></span>9.2 Layer Model</a>
+  <a class="sidebar-link sidebar-sub" href="#s93"><span class="dot"></span>9.3 Modules</a>
+  <a class="sidebar-link sidebar-sub" href="#s94"><span class="dot"></span>9.4 Code Quality</a>
+  <a class="sidebar-link sidebar-sub" href="#s95"><span class="dot"></span>9.5 Portability</a>
+  <a class="sidebar-link sidebar-sub" href="#s96"><span class="dot"></span>9.6 Optimization</a>
+  <a class="sidebar-link sidebar-sub" href="#s97"><span class="dot"></span>9.7 Memory Map</a>
+  <a class="sidebar-link sidebar-sub" href="#s98"><span class="dot"></span>9.8 Testing</a>
+</nav>
+<div class="main-content">
+<section class="hero">
+  <div class="hero-eyebrow">Chapter 09 · Firmware Architecture</div>
+  <h1 class="hero-title">BMS Firmware Design<br>&amp; Architecture</h1>
+  <p class="hero-subtitle">Production-grade firmware patterns for STM32-based BMS — layered architecture, MISRA-C guidelines, 7 functional modules with C code, memory layout, and hardware-in-the-loop testing.</p>
+  <div class="hero-stats">
+    <div class="hero-stat"><span>9</span>Sections</div>
+    <div class="hero-stat"><span>7</span>FW Modules</div>
+    <div class="hero-stat"><span>30+</span>C Snippets</div>
+    <div class="hero-stat"><span>~40min</span>Read</div>
+  </div>
+</section>
+
+<section class="section reveal" id="s91">
+  <div class="section-eyebrow">Section 9.1</div>
+  <h2 class="section-title">Firmware Design Philosophy</h2>
+  <p class="section-intro">BMS firmware is safety-critical embedded software. Unlike an app or a web service, a firmware bug can destroy a battery pack, ignite a fire, or silently under-report SoC until a UPS fails on power cut. The design philosophy must reflect this reality.</p>
+
+  <h3 class="sub-title">Core Principles</h3>
+  <div class="card-grid">
+    <div class="card reveal">
+      <div class="card-label">Principle 01</div>
+      <div class="card-title">Safety First, Features Second</div>
+      <div class="card-body">Protection thresholds are hard-coded constants — never overwritten by CAN commands without authenticated write + watchdog confirmation. An attacker must not be able to raise OVP via a CAN frame.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">Principle 02</div>
+      <div class="card-title">Deterministic Execution</div>
+      <div class="card-body">No dynamic memory allocation (<code>malloc</code>/<code>free</code>) after init. No recursion in safety paths. All buffers are static. Execution time of every ISR and task must be bounded and measured.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">Principle 03</div>
+      <div class="card-title">Defensive Programming</div>
+      <div class="card-body">Assert every assumption. Validate every input. Check pointer != NULL before dereference. Range-check every sensor reading before using it in a decision. Return explicit error codes.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">Principle 04</div>
+      <div class="card-title">Fail-Safe Defaults</div>
+      <div class="card-body">On any undefined state or assert failure, open both DSG and CHG FETs, log the fault, and halt or reset. Never continue operating in an unknown state. The safe default is to disconnect the pack.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">Principle 05</div>
+      <div class="card-title">Minimal Trusted Core</div>
+      <div class="card-body">The protection loop (read → compare → trip FET) is implemented in &lt;100 lines of C with no dependencies. It runs in the fastest interrupt. Everything else is application-layer.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">Principle 06</div>
+      <div class="card-title">Observable System</div>
+      <div class="card-body">Every state change, fault event, and calibration write is logged with a 32-bit timestamp. The log is NVM-backed. Engineers must be able to reconstruct what happened from the log alone.</div>
+    </div>
+  </div>
+
+  <h3 class="sub-title">MISRA C:2012 — What It Actually Means</h3>
+  <p>MISRA C is a coding standard, not a programming language subset. It constrains dangerous C patterns to reduce undefined behaviour. For a safety-critical BMS these rules matter:</p>
+  <table>
+    <thead><tr><th>Rule</th><th>What it forbids</th><th>Why it matters</th></tr></thead>
+    <tbody>
+      <tr><td><code>Rule 1.3</code></td><td>Undefined behaviour (signed overflow, OOB array)</td><td>Signed overflow is UB in C — compilers may silently optimise it away</td></tr>
+      <tr><td><code>Rule 11.3</code></td><td>Pointer cast between object types</td><td>Aliasing violations cause data corruption on optimised builds</td></tr>
+      <tr><td><code>Rule 15.5</code></td><td>Single point of exit per function</td><td>Reduces missed cleanup, easier static analysis</td></tr>
+      <tr><td><code>Rule 17.2</code></td><td>Recursive function calls</td><td>Stack depth becomes unbounded and unanalysable</td></tr>
+      <tr><td><code>Rule 21.3</code></td><td><code>malloc</code> / <code>free</code></td><td>Heap fragmentation + non-deterministic timing</td></tr>
+      <tr><td><code>Rule 14.4</code></td><td>Non-boolean if/while condition</td><td>Prevents accidental <code>if(ptr)</code> instead of <code>if(ptr!=NULL)</code></td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-warn">
+    <div class="callout-title">⚡ Pragmatic Adoption</div>
+    <p>Full MISRA C compliance requires a commercial static analyser (LDRA, PC-lint, Polyspace). For a start-up or hobbyist BMS, adopt the most impactful rules: no malloc, no recursion, explicit types, single exit. Use <strong>cppcheck --enable=all</strong> for free partial coverage.</p>
+  </div>
+</section>
+
+
+<section class="section reveal" id="s92">
+  <div class="section-eyebrow">Section 9.2</div>
+  <h2 class="section-title">Layered Firmware Architecture</h2>
+  <p class="section-intro">A well-structured BMS firmware separates hardware-specific code from application logic. The 4-layer model ensures portability across STM32 variants and makes unit testing possible without real hardware.</p>
+
+  <h3 class="sub-title">The Four Layers</h3>
+  <div class="arch-layer layer-app reveal">
+    <div class="arch-layer-header">▲ Layer 4 · Application Layer</div>
+    <div class="arch-layer-body">
+      <strong>Files:</strong> app_bms.c, app_soc.c, app_balance.c, app_can.c, app_nvm.c<br>
+      <strong>Responsibility:</strong> BMS business logic — SoC algorithm, balancing decisions, CAN message encoding, fault manager, power state machine.<br>
+      <strong>Depends on:</strong> Middleware API only. Never calls HAL directly. No register addresses.
+    </div>
+  </div>
+  <div class="arch-layer layer-mid reveal">
+    <div class="arch-layer-header">▲ Layer 3 · Middleware / Services</div>
+    <div class="arch-layer-body">
+      <strong>Files:</strong> mw_filter.c, mw_coulomb.c, mw_event_log.c, mw_scheduler.c<br>
+      <strong>Responsibility:</strong> Algorithm implementations agnostic to hardware — IIR filters, Coulomb counter, circular event log, cooperative task scheduler.<br>
+      <strong>Depends on:</strong> Driver API. Can be unit-tested on host PC.
+    </div>
+  </div>
+  <div class="arch-layer layer-drv reveal">
+    <div class="arch-layer-header">▲ Layer 2 · Driver Layer</div>
+    <div class="arch-layer-body">
+      <strong>Files:</strong> drv_afe.c, drv_can.c, drv_flash.c, drv_temp.c<br>
+      <strong>Responsibility:</strong> Device-specific drivers for AFE (BQ76952), CAN peripheral, flash/EEPROM, NTC thermistors. Exposes clean C API; hides register details.<br>
+      <strong>Depends on:</strong> HAL API. Swappable per chip variant.
+    </div>
+  </div>
+  <div class="arch-layer layer-hal reveal">
+    <div class="arch-layer-header">▲ Layer 1 · HAL / BSP</div>
+    <div class="arch-layer-body">
+      <strong>Files:</strong> stm32g4xx_hal_*.c (vendor), bsp_init.c, bsp_gpio.c<br>
+      <strong>Responsibility:</strong> STM32 HAL (auto-generated by CubeMX), clock tree, pin assignments, peripheral init. Board Support Package maps logical names to physical pins.<br>
+      <strong>Depends on:</strong> Silicon vendor CMSIS. Never modified — regenerated by CubeMX.
+    </div>
+  </div>
+
+  <h3 class="sub-title">Startup &amp; Init Sequence</h3>
+  <pre><code>/* main.c — startup order matters */
+int main(void) {
+    HAL_Init();               /* SysTick @ 1 ms, NVIC defaults */
+    SystemClock_Config();     /* 170 MHz from PLL (STM32G474) */
+    BSP_GPIO_Init();          /* FET pins OUTPUT LOW (safe) */
+
+    DRV_AFE_Init();           /* BQ76952 I2C config, OVP/UVP set */
+    DRV_CAN_Init(250000U);    /* 250 kbps, filters 0x351-0x380 */
+    DRV_Flash_Init();         /* NVM partition verify + CRC */
+
+    MW_Scheduler_Init();      /* register tasks, periods */
+    MW_EventLog_Init();       /* restore NVM log head pointer */
+
+    APP_BMS_Init();           /* restore SoC, check wake reason */
+    APP_CAN_Init();           /* send 0x351 announcement frame */
+
+    MW_Scheduler_Run();       /* never returns */
+}</code></pre>
+
+  <div class="callout callout-info">
+    <div class="callout-title">ℹ️ Cooperative Scheduler vs RTOS</div>
+    <p>For &lt;16 cells, 1 MCU, a simple cooperative round-robin scheduler is sufficient and easier to certify than FreeRTOS. Use an RTOS only if you need preemption (e.g., &lt;1 ms protection response competing with 50 ms CAN frame assembly). The STM32G4 protection ISR runs independent of the scheduler anyway.</p>
+  </div>
+
+  <h3 class="sub-title">Task Table (Cooperative Scheduler)</h3>
+  <table>
+    <thead><tr><th>Task</th><th>Period</th><th>Priority</th><th>Typical runtime</th></tr></thead>
+    <tbody>
+      <tr><td>Protection ISR (OVP/UVP/OCP)</td><td>Hardware interrupt</td><td>Highest</td><td>&lt;10 µs</td></tr>
+      <tr><td>Cell voltage read (AFE)</td><td>100 ms</td><td>High</td><td>3–8 ms (I2C burst)</td></tr>
+      <tr><td>Temperature read (NTC ADC)</td><td>500 ms</td><td>Medium</td><td>~1 ms</td></tr>
+      <tr><td>Coulomb counter update</td><td>100 ms</td><td>High</td><td>&lt;50 µs (fixed-point)</td></tr>
+      <tr><td>SoC algorithm (Kalman/lookup)</td><td>1 s</td><td>Medium</td><td>&lt;200 µs</td></tr>
+      <tr><td>Balancing decision</td><td>5 s</td><td>Low</td><td>&lt;100 µs</td></tr>
+      <tr><td>CAN TX (0x351–0x355)</td><td>1 s</td><td>Medium</td><td>&lt;100 µs per frame</td></tr>
+      <tr><td>NVM write (event log)</td><td>On event</td><td>Low</td><td>1–5 ms (flash page)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+
+<section class="section reveal" id="s93">
+  <div class="section-eyebrow">Section 9.3</div>
+  <h2 class="section-title">Functional Module Implementations</h2>
+  <p class="section-intro">Each BMS firmware module has a well-defined API, owns its data, and exposes only what other layers need. Below are the 7 core modules with C code examples for the 16S1P reference design.</p>
+
+  <h3 class="sub-title">Module 01 · Measurement (drv_afe.c + app_meas.c)</h3>
+  <p>Reads cell voltages and temperatures from the BQ76952 via I2C, applies IIR smoothing, and stores in a shared data structure. All voltages stored as <code>uint16_t</code> in millivolts to avoid float.</p>
+  <pre><code>/* app_meas.h — public types */
+#define CELL_COUNT   16U
+#define TEMP_COUNT    3U   /* top / mid / bottom NTC */
+
+typedef struct {
+    uint16_t cell_mv[CELL_COUNT]; /* 2800–3650 mV */
+    int16_t  temp_dc[TEMP_COUNT]; /* deci-Celsius, -400..+850 */
+    uint16_t pack_mv;             /* sum of cells */
+    int32_t  current_ma;          /* signed: +charge, -discharge */
+    uint8_t  valid;               /* bitmask: bit0=volt, bit1=temp, bit2=curr */
+} BMS_Meas_t;
+
+extern BMS_Meas_t g_meas; /* single shared instance */</code></pre>
+
+  <pre><code>/* app_meas.c — measurement task (runs every 100 ms) */
+void APP_Meas_Task(void) {
+    uint16_t raw[CELL_COUNT];
+    int16_t  temps[TEMP_COUNT];
+
+    if (DRV_AFE_ReadVoltages(raw, CELL_COUNT) != HAL_OK) {
+        g_meas.valid &= ~0x01U;   /* invalidate voltage data */
+        APP_Fault_Set(FAULT_AFE_COMM);
+        return;
+    }
+
+    uint32_t sum = 0U;
+    for (uint8_t i = 0U; i < CELL_COUNT; i++) {
+        /* IIR filter: y = 0.8*y + 0.2*x  (fixed-point: *10 scale) */
+        g_meas.cell_mv[i] = (uint16_t)(
+            ((uint32_t)g_meas.cell_mv[i] * 8U + (uint32_t)raw[i] * 2U) / 10U
+        );
+        sum += g_meas.cell_mv[i];
+    }
+    g_meas.pack_mv = (uint16_t)(sum / 1U); /* store as mV (fits uint16_t for &lt;60V) */
+    g_meas.valid |= 0x01U;
+}</code></pre>
+
+  <div class="callout callout-success">
+    <div class="callout-title">✅ IIR Filter Coefficient Choice</div>
+    <p>0.8/0.2 (α=0.2) gives ~5 sample time constant. At 100 ms period that's ~500 ms settling. For UPS float voltage accuracy use α=0.05 (0.95/0.05) — slower but eliminates noise from load transients. Scale factor 10 keeps fixed-point error &lt;0.1 mV.</p>
+  </div>
+
+  <h3 class="sub-title">Module 02 · Protection (app_protect.c)</h3>
+  <p>The protection module is the most critical path. It compares measurements against thresholds and trips the appropriate FET. It must run fast and have no dependencies beyond the measurement struct.</p>
+  <pre><code>/* app_protect.h */
+typedef enum {
+    PROT_NONE   = 0x00,
+    PROT_OVP    = 0x01,  /* over-voltage */
+    PROT_UVP    = 0x02,  /* under-voltage */
+    PROT_OCP_D  = 0x04,  /* over-current discharge */
+    PROT_OCP_C  = 0x08,  /* over-current charge */
+    PROT_OTP    = 0x10,  /* over-temperature */
+    PROT_UTP    = 0x20,  /* under-temperature charge */
+    PROT_SCP    = 0x40,  /* short-circuit */
+} Prot_Fault_t;
+
+/* Thresholds — hard-coded, not RAM-configurable */
+#define OVP_MV        3650U   /* per cell */
+#define UVP_MV        2800U
+#define OVP_HYST_MV     50U   /* re-engage after OVP-hyst */
+#define OCP_D_MA      50000L  /* 50 A discharge */
+#define OCP_C_MA      30000L  /* 30 A charge */
+#define OTP_DC          550   /* 55.0 °C */
+#define UTP_CHARGE_DC  (-50)  /* -5.0 °C, disable charge only */</code></pre>
+
+  <pre><code>/* app_protect.c */
+static Prot_Fault_t s_active = PROT_NONE;
+
+void APP_Protect_Task(void) {
+    if ((g_meas.valid & 0x01U) == 0U) { return; } /* no valid data */
+
+    Prot_Fault_t new_fault = PROT_NONE;
+
+    /* --- Voltage checks --- */
+    for (uint8_t i = 0U; i < CELL_COUNT; i++) {
+        if (g_meas.cell_mv[i] > OVP_MV)  { new_fault |= PROT_OVP; break; }
+        if (g_meas.cell_mv[i] < UVP_MV)  { new_fault |= PROT_UVP; break; }
+    }
+
+    /* --- Current checks --- */
+    if (g_meas.current_ma >  (int32_t)OCP_C_MA) { new_fault |= PROT_OCP_C; }
+    if (g_meas.current_ma < -(int32_t)OCP_D_MA) { new_fault |= PROT_OCP_D; }
+
+    /* --- Temperature checks --- */
+    for (uint8_t j = 0U; j < TEMP_COUNT; j++) {
+        if (g_meas.temp_dc[j] > OTP_DC)        { new_fault |= PROT_OTP; }
+        if (g_meas.temp_dc[j] < UTP_CHARGE_DC) { new_fault |= PROT_UTP; }
+    }
+
+    /* Trip / clear FETs */
+    if (new_fault != s_active) {
+        s_active = new_fault;
+        BSP_FET_SetDSG((new_fault & (PROT_UVP|PROT_OCP_D|PROT_OTP|PROT_SCP)) == 0U);
+        BSP_FET_SetCHG((new_fault & (PROT_OVP|PROT_OCP_C|PROT_UTP))          == 0U);
+        APP_EventLog_Write(EVT_PROT_CHANGE, (uint32_t)new_fault);
+    }
+}</code></pre>
+</section>
+
+
+<!-- 9.3 continued: SoC + Balancing modules -->
+<section class="section reveal" id="s93b">
+  <h3 class="sub-title">Module 03 · State-of-Charge (app_soc.c)</h3>
+  <p>SoC is estimated using a hybrid of Coulomb Counting (CC) and OCV-lookup, with periodic re-anchoring when the pack is at rest. The CC accumulator uses 64-bit integer arithmetic to avoid drift over long periods.</p>
+  <pre><code>/* app_soc.h */
+#define SOC_SCALE    1000U  /* internal: 0–1000 = 0.0–100.0 % */
+
+typedef struct {
+    uint16_t soc_ppt;       /* parts-per-thousand, 0–1000 */
+    int64_t  cc_uah;        /* coulomb counter in µAh */
+    uint8_t  anchored;      /* 1 = last CC anchor is valid */
+    uint32_t anchor_ts;     /* HAL_GetTick() at last anchor */
+} SoC_State_t;
+
+extern SoC_State_t g_soc;</code></pre>
+
+  <pre><code>/* app_soc.c — Coulomb counter update (100 ms period) */
+#define CC_PERIOD_MS   100U
+#define CAPACITY_UAH   (280000000LL)  /* 280 Ah = 280,000,000 µAh */
+
+void APP_SoC_CoulombUpdate(void) {
+    /* current_ma is signed: +charge, -discharge */
+    /* µAh += mA * 100ms / 3600s  =>  µAh += mA * 100 / 3600 */
+    int64_t delta_uah = ((int64_t)g_meas.current_ma * CC_PERIOD_MS) / 3600LL;
+    g_soc.cc_uah += delta_uah;
+
+    /* Clamp to physical limits */
+    if (g_soc.cc_uah > CAPACITY_UAH)  { g_soc.cc_uah = CAPACITY_UAH; }
+    if (g_soc.cc_uah < 0LL)           { g_soc.cc_uah = 0LL; }
+
+    g_soc.soc_ppt = (uint16_t)((g_soc.cc_uah * SOC_SCALE) / CAPACITY_UAH);
+}</code></pre>
+
+  <pre><code>/* OCV re-anchor: called when |current| &lt; 500 mA for 30 s */
+/* LFP OCV lookup: 8 breakpoints (mV vs SoC ppt) */
+static const uint16_t ocv_mv[8]   = {2800,3100,3200,3280,3320,3340,3380,3400};
+static const uint16_t ocv_soc[8]  = {   0,  50, 100, 200, 400, 600, 850,1000};
+
+static uint16_t OCV_Lookup(uint16_t mv) {
+    if (mv &lt;= ocv_mv[0]) { return ocv_soc[0]; }
+    if (mv >= ocv_mv[7]) { return ocv_soc[7]; }
+    for (uint8_t i = 1U; i &lt; 8U; i++) {
+        if (mv &lt;= ocv_mv[i]) {
+            /* linear interpolation (fixed-point) */
+            uint16_t range_mv  = ocv_mv[i]  - ocv_mv[i-1U];
+            uint16_t range_soc = ocv_soc[i] - ocv_soc[i-1U];
+            uint16_t offset    = mv - ocv_mv[i-1U];
+            return ocv_soc[i-1U] + (uint16_t)((uint32_t)offset * range_soc / range_mv);
+        }
+    }
+    return 0U; /* unreachable */
+}
+
+void APP_SoC_AnchorOCV(void) {
+    /* Use median cell voltage for flat OCV curve region */
+    uint16_t mid_mv = g_meas.cell_mv[CELL_COUNT / 2U];
+    uint16_t soc_from_ocv = OCV_Lookup(mid_mv);
+    /* Re-anchor CC accumulator */
+    g_soc.cc_uah    = ((int64_t)soc_from_ocv * CAPACITY_UAH) / SOC_SCALE;
+    g_soc.anchored  = 1U;
+    g_soc.anchor_ts = HAL_GetTick();
+    APP_EventLog_Write(EVT_SOC_ANCHOR, (uint32_t)soc_from_ocv);
+}</code></pre>
+
+  <h3 class="sub-title">Module 04 · Balancing (app_balance.c)</h3>
+  <p>Passive top balancing: enable the bleed resistor FET for cells above average voltage. Only runs when pack voltage is above 90% SoC to avoid wasting energy at low SoC.</p>
+  <pre><code>/* app_balance.c — passive balancing decision (5 s period) */
+#define BAL_ENABLE_SOC_PPT   900U   /* only balance above 90% */
+#define BAL_DELTA_MV          10U   /* start balancing if Vcell &gt; Vavg + 10 mV */
+
+void APP_Balance_Task(void) {
+    if (g_soc.soc_ppt &lt; BAL_ENABLE_SOC_PPT) {
+        DRV_AFE_SetBalance(0x0000U); /* all off */
+        return;
+    }
+
+    /* Compute average voltage */
+    uint32_t sum = 0U;
+    for (uint8_t i = 0U; i &lt; CELL_COUNT; i++) { sum += g_meas.cell_mv[i]; }
+    uint16_t avg_mv = (uint16_t)(sum / CELL_COUNT);
+
+    /* Build bitmask of cells to balance */
+    uint16_t bal_mask = 0U;
+    for (uint8_t i = 0U; i &lt; CELL_COUNT; i++) {
+        if (g_meas.cell_mv[i] > (uint16_t)(avg_mv + BAL_DELTA_MV)) {
+            bal_mask |= (uint16_t)(1U &lt;&lt; i);
+        }
+    }
+    DRV_AFE_SetBalance(bal_mask);
+}</code></pre>
+
+  <div class="callout callout-warn">
+    <div class="callout-title">⚡ Temperature Gate</div>
+    <p>Always gate balancing on temperature. If any NTC reads &gt;45 °C, disable all balance FETs — the bleed resistors add heat. This is especially important in a sealed UPS enclosure where convection is limited.</p>
+  </div>
+</section>
+
+
+<!-- 9.3 continued: CAN + NVM + Event Logger -->
+<section class="section reveal" id="s93c">
+  <h3 class="sub-title">Module 05 · CAN Communication (app_can.c)</h3>
+  <p>The CAN module assembles PYLON-compatible frames and transmits them every 1 second. It also handles incoming charge voltage/current setpoints from the inverter (0x356 / 0x35C).</p>
+  <pre><code>/* PYLON message set — 0x351 through 0x355 */
+/* 0x351: Charge voltage limit + current limit */
+void CAN_TX_0x351(void) {
+    uint8_t data[8] = {0};
+    uint16_t cv_limit = (uint16_t)(OVP_MV * CELL_COUNT); /* pack CV limit in 100mV */
+    uint16_t ci_limit = (uint16_t)(OCP_C_MA / 100U);     /* 0.1 A per bit */
+    uint16_t di_limit = (uint16_t)(OCP_D_MA / 100U);
+
+    data[0] = (uint8_t)(cv_limit & 0xFFU);
+    data[1] = (uint8_t)(cv_limit >> 8);
+    data[2] = (uint8_t)(ci_limit & 0xFFU);
+    data[3] = (uint8_t)(ci_limit >> 8);
+    data[4] = (uint8_t)(di_limit & 0xFFU);
+    data[5] = (uint8_t)(di_limit >> 8);
+    /* data[6..7] = discharge voltage minimum */
+    data[6] = (uint8_t)((UVP_MV * CELL_COUNT / 100U) & 0xFFU);
+    data[7] = (uint8_t)((UVP_MV * CELL_COUNT / 100U) >> 8);
+
+    DRV_CAN_Transmit(0x351U, data, 8U);
+}
+
+/* 0x355: SoC % and SoH % */
+void CAN_TX_0x355(void) {
+    uint8_t data[8] = {0};
+    data[0] = (uint8_t)(g_soc.soc_ppt / 10U);   /* 0–100% */
+    data[1] = 0U;
+    data[2] = 100U;  /* SoH fixed 100 (no degradation model yet) */
+    data[3] = 0U;
+    DRV_CAN_Transmit(0x355U, data, 8U);
+}
+
+/* 0x356: Pack voltage, current, temperature */
+void CAN_TX_0x356(void) {
+    uint8_t data[8] = {0};
+    int16_t pv = (int16_t)(g_meas.pack_mv / 10U);   /* 0.01V/bit */
+    int16_t pc = (int16_t)(g_meas.current_ma / 100L); /* 0.1A/bit, signed */
+    int16_t pt = g_meas.temp_dc[1];                   /* mid NTC */
+    data[0]=(uint8_t)(pv & 0xFF); data[1]=(uint8_t)(pv>>8);
+    data[2]=(uint8_t)(pc & 0xFF); data[3]=(uint8_t)(pc>>8);
+    data[4]=(uint8_t)(pt & 0xFF); data[5]=(uint8_t)(pt>>8);
+    DRV_CAN_Transmit(0x356U, data, 8U);
+}</code></pre>
+
+  <h3 class="sub-title">Module 06 · NVM / Flash (drv_flash.c)</h3>
+  <p>Persistent storage uses an emulated EEPROM approach with two flash pages (ping-pong). Critical data: SoC anchor, event log, calibration. Never store protection thresholds in NVM — hardcode them.</p>
+  <pre><code>/* drv_flash.h — NVM partition layout */
+/* STM32G474 internal flash: 512 KB, pages 63+64 reserved for NVM */
+#define NVM_PAGE_A      63U
+#define NVM_PAGE_B      64U
+#define NVM_PAGE_SIZE   2048U   /* bytes, STM32G4 */
+
+typedef struct __attribute__((packed)) {
+    uint32_t magic;          /* 0xBEEF1234 — valid marker */
+    uint32_t seq;            /* write sequence counter */
+    int64_t  cc_uah;         /* SoC Coulomb counter */
+    uint16_t soc_ppt;        /* last known SoC */
+    uint32_t cycle_count;    /* full cycles since manufacture */
+    uint32_t crc32;          /* CRC of bytes [0..N-5] */
+} NVM_Data_t;                /* 28 bytes */
+
+HAL_StatusTypeDef DRV_Flash_WriteNVM(const NVM_Data_t *d);
+HAL_StatusTypeDef DRV_Flash_ReadNVM(NVM_Data_t *d);</code></pre>
+
+  <h3 class="sub-title">Module 07 · Event Logger (mw_event_log.c)</h3>
+  <p>A circular log of 128 events stored in NVM. Each event has a type, 32-bit data, and millisecond timestamp. Critical for post-mortem fault analysis.</p>
+  <pre><code>/* mw_event_log.h */
+typedef enum {
+    EVT_POWER_ON      = 0x01,
+    EVT_POWER_OFF     = 0x02,
+    EVT_PROT_CHANGE   = 0x10,  /* data = fault bitmask */
+    EVT_SOC_ANCHOR    = 0x20,  /* data = new SoC ppt */
+    EVT_OVER_TEMP     = 0x30,  /* data = temp_dc */
+    EVT_CAN_TIMEOUT   = 0x40,
+    EVT_NVM_ERROR     = 0x50,
+    EVT_WATCHDOG_RST  = 0x60,
+} EventType_t;
+
+typedef struct __attribute__((packed)) {
+    uint8_t  type;       /* EventType_t */
+    uint32_t ts_ms;      /* HAL_GetTick() */
+    uint32_t data;       /* event-specific payload */
+} Event_t;              /* 9 bytes */
+
+#define EVT_LOG_SIZE   128U
+void MW_EventLog_Write(EventType_t type, uint32_t data);
+Event_t *MW_EventLog_GetLatest(uint8_t n);</code></pre>
+
+  <pre><code>/* mw_event_log.c */
+static Event_t s_log[EVT_LOG_SIZE];
+static uint8_t s_head = 0U;
+
+void MW_EventLog_Write(EventType_t type, uint32_t data) {
+    s_log[s_head].type  = (uint8_t)type;
+    s_log[s_head].ts_ms = HAL_GetTick();
+    s_log[s_head].data  = data;
+    s_head = (uint8_t)((s_head + 1U) % EVT_LOG_SIZE);
+    /* Flush to NVM every 8 events to reduce flash writes */
+    if ((s_head % 8U) == 0U) { DRV_Flash_FlushEventLog(s_log, EVT_LOG_SIZE); }
+}</code></pre>
+
+  <div class="callout callout-info">
+    <div class="callout-title">ℹ️ Flash Endurance</div>
+    <p>STM32 internal flash: 10,000 erase cycles. At 8 events per flush and 1 event per second worst case, that's 10,000 × 2048 bytes / (9 bytes × 8) ≈ 284,000 seconds ≈ 3.3 years of worst-case logging before endurance limit. Use ping-pong pages to double effective life.</p>
+  </div>
+</section>
+
+
+
+<!-- Protection State Machine — inserted before Section 9.4 -->
+<section class="section reveal" id="s93-sm">
+  <div class="section-eyebrow">Section 9.3 · Addendum</div>
+  <h2 class="section-title">Protection State Machine</h2>
+  <p class="section-intro">Every BMS protection module implements an implicit state machine. Understanding the state transitions prevents common bugs — like re-enabling FETs before the fault condition has actually cleared.</p>
+
+  <!-- Animated state machine SVG -->
+  <svg id="sm-svg" viewBox="0 0 760 320" style="width:100%;max-width:760px;height:auto;margin:1.5rem 0;display:block;">
+    <defs>
+      <marker id="sm-arrow" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
+        <path d="M0,0 L7,3.5 L0,7 Z" fill="rgba(0,255,136,0.7)"/>
+      </marker>
+      <marker id="sm-arrow-r" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
+        <path d="M0,0 L7,3.5 L0,7 Z" fill="rgba(255,45,85,0.7)"/>
+      </marker>
+      <filter id="sm-glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    </defs>
+    <rect width="760" height="320" fill="rgba(0,0,0,0.35)" rx="8"/>
+
+    <!-- NORMAL state -->
+    <rect x="30" y="120" width="120" height="70" rx="6" fill="rgba(0,255,136,0.1)" stroke="rgba(0,255,136,0.6)" stroke-width="2" id="sm-normal"/>
+    <text x="90" y="150" fill="#00FF88" font-family="Orbitron,sans-serif" font-size="10" text-anchor="middle" font-weight="700">NORMAL</text>
+    <text x="90" y="166" fill="rgba(0,255,136,0.6)" font-family="JetBrains Mono,monospace" font-size="8" text-anchor="middle">DSG=ON</text>
+    <text x="90" y="178" fill="rgba(0,255,136,0.6)" font-family="JetBrains Mono,monospace" font-size="8" text-anchor="middle">CHG=ON</text>
+
+    <!-- WARNING state -->
+    <rect x="220" y="50" width="130" height="70" rx="6" fill="rgba(255,200,87,0.1)" stroke="rgba(255,200,87,0.6)" stroke-width="2" id="sm-warn"/>
+    <text x="285" y="80" fill="#FFC857" font-family="Orbitron,sans-serif" font-size="10" text-anchor="middle" font-weight="700">WARNING</text>
+    <text x="285" y="96" fill="rgba(255,200,87,0.6)" font-family="JetBrains Mono,monospace" font-size="8" text-anchor="middle">DSG=ON</text>
+    <text x="285" y="108" fill="rgba(255,200,87,0.6)" font-family="JetBrains Mono,monospace" font-size="8" text-anchor="middle">CHG=ON*derate</text>
+
+    <!-- OVP TRIP state -->
+    <rect x="430" y="30" width="130" height="70" rx="6" fill="rgba(255,45,85,0.1)" stroke="rgba(255,45,85,0.6)" stroke-width="2"/>
+    <text x="495" y="58" fill="#FF2D55" font-family="Orbitron,sans-serif" font-size="9" text-anchor="middle" font-weight="700">OVP TRIP</text>
+    <text x="495" y="74" fill="rgba(255,45,85,0.6)" font-family="JetBrains Mono,monospace" font-size="8" text-anchor="middle">DSG=ON</text>
+    <text x="495" y="86" fill="rgba(255,45,85,0.6)" font-family="JetBrains Mono,monospace" font-size="8" text-anchor="middle">CHG=OFF</text>
+
+    <!-- UVP/OCP TRIP state -->
+    <rect x="430" y="120" width="130" height="70" rx="6" fill="rgba(255,45,85,0.1)" stroke="rgba(255,45,85,0.6)" stroke-width="2"/>
+    <text x="495" y="148" fill="#FF2D55" font-family="Orbitron,sans-serif" font-size="9" text-anchor="middle" font-weight="700">DSG TRIP</text>
+    <text x="495" y="164" fill="rgba(255,45,85,0.6)" font-family="JetBrains Mono,monospace" font-size="8" text-anchor="middle">DSG=OFF</text>
+    <text x="495" y="176" fill="rgba(255,45,85,0.6)" font-family="JetBrains Mono,monospace" font-size="8" text-anchor="middle">CHG=ON (recovery)</text>
+
+    <!-- FAULT state -->
+    <rect x="430" y="210" width="130" height="70" rx="6" fill="rgba(191,90,242,0.1)" stroke="rgba(191,90,242,0.6)" stroke-width="2"/>
+    <text x="495" y="238" fill="#BF5AF2" font-family="Orbitron,sans-serif" font-size="9" text-anchor="middle" font-weight="700">HARD FAULT</text>
+    <text x="495" y="254" fill="rgba(191,90,242,0.6)" font-family="JetBrains Mono,monospace" font-size="8" text-anchor="middle">DSG=OFF</text>
+    <text x="495" y="266" fill="rgba(191,90,242,0.6)" font-family="JetBrains Mono,monospace" font-size="8" text-anchor="middle">CHG=OFF</text>
+
+    <!-- RECOVERY state -->
+    <rect x="220" y="200" width="130" height="70" rx="6" fill="rgba(10,132,255,0.1)" stroke="rgba(10,132,255,0.6)" stroke-width="2"/>
+    <text x="285" y="228" fill="#0A84FF" font-family="Orbitron,sans-serif" font-size="10" text-anchor="middle" font-weight="700">RECOVERY</text>
+    <text x="285" y="244" fill="rgba(10,132,255,0.6)" font-family="JetBrains Mono,monospace" font-size="8" text-anchor="middle">Checking clear</text>
+    <text x="285" y="256" fill="rgba(10,132,255,0.6)" font-family="JetBrains Mono,monospace" font-size="8" text-anchor="middle">30s timeout</text>
+
+    <!-- Transitions: NORMAL → WARNING -->
+    <line x1="150" y1="140" x2="218" y2="110" stroke="rgba(255,200,87,0.6)" stroke-width="1.5" marker-end="url(#sm-arrow)">
+      <animate attributeName="stroke-opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/>
+    </line>
+    <text x="170" y="118" fill="rgba(255,200,87,0.6)" font-family="JetBrains Mono,monospace" font-size="7.5">V&gt;3.6V</text>
+
+    <!-- WARNING → OVP TRIP -->
+    <line x1="350" y1="75" x2="428" y2="70" stroke="rgba(255,45,85,0.6)" stroke-width="1.5" marker-end="url(#sm-arrow-r)">
+      <animate attributeName="stroke-opacity" values="0.3;1;0.3" dur="2.5s" repeatCount="indefinite"/>
+    </line>
+    <text x="362" y="65" fill="rgba(255,45,85,0.6)" font-family="JetBrains Mono,monospace" font-size="7.5">V&gt;3.65V</text>
+
+    <!-- NORMAL → DSG TRIP -->
+    <line x1="150" y1="160" x2="428" y2="160" stroke="rgba(255,45,85,0.6)" stroke-width="1.5" marker-end="url(#sm-arrow-r)">
+      <animate attributeName="stroke-opacity" values="0.2;0.9;0.2" dur="1.8s" repeatCount="indefinite"/>
+    </line>
+    <text x="260" y="155" fill="rgba(255,45,85,0.6)" font-family="JetBrains Mono,monospace" font-size="7.5">UVP or OCP</text>
+
+    <!-- NORMAL → HARD FAULT (SCP) -->
+    <line x1="90" y1="190" x2="90" y2="280" stroke="rgba(191,90,242,0.5)" stroke-width="1.5"/>
+    <line x1="90" y1="280" x2="428" y2="248" stroke="rgba(191,90,242,0.5)" stroke-width="1.5" marker-end="url(#sm-arrow)">
+      <animate attributeName="stroke-opacity" values="0.2;0.8;0.2" dur="1.5s" repeatCount="indefinite"/>
+    </line>
+    <text x="96" y="260" fill="rgba(191,90,242,0.6)" font-family="JetBrains Mono,monospace" font-size="7.5">SCP/OTP</text>
+
+    <!-- OVP TRIP → RECOVERY -->
+    <line x1="495" y1="100" x2="495" y2="115" stroke="rgba(10,132,255,0.5)" stroke-width="1.5"/>
+    <line x1="350" y1="235" x2="428" y2="235" stroke="rgba(255,45,85,0.4)" stroke-width="1" stroke-dasharray="4,3"/>
+    <line x1="430" y1="120" x2="353" y2="228" stroke="rgba(10,132,255,0.5)" stroke-width="1.5" marker-end="url(#sm-arrow)"/>
+    <text x="370" y="178" fill="rgba(10,132,255,0.6)" font-family="JetBrains Mono,monospace" font-size="7.5">Fault clear</text>
+
+    <!-- RECOVERY → NORMAL -->
+    <line x1="220" y1="240" x2="150" y2="175" stroke="rgba(0,255,136,0.5)" stroke-width="1.5" marker-end="url(#sm-arrow)">
+      <animate attributeName="stroke-opacity" values="0.2;1;0.2" dur="3s" repeatCount="indefinite"/>
+    </line>
+    <text x="148" y="218" fill="rgba(0,255,136,0.6)" font-family="JetBrains Mono,monospace" font-size="7.5">Hysteresis OK</text>
+
+    <!-- HARD FAULT → RECOVERY (manual reset only) -->
+    <line x1="430" y1="252" x2="352" y2="252" stroke="rgba(10,132,255,0.4)" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#sm-arrow)"/>
+    <text x="355" y="270" fill="rgba(10,132,255,0.5)" font-family="JetBrains Mono,monospace" font-size="7.5">Manual reset</text>
+
+    <!-- Animated current state indicator -->
+    <circle cx="90" cy="155" r="5" fill="rgba(0,255,136,0.8)" filter="url(#sm-glow)">
+      <animate attributeName="opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite"/>
+    </circle>
+  </svg>
+
+  <h3 class="sub">C Implementation: State Machine Core</h3>
+  <pre><code>/* app_prot_sm.h — Protection State Machine */
+typedef enum {
+    PROT_STATE_NORMAL   = 0,
+    PROT_STATE_WARN     = 1,   /* pre-fault: derate output */
+    PROT_STATE_OVP      = 2,   /* CHG FET open */
+    PROT_STATE_DSG_TRIP = 3,   /* DSG FET open */
+    PROT_STATE_HARD     = 4,   /* both FETs open, manual reset needed */
+    PROT_STATE_RECOVERY = 5,   /* checking if fault cleared */
+} ProtState_t;
+
+/* Hysteresis: must be clear for N consecutive ticks before recovery */
+#define PROT_CLEAR_TICKS   30U   /* 30 × 100ms = 3 seconds */</code></pre>
+
+  <pre><code>/* State machine tick — called every 100ms */
+static ProtState_t s_state = PROT_STATE_NORMAL;
+static uint8_t s_clear_count = 0U;
+
+void APP_ProtSM_Tick(void) {
+    Prot_Fault_t f = APP_Protect_GetActive();
+
+    switch (s_state) {
+    case PROT_STATE_NORMAL:
+        if (f & PROT_SCP) { s_state = PROT_STATE_HARD; s_clear_count=0; break; }
+        if (f & PROT_OTP) { s_state = PROT_STATE_HARD; s_clear_count=0; break; }
+        if (f & (PROT_UVP|PROT_OCP_D)) { s_state = PROT_STATE_DSG_TRIP; s_clear_count=0; break; }
+        if (f & (PROT_OVP|PROT_OCP_C)) { s_state = PROT_STATE_OVP;      s_clear_count=0; break; }
+        if (g_meas.cell_mv[APP_MaxCellIdx()] > WARN_OVP_MV) { s_state = PROT_STATE_WARN; }
+        break;
+
+    case PROT_STATE_WARN:
+        if (f) { s_state = (f & PROT_SCP) ? PROT_STATE_HARD : PROT_STATE_OVP; break; }
+        if (g_meas.cell_mv[APP_MaxCellIdx()] < (WARN_OVP_MV - 20U)) { s_state = PROT_STATE_NORMAL; }
+        break;
+
+    case PROT_STATE_OVP:
+    case PROT_STATE_DSG_TRIP:
+        if (!f) { s_clear_count++;
+            if (s_clear_count >= PROT_CLEAR_TICKS) { s_state = PROT_STATE_RECOVERY; s_clear_count=0; }
+        } else { s_clear_count = 0U; }
+        break;
+
+    case PROT_STATE_RECOVERY:
+        if (f) { s_state = PROT_STATE_DSG_TRIP; s_clear_count=0; break; }
+        s_clear_count++;
+        if (s_clear_count >= 5U) { s_state = PROT_STATE_NORMAL; s_clear_count=0;
+            APP_EventLog_Write(EVT_PROT_RECOVERY, 0); }
+        break;
+
+    case PROT_STATE_HARD:
+        /* Only exits via manual reset or watchdog reboot */
+        BSP_FET_SetDSG(false); BSP_FET_SetCHG(false);
+        break;
+    }
+    APP_ProtSM_ApplyFETs();
+}</code></pre>
+
+  <div class="callout callout-warn">
+    <div class="callout-title">⚡ Hysteresis Is Non-Optional</div>
+    <p>Without hysteresis on the recovery path, a FET will chatter: trip → clear → re-enable → trip → clear, potentially hundreds of times per second. This stresses the MOSFET, generates RF interference, and destroys gate driver lifetime. The 3-second clear window above is the minimum; use 10s for SCP recovery.</p>
+  </div>
+</section>
+<section class="section reveal" id="s94">
+  <div class="section-eyebrow">Section 9.4</div>
+  <h2 class="section-title">Code Quality Guidelines</h2>
+  <p class="section-intro">Production BMS firmware must be readable, auditable, and testable. These guidelines encode lessons learned from safety-critical embedded projects.</p>
+
+  <h3 class="sub-title">Naming Conventions</h3>
+  <table>
+    <thead><tr><th>Item</th><th>Convention</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td>Global variable</td><td><code>g_</code> prefix + snake_case</td><td><code>g_meas</code>, <code>g_soc</code></td></tr>
+      <tr><td>Static module var</td><td><code>s_</code> prefix</td><td><code>s_active</code>, <code>s_head</code></td></tr>
+      <tr><td>Function</td><td>Module_Verb_Noun (PascalCase)</td><td><code>APP_Meas_Task</code>, <code>DRV_AFE_Init</code></td></tr>
+      <tr><td>Constant / macro</td><td>ALL_CAPS</td><td><code>OVP_MV</code>, <code>CELL_COUNT</code></td></tr>
+      <tr><td>Type</td><td>PascalCase + _t suffix</td><td><code>BMS_Meas_t</code>, <code>Prot_Fault_t</code></td></tr>
+      <tr><td>Enum member</td><td>ALL_CAPS with module prefix</td><td><code>PROT_OVP</code>, <code>EVT_POWER_ON</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3 class="sub-title">Type Safety Rules</h3>
+  <div class="card-grid">
+    <div class="card reveal">
+      <div class="card-label">Rule T1</div>
+      <div class="card-title">Use &lt;stdint.h&gt; fixed-width types</div>
+      <div class="card-body">Never use <code>int</code>, <code>long</code>, or <code>char</code> for data. Always <code>uint8_t</code>, <code>int16_t</code>, <code>uint32_t</code>, etc. Width and signedness are explicit.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">Rule T2</div>
+      <div class="card-title">Explicit casts at boundaries</div>
+      <div class="card-body">When narrowing (e.g., <code>uint32_t</code> → <code>uint16_t</code>) always add an explicit cast <em>and</em> a range check or assert before the cast.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">Rule T3</div>
+      <div class="card-title">Bitmasks with U suffix</div>
+      <div class="card-body">All integer literals used as bitmasks must have <code>U</code> suffix: <code>0x01U</code>, <code>(1U &lt;&lt; 3)</code>. Prevents sign-extension surprises.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">Rule T4</div>
+      <div class="card-title">Boolean-returning functions</div>
+      <div class="card-body">Use <code>bool</code> from <code>&lt;stdbool.h&gt;</code> for predicate functions. Never return 1/0 as int and compare with == 1.</div>
+    </div>
+  </div>
+
+  <h3 class="sub-title">Function Design Rules</h3>
+  <pre><code>/* GOOD: single responsibility, explicit error return, no side effects on error */
+HAL_StatusTypeDef DRV_AFE_ReadVoltages(uint16_t *out, uint8_t count) {
+    if (out == NULL)    { return HAL_ERROR; }  /* guard: null pointer */
+    if (count == 0U)    { return HAL_ERROR; }  /* guard: zero count */
+    if (count > 16U)    { return HAL_ERROR; }  /* guard: over spec */
+
+    /* ... I2C burst read ... */
+    return HAL_OK;
+}
+
+/* BAD: modifies globals on error path, no return value, magic numbers */
+void read_voltages(void) {
+    for (int i=0; i&lt;16; i++) {
+        cells[i] = AFE_Read(i);  /* no error check */
+    }
+}</code></pre>
+
+  <div class="callout callout-success">
+    <div class="callout-title">✅ Static Analysis Tools</div>
+    <p><strong>cppcheck</strong> — free, catches null-deref, uninitialised vars, array OOB. Run in CI.<br>
+    <strong>PC-lint / Flexelint</strong> — commercial, full MISRA coverage.<br>
+    <strong>Polyspace</strong> — formal verification, required for IEC 62133 / ISO 26262 paths.<br>
+    For a BMS start-up: cppcheck + clang-tidy covers 80% of common bugs for free.</p>
+  </div>
+</section>
+
+
+<section class="section reveal" id="s95">
+  <div class="section-eyebrow">Section 9.5</div>
+  <h2 class="section-title">Portability &amp; Generic Code Patterns</h2>
+  <p class="section-intro">Hardware independence allows the same BMS firmware to run on STM32F103, STM32G474, or a PC-based HIL simulator. The key is separating the <em>what</em> (application logic) from the <em>how</em> (hardware access).</p>
+
+  <h3 class="sub-title">HAL Abstraction Pattern</h3>
+  <p>Define a hardware abstraction interface in a header. Provide two implementations: one using STM32 HAL, one using mocked functions for unit tests on a host PC.</p>
+  <pre><code>/* bsp_hal.h — hardware abstraction interface */
+#ifndef BSP_HAL_H
+#define BSP_HAL_H
+
+#include &lt;stdint.h&gt;
+#include &lt;stdbool.h&gt;
+
+/* Time */
+uint32_t BSP_GetTickMs(void);
+void     BSP_DelayMs(uint32_t ms);
+
+/* FET control */
+void     BSP_FET_SetDSG(bool enable);
+void     BSP_FET_SetCHG(bool enable);
+bool     BSP_FET_GetDSG(void);
+
+/* I2C (AFE) */
+int32_t  BSP_I2C_Write(uint8_t addr, uint8_t reg, const uint8_t *buf, uint8_t len);
+int32_t  BSP_I2C_Read (uint8_t addr, uint8_t reg, uint8_t *buf, uint8_t len);
+
+/* SPI (optional: LTC6813) */
+int32_t  BSP_SPI_Transfer(const uint8_t *tx, uint8_t *rx, uint16_t len);
+
+/* CAN */
+int32_t  BSP_CAN_Send(uint32_t id, const uint8_t *data, uint8_t dlc);
+int32_t  BSP_CAN_Recv(uint32_t *id, uint8_t *data, uint8_t *dlc);
+
+#endif</code></pre>
+
+  <pre><code>/* bsp_hal_stm32.c — real STM32G4 implementation */
+#include "bsp_hal.h"
+#include "stm32g4xx_hal.h"
+
+uint32_t BSP_GetTickMs(void) { return HAL_GetTick(); }
+void     BSP_DelayMs(uint32_t ms) { HAL_Delay(ms); }
+
+void BSP_FET_SetDSG(bool en) {
+    HAL_GPIO_WritePin(DSG_GPIO_Port, DSG_Pin, en ? GPIO_PIN_SET : GPIO_PIN_RESET);
+}
+
+/* --- bsp_hal_mock.c — host PC test stub --- */
+static bool s_dsg = false;
+void BSP_FET_SetDSG(bool en) { s_dsg = en; }
+bool BSP_FET_GetDSG(void)    { return s_dsg; }</code></pre>
+
+  <h3 class="sub-title">Configuration via Compile-Time Constants</h3>
+  <p>Hardware parameters differ per board revision. Keep them in a single <code>bms_config.h</code> rather than scattered through source files.</p>
+  <pre><code>/* bms_config.h — single source of truth for this board */
+#ifndef BMS_CONFIG_H
+#define BMS_CONFIG_H
+
+/* Pack topology */
+#define CFG_CELL_COUNT          16U
+#define CFG_PARALLEL_STRINGS     1U
+#define CFG_CAPACITY_AH        280U
+
+/* Voltage thresholds (per cell, mV) */
+#define CFG_OVP_MV            3650U
+#define CFG_UVP_MV            2800U
+#define CFG_FLOAT_MV          3390U   /* UPS float target */
+#define CFG_BALANCE_START_SOC  900U   /* ppt = 90% */
+
+/* Current thresholds (pack, mA) */
+#define CFG_OCP_DSG_MA       50000L
+#define CFG_OCP_CHG_MA       30000L
+
+/* Communication */
+#define CFG_CAN_BAUD_BPS    250000U
+#define CFG_CAN_BASE_ID      0x351U
+
+/* AFE */
+#define CFG_AFE_I2C_ADDR      0x10U   /* BQ76952 ADDR pin = GND */
+#define CFG_SHUNT_UOHM        500U    /* 0.5 mΩ shunt */
+
+#endif</code></pre>
+
+  <div class="callout callout-info">
+    <div class="callout-title">ℹ️ Board Variants</div>
+    <p>Maintain one <code>bms_config.h</code> per board variant in separate folders: <code>boards/ups_16s/</code>, <code>boards/ess_16s/</code>. CMake or Makefile selects the right config at compile time. Never use runtime <code>#ifdef</code> for hardware parameters — that's a build-time decision.</p>
+  </div>
+</section>
+
+
+<section class="section reveal" id="s96">
+  <div class="section-eyebrow">Section 9.6</div>
+  <h2 class="section-title">Embedded Optimisation Techniques</h2>
+  <p class="section-intro">The STM32G474 at 170 MHz has ample headroom for BMS tasks, but writing efficient code prevents surprises at scale — especially when soft-real-time guarantees are required for the protection loop.</p>
+
+  <h3 class="sub-title">Fixed-Point Arithmetic</h3>
+  <p>Avoid floating-point in ISR and protection paths. The STM32G4 has an FPU, but FP operations take 3–14 cycles and are not re-entrant without a context save. Fixed-point integer arithmetic is faster and deterministic.</p>
+  <pre><code>/* Fixed-point Q12.4 format: 1 bit sign + 11 int + 4 frac bits */
+/* Voltage in mV (integer) is already natural fixed-point */
+
+/* Example: Compute pack power in watts */
+/* P = V_pack_mV * I_pack_mA / 1_000_000 */
+/* Use 64-bit to avoid overflow: 58000 mV * 50000 mA = 2.9e9, fits int32_t barely */
+int32_t APP_GetPackPower_W(void) {
+    int64_t p_uw = (int64_t)g_meas.pack_mv * (int64_t)g_meas.current_ma;
+    return (int32_t)(p_uw / 1000000LL);  /* µW → W */
+}
+
+/* Avoid: float version (slower, FPU context) */
+float BAD_GetPackPower(void) {
+    return ((float)g_meas.pack_mv / 1000.0f) * ((float)g_meas.current_ma / 1000.0f);
+}</code></pre>
+
+  <h3 class="sub-title">Lookup Table vs Runtime Calculation</h3>
+  <pre><code>/* LFP OCV curve: 16-point LUT stored in flash (const = ROM) */
+/* RAM cost: 0 bytes. Access: single array index + interpolation */
+static const uint16_t OCV_LUT_MV[16] = {
+    2800, 3050, 3130, 3180, 3220, 3260, 3290, 3310,
+    3320, 3330, 3340, 3360, 3380, 3400, 3420, 3450
+};
+/* Each entry = 6.67% SoC step = 1/15 of full range */
+/* Interpolation between two points: 2 multiplies + 1 divide */</code></pre>
+
+  <h3 class="sub-title">ISR Latency Budget</h3>
+  <table>
+    <thead><tr><th>Interrupt</th><th>Trigger</th><th>Max latency budget</th><th>Typical</th></tr></thead>
+    <tbody>
+      <tr><td>SCP (short-circuit)</td><td>AFE ALERT pin falling edge</td><td>10 µs</td><td>2–4 µs</td></tr>
+      <tr><td>OCP hardware (comparator)</td><td>Internal COMP on shunt sense</td><td>5 µs</td><td>1–2 µs</td></tr>
+      <tr><td>CAN RX</td><td>CAN frame received</td><td>500 µs</td><td>50–100 µs</td></tr>
+      <tr><td>SysTick (scheduler)</td><td>1 ms</td><td>10 µs overhead</td><td>3–5 µs</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-warn">
+    <div class="callout-title">⚡ Measure, Don't Guess</div>
+    <p>Toggle a spare GPIO at ISR entry/exit and measure with a logic analyser. Never assume cycle counts from datasheets are actual latencies under real interrupt load. The STM32 DWT cycle counter (<code>DWT-&gt;CYCCNT</code>) can measure with ~6 ns resolution at 170 MHz.</p>
+  </div>
+
+  <h3 class="sub-title">Memory Efficiency</h3>
+  <pre><code>/* Pack structs tightly — use __attribute__((packed)) for NVM structs only */
+/* For RAM structs, let compiler align naturally (faster access) */
+
+/* GOOD — natural alignment, 12 bytes, fast access */
+typedef struct {
+    uint32_t timestamp;   /* 4B, aligned at 0 */
+    uint16_t voltage_mv;  /* 2B, aligned at 4 */
+    int16_t  current_ma;  /* 2B, aligned at 6 */
+    uint8_t  flags;       /* 1B, aligned at 8 */
+    uint8_t  pad[3];      /* explicit pad, 12 bytes total */
+} Sample_t;
+
+/* BAD — packed wastes cycles on unaligned reads */
+typedef struct __attribute__((packed)) {
+    uint8_t  flags;
+    uint32_t timestamp;   /* unaligned! */
+    uint16_t voltage_mv;
+} BadSample_t;</code></pre>
+</section>
+
+
+<section class="section reveal" id="s97">
+  <div class="section-eyebrow">Section 9.7</div>
+  <h2 class="section-title">Memory Map Design</h2>
+  <p class="section-intro">Understanding the STM32G474 memory map is essential for placing code, data, and NVM partitions correctly. Errors in linker scripts cause subtle bugs that only appear in release builds.</p>
+
+  <h3 class="sub-title">STM32G474 Memory Layout</h3>
+  <table>
+    <thead><tr><th>Region</th><th>Start</th><th>Size</th><th>Used for</th></tr></thead>
+    <tbody>
+      <tr><td>Flash (main)</td><td><code>0x0800_0000</code></td><td>512 KB</td><td>Code, const data, vector table</td></tr>
+      <tr><td>Flash page 63</td><td><code>0x0807_F000</code></td><td>2 KB</td><td>NVM_PAGE_A (ping-pong NVM)</td></tr>
+      <tr><td>Flash page 64</td><td><code>0x0807_F800</code></td><td>2 KB</td><td>NVM_PAGE_B + event log</td></tr>
+      <tr><td>SRAM1</td><td><code>0x2000_0000</code></td><td>96 KB</td><td>Stack, heap (unused), BSS, data</td></tr>
+      <tr><td>SRAM2</td><td><code>0x2001_8000</code></td><td>32 KB</td><td>DMA buffers (CAN RX FIFO, ADC buffer)</td></tr>
+      <tr><td>CCM SRAM</td><td><code>0x1000_0000</code></td><td>32 KB</td><td>Tightly coupled — protection ISR stack</td></tr>
+      <tr><td>Backup SRAM</td><td><code>0x4002_4000</code></td><td>4 KB</td><td>VBAT-powered — WDT reset counter</td></tr>
+      <tr><td>Peripheral bus</td><td><code>0x4000_0000</code></td><td>—</td><td>CAN, I2C, SPI, ADC registers</td></tr>
+    </tbody>
+  </table>
+
+  <h3 class="sub-title">Linker Script Sections</h3>
+  <pre><code>/* STM32G474RE.ld — key custom sections */
+
+/* DMA buffers — must be in SRAM2 (DMA-accessible, non-cacheable) */
+.dma_buf (NOLOAD) :
+{
+    *(.dma_buf)
+} &gt;SRAM2
+
+/* ISR stack in CCM for lowest latency */
+.isr_stack (NOLOAD) :
+{
+    _isr_stack_start = .;
+    . = . + 0x800;   /* 2 KB for protection ISR */
+    _isr_stack_end = .;
+} &gt;CCMRAM
+
+/* NVM constants in last 2 flash pages — excluded from erase */
+.nvm_page_a :
+{
+    KEEP(*(.nvm_page_a))
+} &gt;FLASH_NVM_A AT&gt;FLASH
+
+/* C attribute to place variable in SRAM2 DMA region */
+/* Usage: uint8_t can_rx_buf[64] __attribute__((section(".dma_buf"))); */</code></pre>
+
+  <h3 class="sub-title">RAM Budget for 16S BMS</h3>
+  <div class="card-grid">
+    <div class="card reveal">
+      <div class="card-label">Global Data</div>
+      <div class="card-title">~2 KB</div>
+      <div class="card-body"><code>g_meas</code> (48B) + <code>g_soc</code> (16B) + event log (128×9=1152B) + misc globals</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">Stack</div>
+      <div class="card-title">~4 KB</div>
+      <div class="card-body">Main stack 2 KB + ISR stack 2 KB (CCM). Measure HWM with stack paint (<code>0xDEADBEEF</code> fill at startup)</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">DMA Buffers</div>
+      <div class="card-title">~1 KB</div>
+      <div class="card-body">CAN RX FIFO ×2 (128B each), ADC DMA buffer (32B), I2C temp buffer (48B)</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">Total Used</div>
+      <div class="card-title">&lt;8 KB</div>
+      <div class="card-body">Well within 96 KB SRAM1 + 32 KB SRAM2. Leaves room for future logging expansion.</div>
+    </div>
+  </div>
+
+  <div class="callout callout-success">
+    <div class="callout-title">✅ Stack Overflow Detection</div>
+    <p>Enable <strong>MPU stack guard region</strong> on STM32G4: place an MPU-protected 32-byte region just below the stack base. Stack overflow triggers a HardFault immediately, instead of silently corrupting data. CubeMX can generate this configuration automatically.</p>
+  </div>
+</section>
+
+
+<section class="section reveal" id="s98">
+  <div class="section-eyebrow">Section 9.8</div>
+  <h2 class="section-title">Testing Strategy</h2>
+  <p class="section-intro">BMS firmware testing has three distinct levels: host-based unit tests (no hardware), Hardware-in-the-Loop (HIL) simulation, and final pack-level integration testing. All three are necessary.</p>
+
+  <h3 class="sub-title">Level 1: Host Unit Tests (Unity / CMock)</h3>
+  <p>Application and middleware layers are hardware-independent. They can be compiled for a host PC and tested with the Unity test framework. Mock the BSP layer to inject controlled inputs.</p>
+  <pre><code>/* test_soc.c — Unity unit test for SoC Coulomb counter */
+#include "unity.h"
+#include "app_soc.h"
+#include "mock_bsp_hal.h"  /* CMock-generated mock */
+
+void setUp(void) {
+    /* Reset SoC state before each test */
+    g_soc.cc_uah   = 0LL;
+    g_soc.soc_ppt  = 0U;
+    g_soc.anchored = 0U;
+    /* Set initial measurement values */
+    g_meas.current_ma = 0L;
+    g_meas.valid = 0x07U;
+}
+
+void test_CoulombCounter_Charge_100ms(void) {
+    g_meas.current_ma = 10000L;    /* 10 A charge */
+    APP_SoC_CoulombUpdate();        /* 100 ms tick */
+    /* Expected: 10000 mA * 100 ms / 3600 s = 277.7 µAh */
+    TEST_ASSERT_INT64_WITHIN(5LL, 277LL, g_soc.cc_uah);
+}
+
+void test_CoulombCounter_Clamps_AtCapacity(void) {
+    g_soc.cc_uah = CAPACITY_UAH - 100LL;
+    g_meas.current_ma = 100000L;   /* huge current — should clamp */
+    APP_SoC_CoulombUpdate();
+    TEST_ASSERT_EQUAL_INT64(CAPACITY_UAH, g_soc.cc_uah);
+    TEST_ASSERT_EQUAL_UINT16(1000U, g_soc.soc_ppt);  /* 100% */
+}
+
+void test_SoC_OCV_Anchor_AtRest(void) {
+    /* Cell at 3320 mV ≈ 40% SoC on LFP OCV curve */
+    for (uint8_t i = 0; i &lt; CELL_COUNT; i++) {
+        g_meas.cell_mv[i] = 3320U;
+    }
+    APP_SoC_AnchorOCV();
+    TEST_ASSERT_UINT16_WITHIN(20U, 400U, g_soc.soc_ppt);
+    TEST_ASSERT_EQUAL_UINT8(1U, g_soc.anchored);
+}</code></pre>
+
+  <h3 class="sub-title">Level 2: Hardware-in-the-Loop (HIL)</h3>
+  <p>A second STM32 acts as a "battery simulator" — it drives I2C with fake cell voltages and injects known currents via a DAC into the shunt sense input. The BMS firmware runs unmodified on real hardware.</p>
+  <div class="card-grid">
+    <div class="card reveal">
+      <div class="card-label">HIL Component</div>
+      <div class="card-title">Cell Voltage Injector</div>
+      <div class="card-body">STM32 acts as I2C slave, responds to BQ76952 register read addresses with programmable values. Inject OVP scenario: set cell 7 = 3660 mV, verify CHG FET opens within 200 ms.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">HIL Component</div>
+      <div class="card-title">Current DAC</div>
+      <div class="card-body">12-bit DAC drives the shunt sense amplifier input. Ramp current from 0→55 A over 1 s. Verify OCP trip at 50 A ± 2 A. Verify DSG FET opens, CAN 0x359 alarm frame transmitted.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">HIL Component</div>
+      <div class="card-title">Fault Injection</div>
+      <div class="card-body">Pull ALERT pin low at precise times. Corrupt I2C ACK to simulate AFE comms loss. Measure BMS response latency with logic analyser. Verify event log entry written.</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-label">HIL Component</div>
+      <div class="card-title">CAN Bus Monitor</div>
+      <div class="card-body">Raspberry Pi with MCP2515 CAN HAT captures all frames. Python script validates PYLON message timing (&lt;2 s gap), payload encoding, and alarm bits set correctly.</div>
+    </div>
+  </div>
+
+  <h3 class="sub-title">Level 3: Pack Integration Checklist</h3>
+  <div class="callout callout-warn">
+    <div class="callout-title">⚡ Safety First</div>
+    <p>Pack-level testing uses real cells. Have a fire extinguisher rated for Class D fires nearby. Test in a fireproof enclosure. Wear PPE. Never exceed 1C charge rate during first power-on.</p>
+  </div>
+  <table>
+    <thead><tr><th>#</th><th>Test</th><th>Pass Criterion</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Power-on self test</td><td>Event log shows EVT_POWER_ON, CAN 0x351 frame within 2 s</td></tr>
+      <tr><td>2</td><td>Voltage accuracy</td><td>All 16 cells read within ±5 mV of lab DMM</td></tr>
+      <tr><td>3</td><td>Current accuracy</td><td>Pack current within ±200 mA of clamp meter at 10 A, 30 A</td></tr>
+      <tr><td>4</td><td>OVP trip</td><td>Force cell voltage to 3660 mV — CHG FET opens &lt;200 ms</td></tr>
+      <tr><td>5</td><td>UVP trip</td><td>Discharge until one cell hits 2800 mV — DSG FET opens</td></tr>
+      <tr><td>6</td><td>OCP trip</td><td>Apply 55 A pulse — DSG FET opens, event logged</td></tr>
+      <tr><td>7</td><td>OTP trip</td><td>Heat NTC to 56 °C — both FETs open, CAN alarm set</td></tr>
+      <tr><td>8</td><td>SoC accuracy</td><td>Charge from 0 → 100%, compare Ah-counted vs label capacity</td></tr>
+      <tr><td>9</td><td>NVM persistence</td><td>Power cycle — SoC restores within ±2% of pre-cycle value</td></tr>
+      <tr><td>10</td><td>CAN PYLON protocol</td><td>Growatt/Victron inverter shows correct SoC and limits</td></tr>
+    </tbody>
+  </table>
+</section>
+
+
+<!-- Summary + Footer -->
+<section class="section reveal" id="summary">
+  <div class="section-eyebrow">Chapter Summary</div>
+  <h2 class="section-title">Chapter 9 · Key Takeaways</h2>
+  <p class="section-intro">The 10 principles that define production-grade BMS firmware:</p>
+  <div class="card-grid">
+    <div class="card reveal"><div class="card-label">Principle 1</div><div class="card-title">Safety is architectural</div><div class="card-body">Protection thresholds are compile-time constants in flash, never RAM-configurable over CAN without cryptographic authentication.</div></div>
+    <div class="card reveal"><div class="card-label">Principle 2</div><div class="card-title">Layer strictly</div><div class="card-body">HAL → Driver → Middleware → App. Application code never writes a register address. This enables host-based unit tests and chip portability.</div></div>
+    <div class="card reveal"><div class="card-label">Principle 3</div><div class="card-title">No dynamic memory</div><div class="card-body"><code>malloc</code>/<code>free</code> after init is forbidden. All buffers are static. Execution time is bounded and heap fragmentation is impossible.</div></div>
+    <div class="card reveal"><div class="card-label">Principle 4</div><div class="card-title">Fixed-point everywhere</div><div class="card-body">Integer millivolts and milliamps are natural fixed-point. Avoid FP in ISRs. 64-bit integer handles Coulomb counting without overflow for 280 Ah packs.</div></div>
+    <div class="card reveal"><div class="card-label">Principle 5</div><div class="card-title">Log everything</div><div class="card-body">Every fault, state change, and calibration event gets a timestamp and a NVM-backed entry. Post-mortem debugging without a log is guesswork.</div></div>
+    <div class="card reveal"><div class="card-label">Principle 6</div><div class="card-title">One config header</div><div class="card-body"><code>bms_config.h</code> is the single source of truth for thresholds, cell count, capacity. Board variants = separate config folder, same firmware binary.</div></div>
+    <div class="card reveal"><div class="card-label">Principle 7</div><div class="card-title">Measure latency</div><div class="card-body">Use DWT cycle counter or GPIO toggles to measure every ISR. Protection ISR must trip FETs in &lt;10 µs for SCP, &lt;200 ms for software OVP/UVP.</div></div>
+    <div class="card reveal"><div class="card-label">Principle 8</div><div class="card-title">OCV anchor drift</div><div class="card-body">Re-anchor Coulomb counter with OCV lookup whenever |I| &lt; 500 mA for 30 s. LFP flat OCV curve means ±3 mV accuracy gives ±8% SoC at inflection.</div></div>
+    <div class="card reveal"><div class="card-label">Principle 9</div><div class="card-title">PYLON-compatible CAN</div><div class="card-body">Implement 0x351–0x355 message set. Tested with Victron MultiPlus-II and Growatt SPF 5000. No proprietary protocol needed for most home ESS inverters.</div></div>
+    <div class="card reveal"><div class="card-label">Principle 10</div><div class="card-title">Test at all levels</div><div class="card-body">Host unit tests for algorithms. HIL for hardware interactions. Pack integration for end-to-end validation. All three are necessary for production confidence.</div></div>
+  </div>
+</section>
+
+<!-- Footer navigation -->
+<footer style="padding:2.5rem 3rem;border-top:1px solid var(--border2);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
+  <a href="chapter8.html" style="font-family:var(--mono);font-size:0.75rem;color:var(--muted);text-decoration:none;letter-spacing:0.1em;border:1px solid var(--border);padding:0.5rem 1rem;border-radius:4px;transition:all 0.15s;">← Chapter 8: HW Design</a>
+  <span style="font-family:var(--mono);font-size:0.62rem;color:rgba(0,255,136,0.4);letter-spacing:0.15em;">CH09 · FIRMWARE ARCHITECTURE · COMPLETE</span>
+  <a href="chapter10.html" style="font-family:var(--mono);font-size:0.75rem;color:var(--acc);text-decoration:none;letter-spacing:0.1em;border:1px solid rgba(0,255,136,0.3);padding:0.5rem 1rem;border-radius:4px;transition:all 0.15s;">Ch10: Sustainable Future →</a>
+</footer>
+</div><!-- end .main-content -->
+</div><!-- end .page-wrapper -->
+
+<script>
+// reveal on scroll
+var obs=new IntersectionObserver(function(entries){
+  entries.forEach(function(e){if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target);}});
+},{threshold:0.08});
+document.querySelectorAll('.reveal').forEach(function(el){obs.observe(el);});
+
+// sidebar active section
+(function(){
+  var sObs=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        var id=e.target.getAttribute('id');
+        document.querySelectorAll('.sidebar-link,.sidebar-sub').forEach(function(a){
+          a.classList.toggle('active',a.getAttribute('href')==='#'+id);
+        });
+      }
+    });
+  },{rootMargin:'-30% 0px -60% 0px'});
+  document.querySelectorAll('[id]').forEach(function(s){sObs.observe(s);});
+})();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     CH9 — FAULT CASCADE SIMULATOR + PROTECTION STATE MACHINE VIZ
+═══════════════════════════════════════════════════════════════════ -->
+<style>
+.fc-panel{background:#07070f;border:1px solid rgba(255,107,53,0.2);border-radius:12px;padding:1.5rem;margin:2rem 0;font-family:var(--font-sans)}
+.fc-panel h4{font-family:'Orbitron',monospace;font-size:0.75rem;color:#FF6B35;letter-spacing:0.12em;margin-bottom:1rem;text-transform:uppercase}
+.fault-btns{display:flex;flex-wrap:wrap;gap:0.7rem;margin:1rem 0}
+.fault-btn{font-family:'Orbitron',monospace;font-size:0.65rem;letter-spacing:0.08em;padding:0.6rem 1.1rem;border-radius:6px;cursor:pointer;border:1px solid;background:transparent;transition:all 0.25s}
+.fault-btn:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(255,71,87,0.2)}
+.fault-btn.active-fault{animation:btn-pulse 0.5s ease infinite alternate}
+@keyframes btn-pulse{from{opacity:0.7}to{opacity:1}}
+.cascade-flow{display:flex;flex-direction:column;gap:0;margin:1rem 0;position:relative}
+.cf-step{display:flex;align-items:flex-start;gap:1rem;padding:0.7rem 1rem;border-radius:6px;border:1px solid rgba(255,255,255,0.05);background:rgba(255,255,255,0.02);transition:all 0.4s;opacity:0.25;position:relative}
+.cf-step.cf-active{opacity:1;border-color:rgba(255,107,53,0.5);background:rgba(255,107,53,0.06);transform:translateX(4px)}
+.cf-step.cf-done{opacity:0.7;border-color:rgba(0,255,136,0.3);background:rgba(0,255,136,0.04)}
+.cf-step.cf-active::before{content:'▶';position:absolute;left:-18px;top:50%;transform:translateY(-50%);color:#FF6B35;font-size:0.7rem;animation:blink 0.5s infinite alternate}
+@keyframes blink{from{opacity:0.3}to{opacity:1}}
+.cf-num{font-family:'Orbitron',monospace;font-size:0.6rem;color:#FF6B35;min-width:24px;padding-top:0.2rem}
+.cf-content h5{font-family:'Orbitron',monospace;font-size:0.72rem;color:#e8eaf0;margin-bottom:0.2rem}
+.cf-content p{font-size:0.78rem;color:#6b7280;line-height:1.6;margin:0}
+.cf-content code{font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:#00FF88;background:rgba(0,255,136,0.08);padding:0.1rem 0.35rem;border-radius:3px}
+.cf-time{font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:#FF6B35;white-space:nowrap;padding-top:0.2rem;margin-left:auto}
+.state-machine-viz{display:flex;flex-wrap:wrap;gap:0.6rem;margin:1rem 0;align-items:center;justify-content:center}
+.sm-state{padding:0.5rem 1rem;border-radius:6px;font-family:'Orbitron',monospace;font-size:0.65rem;letter-spacing:0.08em;border:1px solid rgba(255,255,255,0.1);color:#4a5568;background:rgba(255,255,255,0.02);transition:all 0.4s;cursor:default}
+.sm-state.sm-active{border-color:var(--sc);color:var(--sc);background:rgba(255,107,53,0.12);box-shadow:0 0 16px rgba(255,107,53,0.2);transform:scale(1.08)}
+.sm-arrow{color:#2d3748;font-size:1.1rem}
+.var-display{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:0.6rem;margin:1rem 0}
+.var-card{background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:0.6rem 0.8rem}
+.var-card .var-name{font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:#4a5568;margin-bottom:0.2rem}
+.var-card .var-val{font-family:'JetBrains Mono',monospace;font-size:0.88rem;color:#00F5FF;font-weight:600}
+.var-card.var-alarm .var-val{color:#FF4757}
+.var-card.var-warn .var-val{color:#FFC857}
+.fc-log{background:#030308;border:1px solid rgba(0,255,136,0.1);border-radius:6px;padding:0.8rem;font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:#4a5568;height:100px;overflow-y:auto;margin-top:0.8rem;line-height:1.8}
+.fc-log .log-line{animation:logIn 0.3s ease}
+@keyframes logIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.log-ok{color:#00FF88}.log-warn{color:#FFC857}.log-err{color:#FF4757}.log-info{color:#00F5FF}
+.rnd-block-o{background:rgba(255,107,53,0.04);border:1px solid rgba(255,107,53,0.2);border-left:3px solid #FF6B35;border-radius:8px;padding:1.2rem 1.4rem;margin:1.8rem 0}
+.rnd-block-o .rnd-label{font-family:'Orbitron',monospace;font-size:0.6rem;color:#FF6B35;letter-spacing:0.2em;margin-bottom:0.6rem}
+.rnd-block-o p{font-size:0.88rem;color:#9ca3af;line-height:1.85;margin:0.4rem 0}
+.rnd-block-o strong{color:#e8eaf0}
+</style>
+
+<section style="margin-left:260px;padding:3rem 0;border-top:1px solid rgba(255,107,53,0.15)" id="ch9-sim">
+<div style="max-width:940px;margin:0 auto;padding:0 2.5rem">
+  <div style="font-family:'Orbitron',monospace;font-size:0.6rem;color:#FF6B35;letter-spacing:0.2em;margin-bottom:0.5rem">INTERACTIVE LAB · CHAPTER 9</div>
+  <h2 style="font-family:'Orbitron',monospace;font-size:1.3rem;color:#fff;margin-bottom:0.8rem">Fault Cascade Simulator — Trigger Events, Watch the System React</h2>
+  <p style="color:#6b7280;font-size:0.88rem;line-height:1.8;margin-bottom:1.2rem">
+    Click any fault. Watch the full cascade: detection → state machine → FET trip → CAN alarm → recovery.
+    This is what happens inside the BMS in real-time. <strong style="color:#FF6B35">Every step is time-stamped to the millisecond.</strong>
+  </p>
+
+  <div class="rnd-block-o">
+    <div class="rnd-label">⚡ R&D Thinking — Why Does Fault Speed Matter?</div>
+    <p><strong>An OVP that trips in 5ms vs 500µs isn't a minor difference.</strong>
+    At 1C charging into a 16S pack, voltage rises at roughly 5mV/second per cell. In 5ms, that's 0.025mV — negligible.
+    But a short circuit (SCC) dumps current at 10C or higher. A 280Ah cell at 10C = 2800A.
+    In 5ms, that's <strong>14 Coulombs of charge</strong> into an already-full cell. Cell temperature spikes 10–30°C.
+    Dendrite nucleation begins. That 4.5ms difference between your BMS and a good one can determine whether
+    the battery catches fire or survives.</p>
+    <p><strong>This is why hardware OVP (BQ76952 HW comparator) trips in &lt;500µs</strong> independent of firmware,
+    and why the firmware path is a backup, not the primary protection.</p>
+  </div>
+
+  <div class="fc-panel">
+    <h4>⚡ Fault Cascade Simulator — Click to Trigger</h4>
+
+    <!-- State machine viz -->
+    <div style="font-family:'Orbitron',monospace;font-size:0.6rem;color:#4a5568;letter-spacing:0.15em;margin-bottom:0.5rem">PROTECTION STATE MACHINE</div>
+    <div class="state-machine-viz">
+      <div class="sm-state" id="sm-normal" style="--sc:#00FF88">NORMAL</div>
+      <div class="sm-arrow">→</div>
+      <div class="sm-state" id="sm-warn" style="--sc:#FFC857">WARN</div>
+      <div class="sm-arrow">→</div>
+      <div class="sm-state" id="sm-ovp" style="--sc:#FF4757">OVP TRIP</div>
+      <div class="sm-arrow">|</div>
+      <div class="sm-state" id="sm-dsg" style="--sc:#FF4757">DSG TRIP</div>
+      <div class="sm-arrow">→</div>
+      <div class="sm-state" id="sm-hard" style="--sc:#FF0000">HARD FAULT</div>
+      <div class="sm-arrow">↑</div>
+      <div class="sm-state" id="sm-rec" style="--sc:#A855F7">RECOVERY</div>
+    </div>
+
+    <!-- Live variable display -->
+    <div class="var-display" id="var-display">
+      <div class="var-card"><div class="var-name">Vcell_max</div><div class="var-val" id="v-vcell">3.295V</div></div>
+      <div class="var-card"><div class="var-name">Ibat</div><div class="var-val" id="v-ibat">+12.0A</div></div>
+      <div class="var-card"><div class="var-name">T_max</div><div class="var-val" id="v-temp">28.0°C</div></div>
+      <div class="var-card"><div class="var-name">SoC</div><div class="var-val" id="v-soc">65%</div></div>
+      <div class="var-card"><div class="var-name">CHG_FET</div><div class="var-val" id="v-chg">ON</div></div>
+      <div class="var-card"><div class="var-name">DSG_FET</div><div class="var-val" id="v-dsg">ON</div></div>
+      <div class="var-card"><div class="var-name">CAN_fault</div><div class="var-val" id="v-can">0x00</div></div>
+      <div class="var-card"><div class="var-name">Prot_State</div><div class="var-val" id="v-state">NORMAL</div></div>
+    </div>
+
+    <!-- Fault buttons -->
+    <div class="fault-btns">
+      <button class="fault-btn" style="color:#FF4757;border-color:#FF4757" onclick="triggerFault('ovp')">⚡ OVERVOLTAGE (3.66V)</button>
+      <button class="fault-btn" style="color:#FF6B35;border-color:#FF6B35" onclick="triggerFault('uvp')">🔋 UNDERVOLTAGE (2.6V)</button>
+      <button class="fault-btn" style="color:#FFC857;border-color:#FFC857" onclick="triggerFault('otp')">🌡 OVERTEMPERATURE (58°C)</button>
+      <button class="fault-btn" style="color:#A855F7;border-color:#A855F7" onclick="triggerFault('ocp')">⚡ OVERCURRENT (320A)</button>
+      <button class="fault-btn" style="color:#FF0000;border-color:#FF0000" onclick="triggerFault('scc')">💥 SHORT CIRCUIT</button>
+      <button class="fault-btn" style="color:#00FF88;border-color:#00FF88" onclick="triggerFault('reset')">↺ RESET NORMAL</button>
+    </div>
+
+    <!-- Cascade steps -->
+    <div style="font-family:'Orbitron',monospace;font-size:0.6rem;color:#4a5568;letter-spacing:0.15em;margin:1rem 0 0.5rem">FAULT CASCADE TIMELINE</div>
+    <div class="cascade-flow" id="cascade-flow">
+      <div class="cf-step" id="cf0"><div class="cf-num">—</div><div class="cf-content"><h5>SYSTEM NORMAL</h5><p>All FETs on, no thresholds breached. Trigger a fault above to begin cascade.</p></div><div class="cf-time">t=0ms</div></div>
+    </div>
+
+    <!-- Event log -->
+    <div style="font-family:'Orbitron',monospace;font-size:0.6rem;color:#4a5568;letter-spacing:0.15em;margin:1rem 0 0.3rem">EVENT LOG (NVM STREAM)</div>
+    <div class="fc-log" id="fc-log">
+      <div class="log-line log-ok">[BOOT] BMS operational · all checks passed</div>
+    </div>
+  </div>
+</div>
+</section>
+
+<script>
+(function(){
+const faults={
+  ovp:{
+    vars:{vcell:'3.660V',ibat:'+28.0A',temp:'29.2°C',soc:'97%',chg:'OFF',dsg:'ON',can:'0x02',state:'OVP_TRIP'},
+    steps:[
+      {t:'t=0ms',title:'Cell #11 reaches 3.660V',desc:'Charging current pushes weakest cell over 3.65V threshold.',cls:'log-warn'},
+      {t:'t=0.3ms',title:'BQ76952 HW comparator fires',desc:'Hardware OVP pin asserts independent of MCU firmware. No software latency.',cls:'log-err'},
+      {t:'t=0.4ms',title:'CHG FET gate driver OFF',desc:'Gate capacitance discharges. CHG FET opens. Charging physically stops.',cls:'log-err'},
+      {t:'t=1ms',title:'MCU reads fault register',desc:'I²C read: BQ76952 Fault_A = 0x02 (COV bit set). State → OVP_TRIP.',cls:'log-warn'},
+      {t:'t=5ms',title:'CAN 0x359 fault frame',desc:'OVP bit set in CAN fault frame. Inverter receives and halts charge command.',cls:'log-info'},
+      {t:'t=8ms',title:'NVM event written',desc:'Timestamped entry: OVP cell#11 3.660V Ibat=+28A T=29.2°C.',cls:'log-ok'},
+      {t:'t=30s+',title:'Hysteresis timer running',desc:'MCU waits 30 ticks (30s). Vcell must drop below 3.64V for 30 consecutive ticks.',cls:'log-info'},
+      {t:'t=45s',title:'OVP cleared — CHG FET re-enables',desc:'Vcell=3.638V, 30 clear ticks completed. State → NORMAL. Charging may resume.',cls:'log-ok'}
+    ],
+    state:'sm-ovp'
+  },
+  uvp:{
+    vars:{vcell:'2.620V',ibat:'-42.0A',temp:'31.0°C',soc:'4%',chg:'OFF',dsg:'OFF',can:'0x01',state:'DSG_TRIP'},
+    steps:[
+      {t:'t=0ms',title:'Cell #3 drops to 2.620V',desc:'High discharge current and low SoC combine to drag weakest cell below 2.8V threshold.',cls:'log-warn'},
+      {t:'t=0.5ms',title:'BQ76952 CUV bit asserts',desc:'HW undervoltage detect. DSG FET gate driver OFF in hardware.',cls:'log-err'},
+      {t:'t=1ms',title:'DSG FET opens — load disconnected',desc:'Pack voltage collapses at output terminals. Load (inverter) sees bus dropout.',cls:'log-err'},
+      {t:'t=2ms',title:'MCU: state → DSG_TRIP',desc:'Read Fault_A CUV bit. Enter DSG_TRIP state. Coulomb counter stops. SoC locked.',cls:'log-warn'},
+      {t:'t=5ms',title:'CAN alarm — inverter switches to grid',desc:'0x359 UVP bit set. UPS inverter transfers to mains within 20ms.',cls:'log-info'},
+      {t:'t=8ms',title:'Deep discharge recovery mode armed',desc:'SoC < 5%. Recovery protocol: C/20 slow charge only until SoC > 20%.',cls:'log-warn'},
+      {t:'t=60s',title:'Charger begins C/20 recovery',desc:'Only 14A charge allowed. Cell temperature monitored every 1s.',cls:'log-ok'}
+    ],
+    state:'sm-dsg'
+  },
+  otp:{
+    vars:{vcell:'3.315V',ibat:'-35.0A',temp:'58.4°C',soc:'71%',chg:'ON',dsg:'OFF',can:'0x10',state:'OTP_TRIP'},
+    steps:[
+      {t:'t=0ms',title:'NTC #4 reads 58.4°C',desc:'High ambient + high discharge current → cell surface exceeds OTD threshold (55°C).',cls:'log-warn'},
+      {t:'t=0.8ms',title:'Steinhart equation converts to °C',desc:'AFE ADC raw → R_ntc → Steinhart → 58.4°C. MCU flags OTD condition.',cls:'log-warn'},
+      {t:'t=1ms',title:'State → OTP, DSG FET off',desc:'Discharge stops. Without load current, cell temperature begins falling.',cls:'log-err'},
+      {t:'t=3ms',title:'CAN 0x359 OTD bit set',desc:'Inverter sees thermal alarm. Reduces load demand on all DC sources.',cls:'log-info'},
+      {t:'t=5ms',title:'UART debug log',desc:'T_max=58.4 NTC=4 Vbus=51.1 Ibat=-35.0 → OTD_TRIP event streamed.',cls:'log-info'},
+      {t:'t=120s',title:'Temperature drops below 50°C',desc:'5°C hysteresis band: clear threshold = 50°C. 30s timer starts.',cls:'log-warn'},
+      {t:'t=150s',title:'DSG FET re-enables',desc:'Thermal event cleared. State → NORMAL. Full discharge current available again.',cls:'log-ok'}
+    ],
+    state:'sm-ovp'
+  },
+  ocp:{
+    vars:{vcell:'3.28V',ibat:'-320A',temp:'34.0°C',soc:'52%',chg:'ON',dsg:'OFF',can:'0x08',state:'OCP_TRIP'},
+    steps:[
+      {t:'t=0ms',title:'Load spike: Ibat hits 320A (>1C)',desc:'Motor startup or capacitor inrush. Shunt reads 320A on 280Ah pack = 1.14C.',cls:'log-warn'},
+      {t:'t=0.2ms',title:'BQ76952 OCD1 comparator fires',desc:'Hardware OCD detection. Threshold: 100A for 8ms. Exceeded before timeout.',cls:'log-err'},
+      {t:'t=0.3ms',title:'DSG FET opens — load current cut',desc:'Gate capacitance discharges rapidly. Current path broken.',cls:'log-err'},
+      {t:'t=1ms',title:'MCU OCD1 flag — state → OCP_TRIP',desc:'Fault register read. Log Ibat waveform timestamp.',cls:'log-warn'},
+      {t:'t=5ms',title:'CAN alarm transmitted',desc:'0x359 OCD bit. Inverter notes overcurrent event.',cls:'log-info'},
+      {t:'t=30s',title:'Retry after lockout',desc:'3s hysteresis + 27s additional lockout for OCD events. DSG FET tentatively closed.',cls:'log-info'},
+      {t:'t=30.1s',title:'If current OK → NORMAL resume',desc:'Ibat monitored for 100ms. If below threshold, full operation resumes.',cls:'log-ok'}
+    ],
+    state:'sm-dsg'
+  },
+  scc:{
+    vars:{vcell:'3.28V',ibat:'-2800A',temp:'RISING',soc:'50%',chg:'OFF',dsg:'OFF',can:'0xFF',state:'HARD_FAULT'},
+    steps:[
+      {t:'t=0µs',title:'External short circuit: R=5mΩ',desc:'Bus terminals shorted. Discharge current: V/R = 51.2V/0.005Ω = 10,240A peak.',cls:'log-err'},
+      {t:'t=50µs',title:'BQ76952 SCD comparator — FASTEST PATH',desc:'HW short-circuit detect threshold exceeded. No I²C, no firmware — direct gate kill.',cls:'log-err'},
+      {t:'t=80µs',title:'Both FETs OFF — current path broken',desc:'Pack is electrically isolated. Short circuit current collapses.',cls:'log-err'},
+      {t:'t=500µs',title:'Cell temperature spike begins',desc:'I²R heating: 10kA² × 5mΩ × 80µs = ~40J per cell in that instant.',cls:'log-err'},
+      {t:'t=2ms',title:'MCU reads HARD_FAULT register',desc:'SCD bit set. HARD_FAULT state. Manual power cycle required to clear.',cls:'log-err'},
+      {t:'t=5ms',title:'CAN SOS broadcast',desc:'0x359 = 0xFF. All fault bits set. No automatic recovery in HARD_FAULT state.',cls:'log-warn'},
+      {t:'Manual',title:'HARD_FAULT clear requires inspection',desc:'Engineer must inspect pack, test Rcell, verify no thermal damage before restart.',cls:'log-info'}
+    ],
+    state:'sm-hard'
+  },
+  reset:{
+    vars:{vcell:'3.295V',ibat:'+12.0A',temp:'28.0°C',soc:'65%',chg:'ON',dsg:'ON',can:'0x00',state:'NORMAL'},
+    steps:[
+      {t:'t=0ms',title:'System reset to NORMAL',desc:'All fault conditions cleared. FETs re-enabled. CAN fault frame cleared.',cls:'log-ok'}
+    ],
+    state:'sm-normal'
+  }
+};
+
+const stateIds=['sm-normal','sm-warn','sm-ovp','sm-dsg','sm-hard','sm-rec'];
+
+function setVars(v){
+  document.getElementById('v-vcell').textContent=v.vcell||'3.295V';
+  document.getElementById('v-ibat').textContent=v.ibat||'+12.0A';
+  document.getElementById('v-temp').textContent=v.temp||'28°C';
+  document.getElementById('v-soc').textContent=v.soc||'65%';
+  document.getElementById('v-chg').textContent=v.chg||'ON';
+  document.getElementById('v-dsg').textContent=v.dsg||'ON';
+  document.getElementById('v-can').textContent=v.can||'0x00';
+  document.getElementById('v-state').textContent=v.state||'NORMAL';
+  ['v-chg','v-dsg'].forEach(id=>{const el=document.getElementById(id);if(el){el.closest('.var-card').classList.toggle('var-alarm',el.textContent==='OFF');}});
+  ['v-can'].forEach(id=>{const el=document.getElementById(id);if(el){el.closest('.var-card').classList.toggle('var-warn',el.textContent!=='0x00');}});
+}
+
+function setStateActive(stateId){
+  stateIds.forEach(id=>{document.getElementById(id)&&document.getElementById(id).classList.remove('sm-active');});
+  if(stateId)document.getElementById(stateId)&&document.getElementById(stateId).classList.add('sm-active');
+}
+
+function appendLog(msg,cls){
+  const log=document.getElementById('fc-log');if(!log)return;
+  const now=new Date();const ts=`${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}.${now.getMilliseconds().toString().padStart(3,'0')}`;
+  const div=document.createElement('div');div.className=`log-line ${cls}`;
+  div.textContent=`[${ts}] ${msg}`;log.appendChild(div);log.scrollTop=log.scrollHeight;
+}
+
+window.triggerFault=function(type){
+  const f=faults[type];if(!f)return;
+  const flow=document.getElementById('cascade-flow');flow.innerHTML='';
+  setVars(f.vars);
+  if(type==='reset'){setStateActive('sm-normal');appendLog('System reset — all faults cleared — NORMAL state','log-ok');return;}
+  f.steps.forEach((step,i)=>{
+    setTimeout(()=>{
+      const div=document.createElement('div');div.className='cf-step';
+      div.innerHTML=`<div class="cf-num">${String(i+1).padStart(2,'0')}</div><div class="cf-content"><h5>${step.title}</h5><p>${step.desc}</p></div><div class="cf-time">${step.t}</div>`;
+      flow.appendChild(div);
+      setTimeout(()=>{
+        div.classList.add('cf-active');
+        if(i>0){const prev=flow.children[i-1];if(prev){prev.classList.remove('cf-active');prev.classList.add('cf-done');}}
+        appendLog(`${step.t} | ${step.title}`,step.cls);
+        if(i===f.steps.length-1){setStateActive(f.state);}
+        if(i===f.steps.length-1)setTimeout(()=>div.classList.remove('cf-active'),500);
+      },50);
+    },i*600);
+  });
+};
+
+// Start normal
+setStateActive('sm-normal');
+setVars(faults.reset.vars);
+})();
+</script>
+
+
+
+<style>
+.ch-journey{position:fixed;bottom:0;left:0;width:100%;z-index:9999;background:rgba(2,2,10,0.96);border-top:1px solid rgba(255,255,255,0.08);padding:.4rem 1rem;display:flex;align-items:center;justify-content:center;gap:.2rem;font-family:'Orbitron',monospace;font-size:.58rem;letter-spacing:.04em;backdrop-filter:blur(16px);box-shadow:0 -2px 20px rgba(0,0,0,.6);flex-wrap:nowrap;overflow-x:auto;}
+.cj-stop{padding:.28rem .6rem;border-radius:.3rem;text-decoration:none;transition:all .2s;white-space:nowrap;color:#444;}
+.cj-stop:hover{background:rgba(255,255,255,.08);color:#aaa;}
+.cj-current{background:rgba(255,200,87,.15)!important;color:#FFC857!important;border:1px solid rgba(255,200,87,.4);cursor:default;}
+.cj-link{color:#555;}.cj-link:hover{color:#ccc;background:rgba(255,255,255,.08);}
+.cj-arrow{color:#1a1a1a;font-size:.7rem;flex-shrink:0;}
+@media(max-width:768px){.ch-journey{font-size:.5rem;gap:.1rem;}.cj-stop{padding:.2rem .4rem;}.cj-arrow{display:none;}}
+</style>
+<div class="ch-journey"><a href="chapter1.html" class="cj-stop cj-link" title="Fundamentals">CH1</a><span class="cj-arrow">›</span><a href="chapter2.html" class="cj-stop cj-link" title="Cell Physics">CH2</a><span class="cj-arrow">›</span><a href="chapter3.html" class="cj-stop cj-link" title="Thermal">CH3</a><span class="cj-arrow">›</span><a href="chapter4.html" class="cj-stop cj-link" title="Protection">CH4</a><span class="cj-arrow">›</span><a href="chapter5.html" class="cj-stop cj-link" title="Standards">CH5</a><span class="cj-arrow">›</span><a href="chapter6.html" class="cj-stop cj-link" title="Architecture">CH6</a><span class="cj-arrow">›</span><a href="chapter7.html" class="cj-stop cj-link" title="UPS & ESS">CH7</a><span class="cj-arrow">›</span><a href="chapter8.html" class="cj-stop cj-link" title="Hardware">CH8</a><span class="cj-arrow">›</span><span class="cj-stop cj-current" title="Firmware">CH9</span><span class="cj-arrow">›</span><a href="chapter10.html" class="cj-stop cj-link" title="Future">CH10</a><span class="cj-arrow">›</span><a href="SYSTEM_OVERVIEW.html" class="cj-stop cj-link" title="System View">SYS</a></div>
+
+</body>
+</html>

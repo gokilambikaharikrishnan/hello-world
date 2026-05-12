@@ -1,0 +1,1699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SYSTEM OVERVIEW — How A BMS Actually Works | LFP BMS Knowledge Base</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Bangers&display=swap" rel="stylesheet"/>
+<style>
+/* ═══════════════════════════════════════════════
+   SYSTEM OVERVIEW — DESIGN SYSTEM
+   This page bridges all 10 chapters.
+   Accent: Prismatic — all chapter colours alive
+   ═══════════════════════════════════════════════ */
+:root{
+  --bg:#020204;--surface:#0d0d12;--surface2:#12121a;
+  --c1:#FFC857; /* amber  – ch1/7/8  */
+  --c2:#00F5FF; /* cyan   – ch2/4    */
+  --c3:#FF6B35; /* orange – ch3      */
+  --c4:#00FF88; /* green  – ch5/9    */
+  --c5:#A855F7; /* violet – ch6      */
+  --c6:#FF4757; /* red    – danger   */
+  --c7:#00CFFF; /* teal   – ch10     */
+  --accent:var(--c2);
+  --text:#e8eaf0;--text-muted:#6b7280;
+  --border:rgba(0,245,255,0.18);
+  --font-hud:'Orbitron',sans-serif;
+  --font-body:'Space Grotesk',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);display:block;overflow-x:hidden}
+
+/* ── TOPBAR ── */
+.topbar{position:fixed;top:0;left:0;width:100%;height:44px;
+  background:rgba(2,2,4,0.94);border-bottom:1px solid var(--border);
+  backdrop-filter:blur(14px);display:flex;align-items:center;
+  padding:0 1.5rem;z-index:1000;font-family:var(--font-hud);
+  font-size:0.7rem;letter-spacing:0.12em;animation:hud-topbar-in 0.6s ease both}
+.topbar-dot{width:8px;height:8px;border-radius:50%;background:var(--c2);
+  box-shadow:0 0 8px var(--c2);}
+.topbar-left{display:flex;align-items:center;gap:1rem;color:var(--c2)}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:1.5rem;
+  color:var(--text-muted);font-size:0.65rem}
+#hud-clock{color:var(--c2)}
+
+/* ── PAGE LAYOUT ── */
+.page-wrapper{display:grid;grid-template-columns:260px 1fr;width:100%;padding-top:44px;min-height:100vh}
+
+/* ── SIDEBAR ── */
+.sidebar{position:sticky;top:44px;height:calc(100vh - 44px);overflow-y:auto;
+  background:rgba(13,13,18,0.98);border-right:1px solid var(--border);
+  padding:1.5rem 0;scrollbar-width:thin;scrollbar-color:var(--c2) transparent}
+.sidebar-brand{padding:0 1.2rem 1.2rem;border-bottom:1px solid var(--border);margin-bottom:1rem}
+.sidebar-brand h3{font-family:var(--font-hud);font-size:0.65rem;color:var(--c2);letter-spacing:0.15em;margin-bottom:0.3rem}
+.sidebar-brand p{font-size:0.72rem;color:var(--text-muted);line-height:1.5}
+.nav-section{padding:0 1.2rem;margin-bottom:0.5rem}
+.nav-section-title{font-family:var(--font-hud);font-size:0.55rem;color:var(--text-muted);
+  letter-spacing:0.2em;text-transform:uppercase;margin-bottom:0.6rem;padding-left:0.5rem}
+.nav-link{display:flex;align-items:center;gap:0.6rem;padding:0.45rem 0.7rem;border-radius:6px;
+  color:var(--text-muted);font-size:0.78rem;text-decoration:none;transition:all 0.2s;margin-bottom:2px}
+.nav-link:hover,.nav-link.active{background:rgba(0,245,255,0.1);color:var(--c2);border-left:2px solid var(--c2)}
+.nav-icon{width:16px;height:16px;border:1px solid currentColor;border-radius:3px;
+  display:flex;align-items:center;justify-content:center;font-size:0.5rem;flex-shrink:0}
+.sidebar-divider{height:1px;background:var(--border);margin:0.8rem 1.2rem}
+.ch-link{display:block;padding:0.3rem 0.7rem;color:var(--text-muted);font-size:0.73rem;
+  text-decoration:none;border-radius:4px;transition:all 0.15s;margin-bottom:2px}
+.ch-link:hover{color:var(--text);background:rgba(255,255,255,0.04)}
+
+/* ── MAIN ── */
+.main{min-height:100vh;overflow:hidden}
+
+/* ── HERO ── */
+.hero{position:relative;min-height:380px;display:flex;align-items:center;
+  justify-content:center;overflow:hidden;border-bottom:1px solid var(--border);
+  background:radial-gradient(ellipse at 30% 50%,rgba(0,245,255,0.06) 0%,transparent 60%),
+             radial-gradient(ellipse at 70% 50%,rgba(168,85,247,0.06) 0%,transparent 60%),
+             #020204}
+.hero-scanlines{position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,245,255,0.015) 2px,rgba(0,245,255,0.015) 4px);
+  pointer-events:none;z-index:1}
+.hero-corners{position:absolute;inset:0;pointer-events:none;z-index:2}
+.hero-corners::before,.hero-corners::after{content:'';position:absolute;
+  width:70px;height:70px;border-color:var(--c2);border-style:solid;opacity:0.5;
+  animation:hud-boot 1s ease both}
+.hero-corners::before{top:20px;left:20px;border-width:2px 0 0 2px}
+.hero-corners::after{bottom:20px;right:20px;border-width:0 2px 2px 0}
+.hero-content{position:relative;z-index:3;text-align:center;padding:2rem}
+.hero-badge{font-family:var(--font-hud);font-size:0.65rem;letter-spacing:0.25em;color:var(--c2);
+  border:1px solid var(--border);padding:0.3rem 1rem;border-radius:20px;display:inline-block;
+  margin-bottom:1.2rem;animation:hud-line-in 0.5s ease both 0.3s;opacity:0}
+.hero-title{font-family:'Bangers',cursive;font-size:clamp(2.4rem,6vw,4.5rem);
+  line-height:1.05;letter-spacing:0.05em;color:#fff;position:relative;
+  text-shadow:1px 1px 0 rgba(255,0,110,0.4),-1px -1px 0 rgba(0,245,255,0.4);
+  animation:hud-line-in 0.6s ease both 0.5s;opacity:0}
+.hero-title::before,.hero-title::after{content:attr(data-text);position:absolute;top:0;left:0;width:100%;height:100%;z-index:-1}
+.hero-title::before{color:rgba(255,0,110,0.5);clip-path:polygon(0 20%,100% 20%,100% 30%,0 30%);animation:__g1 4s infinite 2s}
+.hero-title::after{color:rgba(0,245,255,0.5);clip-path:polygon(0 70%,100% 70%,100% 80%,0 80%);animation:__g2 3.5s infinite 2.5s}
+.hero-sub{color:var(--text-muted);font-size:0.9rem;margin-top:0.8rem;line-height:1.6;
+  animation:hud-line-in 0.5s ease both 0.8s;opacity:0}
+.hero-tagline{font-family:var(--font-hud);font-size:0.72rem;color:var(--c4);letter-spacing:0.1em;
+  margin-top:0.6rem;animation:hud-line-in 0.5s ease both 1s;opacity:0}
+
+/* ── BOOT OVERLAY ── */
+#boot-overlay{position:fixed;inset:0;background:#020204;z-index:9999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.4rem;
+  font-family:var(--font-mono);font-size:0.78rem;color:var(--c2);
+  transition:opacity 0.6s ease;pointer-events:none}
+.boot-line{opacity:0;transform:translateX(-12px);transition:all 0.3s ease}
+.boot-line.show{opacity:1;transform:translateX(0)}
+#boot-bar-wrap{width:320px;height:3px;background:rgba(0,245,255,0.15);border-radius:2px;margin-top:0.8rem}
+#boot-bar{height:100%;width:0;background:var(--c2);border-radius:2px;
+  box-shadow:0 0 10px var(--c2);transition:width 1.4s ease}
+
+/* ── SECTIONS ── */
+.section{padding:3rem 0;border-bottom:1px solid var(--border)}
+.section-inner{max-width:980px;margin:0 auto;padding:0 2.5rem}
+.section-label{font-family:var(--font-hud);font-size:0.6rem;color:var(--c2);letter-spacing:0.2em;margin-bottom:0.5rem}
+.section-title{font-family:var(--font-hud);font-size:1.5rem;color:var(--text);margin-bottom:1rem;line-height:1.3}
+.section-intro{color:var(--text-muted);font-size:0.93rem;line-height:1.85;margin-bottom:1.5rem;max-width:840px}
+.subsection-title{font-family:var(--font-hud);font-size:1rem;color:var(--c2);margin:1.8rem 0 0.8rem;letter-spacing:0.05em}
+
+/* ── CALLOUTS ── */
+.callout{padding:1rem 1.2rem;border-radius:8px;margin:1.2rem 0;font-size:0.88rem;line-height:1.75;border-left:3px solid}
+.callout-cyan{background:rgba(0,245,255,0.06);border-color:var(--c2);color:var(--text)}
+.callout-amber{background:rgba(255,200,87,0.07);border-color:var(--c1);color:var(--text)}
+.callout-green{background:rgba(0,255,136,0.06);border-color:var(--c4);color:var(--text)}
+.callout-red{background:rgba(255,71,87,0.07);border-color:var(--c6);color:var(--text)}
+.callout-violet{background:rgba(168,85,247,0.07);border-color:var(--c5);color:var(--text)}
+
+/* ── CARDS ── */
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:1rem;margin:1.5rem 0}
+.card{background:var(--surface2);border:1px solid rgba(255,255,255,0.07);border-radius:10px;
+  padding:1.2rem;transition:all 0.3s;cursor:default}
+.card:hover{transform:translateY(-3px);border-color:var(--c2);box-shadow:0 8px 32px rgba(0,245,255,0.1)}
+.card-icon{font-size:1.6rem;margin-bottom:0.6rem;display:block}
+.card-title{font-family:var(--font-hud);font-size:0.75rem;color:var(--c2);margin-bottom:0.4rem;letter-spacing:0.08em}
+.card-body{font-size:0.8rem;color:var(--text-muted);line-height:1.6}
+
+/* ── CODE ── */
+.code-block{background:#080810;border:1px solid rgba(0,245,255,0.15);border-radius:8px;
+  padding:1.2rem 1.4rem;overflow-x:auto;margin:1rem 0}
+.code-block pre{font-family:var(--font-mono);font-size:0.8rem;color:#a9b1d6;line-height:1.8;white-space:pre}
+.ck{color:#00f5ff}.ct{color:#ffc857}.cn{color:#ff6b35}.cf{color:#a855f7}.cs{color:#00ff88}.cc{color:#4a5568;font-style:italic}
+
+/* ── PIPELINE STEP ── */
+.pipe-steps{display:flex;flex-wrap:wrap;gap:0;align-items:stretch;margin:1.5rem 0}
+.pipe-step{flex:1;min-width:110px;background:var(--surface2);border:1px solid rgba(255,255,255,0.07);
+  padding:1rem 0.8rem;text-align:center;position:relative;transition:all 0.3s}
+.pipe-step:not(:last-child)::after{content:'→';position:absolute;right:-12px;top:50%;
+  transform:translateY(-50%);color:var(--c2);font-size:1rem;z-index:1;opacity:0.6}
+.pipe-step:first-child{border-radius:8px 0 0 8px}
+.pipe-step:last-child{border-radius:0 8px 8px 0}
+.pipe-step:hover{background:rgba(0,245,255,0.08);border-color:var(--c2)}
+.pipe-num{font-family:var(--font-hud);font-size:0.6rem;color:var(--c2);margin-bottom:0.3rem;letter-spacing:0.1em}
+.pipe-label{font-family:var(--font-hud);font-size:0.72rem;color:var(--text);margin-bottom:0.3rem}
+.pipe-sub{font-size:0.68rem;color:var(--text-muted);line-height:1.4}
+
+/* ── CHAPTER BADGE ── */
+.ch-badge{display:inline-block;padding:0.15rem 0.55rem;border-radius:4px;font-size:0.68rem;
+  font-family:var(--font-hud);letter-spacing:0.04em;margin:0.15rem;vertical-align:middle;
+  text-decoration:none;transition:all 0.2s}
+.ch-badge:hover{transform:scale(1.08)}
+.b1{background:rgba(255,200,87,0.15);color:var(--c1);border:1px solid rgba(255,200,87,0.3)}
+.b2{background:rgba(0,245,255,0.12);color:var(--c2);border:1px solid rgba(0,245,255,0.25)}
+.b3{background:rgba(255,107,53,0.15);color:var(--c3);border:1px solid rgba(255,107,53,0.3)}
+.b4{background:rgba(0,245,255,0.12);color:var(--c2);border:1px solid rgba(0,245,255,0.25)}
+.b5{background:rgba(0,255,136,0.12);color:var(--c4);border:1px solid rgba(0,255,136,0.25)}
+.b6{background:rgba(168,85,247,0.12);color:var(--c5);border:1px solid rgba(168,85,247,0.25)}
+.b7{background:rgba(255,200,87,0.15);color:var(--c1);border:1px solid rgba(255,200,87,0.3)}
+.b8{background:rgba(255,200,87,0.12);color:var(--c1);border:1px solid rgba(255,200,87,0.25)}
+.b9{background:rgba(0,255,136,0.12);color:var(--c4);border:1px solid rgba(0,255,136,0.25)}
+.b10{background:rgba(0,207,255,0.12);color:var(--c7);border:1px solid rgba(0,207,255,0.25)}
+
+/* ── TIMELINE ── */
+.timeline{position:relative;padding-left:2rem;margin:1.5rem 0}
+.timeline::before{content:'';position:absolute;left:0.5rem;top:0;bottom:0;width:2px;
+  background:linear-gradient(180deg,var(--c2),var(--c5),transparent)}
+.tl-item{position:relative;margin-bottom:1.4rem}
+.tl-item::before{content:'';position:absolute;left:-1.9rem;top:0.35rem;width:10px;height:10px;
+  border-radius:50%;background:var(--c2);box-shadow:0 0 8px var(--c2);
+  }
+.tl-item h4{font-family:var(--font-hud);font-size:0.82rem;color:var(--c2);margin-bottom:0.3rem;letter-spacing:0.04em}
+.tl-item p{font-size:0.85rem;color:var(--text-muted);line-height:1.7}
+.tl-item code{font-family:var(--font-mono);font-size:0.78rem;color:var(--c4);
+  background:rgba(0,255,136,0.08);padding:0.1rem 0.4rem;border-radius:3px}
+
+
+/* ── BTT ── */
+#btt{position:fixed;bottom:1.5rem;right:1.5rem;width:42px;height:42px;border-radius:50%;
+  background:rgba(0,245,255,0.12);border:1px solid var(--c2);color:var(--c2);
+  font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:all 0.3s;z-index:500;backdrop-filter:blur(6px)}
+#btt.show{opacity:1}
+#btt:hover{background:rgba(0,245,255,0.25);box-shadow:0 0 20px var(--c2)}
+
+/* ── REVEAL ── */
+.reveal{opacity:0;transform:translateY(24px);transition:opacity 0.7s ease,transform 0.7s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* ══ KEYFRAMES ══ */
+@keyframes hud-boot{from{opacity:0;transform:scale(0.8)}to{opacity:0.55;transform:scale(1)}}
+@keyframes hud-glow-pulse{0%,100%{box-shadow:0 0 5px currentColor}50%{box-shadow:0 0 16px currentColor,0 0 30px currentColor}}
+@keyframes hud-line-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes hud-topbar-in{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes hud-scan{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
+@keyframes hud-flicker{0%,100%{opacity:1}92%{opacity:1}93%{opacity:0.3}95%{opacity:1}98%{opacity:0.5}99%{opacity:1}}
+@keyframes __g1{0%,88%,100%{clip-path:polygon(0 20%,100% 20%,100% 30%,0 30%);transform:translateX(0)}89%{clip-path:polygon(0 15%,100% 15%,100% 28%,0 28%);transform:translateX(-4px)}94%{transform:translateX(3px)}}
+@keyframes __g2{0%,86%,100%{clip-path:polygon(0 70%,100% 70%,100% 80%,0 80%);transform:translateX(0)}87%{clip-path:polygon(0 68%,100% 68%,100% 78%,0 78%);transform:translateX(4px)}92%{transform:translateX(-2px)}}
+@keyframes pulse-ring{0%{transform:scale(0.8);opacity:1}100%{transform:scale(2.5);opacity:0}}
+@keyframes data-flow{0%{stroke-dashoffset:200}100%{stroke-dashoffset:0}}
+@keyframes node-ping{0%,100%{r:6}50%{r:9}}
+@keyframes sweep{0%{stroke-dashoffset:1000}100%{stroke-dashoffset:0}}
+</style>
+</head>
+<body>
+
+<!-- BOOT OVERLAY -->
+<div id="boot-overlay">
+  <div class="boot-line" id="bl0">[ SYS ] LOADING SYSTEM_OVERVIEW — MASTER INTEGRATION MODULE</div>
+  <div class="boot-line" id="bl1">[ CH01-10 ] Linking all chapters into unified view...</div>
+  <div class="boot-line" id="bl2">[ SIGNAL ] Cell → ADC → Algorithm → Decision → Action</div>
+  <div class="boot-line" id="bl3">[ JARVIS ] Complete BMS signal chain initialised</div>
+  <div class="boot-line" id="bl4">[ STATUS ] You are about to see everything connect.</div>
+  <div id="boot-bar-wrap"><div id="boot-bar"></div></div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-dot"></div>
+    <span>LFP BMS KNOWLEDGE BASE</span>
+    <span style="color:var(--text-muted)">|</span>
+    <span style="color:var(--c4)">SYSTEM OVERVIEW</span>
+    <span style="color:var(--text-muted)">|</span>
+    <span>MASTER INTEGRATION</span>
+  </div>
+  <div class="topbar-right">
+    <span id="hud-clock">--:--:--</span>
+    <span>16S1P · 280Ah · 51.2V</span>
+  </div>
+</div>
+
+<!-- PAGE WRAPPER -->
+<div class="page-wrapper">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <h3>SYSTEM OVERVIEW</h3>
+    <p>The page that connects everything. One BMS. One signal chain. Ten chapters unified.</p>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-title">Sections</div>
+    <a class="nav-link" href="#s-pipeline"><div class="nav-icon">01</div>The Big Picture</a>
+    <a class="nav-link" href="#s-realflow"><div class="nav-icon">02</div>Real Operation Flow</a>
+    <a class="nav-link" href="#s-signal"><div class="nav-icon">03</div>Signal Flow</a>
+    <a class="nav-link" href="#s-chapters"><div class="nav-icon">04</div>Chapter Map</a>
+    <a class="nav-link" href="#s-firmware"><div class="nav-icon">05</div>Firmware View</a>
+    <a class="nav-link" href="#s-intuition"><div class="nav-icon">06</div>Intuition</a>
+    <a class="nav-link" href="#s-scenario"><div class="nav-icon">07</div>Mini Scenario</a>
+  </div>
+  <div class="sidebar-divider"></div>
+  <div class="nav-section">
+    <div class="nav-section-title">All Chapters</div>
+    <a class="ch-link" href="chapter1.html">Ch 1 — Cell Chemistry</a>
+    <a class="ch-link" href="chapter2.html">Ch 2 — Electrochemistry</a>
+    <a class="ch-link" href="chapter3.html">Ch 3 — Pack Architecture</a>
+    <a class="ch-link" href="chapter4.html">Ch 4 — AFE &amp; Sensing</a>
+    <a class="ch-link" href="chapter5.html">Ch 5 — Algorithms</a>
+    <a class="ch-link" href="chapter6.html">Ch 6 — Firmware</a>
+    <a class="ch-link" href="chapter7.html">Ch 7 — Applications</a>
+    <a class="ch-link" href="chapter8.html">Ch 8 — HW Design</a>
+    <a class="ch-link" href="chapter9.html">Ch 9 — Protection</a>
+    <a class="ch-link" href="chapter10.html">Ch 10 — Sustainability</a>
+    <a class="ch-link" href="index.html">⌂ Index</a>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-scanlines"></div>
+  <div class="hero-corners"></div>
+  <div class="hero-content">
+    <div class="hero-badge">MASTER INTEGRATION · ALL 10 CHAPTERS · FINAL CHAPTER</div>
+    <h1 class="hero-title" data-text="HOW A BMS ACTUALLY WORKS">HOW A BMS ACTUALLY WORKS</h1>
+    <p class="hero-sub">One page to rule them all. Cell to cloud — the complete signal chain.</p>
+    <p class="hero-tagline">CELL → MEASURE → THINK → DECIDE → ACT → COMMUNICATE → REPEAT</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ SECTION 1 ═══════════════ -->
+<section class="section reveal" id="s-pipeline">
+<div class="section-inner">
+  <div class="section-label">Section 01</div>
+  <h2 class="section-title">The Big Picture — Cell to Cloud</h2>
+  <p class="section-intro">
+    Strip away all the complexity and a BMS does exactly one thing repeatedly, forever:
+    <strong style="color:var(--c2)">measure → think → act</strong>.
+    Everything else — CAN frames, Kalman filters, FET drivers — is just detail inside those three words.
+    Here is the full pipeline from raw electrons to a cloud dashboard in nine stages.
+  </p>
+
+  <!-- 9-STAGE ANIMATED PIPELINE SVG -->
+  <div style="overflow-x:auto;margin:1.5rem 0">
+  <svg id="pipeline-svg" viewBox="0 0 960 520" width="940" style="display:block;margin:0 auto;font-family:'JetBrains Mono',monospace;">
+    <defs>
+      <marker id="p-arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#00f5ff"/></marker>
+      <filter id="p-glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <linearGradient id="pipe-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#FFC857"/>
+        <stop offset="25%" stop-color="#00F5FF"/>
+        <stop offset="50%" stop-color="#A855F7"/>
+        <stop offset="75%" stop-color="#00FF88"/>
+        <stop offset="100%" stop-color="#00CFFF"/>
+      </linearGradient>
+    </defs>
+
+    <!-- bg -->
+    <rect width="960" height="520" fill="#020204" rx="12"/>
+    <!-- subtle grid -->
+    <g opacity="0.04" stroke="#00f5ff" stroke-width="0.5">
+      <line x1="0" y1="65" x2="960" y2="65"/><line x1="0" y1="130" x2="960" y2="130"/>
+      <line x1="0" y1="195" x2="960" y2="195"/><line x1="0" y1="260" x2="960" y2="260"/>
+      <line x1="0" y1="325" x2="960" y2="325"/><line x1="0" y1="390" x2="960" y2="390"/>
+      <line x1="0" y1="455" x2="960" y2="455"/>
+      <line x1="96" y1="0" x2="96" y2="520"/><line x1="192" y1="0" x2="192" y2="520"/>
+      <line x1="288" y1="0" x2="288" y2="520"/><line x1="384" y1="0" x2="384" y2="520"/>
+      <line x1="480" y1="0" x2="480" y2="520"/><line x1="576" y1="0" x2="576" y2="520"/>
+      <line x1="672" y1="0" x2="672" y2="520"/><line x1="768" y1="0" x2="768" y2="520"/>
+      <line x1="864" y1="0" x2="864" y2="520"/>
+    </g>
+
+    <!-- TITLE -->
+    <text x="480" y="26" fill="#00f5ff" font-size="11" text-anchor="middle" font-weight="bold" font-family="Orbitron" letter-spacing="2">COMPLETE BMS SIGNAL CHAIN — 16S1P LFP REFERENCE</text>
+
+    <!-- MAIN PIPELINE SPINE (animated gradient line) -->
+    <line x1="60" y1="120" x2="900" y2="120" stroke="url(#pipe-grad)" stroke-width="3" opacity="0.3"/>
+    <line x1="60" y1="120" x2="900" y2="120" stroke="url(#pipe-grad)" stroke-width="3" opacity="0.6"
+      stroke-dasharray="900" stroke-dashoffset="900">
+      <animate attributeName="stroke-dashoffset" from="900" to="0" dur="2.5s" fill="freeze" begin="0.3s"/>
+    </line>
+
+    <!-- ── NODE 1: CELL STACK ── -->
+    <rect x="20" y="75" width="88" height="90" rx="7" fill="#0d1208" stroke="#FFC857" stroke-width="1.8" filter="url(#p-glow)"/>
+    <text x="64" y="98" fill="#FFC857" font-size="9" text-anchor="middle" font-weight="bold">CELL</text>
+    <text x="64" y="110" fill="#FFC857" font-size="9" text-anchor="middle" font-weight="bold">STACK</text>
+    <text x="64" y="127" fill="#888" font-size="7.5" text-anchor="middle">16 × LFP</text>
+    <text x="64" y="139" fill="#888" font-size="7.5" text-anchor="middle">3.2V / 280Ah</text>
+    <text x="64" y="152" fill="#555" font-size="7" text-anchor="middle">Ch 1+3</text>
+
+    <!-- ── NODE 2: SENSING ── -->
+    <rect x="125" y="75" width="88" height="90" rx="7" fill="#080d14" stroke="#00F5FF" stroke-width="1.8" filter="url(#p-glow)"/>
+    <text x="169" y="98" fill="#00F5FF" font-size="9" text-anchor="middle" font-weight="bold">VOLTAGE</text>
+    <text x="169" y="110" fill="#00F5FF" font-size="9" text-anchor="middle" font-weight="bold">+ TEMP</text>
+    <text x="169" y="127" fill="#888" font-size="7.5" text-anchor="middle">NTC × 5</text>
+    <text x="169" y="139" fill="#888" font-size="7.5" text-anchor="middle">±1mV / ±0.5°C</text>
+    <text x="169" y="152" fill="#555" font-size="7" text-anchor="middle">Ch 4</text>
+
+    <!-- ── NODE 3: AFE ADC ── -->
+    <rect x="230" y="75" width="88" height="90" rx="7" fill="#08100d" stroke="#00F5FF" stroke-width="1.8" filter="url(#p-glow)"/>
+    <text x="274" y="98" fill="#00F5FF" font-size="9" text-anchor="middle" font-weight="bold">AFE / ADC</text>
+    <text x="274" y="110" fill="#00F5FF" font-size="9" text-anchor="middle" font-weight="bold">BQ76952</text>
+    <text x="274" y="127" fill="#888" font-size="7.5" text-anchor="middle">16-ch @ 1ms</text>
+    <text x="274" y="139" fill="#888" font-size="7.5" text-anchor="middle">I²C → MCU</text>
+    <text x="274" y="152" fill="#555" font-size="7" text-anchor="middle">Ch 4+8</text>
+
+    <!-- ── NODE 4: FILTER ── -->
+    <rect x="335" y="75" width="88" height="90" rx="7" fill="#0d0820" stroke="#A855F7" stroke-width="1.8" filter="url(#p-glow)"/>
+    <text x="379" y="98" fill="#A855F7" font-size="9" text-anchor="middle" font-weight="bold">DIGITAL</text>
+    <text x="379" y="110" fill="#A855F7" font-size="9" text-anchor="middle" font-weight="bold">FILTER</text>
+    <text x="379" y="127" fill="#888" font-size="7.5" text-anchor="middle">IIR low-pass</text>
+    <text x="379" y="139" fill="#888" font-size="7.5" text-anchor="middle">α = 0.1</text>
+    <text x="379" y="152" fill="#555" font-size="7" text-anchor="middle">Ch 5+6</text>
+
+    <!-- ── NODE 5: SOC/SOH ── -->
+    <rect x="440" y="75" width="88" height="90" rx="7" fill="#081408" stroke="#00FF88" stroke-width="1.8" filter="url(#p-glow)"/>
+    <text x="484" y="98" fill="#00FF88" font-size="9" text-anchor="middle" font-weight="bold">SoC / SoH</text>
+    <text x="484" y="110" fill="#00FF88" font-size="9" text-anchor="middle" font-weight="bold">KALMAN</text>
+    <text x="484" y="127" fill="#888" font-size="7.5" text-anchor="middle">EKF 10ms</text>
+    <text x="484" y="139" fill="#888" font-size="7.5" text-anchor="middle">±2% SoC</text>
+    <text x="484" y="152" fill="#555" font-size="7" text-anchor="middle">Ch 2+5</text>
+
+    <!-- ── NODE 6: PROTECTION ── -->
+    <rect x="545" y="75" width="88" height="90" rx="7" fill="#14080a" stroke="#FF6B35" stroke-width="1.8" filter="url(#p-glow)"/>
+    <text x="589" y="98" fill="#FF6B35" font-size="9" text-anchor="middle" font-weight="bold">PROT</text>
+    <text x="589" y="110" fill="#FF6B35" font-size="9" text-anchor="middle" font-weight="bold">STATE M/C</text>
+    <text x="589" y="127" fill="#888" font-size="7.5" text-anchor="middle">6 states</text>
+    <text x="589" y="139" fill="#888" font-size="7.5" text-anchor="middle">hysteresis 3s</text>
+    <text x="589" y="152" fill="#555" font-size="7" text-anchor="middle">Ch 6+9</text>
+
+    <!-- ── NODE 7: FET CONTROL ── -->
+    <rect x="650" y="75" width="88" height="90" rx="7" fill="#140e08" stroke="#FFC857" stroke-width="1.8" filter="url(#p-glow)"/>
+    <text x="694" y="98" fill="#FFC857" font-size="9" text-anchor="middle" font-weight="bold">FET / CONT</text>
+    <text x="694" y="110" fill="#FFC857" font-size="9" text-anchor="middle" font-weight="bold">CONTROL</text>
+    <text x="694" y="127" fill="#888" font-size="7.5" text-anchor="middle">CHG + DSG</text>
+    <text x="694" y="139" fill="#888" font-size="7.5" text-anchor="middle">&lt;500µs trip</text>
+    <text x="694" y="152" fill="#555" font-size="7" text-anchor="middle">Ch 3+8+9</text>
+
+    <!-- ── NODE 8: CAN BUS ── -->
+    <rect x="755" y="75" width="88" height="90" rx="7" fill="#08100e" stroke="#00F5FF" stroke-width="1.8" filter="url(#p-glow)"/>
+    <text x="799" y="98" fill="#00F5FF" font-size="9" text-anchor="middle" font-weight="bold">CAN BUS</text>
+    <text x="799" y="110" fill="#00F5FF" font-size="9" text-anchor="middle" font-weight="bold">0x351–35F</text>
+    <text x="799" y="127" fill="#888" font-size="7.5" text-anchor="middle">250 kbps</text>
+    <text x="799" y="139" fill="#888" font-size="7.5" text-anchor="middle">PYLON compat</text>
+    <text x="799" y="152" fill="#555" font-size="7" text-anchor="middle">Ch 6+7</text>
+
+    <!-- ── NODE 9: CLOUD/LOG ── -->
+    <rect x="860" y="75" width="88" height="90" rx="7" fill="#080e10" stroke="#00CFFF" stroke-width="1.8" filter="url(#p-glow)"/>
+    <text x="904" y="98" fill="#00CFFF" font-size="9" text-anchor="middle" font-weight="bold">LOG /</text>
+    <text x="904" y="110" fill="#00CFFF" font-size="9" text-anchor="middle" font-weight="bold">CLOUD</text>
+    <text x="904" y="127" fill="#888" font-size="7.5" text-anchor="middle">NVM + MQTT</text>
+    <text x="904" y="139" fill="#888" font-size="7.5" text-anchor="middle">Grafana dash</text>
+    <text x="904" y="152" fill="#555" font-size="7" text-anchor="middle">Ch 6+10</text>
+
+    <!-- CONNECTOR ARROWS -->
+    <line x1="108" y1="120" x2="123" y2="120" stroke="#00f5ff" stroke-width="1.5" marker-end="url(#p-arr)"/>
+    <line x1="213" y1="120" x2="228" y2="120" stroke="#00f5ff" stroke-width="1.5" marker-end="url(#p-arr)"/>
+    <line x1="318" y1="120" x2="333" y2="120" stroke="#a855f7" stroke-width="1.5" marker-end="url(#p-arr)"/>
+    <line x1="423" y1="120" x2="438" y2="120" stroke="#00ff88" stroke-width="1.5" marker-end="url(#p-arr)"/>
+    <line x1="528" y1="120" x2="543" y2="120" stroke="#ff6b35" stroke-width="1.5" marker-end="url(#p-arr)"/>
+    <line x1="633" y1="120" x2="648" y2="120" stroke="#ffc857" stroke-width="1.5" marker-end="url(#p-arr)"/>
+    <line x1="738" y1="120" x2="753" y2="120" stroke="#00f5ff" stroke-width="1.5" marker-end="url(#p-arr)"/>
+    <line x1="843" y1="120" x2="858" y2="120" stroke="#00cfff" stroke-width="1.5" marker-end="url(#p-arr)"/>
+
+    <!-- FEEDBACK LOOP (bottom arc) -->
+    <path d="M904,165 Q480,240 64,165" fill="none" stroke="rgba(0,245,255,0.25)" stroke-width="1.5" stroke-dasharray="8,4"/>
+    <text x="480" y="235" fill="#00f5ff" font-size="8.5" text-anchor="middle" opacity="0.5" font-style="italic">← feedback: FET state & SoC update loops back to algorithm ←</text>
+
+    <!-- LOWER DETAIL PANEL -->
+    <rect x="20" y="280" width="920" height="220" rx="8" fill="#050508" stroke="rgba(0,245,255,0.1)" stroke-width="1"/>
+    <text x="480" y="304" fill="#00f5ff" font-size="10" text-anchor="middle" font-weight="bold" font-family="Orbitron" letter-spacing="1">WHAT EACH STAGE ACTUALLY DOES</text>
+
+    <!-- col 1 -->
+    <text x="40" y="326" fill="#FFC857" font-size="8.5" font-weight="bold">① CELL STACK</text>
+    <text x="40" y="340" fill="#555" font-size="7.5">Source of all electrical energy.</text>
+    <text x="40" y="353" fill="#555" font-size="7.5">V varies 2.5–3.65V/cell.</text>
+    <text x="40" y="366" fill="#555" font-size="7.5">T varies –20 to +60°C.</text>
+    <text x="40" y="379" fill="#555" font-size="7.5">Flat OCV = hard to know SoC.</text>
+
+    <!-- col 2 -->
+    <text x="165" y="326" fill="#00F5FF" font-size="8.5" font-weight="bold">② SENSE</text>
+    <text x="165" y="340" fill="#555" font-size="7.5">NTC gives analogue voltage.</text>
+    <text x="165" y="353" fill="#555" font-size="7.5">Cell taps → differential mux.</text>
+    <text x="165" y="366" fill="#555" font-size="7.5">Shunt → bidirectional Ibat.</text>
+    <text x="165" y="379" fill="#555" font-size="7.5">Accuracy limits everything.</text>
+
+    <!-- col 3 -->
+    <text x="280" y="326" fill="#00F5FF" font-size="8.5" font-weight="bold">③ AFE / ADC</text>
+    <text x="280" y="340" fill="#555" font-size="7.5">Sigma-delta ADC 16-bit.</text>
+    <text x="280" y="353" fill="#555" font-size="7.5">All 16 cells in &lt;1ms cycle.</text>
+    <text x="280" y="366" fill="#555" font-size="7.5">CC2 integrates charge/sec.</text>
+    <text x="280" y="379" fill="#555" font-size="7.5">OVP/UVP hardware trip.</text>
+
+    <!-- col 4 -->
+    <text x="390" y="326" fill="#A855F7" font-size="8.5" font-weight="bold">④ FILTER</text>
+    <text x="390" y="340" fill="#555" font-size="7.5">ADC noise → IIR smooth.</text>
+    <text x="390" y="353" fill="#555" font-size="7.5">α=0.1 cuts 90% noise.</text>
+    <text x="390" y="366" fill="#555" font-size="7.5">Also catches glitches.</text>
+    <text x="390" y="379" fill="#555" font-size="7.5">No filter = chattering FETs.</text>
+
+    <!-- col 5 -->
+    <text x="500" y="326" fill="#00FF88" font-size="8.5" font-weight="bold">⑤ SoC/SoH</text>
+    <text x="500" y="340" fill="#555" font-size="7.5">Kalman fuses CC + OCV.</text>
+    <text x="500" y="353" fill="#555" font-size="7.5">DCIR lookup → SoH.</text>
+    <text x="500" y="366" fill="#555" font-size="7.5">Runs every 10ms.</text>
+    <text x="500" y="379" fill="#555" font-size="7.5">Feeds protection + CAN.</text>
+
+    <!-- col 6 -->
+    <text x="610" y="326" fill="#FF6B35" font-size="8.5" font-weight="bold">⑥ PROTECTION</text>
+    <text x="610" y="340" fill="#555" font-size="7.5">6-state state machine.</text>
+    <text x="610" y="353" fill="#555" font-size="7.5">OVP/UVP/OCP/OTP.</text>
+    <text x="610" y="366" fill="#555" font-size="7.5">Hysteresis prevents chatter.</text>
+    <text x="610" y="379" fill="#555" font-size="7.5">Fastest path to FET trip.</text>
+
+    <!-- col 7 -->
+    <text x="718" y="326" fill="#FFC857" font-size="8.5" font-weight="bold">⑦ FET CTRL</text>
+    <text x="718" y="340" fill="#555" font-size="7.5">CHG FET + DSG FET.</text>
+    <text x="718" y="353" fill="#555" font-size="7.5">HW trip: &lt;500µs.</text>
+    <text x="718" y="366" fill="#555" font-size="7.5">Precharge 10Ω/100ms.</text>
+    <text x="718" y="379" fill="#555" font-size="7.5">Watchdog → both off.</text>
+
+    <!-- col 8 -->
+    <text x="820" y="326" fill="#00CFFF" font-size="8.5" font-weight="bold">⑧+⑨ OUT</text>
+    <text x="820" y="340" fill="#555" font-size="7.5">CAN 0x351–0x359.</text>
+    <text x="820" y="353" fill="#555" font-size="7.5">UART debug stream.</text>
+    <text x="820" y="366" fill="#555" font-size="7.5">NVM event log.</text>
+    <text x="820" y="379" fill="#555" font-size="7.5">Cloud MQTT/Grafana.</text>
+
+    <!-- bottom note -->
+    <text x="480" y="458" fill="#2a2a3a" font-size="8.5" text-anchor="middle">The entire loop runs every 10ms on the MCU. 100 times per second. Forever. Until power is removed.</text>
+    <text x="480" y="472" fill="#2a2a3a" font-size="8.5" text-anchor="middle">That is what a BMS is: a real-time control system wrapped around electrochemistry.</text>
+    <text x="480" y="488" fill="#333" font-size="8" text-anchor="middle" font-family="Orbitron">MEASURE → THINK → ACT · REPEAT 100×/SECOND</text>
+  </svg>
+  </div>
+
+  <div class="callout callout-cyan">
+    <strong>The one thing to remember:</strong> The BMS never "knows" the battery state perfectly. It
+    <em>estimates</em> it — using voltage, current, temperature, and a mathematical model. Every design
+    decision in chapters 1–10 is about making that estimate more accurate, more reliable, and faster to react.
+  </div>
+
+  <!-- 9 stage cards quick summary -->
+  <div class="card-grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="card"><div class="card-title" style="color:var(--c1)">MEASURE (Stages 1–3)</div><div class="card-body">Cells generate voltage. Sensors capture it. AFE digitises every cell every millisecond with ±1mV accuracy. This raw data is the foundation of everything.</div></div>
+    <div class="card"><div class="card-title" style="color:var(--c4)">THINK (Stages 4–5)</div><div class="card-body">Filter removes noise. Kalman filter fuses coulomb counting + voltage model → SoC ±2%. DCIR trend → SoH. This is the intelligence layer.</div></div>
+    <div class="card"><div class="card-title" style="color:var(--c3)">ACT (Stages 6–9)</div><div class="card-body">Protection state machine decides. FETs execute in &lt;500µs. CAN tells the inverter. NVM logs every event. Cloud visualises. System reacts.</div></div>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════ SECTION 2 ═══════════════ -->
+<section class="section reveal" id="s-realflow">
+<div class="section-inner">
+  <div class="section-label">Section 02</div>
+  <h2 class="section-title">Real Operation Flow — What Happens From Power-ON</h2>
+  <p class="section-intro">
+    This is not theory. This is what the MCU firmware actually runs, step by step, the moment you
+    connect power. The BMS is a state machine with a deterministic boot sequence. If you understand this
+    sequence, you understand the entire embedded system.
+  </p>
+
+  <!-- ANIMATED BOOT/OPERATION SVG -->
+  <div style="overflow-x:auto;margin:1.5rem 0">
+  <svg viewBox="0 0 880 400" width="860" style="display:block;margin:0 auto;font-family:'JetBrains Mono',monospace;">
+    <rect width="880" height="400" fill="#020204" rx="12"/>
+    <text x="440" y="24" fill="#00ff88" font-size="10" text-anchor="middle" font-weight="bold" font-family="Orbitron">BMS POWER-ON → STEADY STATE — COMPLETE SEQUENCE</text>
+
+    <!-- 8 phase boxes in a flow -->
+    <!-- Phase 1: Power ON -->
+    <rect x="20" y="45" width="96" height="68" rx="6" fill="#080e08" stroke="#00ff88" stroke-width="1.8">
+      </rect>
+    <text x="68" y="67" fill="#00ff88" font-size="8" text-anchor="middle" font-weight="bold">POWER ON</text>
+    <text x="68" y="81" fill="#888" font-size="7" text-anchor="middle">3.3V rail stable</text>
+    <text x="68" y="93" fill="#888" font-size="7" text-anchor="middle">Clock → 170MHz</text>
+    <text x="68" y="105" fill="#555" font-size="7" text-anchor="middle">~2ms</text>
+
+    <!-- Phase 2: Init -->
+    <rect x="130" y="45" width="96" height="68" rx="6" fill="#0a0820" stroke="#A855F7" stroke-width="1.5">
+      </rect>
+    <text x="178" y="67" fill="#A855F7" font-size="8" text-anchor="middle" font-weight="bold">HAL INIT</text>
+    <text x="178" y="81" fill="#888" font-size="7" text-anchor="middle">GPIO, SPI, I²C</text>
+    <text x="178" y="93" fill="#888" font-size="7" text-anchor="middle">CAN, UART, ADC</text>
+    <text x="178" y="105" fill="#555" font-size="7" text-anchor="middle">~5ms</text>
+
+    <!-- Phase 3: NVM restore -->
+    <rect x="240" y="45" width="96" height="68" rx="6" fill="#14100a" stroke="#FFC857" stroke-width="1.5">
+      </rect>
+    <text x="288" y="67" fill="#FFC857" font-size="8" text-anchor="middle" font-weight="bold">NVM LOAD</text>
+    <text x="288" y="81" fill="#888" font-size="7" text-anchor="middle">SoC from EEPROM</text>
+    <text x="288" y="93" fill="#888" font-size="7" text-anchor="middle">DCIR table, logs</text>
+    <text x="288" y="105" fill="#555" font-size="7" text-anchor="middle">~10ms</text>
+
+    <!-- Phase 4: AFE startup -->
+    <rect x="350" y="45" width="96" height="68" rx="6" fill="#080e14" stroke="#00F5FF" stroke-width="1.5">
+      </rect>
+    <text x="398" y="67" fill="#00F5FF" font-size="8" text-anchor="middle" font-weight="bold">AFE WAKE</text>
+    <text x="398" y="81" fill="#888" font-size="7" text-anchor="middle">BQ76952 config</text>
+    <text x="398" y="93" fill="#888" font-size="7" text-anchor="middle">OVP/UVP thresh</text>
+    <text x="398" y="105" fill="#555" font-size="7" text-anchor="middle">~20ms</text>
+
+    <!-- Phase 5: Pre-charge -->
+    <rect x="460" y="45" width="96" height="68" rx="6" fill="#14080a" stroke="#FF6B35" stroke-width="1.8">
+      </rect>
+    <text x="508" y="67" fill="#FF6B35" font-size="8" text-anchor="middle" font-weight="bold">PRE-CHARGE</text>
+    <text x="508" y="81" fill="#888" font-size="7" text-anchor="middle">10Ω resistor</text>
+    <text x="508" y="93" fill="#888" font-size="7" text-anchor="middle">Cap charge 100ms</text>
+    <text x="508" y="105" fill="#555" font-size="7" text-anchor="middle">~100–500ms</text>
+
+    <!-- Phase 6: DSG close -->
+    <rect x="570" y="45" width="96" height="68" rx="6" fill="#0a1408" stroke="#00FF88" stroke-width="1.5">
+      </rect>
+    <text x="618" y="67" fill="#00FF88" font-size="8" text-anchor="middle" font-weight="bold">DSG ON</text>
+    <text x="618" y="81" fill="#888" font-size="7" text-anchor="middle">DSG FET closes</text>
+    <text x="618" y="93" fill="#888" font-size="7" text-anchor="middle">Load sees Vbat</text>
+    <text x="618" y="105" fill="#555" font-size="7" text-anchor="middle">~1ms switch</text>
+
+    <!-- Phase 7: Normal loop -->
+    <rect x="680" y="45" width="96" height="68" rx="6" fill="#080e14" stroke="#00F5FF" stroke-width="2">
+      </rect>
+    <text x="728" y="62" fill="#00F5FF" font-size="8" text-anchor="middle" font-weight="bold">NORMAL</text>
+    <text x="728" y="74" fill="#00F5FF" font-size="8" text-anchor="middle" font-weight="bold">LOOP ∞</text>
+    <text x="728" y="88" fill="#888" font-size="7" text-anchor="middle">Measure→Decide</text>
+    <text x="728" y="100" fill="#888" font-size="7" text-anchor="middle">every 10ms</text>
+    <text x="728" y="112" fill="#555" font-size="7" text-anchor="middle">forever</text>
+
+    <!-- Phase 8: Fault path -->
+    <rect x="790" y="45" width="80" height="68" rx="6" fill="#140808" stroke="#FF4757" stroke-width="1.5">
+      </rect>
+    <text x="830" y="67" fill="#FF4757" font-size="8" text-anchor="middle" font-weight="bold">FAULT</text>
+    <text x="830" y="81" fill="#888" font-size="7" text-anchor="middle">FET trip</text>
+    <text x="830" y="93" fill="#888" font-size="7" text-anchor="middle">CAN alarm</text>
+    <text x="830" y="105" fill="#555" font-size="7" text-anchor="middle">&lt;500µs</text>
+
+    <!-- sequential arrows -->
+    <line x1="116" y1="79" x2="128" y2="79" stroke="#555" stroke-width="1.5" marker-end="url(#p-arr)"/>
+    <line x1="226" y1="79" x2="238" y2="79" stroke="#555" stroke-width="1.5" marker-end="url(#p-arr)"/>
+    <line x1="336" y1="79" x2="348" y2="79" stroke="#555" stroke-width="1.5" marker-end="url(#p-arr)"/>
+    <line x1="446" y1="79" x2="458" y2="79" stroke="#555" stroke-width="1.5" marker-end="url(#p-arr)"/>
+    <line x1="556" y1="79" x2="568" y2="79" stroke="#555" stroke-width="1.5" marker-end="url(#p-arr)"/>
+    <line x1="666" y1="79" x2="678" y2="79" stroke="#555" stroke-width="1.5" marker-end="url(#p-arr)"/>
+    <line x1="776" y1="79" x2="788" y2="79" stroke="#ff4757" stroke-width="1.5" marker-end="url(#p-arr)"/>
+
+    <!-- NORMAL LOOP expanded detail -->
+    <rect x="20" y="145" width="650" height="230" rx="8" fill="#050508" stroke="rgba(0,245,255,0.12)" stroke-width="1"/>
+    <text x="345" y="168" fill="#00f5ff" font-size="10" text-anchor="middle" font-weight="bold" font-family="Orbitron">INSIDE THE NORMAL LOOP (runs every 10ms)</text>
+
+    <!-- left column: what runs -->
+    <text x="40" y="190" fill="#00ff88" font-size="8.5" font-weight="bold">1ms TICK (ISR)</text>
+    <text x="40" y="204" fill="#555" font-size="7.5">→ Watchdog kick</text>
+    <text x="40" y="216" fill="#555" font-size="7.5">→ AFE data ready flag</text>
+    <text x="40" y="228" fill="#555" font-size="7.5">→ Coulomb counter update</text>
+
+    <text x="40" y="248" fill="#00f5ff" font-size="8.5" font-weight="bold">10ms TICK (main loop)</text>
+    <text x="40" y="262" fill="#555" font-size="7.5">→ Read I²C: 16× Vcell, 5× Temp, Ibat</text>
+    <text x="40" y="274" fill="#555" font-size="7.5">→ IIR filter all readings</text>
+    <text x="40" y="286" fill="#555" font-size="7.5">→ Run Kalman → update SoC</text>
+    <text x="40" y="298" fill="#555" font-size="7.5">→ Check protection thresholds</text>
+    <text x="40" y="310" fill="#555" font-size="7.5">→ Update FET state if needed</text>
+    <text x="40" y="322" fill="#555" font-size="7.5">→ Build CAN frame 0x355 (SoC)</text>
+    <text x="40" y="334" fill="#555" font-size="7.5">→ Transmit CAN @ 100ms gate</text>
+    <text x="40" y="346" fill="#555" font-size="7.5">→ Check UART rx (debug cmd?)</text>
+    <text x="40" y="358" fill="#555" font-size="7.5">→ NVM write if SoC changed &gt;1%</text>
+
+    <!-- right column: 1s tick -->
+    <text x="360" y="190" fill="#ffc857" font-size="8.5" font-weight="bold">100ms GATE</text>
+    <text x="360" y="204" fill="#555" font-size="7.5">→ CAN 0x351 (V limits)</text>
+    <text x="360" y="216" fill="#555" font-size="7.5">→ CAN 0x359 (fault bits)</text>
+    <text x="360" y="228" fill="#555" font-size="7.5">→ Balancer threshold check</text>
+
+    <text x="360" y="248" fill="#a855f7" font-size="8.5" font-weight="bold">1 SECOND</text>
+    <text x="360" y="262" fill="#555" font-size="7.5">→ SoH update from DCIR trend</text>
+    <text x="360" y="274" fill="#555" font-size="7.5">→ RTC timestamp sync</text>
+    <text x="360" y="286" fill="#555" font-size="7.5">→ CAN 0x356 (Vbat/Ibat/T)</text>
+
+    <text x="360" y="306" fill="#ff6b35" font-size="8.5" font-weight="bold">1 MINUTE</text>
+    <text x="360" y="320" fill="#555" font-size="7.5">→ Write event log entry to NVM</text>
+    <text x="360" y="332" fill="#555" font-size="7.5">→ Check for drift: recalibrate SoC</text>
+
+    <text x="360" y="352" fill="#00cfff" font-size="8.5" font-weight="bold">60 SECONDS</text>
+    <text x="360" y="366" fill="#555" font-size="7.5">→ MQTT push to cloud dashboard</text>
+
+    <!-- FAULT path detail (right side) -->
+    <rect x="685" y="145" width="180" height="230" rx="8" fill="#0d0508" stroke="rgba(255,71,87,0.2)" stroke-width="1"/>
+    <text x="775" y="168" fill="#FF4757" font-size="9" text-anchor="middle" font-weight="bold" font-family="Orbitron">FAULT PATH</text>
+    <text x="695" y="190" fill="#ff6b35" font-size="8" font-weight="bold">Detection:</text>
+    <text x="695" y="204" fill="#555" font-size="7.5">Vcell &gt; OVP threshold</text>
+    <text x="695" y="216" fill="#555" font-size="7.5">OR HW comparator fires</text>
+    <text x="695" y="232" fill="#ff4757" font-size="8" font-weight="bold">SW Action (&lt;1ms):</text>
+    <text x="695" y="246" fill="#555" font-size="7.5">→ Trip CHG FET</text>
+    <text x="695" y="258" fill="#555" font-size="7.5">→ Set fault flag in RAM</text>
+    <text x="695" y="270" fill="#555" font-size="7.5">→ Build CAN alarm frame</text>
+    <text x="695" y="286" fill="#ff4757" font-size="8" font-weight="bold">HW Action (&lt;500µs):</text>
+    <text x="695" y="300" fill="#555" font-size="7.5">BQ76952 OVP pin</text>
+    <text x="695" y="312" fill="#555" font-size="7.5">→ Gate driver OFF</text>
+    <text x="695" y="324" fill="#555" font-size="7.5">independent of MCU</text>
+    <text x="695" y="344" fill="#00ff88" font-size="8" font-weight="bold">Recovery:</text>
+    <text x="695" y="358" fill="#555" font-size="7.5">Hysteresis 3s clear</text>
+    <text x="695" y="370" fill="#555" font-size="7.5">→ NORMAL resume</text>
+  </svg>
+  </div>
+
+  <div class="callout callout-amber">
+    <strong>Why pre-charge?</strong> The inverter/load has large input capacitors (100–1000µF).
+    Without pre-charge, closing the DSG FET directly creates a current spike of I = C × dV/dt — easily
+    hundreds of amps for microseconds. This welds the FET contacts or destroys the gate driver.
+    The 10Ω pre-charge resistor limits inrush to safe levels during cap charging.
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════ SECTION 3 ═══════════════ -->
+<section class="section reveal" id="s-signal">
+<div class="section-inner">
+  <div class="section-label">Section 03</div>
+  <h2 class="section-title">Signal Flow — Data Moving Through the System</h2>
+  <p class="section-intro">
+    Three real examples. Each one shows a single physical event — an overvoltage, a temperature spike,
+    a low SoC — and traces exactly how that event propagates from the cell through every layer of hardware
+    and firmware until it reaches an output. This is the <em>muscle memory</em> of BMS debugging.
+  </p>
+
+  <!-- THREE SIGNAL FLOW DIAGRAMS -->
+  <div style="display:grid;grid-template-columns:1fr;gap:1.5rem;margin:1.5rem 0">
+
+  <!-- EXAMPLE 1: OVERVOLTAGE -->
+  <div style="background:var(--surface2);border:1px solid rgba(255,71,87,0.25);border-radius:10px;padding:1.2rem">
+    <div style="font-family:var(--font-hud);font-size:0.72rem;color:#FF4757;letter-spacing:0.12em;margin-bottom:0.8rem">
+      EXAMPLE A — OVERVOLTAGE EVENT
+    </div>
+    <div style="overflow-x:auto">
+    <svg viewBox="0 0 860 110" width="840" style="display:block;font-family:'JetBrains Mono',monospace;">
+      <rect width="860" height="110" fill="#0a0508" rx="8"/>
+      <!-- flow nodes -->
+      <rect x="10" y="25" width="85" height="60" rx="5" fill="#1a0808" stroke="#FFC857" stroke-width="1.3"/>
+      <text x="52" y="50" fill="#FFC857" font-size="7.5" text-anchor="middle" font-weight="bold">CELL #7</text>
+      <text x="52" y="63" fill="#888" font-size="7" text-anchor="middle">Vcell rises</text>
+      <text x="52" y="75" fill="#888" font-size="7" text-anchor="middle">to 3.66V</text>
+      <text x="52" y="88" fill="#555" font-size="6.5" text-anchor="middle">(overcharged)</text>
+
+      <line x1="95" y1="55" x2="108" y2="55" stroke="#ff4757" stroke-width="1.5" marker-end="url(#p-arr)"/>
+
+      <rect x="110" y="25" width="90" height="60" rx="5" fill="#0a080e" stroke="#00F5FF" stroke-width="1.3"/>
+      <text x="155" y="48" fill="#00F5FF" font-size="7.5" text-anchor="middle" font-weight="bold">BQ76952</text>
+      <text x="155" y="61" fill="#888" font-size="7" text-anchor="middle">Vcell mux ADC</text>
+      <text x="155" y="74" fill="#888" font-size="7" text-anchor="middle">reads 3.660V</text>
+      <text x="155" y="87" fill="#555" font-size="6.5" text-anchor="middle">HW compares &gt;3.65V</text>
+
+      <line x1="200" y1="55" x2="213" y2="55" stroke="#ff4757" stroke-width="1.5" marker-end="url(#p-arr)"/>
+
+      <rect x="215" y="25" width="90" height="60" rx="5" fill="#0a080e" stroke="#A855F7" stroke-width="1.3"/>
+      <text x="260" y="48" fill="#A855F7" font-size="7.5" text-anchor="middle" font-weight="bold">I²C → MCU</text>
+      <text x="260" y="61" fill="#888" font-size="7" text-anchor="middle">Read in 10ms</text>
+      <text x="260" y="74" fill="#888" font-size="7" text-anchor="middle">loop tick</text>
+      <text x="260" y="87" fill="#555" font-size="6.5" text-anchor="middle">Vcell[6]=3.660V</text>
+
+      <line x1="305" y1="55" x2="318" y2="55" stroke="#ff4757" stroke-width="1.5" marker-end="url(#p-arr)"/>
+
+      <rect x="320" y="25" width="100" height="60" rx="5" fill="#0a080e" stroke="#FF6B35" stroke-width="1.3"/>
+      <text x="370" y="48" fill="#FF6B35" font-size="7.5" text-anchor="middle" font-weight="bold">PROT SM</text>
+      <text x="370" y="61" fill="#888" font-size="7" text-anchor="middle">OVP check fires</text>
+      <text x="370" y="74" fill="#888" font-size="7" text-anchor="middle">State→OVP_TRIP</text>
+      <text x="370" y="87" fill="#555" font-size="6.5" text-anchor="middle">&lt;1ms decision</text>
+
+      <line x1="420" y1="55" x2="433" y2="55" stroke="#ff4757" stroke-width="1.5" marker-end="url(#p-arr)"/>
+
+      <rect x="435" y="25" width="90" height="60" rx="5" fill="#0d1008" stroke="#FFC857" stroke-width="1.3"/>
+      <text x="480" y="48" fill="#FFC857" font-size="7.5" text-anchor="middle" font-weight="bold">CHG FET</text>
+      <text x="480" y="61" fill="#888" font-size="7" text-anchor="middle">Gate driver OFF</text>
+      <text x="480" y="74" fill="#888" font-size="7" text-anchor="middle">Charging stops</text>
+      <text x="480" y="87" fill="#555" font-size="6.5" text-anchor="middle">&lt;500µs physical</text>
+
+      <line x1="525" y1="55" x2="538" y2="55" stroke="#ff4757" stroke-width="1.5" marker-end="url(#p-arr)"/>
+
+      <rect x="540" y="25" width="90" height="60" rx="5" fill="#080e0a" stroke="#00F5FF" stroke-width="1.3"/>
+      <text x="585" y="48" fill="#00F5FF" font-size="7.5" text-anchor="middle" font-weight="bold">CAN 0x359</text>
+      <text x="585" y="61" fill="#888" font-size="7" text-anchor="middle">fault bits set</text>
+      <text x="585" y="74" fill="#888" font-size="7" text-anchor="middle">Inverter sees it</text>
+      <text x="585" y="87" fill="#555" font-size="6.5" text-anchor="middle">stops charging</text>
+
+      <line x1="630" y1="55" x2="643" y2="55" stroke="#ff4757" stroke-width="1.5" marker-end="url(#p-arr)"/>
+
+      <rect x="645" y="25" width="90" height="60" rx="5" fill="#080a08" stroke="#00FF88" stroke-width="1.3"/>
+      <text x="690" y="48" fill="#00FF88" font-size="7.5" text-anchor="middle" font-weight="bold">NVM LOG</text>
+      <text x="690" y="61" fill="#888" font-size="7" text-anchor="middle">Timestamp</text>
+      <text x="690" y="74" fill="#888" font-size="7" text-anchor="middle">Vcell, Ibat, T</text>
+      <text x="690" y="87" fill="#555" font-size="6.5" text-anchor="middle">permanent record</text>
+
+      <line x1="735" y1="55" x2="748" y2="55" stroke="#555" stroke-width="1.2" marker-end="url(#p-arr)" stroke-dasharray="3,2"/>
+
+      <rect x="750" y="25" width="98" height="60" rx="5" fill="#0a0808" stroke="#00FF88" stroke-width="1.3">
+      </rect>
+      <text x="799" y="48" fill="#00FF88" font-size="7.5" text-anchor="middle" font-weight="bold">RECOVERY</text>
+      <text x="799" y="61" fill="#888" font-size="7" text-anchor="middle">Vcell drops</text>
+      <text x="799" y="74" fill="#888" font-size="7" text-anchor="middle">below 3.64V</text>
+      <text x="799" y="87" fill="#555" font-size="6.5" text-anchor="middle">→ CHG FET on</text>
+    </svg>
+    </div>
+    <p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem">
+      Total time from Vcell hitting threshold to charging physically stopping: <strong style="color:#FF4757">&lt;1ms (SW) + &lt;500µs (HW) = under 1.5ms</strong>. The cell never sees more than +10mV above limit.
+    </p>
+  </div>
+
+  <!-- EXAMPLE 2: OVERTEMPERATURE -->
+  <div style="background:var(--surface2);border:1px solid rgba(255,107,53,0.25);border-radius:10px;padding:1.2rem">
+    <div style="font-family:var(--font-hud);font-size:0.72rem;color:#FF6B35;letter-spacing:0.12em;margin-bottom:0.8rem">
+      EXAMPLE B — OVERTEMPERATURE (OTP)
+    </div>
+    <div style="overflow-x:auto">
+    <svg viewBox="0 0 760 90" width="740" style="display:block;font-family:'JetBrains Mono',monospace;">
+      <rect width="760" height="90" fill="#0a0808" rx="8"/>
+      <rect x="10" y="15" width="100" height="60" rx="5" fill="#180d08" stroke="#FF6B35" stroke-width="1.3"/>
+      <text x="60" y="38" fill="#FF6B35" font-size="7.5" text-anchor="middle" font-weight="bold">NTC SENSOR</text>
+      <text x="60" y="51" fill="#888" font-size="7" text-anchor="middle">T rises to 56°C</text>
+      <text x="60" y="64" fill="#555" font-size="6.5" text-anchor="middle">V_ntc drops</text>
+      <text x="60" y="77" fill="#555" font-size="6.5" text-anchor="middle">10kΩ NTC div</text>
+      <line x1="110" y1="45" x2="123" y2="45" stroke="#ff6b35" stroke-width="1.5" marker-end="url(#p-arr)"/>
+      <rect x="125" y="15" width="100" height="60" rx="5" fill="#0a080e" stroke="#00F5FF" stroke-width="1.3"/>
+      <text x="175" y="38" fill="#00F5FF" font-size="7.5" text-anchor="middle" font-weight="bold">AFE TEMP ADC</text>
+      <text x="175" y="51" fill="#888" font-size="7" text-anchor="middle">16-bit conv</text>
+      <text x="175" y="64" fill="#888" font-size="7" text-anchor="middle">→ Steinhart eq</text>
+      <text x="175" y="77" fill="#555" font-size="6.5" text-anchor="middle">T_calc = 56.2°C</text>
+      <line x1="225" y1="45" x2="238" y2="45" stroke="#ff6b35" stroke-width="1.5" marker-end="url(#p-arr)"/>
+      <rect x="240" y="15" width="100" height="60" rx="5" fill="#0a080e" stroke="#A855F7" stroke-width="1.3"/>
+      <text x="290" y="38" fill="#A855F7" font-size="7.5" text-anchor="middle" font-weight="bold">MCU PROT</text>
+      <text x="290" y="51" fill="#888" font-size="7" text-anchor="middle">T &gt; 55°C OTD</text>
+      <text x="290" y="64" fill="#888" font-size="7" text-anchor="middle">State→OTP</text>
+      <text x="290" y="77" fill="#555" font-size="6.5" text-anchor="middle">flag set</text>
+      <line x1="340" y1="45" x2="353" y2="45" stroke="#ff6b35" stroke-width="1.5" marker-end="url(#p-arr)"/>
+      <rect x="355" y="15" width="100" height="60" rx="5" fill="#0d1008" stroke="#FFC857" stroke-width="1.3"/>
+      <text x="405" y="38" fill="#FFC857" font-size="7.5" text-anchor="middle" font-weight="bold">DSG FET OFF</text>
+      <text x="405" y="51" fill="#888" font-size="7" text-anchor="middle">load current</text>
+      <text x="405" y="64" fill="#888" font-size="7" text-anchor="middle">stops → T drops</text>
+      <text x="405" y="77" fill="#555" font-size="6.5" text-anchor="middle">cooling begins</text>
+      <line x1="455" y1="45" x2="468" y2="45" stroke="#ff6b35" stroke-width="1.5" marker-end="url(#p-arr)"/>
+      <rect x="470" y="15" width="100" height="60" rx="5" fill="#080a0e" stroke="#00F5FF" stroke-width="1.3"/>
+      <text x="520" y="38" fill="#00F5FF" font-size="7.5" text-anchor="middle" font-weight="bold">CAN ALARM</text>
+      <text x="520" y="51" fill="#888" font-size="7" text-anchor="middle">0x359 bit[4]</text>
+      <text x="520" y="64" fill="#888" font-size="7" text-anchor="middle">Inverter notified</text>
+      <text x="520" y="77" fill="#555" font-size="6.5" text-anchor="middle">reduce load</text>
+      <line x1="570" y1="45" x2="583" y2="45" stroke="#555" stroke-width="1.2" marker-end="url(#p-arr)" stroke-dasharray="3,2"/>
+      <rect x="585" y="15" width="160" height="60" rx="5" fill="#080e08" stroke="#00FF88" stroke-width="1.3"/>
+      <text x="665" y="38" fill="#00FF88" font-size="7.5" text-anchor="middle" font-weight="bold">AUTO-RECOVERY</text>
+      <text x="665" y="51" fill="#888" font-size="7" text-anchor="middle">T &lt; 50°C (5°C hyst)</text>
+      <text x="665" y="64" fill="#888" font-size="7" text-anchor="middle">after 30s clear ticks</text>
+      <text x="665" y="77" fill="#555" font-size="6.5" text-anchor="middle">DSG FET re-closes</text>
+    </svg>
+    </div>
+    <p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem">
+      Key insight: the 5°C hysteresis band prevents the FET from cycling on/off rapidly near the threshold.
+      The 30-second clear timer (30 ticks × 1 tick/s) prevents re-entry unless temperature is genuinely stable.
+    </p>
+  </div>
+
+  <!-- EXAMPLE 3: LOW SOC -->
+  <div style="background:var(--surface2);border:1px solid rgba(0,255,136,0.2);border-radius:10px;padding:1.2rem">
+    <div style="font-family:var(--font-hud);font-size:0.72rem;color:#00FF88;letter-spacing:0.12em;margin-bottom:0.8rem">
+      EXAMPLE C — LOW SoC WARNING → DEEP DISCHARGE PROTECTION
+    </div>
+    <div style="overflow-x:auto">
+    <svg viewBox="0 0 860 90" width="840" style="display:block;font-family:'JetBrains Mono',monospace;">
+      <rect width="860" height="90" fill="#080e08" rx="8"/>
+      <rect x="10" y="15" width="100" height="60" rx="5" fill="#0a1208" stroke="#00FF88" stroke-width="1.3"/>
+      <text x="60" y="38" fill="#00FF88" font-size="7.5" text-anchor="middle" font-weight="bold">COULOMB CTR</text>
+      <text x="60" y="51" fill="#888" font-size="7" text-anchor="middle">CC2 integrates</text>
+      <text x="60" y="64" fill="#888" font-size="7" text-anchor="middle">SoC → 22%</text>
+      <text x="60" y="77" fill="#555" font-size="6.5" text-anchor="middle">Ibat = -15A</text>
+      <line x1="110" y1="45" x2="123" y2="45" stroke="#00ff88" stroke-width="1.5" marker-end="url(#p-arr)"/>
+      <rect x="125" y="15" width="100" height="60" rx="5" fill="#0a080e" stroke="#A855F7" stroke-width="1.3"/>
+      <text x="175" y="38" fill="#A855F7" font-size="7.5" text-anchor="middle" font-weight="bold">KALMAN EKF</text>
+      <text x="175" y="51" fill="#888" font-size="7" text-anchor="middle">fuses CC + OCV</text>
+      <text x="175" y="64" fill="#888" font-size="7" text-anchor="middle">SoC_est = 21.8%</text>
+      <text x="175" y="77" fill="#555" font-size="6.5" text-anchor="middle">±2% confidence</text>
+      <line x1="225" y1="45" x2="238" y2="45" stroke="#00ff88" stroke-width="1.5" marker-end="url(#p-arr)"/>
+      <rect x="240" y="15" width="100" height="60" rx="5" fill="#141008" stroke="#FFC857" stroke-width="1.3"/>
+      <text x="290" y="38" fill="#FFC857" font-size="7.5" text-anchor="middle" font-weight="bold">WARN STATE</text>
+      <text x="290" y="51" fill="#888" font-size="7" text-anchor="middle">SoC &lt; 25%</text>
+      <text x="290" y="64" fill="#888" font-size="7" text-anchor="middle">CAN 0x355</text>
+      <text x="290" y="77" fill="#555" font-size="6.5" text-anchor="middle">low-batt flag</text>
+      <line x1="340" y1="45" x2="353" y2="45" stroke="#00ff88" stroke-width="1.5" marker-end="url(#p-arr)"/>
+      <rect x="355" y="15" width="110" height="60" rx="5" fill="#14080a" stroke="#FF6B35" stroke-width="1.3"/>
+      <text x="410" y="38" fill="#FF6B35" font-size="7.5" text-anchor="middle" font-weight="bold">UVP WATCH</text>
+      <text x="410" y="51" fill="#888" font-size="7" text-anchor="middle">Vcell min &lt; 2.8V</text>
+      <text x="410" y="64" fill="#888" font-size="7" text-anchor="middle">DSG trip → UVP</text>
+      <text x="410" y="77" fill="#555" font-size="6.5" text-anchor="middle">pack protected</text>
+      <line x1="465" y1="45" x2="478" y2="45" stroke="#00ff88" stroke-width="1.5" marker-end="url(#p-arr)"/>
+      <rect x="480" y="15" width="110" height="60" rx="5" fill="#080a0e" stroke="#00F5FF" stroke-width="1.3"/>
+      <text x="535" y="38" fill="#00F5FF" font-size="7.5" text-anchor="middle" font-weight="bold">INVERTER NOTIF</text>
+      <text x="535" y="51" fill="#888" font-size="7" text-anchor="middle">0x351 min cell</text>
+      <text x="535" y="64" fill="#888" font-size="7" text-anchor="middle">switch to grid</text>
+      <text x="535" y="77" fill="#555" font-size="6.5" text-anchor="middle">load maintained</text>
+      <line x1="590" y1="45" x2="603" y2="45" stroke="#555" stroke-width="1.2" marker-end="url(#p-arr)" stroke-dasharray="3,2"/>
+      <rect x="605" y="15" width="100" height="60" rx="5" fill="#0a0a0e" stroke="#A855F7" stroke-width="1.3"/>
+      <text x="655" y="38" fill="#A855F7" font-size="7.5" text-anchor="middle" font-weight="bold">6-STEP RECOV</text>
+      <text x="655" y="51" fill="#888" font-size="7" text-anchor="middle">C/20 slow CHG</text>
+      <text x="655" y="64" fill="#888" font-size="7" text-anchor="middle">deep-dchg recovery</text>
+      <text x="655" y="77" fill="#555" font-size="6.5" text-anchor="middle">6 steps, hrs</text>
+      <line x1="705" y1="45" x2="718" y2="45" stroke="#555" stroke-width="1.2" marker-end="url(#p-arr)" stroke-dasharray="3,2"/>
+      <rect x="720" y="15" width="128" height="60" rx="5" fill="#080e08" stroke="#00FF88" stroke-width="1.3">
+      </rect>
+      <text x="784" y="38" fill="#00FF88" font-size="7.5" text-anchor="middle" font-weight="bold">SoC RESTORED</text>
+      <text x="784" y="51" fill="#888" font-size="7" text-anchor="middle">SoC &gt; 20%</text>
+      <text x="784" y="64" fill="#888" font-size="7" text-anchor="middle">normal ops resume</text>
+      <text x="784" y="77" fill="#555" font-size="6.5" text-anchor="middle">cell life preserved</text>
+    </svg>
+    </div>
+    <p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.6rem">
+      For a UPS, the inverter <em>must</em> be told before the BMS trips the DSG FET — otherwise loads
+      drop for the milliseconds it takes to switch to mains. CAN warning at 25% SoC gives the inverter
+      ~10 minutes to initiate a graceful grid transfer. See <a href="chapter7.html" style="color:var(--c2)">Ch 7</a> for the full UPS protocol.
+    </p>
+  </div>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════ SECTION 4 ═══════════════ -->
+<section class="section reveal" id="s-chapters">
+<div class="section-inner">
+  <div class="section-label">Section 04</div>
+  <h2 class="section-title">Chapter Connection Map — Where Each Chapter Lives in the System</h2>
+  <p class="section-intro">
+    Every chapter in this knowledge base owns one or more stages in the BMS signal chain. This map shows
+    you exactly which chapter to open when you hit a question at any stage of the system. No more guessing
+    which chapter covers what.
+  </p>
+
+  <!-- CHAPTER MAP SVG -->
+  <div style="overflow-x:auto;margin:1.5rem 0">
+  <svg viewBox="0 0 920 560" width="900" style="display:block;margin:0 auto;font-family:'JetBrains Mono',monospace;">
+    <rect width="920" height="560" fill="#020204" rx="12"/>
+    <text x="460" y="26" fill="#00f5ff" font-size="11" text-anchor="middle" font-weight="bold" font-family="Orbitron" letter-spacing="2">KNOWLEDGE BASE — CHAPTER COVERAGE MAP</text>
+
+    <!-- CENTER SPINE: BMS system pipeline labels -->
+    <rect x="60" y="50" width="800" height="32" rx="5" fill="#060610" stroke="rgba(0,245,255,0.2)" stroke-width="1"/>
+    <text x="460" y="71" fill="#00f5ff" font-size="8.5" text-anchor="middle" font-family="Orbitron" letter-spacing="3">CELL → SENSE → AFE → FILTER → SoC/SoH → PROT → FET → CAN → CLOUD</text>
+
+    <!-- Stage dots on spine -->
+    <circle cx="110" cy="66" r="5" fill="#FFC857"></circle>
+    <circle cx="195" cy="66" r="5" fill="#00F5FF"></circle>
+    <circle cx="290" cy="66" r="5" fill="#00F5FF"></circle>
+    <circle cx="385" cy="66" r="5" fill="#A855F7"></circle>
+    <circle cx="480" cy="66" r="5" fill="#00FF88"></circle>
+    <circle cx="575" cy="66" r="5" fill="#FF6B35"></circle>
+    <circle cx="665" cy="66" r="5" fill="#FFC857"></circle>
+    <circle cx="755" cy="66" r="5" fill="#00F5FF"></circle>
+    <circle cx="840" cy="66" r="5" fill="#00CFFF"></circle>
+
+    <!-- ── CHAPTER CARDS (arranged around spine) ── -->
+
+    <!-- CH1: Cell Chemistry → CELL stage -->
+    <rect x="55" y="110" width="130" height="80" rx="7" fill="#120e04" stroke="#FFC857" stroke-width="1.8"/>
+    <text x="120" y="132" fill="#FFC857" font-size="9.5" text-anchor="middle" font-weight="bold">CH 1</text>
+    <text x="120" y="146" fill="#FFC857" font-size="8" text-anchor="middle">Cell Chemistry</text>
+    <text x="120" y="162" fill="#888" font-size="7.5" text-anchor="middle">Why LFP? P-O bonds</text>
+    <text x="120" y="175" fill="#888" font-size="7.5" text-anchor="middle">flat OCV, cycle life</text>
+    <line x1="110" y1="82" x2="110" y2="109" stroke="#FFC857" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.6"/>
+
+    <!-- CH2: Electrochemistry → SoC stage -->
+    <rect x="420" y="110" width="130" height="80" rx="7" fill="#04100e" stroke="#00FF88" stroke-width="1.8"/>
+    <text x="485" y="132" fill="#00FF88" font-size="9.5" text-anchor="middle" font-weight="bold">CH 2</text>
+    <text x="485" y="146" fill="#00FF88" font-size="8" text-anchor="middle">Electrochemistry</text>
+    <text x="485" y="162" fill="#888" font-size="7.5" text-anchor="middle">SoC/SoH equations</text>
+    <text x="485" y="175" fill="#888" font-size="7.5" text-anchor="middle">Butler-Volmer, EIS</text>
+    <line x1="480" y1="82" x2="480" y2="109" stroke="#00FF88" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.6"/>
+
+    <!-- CH3: Pack Architecture → CELL + FET -->
+    <rect x="55" y="220" width="130" height="80" rx="7" fill="#120804" stroke="#FF6B35" stroke-width="1.8"/>
+    <text x="120" y="242" fill="#FF6B35" font-size="9.5" text-anchor="middle" font-weight="bold">CH 3</text>
+    <text x="120" y="256" fill="#FF6B35" font-size="8" text-anchor="middle">Pack Architecture</text>
+    <text x="120" y="272" fill="#888" font-size="7.5" text-anchor="middle">S/P config, busbar</text>
+    <text x="120" y="285" fill="#888" font-size="7.5" text-anchor="middle">thermal management</text>
+    <line x1="110" y1="195" x2="110" y2="219" stroke="#FF6B35" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.6"/>
+    <!-- connecting to FET stage -->
+    <path d="M185,260 Q430,260 610,82" fill="none" stroke="#FF6B35" stroke-width="0.8" stroke-dasharray="4,3" opacity="0.3"/>
+
+    <!-- CH4: AFE & Sensing → SENSE + AFE -->
+    <rect x="155" y="110" width="130" height="80" rx="7" fill="#04080e" stroke="#00F5FF" stroke-width="1.8"/>
+    <text x="220" y="132" fill="#00F5FF" font-size="9.5" text-anchor="middle" font-weight="bold">CH 4</text>
+    <text x="220" y="146" fill="#00F5FF" font-size="8" text-anchor="middle">AFE &amp; Sensing</text>
+    <text x="220" y="162" fill="#888" font-size="7.5" text-anchor="middle">BQ76952, ADC</text>
+    <text x="220" y="175" fill="#888" font-size="7.5" text-anchor="middle">NTC, shunt, I²C</text>
+    <line x1="200" y1="82" x2="200" y2="109" stroke="#00F5FF" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.6"/>
+    <line x1="280" y1="82" x2="260" y2="109" stroke="#00F5FF" stroke-width="0.8" stroke-dasharray="3,3" opacity="0.4"/>
+
+    <!-- CH5: Algorithms → FILTER + SoC -->
+    <rect x="310" y="110" width="130" height="80" rx="7" fill="#04100a" stroke="#00FF88" stroke-width="1.8"/>
+    <text x="375" y="132" fill="#00FF88" font-size="9.5" text-anchor="middle" font-weight="bold">CH 5</text>
+    <text x="375" y="146" fill="#00FF88" font-size="8" text-anchor="middle">Algorithms</text>
+    <text x="375" y="162" fill="#888" font-size="7.5" text-anchor="middle">Kalman filter, EKF</text>
+    <text x="375" y="175" fill="#888" font-size="7.5" text-anchor="middle">IIR, SoH DCIR</text>
+    <line x1="385" y1="82" x2="385" y2="109" stroke="#00FF88" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.6"/>
+
+    <!-- CH6: Firmware → ALL MCU stages -->
+    <rect x="55" y="330" width="130" height="90" rx="7" fill="#080420" stroke="#A855F7" stroke-width="1.8"/>
+    <text x="120" y="352" fill="#A855F7" font-size="9.5" text-anchor="middle" font-weight="bold">CH 6</text>
+    <text x="120" y="366" fill="#A855F7" font-size="8" text-anchor="middle">Firmware</text>
+    <text x="120" y="382" fill="#888" font-size="7.5" text-anchor="middle">MISRA-C, HAL</text>
+    <text x="120" y="395" fill="#888" font-size="7.5" text-anchor="middle">state machine, RTOS</text>
+    <text x="120" y="408" fill="#555" font-size="7" text-anchor="middle">CAN, NVM, WDG</text>
+    <!-- spanning line under pipeline -->
+    <line x1="185" y1="375" x2="870" y2="375" stroke="#A855F7" stroke-width="0.8" stroke-dasharray="6,4" opacity="0.25"/>
+    <text x="530" y="395" fill="#A855F7" font-size="7" text-anchor="middle" opacity="0.4">CH 6 underlies ALL MCU stages above this line</text>
+
+    <!-- CH7: Applications → CAN + Cloud -->
+    <rect x="680" y="110" width="130" height="80" rx="7" fill="#120e04" stroke="#FFC857" stroke-width="1.8"/>
+    <text x="745" y="132" fill="#FFC857" font-size="9.5" text-anchor="middle" font-weight="bold">CH 7</text>
+    <text x="745" y="146" fill="#FFC857" font-size="8" text-anchor="middle">Applications</text>
+    <text x="745" y="162" fill="#888" font-size="7.5" text-anchor="middle">UPS, home ESS</text>
+    <text x="745" y="175" fill="#888" font-size="7.5" text-anchor="middle">CAN frames, VoC</text>
+    <line x1="755" y1="82" x2="755" y2="109" stroke="#FFC857" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.6"/>
+
+    <!-- CH8: HW Design → AFE + FET -->
+    <rect x="205" y="220" width="130" height="80" rx="7" fill="#120e04" stroke="#FFC857" stroke-width="1.8"/>
+    <text x="270" y="242" fill="#FFC857" font-size="9.5" text-anchor="middle" font-weight="bold">CH 8</text>
+    <text x="270" y="256" fill="#FFC857" font-size="8" text-anchor="middle">HW Design</text>
+    <text x="270" y="272" fill="#888" font-size="7.5" text-anchor="middle">PCB, FET sizing</text>
+    <text x="270" y="285" fill="#888" font-size="7.5" text-anchor="middle">gate driver, shunt</text>
+    <line x1="270" y1="195" x2="270" y2="219" stroke="#FFC857" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.5"/>
+    <path d="M335,260 Q440,240 630,82" fill="none" stroke="#FFC857" stroke-width="0.8" stroke-dasharray="4,3" opacity="0.3"/>
+
+    <!-- CH9: Protection → PROT + FET -->
+    <rect x="510" y="220" width="130" height="80" rx="7" fill="#0e0810" stroke="#FF6B35" stroke-width="1.8"/>
+    <text x="575" y="242" fill="#FF6B35" font-size="9.5" text-anchor="middle" font-weight="bold">CH 9</text>
+    <text x="575" y="256" fill="#FF6B35" font-size="8" text-anchor="middle">Protection</text>
+    <text x="575" y="272" fill="#888" font-size="7.5" text-anchor="middle">OVP/UVP/OCP/OTP</text>
+    <text x="575" y="285" fill="#888" font-size="7.5" text-anchor="middle">SCC, prot SM</text>
+    <line x1="575" y1="195" x2="575" y2="219" stroke="#FF6B35" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.6"/>
+
+    <!-- CH10: Sustainability → Cloud -->
+    <rect x="770" y="220" width="130" height="80" rx="7" fill="#04100e" stroke="#00CFFF" stroke-width="1.8"/>
+    <text x="835" y="242" fill="#00CFFF" font-size="9.5" text-anchor="middle" font-weight="bold">CH 10</text>
+    <text x="835" y="256" fill="#00CFFF" font-size="8" text-anchor="middle">Sustainability</text>
+    <text x="835" y="272" fill="#888" font-size="7.5" text-anchor="middle">V2G, Na-ion, SSB</text>
+    <text x="835" y="285" fill="#888" font-size="7.5" text-anchor="middle">grid-scale ESS</text>
+    <line x1="840" y1="195" x2="840" y2="219" stroke="#00CFFF" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.6"/>
+
+    <!-- QUICK REFERENCE row at bottom -->
+    <rect x="55" y="450" width="810" height="90" rx="8" fill="#060608" stroke="rgba(0,245,255,0.1)" stroke-width="1"/>
+    <text x="460" y="473" fill="#00f5ff" font-size="9" text-anchor="middle" font-weight="bold" font-family="Orbitron">WHICH CHAPTER TO OPEN — QUICK LOOKUP</text>
+    <text x="80" y="495" fill="#FFC857" font-size="8" font-weight="bold">Cell behaviour?</text><text x="80" y="508" fill="#888" font-size="7.5">→ Ch 1 + Ch 2</text>
+    <text x="210" y="495" fill="#00F5FF" font-size="8" font-weight="bold">ADC / sensing issue?</text><text x="210" y="508" fill="#888" font-size="7.5">→ Ch 4 + Ch 8</text>
+    <text x="360" y="495" fill="#00FF88" font-size="8" font-weight="bold">SoC drift?</text><text x="360" y="508" fill="#888" font-size="7.5">→ Ch 2 + Ch 5</text>
+    <text x="480" y="495" fill="#A855F7" font-size="8" font-weight="bold">Firmware / loop?</text><text x="480" y="508" fill="#888" font-size="7.5">→ Ch 6</text>
+    <text x="590" y="495" fill="#FF6B35" font-size="8" font-weight="bold">FET tripping?</text><text x="590" y="508" fill="#888" font-size="7.5">→ Ch 9 + Ch 3</text>
+    <text x="720" y="495" fill="#FFC857" font-size="8" font-weight="bold">UPS / ESS tuning?</text><text x="720" y="508" fill="#888" font-size="7.5">→ Ch 7</text>
+    <text x="80" y="528" fill="#FF4757" font-size="8" font-weight="bold">CAN not talking?</text><text x="80" y="541" fill="#888" font-size="7.5">→ Ch 6 + Ch 7</text>
+    <text x="210" y="528" fill="#00CFFF" font-size="8" font-weight="bold">Future tech?</text><text x="210" y="541" fill="#888" font-size="7.5">→ Ch 10</text>
+    <text x="360" y="528" fill="#888" font-size="8" font-weight="bold">Pack layout?</text><text x="360" y="541" fill="#888" font-size="7.5">→ Ch 3 + Ch 8</text>
+    <text x="480" y="528" fill="#888" font-size="8" font-weight="bold">Thermal runaway?</text><text x="480" y="541" fill="#888" font-size="7.5">→ Ch 9 + Ch 1</text>
+    <text x="620" y="528" fill="#888" font-size="8" font-weight="bold">HPPC / DCIR?</text><text x="620" y="541" fill="#888" font-size="7.5">→ Ch 2 + Ch 5</text>
+    <text x="760" y="528" fill="#888" font-size="8" font-weight="bold">Standards?</text><text x="760" y="541" fill="#888" font-size="7.5">→ Ch 9 + Ch 10</text>
+  </svg>
+  </div>
+
+  <!-- chapter badges clickable row -->
+  <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin:1rem 0;align-items:center">
+    <span style="font-family:var(--font-hud);font-size:0.65rem;color:var(--text-muted);margin-right:0.5rem">JUMP TO:</span>
+    <a href="chapter1.html" class="ch-badge b1">Ch1 · Chemistry</a>
+    <a href="chapter2.html" class="ch-badge b2">Ch2 · Electrochemistry</a>
+    <a href="chapter3.html" class="ch-badge b3">Ch3 · Pack Architecture</a>
+    <a href="chapter4.html" class="ch-badge b4">Ch4 · AFE &amp; Sensing</a>
+    <a href="chapter5.html" class="ch-badge b5">Ch5 · Algorithms</a>
+    <a href="chapter6.html" class="ch-badge b6">Ch6 · Firmware</a>
+    <a href="chapter7.html" class="ch-badge b7">Ch7 · Applications</a>
+    <a href="chapter8.html" class="ch-badge b8">Ch8 · HW Design</a>
+    <a href="chapter9.html" class="ch-badge b9">Ch9 · Protection</a>
+    <a href="chapter10.html" class="ch-badge b10">Ch10 · Sustainability</a>
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════ SECTION 5 ═══════════════ -->
+<section class="section reveal" id="s-firmware">
+<div class="section-inner">
+  <div class="section-label">Section 05</div>
+  <h2 class="section-title">The Embedded View — How Firmware Actually Runs This</h2>
+  <p class="section-intro">
+    If you're writing BMS firmware, everything so far is "what". This section is "how" — the scheduler,
+    the task structure, the input-output loop. This is what the MCU is actually doing, tick by tick.
+  </p>
+
+  <!-- TASK SCHEDULER VISUAL -->
+  <h3 class="subsection-title">Task Scheduler — Visual Timeline</h3>
+  <div style="overflow-x:auto;margin:1rem 0">
+  <svg viewBox="0 0 880 300" width="860" style="display:block;margin:0 auto;font-family:'JetBrains Mono',monospace;">
+    <rect width="880" height="300" fill="#020204" rx="10"/>
+    <!-- Time axis -->
+    <line x1="120" y1="260" x2="860" y2="260" stroke="#333" stroke-width="1.5"/>
+    <text x="60" y="265" fill="#888" font-size="8.5" text-anchor="middle" font-family="Orbitron">TIME →</text>
+    <!-- time ticks: 0,10,20,30,40,50,60,70,80,90,100ms -->
+    <g fill="#555" font-size="7.5" text-anchor="middle">
+      <text x="120" y="275">0ms</text><text x="194" y="275">10</text><text x="268" y="275">20</text>
+      <text x="342" y="275">30</text><text x="416" y="275">40</text><text x="490" y="275">50</text>
+      <text x="564" y="275">60</text><text x="638" y="275">70</text><text x="712" y="275">80</text>
+      <text x="786" y="275">90</text><text x="856" y="275">100</text>
+    </g>
+    <!-- vertical tick lines -->
+    <g stroke="#1a1a2e" stroke-width="0.7">
+      <line x1="120" y1="20" x2="120" y2="260"/><line x1="194" y1="20" x2="194" y2="260"/>
+      <line x1="268" y1="20" x2="268" y2="260"/><line x1="342" y1="20" x2="342" y2="260"/>
+      <line x1="416" y1="20" x2="416" y2="260"/><line x1="490" y1="20" x2="490" y2="260"/>
+      <line x1="564" y1="20" x2="564" y2="260"/><line x1="638" y1="20" x2="638" y2="260"/>
+      <line x1="712" y1="20" x2="712" y2="260"/><line x1="786" y1="20" x2="786" y2="260"/>
+    </g>
+
+    <!-- Row labels -->
+    <text x="60" y="42" fill="#FFC857" font-size="8" text-anchor="middle">1ms ISR</text>
+    <text x="60" y="82" fill="#00F5FF" font-size="8" text-anchor="middle">AFE Read</text>
+    <text x="60" y="122" fill="#00FF88" font-size="8" text-anchor="middle">Kalman</text>
+    <text x="60" y="162" fill="#FF6B35" font-size="8" text-anchor="middle">Prot SM</text>
+    <text x="60" y="202" fill="#A855F7" font-size="8" text-anchor="middle">CAN TX</text>
+    <text x="60" y="242" fill="#00CFFF" font-size="8" text-anchor="middle">NVM log</text>
+
+    <!-- 1ms ISR — fires every 1ms bar: thin amber bars at 0,1,2,...10ms shown as ticks -->
+    <g fill="#FFC857" opacity="0.7">
+      <rect x="120" y="28" width="3" height="22" rx="1"/><rect x="194" y="28" width="3" height="22" rx="1"/>
+      <rect x="268" y="28" width="3" height="22" rx="1"/><rect x="342" y="28" width="3" height="22" rx="1"/>
+      <rect x="416" y="28" width="3" height="22" rx="1"/><rect x="490" y="28" width="3" height="22" rx="1"/>
+      <rect x="564" y="28" width="3" height="22" rx="1"/><rect x="638" y="28" width="3" height="22" rx="1"/>
+      <rect x="712" y="28" width="3" height="22" rx="1"/><rect x="786" y="28" width="3" height="22" rx="1"/>
+    </g>
+    <!-- animated blink on current 1ms tick -->
+    <rect x="120" y="28" width="3" height="22" rx="1" fill="#FFC857">
+      <animateTransform attributeName="transform" type="translate" values="0,0;74,0;74,0;148,0;148,0;222,0;222,0;296,0;296,0;370,0;370,0;444,0;444,0;518,0;518,0;592,0;592,0;666,0;666,0;0,0" dur="1s" repeatCount="indefinite" calcMode="discrete"/>
+    </rect>
+
+    <!-- AFE I2C read — fires every 10ms, takes ~2ms -->
+    <g fill="#00F5FF" opacity="0.6">
+      <rect x="120" y="68" width="14" height="22" rx="2"/>
+      <rect x="194" y="68" width="14" height="22" rx="2"/>
+      <rect x="268" y="68" width="14" height="22" rx="2"/>
+      <rect x="342" y="68" width="14" height="22" rx="2"/>
+      <rect x="416" y="68" width="14" height="22" rx="2"/>
+      <rect x="490" y="68" width="14" height="22" rx="2"/>
+      <rect x="564" y="68" width="14" height="22" rx="2"/>
+      <rect x="638" y="68" width="14" height="22" rx="2"/>
+      <rect x="712" y="68" width="14" height="22" rx="2"/>
+      <rect x="786" y="68" width="14" height="22" rx="2"/>
+    </g>
+    <!-- animated sweep highlight -->
+    <rect x="120" y="68" width="14" height="22" rx="2" fill="#00F5FF" opacity="0.9">
+      <animateTransform attributeName="transform" type="translate" values="0,0;74,0;148,0;222,0;296,0;370,0;444,0;518,0;592,0;666,0;0,0" dur="1s" repeatCount="indefinite" calcMode="discrete"/>
+    </rect>
+
+    <!-- Kalman — every 10ms, ~1ms -->
+    <g fill="#00FF88" opacity="0.5">
+      <rect x="134" y="108" width="8" height="22" rx="2"/><rect x="208" y="108" width="8" height="22" rx="2"/>
+      <rect x="282" y="108" width="8" height="22" rx="2"/><rect x="356" y="108" width="8" height="22" rx="2"/>
+      <rect x="430" y="108" width="8" height="22" rx="2"/><rect x="504" y="108" width="8" height="22" rx="2"/>
+      <rect x="578" y="108" width="8" height="22" rx="2"/><rect x="652" y="108" width="8" height="22" rx="2"/>
+      <rect x="726" y="108" width="8" height="22" rx="2"/><rect x="800" y="108" width="8" height="22" rx="2"/>
+    </g>
+    <rect x="134" y="108" width="8" height="22" rx="2" fill="#00FF88" opacity="0.9">
+      <animateTransform attributeName="transform" type="translate" values="0,0;74,0;148,0;222,0;296,0;370,0;444,0;518,0;592,0;666,0;0,0" dur="1s" repeatCount="indefinite" calcMode="discrete"/>
+    </rect>
+
+    <!-- Prot SM — every 10ms, fast -->
+    <g fill="#FF6B35" opacity="0.5">
+      <rect x="143" y="148" width="5" height="22" rx="2"/><rect x="217" y="148" width="5" height="22" rx="2"/>
+      <rect x="291" y="148" width="5" height="22" rx="2"/><rect x="365" y="148" width="5" height="22" rx="2"/>
+      <rect x="439" y="148" width="5" height="22" rx="2"/><rect x="513" y="148" width="5" height="22" rx="2"/>
+      <rect x="587" y="148" width="5" height="22" rx="2"/><rect x="661" y="148" width="5" height="22" rx="2"/>
+      <rect x="735" y="148" width="5" height="22" rx="2"/><rect x="809" y="148" width="5" height="22" rx="2"/>
+    </g>
+
+    <!-- CAN TX — every 100ms (just one bar in 100ms window) -->
+    <rect x="120" y="188" width="740" height="3" rx="1" fill="#A855F7" opacity="0.2"/>
+    <rect x="120" y="184" width="18" height="22" rx="2" fill="#A855F7" opacity="0.7"/>
+    <text x="820" y="199" fill="#A855F7" font-size="7" opacity="0.6">every 100ms</text>
+
+    <!-- NVM — rarely (grey bar) -->
+    <rect x="120" y="224" width="740" height="3" rx="1" fill="#00cfff" opacity="0.1"/>
+    <rect x="380" y="220" width="20" height="22" rx="2" fill="#00CFFF" opacity="0.5"/>
+    <text x="820" y="235" fill="#00CFFF" font-size="7" opacity="0.5">if SoC changed &gt;1%</text>
+  </svg>
+  </div>
+
+  <h3 class="subsection-title">Firmware Input → Processing → Output Loop</h3>
+  <div class="code-block"><pre>
+<span class="cc">/* ═══════════════════════════════════════════════════════════════
+   BMS MAIN LOOP — conceptual structure (runs every 10ms)
+   Based on 16S1P reference design, STM32G474, MISRA-C compliant
+   ═══════════════════════════════════════════════════════════════ */</span>
+
+<span class="cc">/* ── INPUTS (read from hardware) ──────────────────────────────── */</span>
+<span class="ck">void</span> <span class="cf">BMS_ReadInputs</span>(<span class="ct">BmsData_t</span> *d) {
+    <span class="cf">AFE_ReadAllCells</span>(d->vcell);          <span class="cc">/* 16× voltage via I²C    */</span>
+    <span class="cf">AFE_ReadTemperatures</span>(d->temp);       <span class="cc">/* 5× NTC via AFE ADC     */</span>
+    d->ibat = <span class="cf">AFE_ReadCurrent</span>();         <span class="cc">/* shunt, signed A        */</span>
+    d->vbat = <span class="cf">AFE_ReadPackVoltage</span>();     <span class="cc">/* sum of 16 cells        */</span>
+}
+
+<span class="cc">/* ── PROCESSING (think) ───────────────────────────────────────── */</span>
+<span class="ck">void</span> <span class="cf">BMS_Process</span>(<span class="ct">BmsData_t</span> *d) {
+    <span class="cf">Filter_IIR_All</span>(d);                   <span class="cc">/* α=0.1 low-pass filter  */</span>
+    d->soc = <span class="cf">Kalman_Update</span>(d->vcell,     <span class="cc">/* EKF: CC + OCV fusion   */</span>
+                            d->ibat);
+    d->soh = <span class="cf">SoH_EstimateDCIR</span>(d->soc,   <span class="cc">/* DCIR trend → capacity  */</span>
+                               d->ibat);
+}
+
+<span class="cc">/* ── DECISION (protection state machine) ─────────────────────── */</span>
+<span class="ck">void</span> <span class="cf">BMS_Decide</span>(<span class="ct">BmsData_t</span> *d) {
+    d->prot_state = <span class="cf">APP_ProtSM_Tick</span>(d); <span class="cc">/* 6-state machine        */</span>
+    <span class="cf">FET_ApplyState</span>(d->prot_state);       <span class="cc">/* CHG/DSG FET control    */</span>
+    <span class="cf">BAL_Tick</span>(d->vcell);                  <span class="cc">/* balancer if ΔV&gt;10mV   */</span>
+}
+
+<span class="cc">/* ── OUTPUTS (communicate) ───────────────────────────────────── */</span>
+<span class="ck">void</span> <span class="cf">BMS_Output</span>(<span class="ct">BmsData_t</span> *d) {
+    <span class="cf">CAN_BuildAndSend</span>(d);                 <span class="cc">/* 0x351–0x359 frames     */</span>
+    <span class="cf">UART_SendDebugLine</span>(d);               <span class="cc">/* human-readable log     */</span>
+    <span class="cf">NVM_MaybePersist</span>(d->soc, d->faults); <span class="cc">/* write if changed &gt;1%  */</span>
+}
+
+<span class="cc">/* ── MAIN SCHEDULER LOOP ────────────────────────────────────────
+   Triggered by SysTick every 10ms via flag, NOT blocking delay  */</span>
+<span class="ck">void</span> <span class="cf">main</span>(<span class="ck">void</span>) {
+    <span class="cf">HAL_Init</span>(); <span class="cf">AFE_Init</span>(); <span class="cf">CAN_Init</span>(); <span class="cf">NVM_Restore</span>(&amp;g_bms);
+    <span class="ck">while</span> (<span class="cs">1U</span>) {
+        <span class="ck">if</span> (g_10ms_flag) {
+            g_10ms_flag = <span class="cs">0U</span>;
+            <span class="cf">BMS_ReadInputs</span>(&amp;g_bms);
+            <span class="cf">BMS_Process</span>(&amp;g_bms);
+            <span class="cf">BMS_Decide</span>(&amp;g_bms);
+            <span class="cf">BMS_Output</span>(&amp;g_bms);
+        }
+        <span class="cc">/* ISR independently kicks IWDG every 1ms */</span>
+    }
+}
+  </pre></div>
+
+  <div class="callout callout-violet">
+    <strong>Why not use RTOS tasks?</strong> For a single-core MCU doing one job reliably, a bare-metal
+    super-loop with a 10ms SysTick gate is <em>more predictable</em> than FreeRTOS preemption. RTOS adds
+    value when you have multiple independent peripherals with different timing requirements. For a BMS
+    where everything shares the same data, a super-loop gives you deterministic worst-case timing —
+    critical for MISRA-C certification.
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════ SECTION 6 ═══════════════ -->
+<section class="section reveal" id="s-intuition">
+<div class="section-inner">
+  <div class="section-label">Section 06</div>
+  <h2 class="section-title">The Intuition — What Is The BMS Really Doing?</h2>
+  <p class="section-intro">
+    Forget the registers for a second. Here is what the BMS is doing at the highest level, in plain language.
+    These four verbs are the soul of the system.
+  </p>
+
+  <div class="card-grid" style="grid-template-columns:repeat(4,1fr);gap:1.2rem;margin:1.5rem 0">
+
+    <!-- WATCHING -->
+    <div class="card" style="border-color:rgba(0,245,255,0.3);background:rgba(0,245,255,0.04)">
+      <div class="card-icon">👁</div>
+      <div class="card-title" style="color:var(--c2);font-size:0.9rem">WATCHING</div>
+      <div class="card-body" style="margin-top:0.5rem">
+        <strong style="color:var(--text)">Every 10ms:</strong><br>
+        — Is any cell above 3.65V?<br>
+        — Is any cell below 2.8V?<br>
+        — Is current above 1C?<br>
+        — Is any sensor above 55°C?<br><br>
+        The BMS never sleeps. It is always watching. 100 times per second.
+      </div>
+    </div>
+
+    <!-- PREDICTING -->
+    <div class="card" style="border-color:rgba(0,255,136,0.3);background:rgba(0,255,136,0.04)">
+      <div class="card-icon">🧠</div>
+      <div class="card-title" style="color:var(--c4);font-size:0.9rem">PREDICTING</div>
+      <div class="card-body" style="margin-top:0.5rem">
+        <strong style="color:var(--text)">Every 10ms:</strong><br>
+        — What is SoC right now?<br>
+        — How much energy remains?<br>
+        — How healthy is this pack?<br>
+        — When will this cell hit UVP?<br><br>
+        The Kalman filter is an educated guess engine. It never knows — it <em>estimates</em>.
+      </div>
+    </div>
+
+    <!-- PROTECTING -->
+    <div class="card" style="border-color:rgba(255,107,53,0.3);background:rgba(255,107,53,0.04)">
+      <div class="card-icon">🛡</div>
+      <div class="card-title" style="color:var(--c3);font-size:0.9rem">PROTECTING</div>
+      <div class="card-body" style="margin-top:0.5rem">
+        <strong style="color:var(--text)">When threshold crossed:</strong><br>
+        — Trip FET in &lt;500µs<br>
+        — Log with timestamp<br>
+        — Notify inverter via CAN<br>
+        — Apply hysteresis before reset<br><br>
+        Protection is the BMS's immune system. It should rarely fire — but when it does, it must be instant.
+      </div>
+    </div>
+
+    <!-- CONTROLLING -->
+    <div class="card" style="border-color:rgba(168,85,247,0.3);background:rgba(168,85,247,0.04)">
+      <div class="card-icon">⚡</div>
+      <div class="card-title" style="color:var(--c5);font-size:0.9rem">CONTROLLING</div>
+      <div class="card-body" style="margin-top:0.5rem">
+        <strong style="color:var(--text)">Every 100ms:</strong><br>
+        — Tell inverter max charge current<br>
+        — Tell inverter min cell voltage<br>
+        — Balance cells if ΔV &gt; 10mV<br>
+        — Throttle load at low SoC<br><br>
+        The BMS is not just reactive — it actively shapes how the battery is used.
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-green" style="font-size:0.9rem;line-height:2">
+    <strong>The mental model in one sentence:</strong><br>
+    A BMS is a <span style="color:var(--c2)">real-time measurement system</span> wrapped around a
+    <span style="color:var(--c4)">state estimator</span> wrapped around a
+    <span style="color:var(--c3)">protection system</span> wrapped around a
+    <span style="color:var(--c5)">communication protocol</span> —
+    all running on a microcontroller that must never crash, never drift, and never miss a deadline.
+  </div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════ SECTION 7 ═══════════════ -->
+<section class="section reveal" id="s-scenario">
+<div class="section-inner">
+  <div class="section-label">Section 07</div>
+  <h2 class="section-title">Mini Scenario — Full Charge Cycle Walkthrough</h2>
+  <p class="section-intro">
+    One complete event, traced across the entire system. The scenario: a home ESS pack at 30% SoC
+    starts charging from solar. We follow the data from the first electron to the inverter's dashboard.
+    This is what it feels like to understand the system end-to-end.
+  </p>
+
+  <div class="timeline">
+    <div class="tl-item" style="--dot-color:var(--c1)">
+      <h4>t=0s — Solar ramp begins. Ibat goes positive.</h4>
+      <p>Solar inverter starts pushing current into pack. <code>Ibat = +12A</code> detected by shunt.
+      CC2 coulomb counter begins integrating. Kalman filter receives new I measurement.
+      <a href="chapter4.html" class="ch-badge b4">Ch4 — Shunt sensing</a>
+      <a href="chapter5.html" class="ch-badge b5">Ch5 — Kalman update</a></p>
+    </div>
+
+    <div class="tl-item">
+      <h4>t=10ms — First AFE read. Vcell[0..15] = 3.28–3.30V. SoC = 30.2%</h4>
+      <p>All 16 cells sampled via I²C. IIR filter applied. OCV model cross-checked against CC estimate.
+      Kalman blend: SoC_kalman = 30.2%. No threshold breach — state stays NORMAL.
+      <a href="chapter4.html" class="ch-badge b4">Ch4 — AFE</a>
+      <a href="chapter5.html" class="ch-badge b5">Ch5 — EKF</a></p>
+    </div>
+
+    <div class="tl-item">
+      <h4>t=100ms — First CAN frame sent. Inverter receives SoC=30%.</h4>
+      <p>0x355 frame: SoC=30, SoH=98. 0x351 frame: max cell V=3.65V, max charge A=56A.
+      Inverter reads this and knows it can push up to 56A. It decides on 12A (solar limited).
+      <a href="chapter6.html" class="ch-badge b6">Ch6 — CAN builder</a>
+      <a href="chapter7.html" class="ch-badge b7">Ch7 — PYLON protocol</a></p>
+    </div>
+
+    <div class="tl-item">
+      <h4>t=2h — SoC reaches 80%. Cells now 3.35V average.</h4>
+      <p>Kalman confidence high — CC and OCV agree within 1%. SoC=80.3%. Balancer
+      detects cell #11 at 3.38V vs average 3.35V → bypass resistor activates for cell #11.
+      <a href="chapter3.html" class="ch-badge b3">Ch3 — Balancer</a>
+      <a href="chapter5.html" class="ch-badge b5">Ch5 — SoC</a></p>
+    </div>
+
+    <div class="tl-item">
+      <h4>t=3h20m — Cell #11 hits 3.63V. Approaching OVP threshold (3.65V).</h4>
+      <p>Protection state machine enters WARN state. CAN 0x351 updated: max_charge_A drops to 20A.
+      Inverter sees the new limit and reduces solar charge current. Cell #11 slows its rise.
+      <a href="chapter9.html" class="ch-badge b9">Ch9 — Protection SM</a>
+      <a href="chapter7.html" class="ch-badge b7">Ch7 — Ichrg control</a></p>
+    </div>
+
+    <div class="tl-item">
+      <h4>t=3h45m — Cell #11 still rising. Hits 3.65V. OVP TRIP.</h4>
+      <p>State machine: NORMAL → WARN → OVP_TRIP. CHG FET opens in 500µs. Charging stops entirely.
+      CAN 0x359 fault bit set. NVM writes event: <code>OVP cell#11 3.652V Ibat=+8A T=27.3C ts=2026-04-06T14:22:11</code>.
+      <a href="chapter9.html" class="ch-badge b9">Ch9 — OVP trip</a>
+      <a href="chapter6.html" class="ch-badge b6">Ch6 — NVM log</a></p>
+    </div>
+
+    <div class="tl-item">
+      <h4>t=3h45m + 30s — Hysteresis clears. SoC = 96%.</h4>
+      <p>Cell #11 relaxes to 3.638V (30s open circuit). OVP clear threshold = 3.64V → met after 3s.
+      But protection SM requires 30 consecutive clear ticks before re-enabling. After 30s: CHG FET re-closes.
+      <a href="chapter9.html" class="ch-badge b9">Ch9 — Hysteresis</a></p>
+    </div>
+
+    <div class="tl-item">
+      <h4>t=4h — SoC = 100%. Inverter switches to float mode.</h4>
+      <p>BMS sends 0x351 with max_charge_A = 0 (SoC ≥ 99%). Inverter stops charging.
+      Pack enters FLOAT: tiny trickle current to compensate self-discharge.
+      Cloud dashboard shows SoC=100%, SoH=98%, all cells balanced within 8mV.
+      <a href="chapter7.html" class="ch-badge b7">Ch7 — Float charging</a>
+      <a href="chapter10.html" class="ch-badge b10">Ch10 — Cloud / dashboard</a></p>
+    </div>
+  </div>
+
+  <div class="callout callout-cyan">
+    <strong>Notice what just happened:</strong> The BMS never needed to be "told" anything by a human.
+    It measured, estimated, protected, and communicated autonomously for 4 hours. The inverter adjusted
+    based on CAN data. The cells stayed safe. The logs captured everything. That is the complete
+    system working as designed.
+  </div>
+
+  <!-- Summary stat grid -->
+  <h3 class="subsection-title">System Design Principles — The 10 Non-Negotiables</h3>
+  <div class="card-grid" style="grid-template-columns:repeat(5,1fr);gap:0.8rem">
+    <div class="card" style="padding:0.9rem;text-align:center"><div style="font-family:var(--font-hud);font-size:0.7rem;color:var(--c2);margin-bottom:0.3rem">NEVER GUESS</div><div style="font-size:0.72rem;color:var(--text-muted)">Always estimate with confidence bounds. Kalman &gt; open-loop CC.</div></div>
+    <div class="card" style="padding:0.9rem;text-align:center"><div style="font-family:var(--font-hud);font-size:0.7rem;color:var(--c4);margin-bottom:0.3rem">HARDWARE FIRST</div><div style="font-size:0.72rem;color:var(--text-muted)">HW OVP fires in 500µs. SW is backup, not primary protection.</div></div>
+    <div class="card" style="padding:0.9rem;text-align:center"><div style="font-family:var(--font-hud);font-size:0.7rem;color:var(--c3);margin-bottom:0.3rem">LOG EVERYTHING</div><div style="font-size:0.72rem;color:var(--text-muted)">Every fault needs a timestamp. NVM must survive power loss.</div></div>
+    <div class="card" style="padding:0.9rem;text-align:center"><div style="font-family:var(--font-hud);font-size:0.7rem;color:var(--c1);margin-bottom:0.3rem">HYSTERESIS</div><div style="font-size:0.72rem;color:var(--text-muted)">No chattering FETs. 5°C band. 30s clear timer. Always.</div></div>
+    <div class="card" style="padding:0.9rem;text-align:center"><div style="font-family:var(--font-hud);font-size:0.7rem;color:var(--c5);margin-bottom:0.3rem">DETERMINISM</div><div style="font-size:0.72rem;color:var(--text-muted)">Worst-case timing is the only timing that matters. No malloc.</div></div>
+    <div class="card" style="padding:0.9rem;text-align:center"><div style="font-family:var(--font-hud);font-size:0.7rem;color:var(--c2);margin-bottom:0.3rem">COMMUNICATE</div><div style="font-size:0.72rem;color:var(--text-muted)">Tell the inverter before tripping. CAN warning saves load uptime.</div></div>
+    <div class="card" style="padding:0.9rem;text-align:center"><div style="font-family:var(--font-hud);font-size:0.7rem;color:var(--c4);margin-bottom:0.3rem">BALANCE</div><div style="font-size:0.72rem;color:var(--text-muted)">ΔV &gt; 10mV means one cell takes all the stress. Balance continuously.</div></div>
+    <div class="card" style="padding:0.9rem;text-align:center"><div style="font-family:var(--font-hud);font-size:0.7rem;color:var(--c3);margin-bottom:0.3rem">PERSIST STATE</div><div style="font-size:0.72rem;color:var(--text-muted)">SoC must survive a power cut. Write NVM on every 1% change.</div></div>
+    <div class="card" style="padding:0.9rem;text-align:center"><div style="font-family:var(--font-hud);font-size:0.7rem;color:var(--c1);margin-bottom:0.3rem">WATCHDOG</div><div style="font-size:0.72rem;color:var(--text-muted)">If firmware hangs for 200ms → both FETs off. No exceptions.</div></div>
+    <div class="card" style="padding:0.9rem;text-align:center"><div style="font-family:var(--font-hud);font-size:0.7rem;color:var(--c7);margin-bottom:0.3rem">KNOW YOUR CELL</div><div style="font-size:0.72rem;color:var(--text-muted)">DCIR table, OCV curve, capacity — your algorithms are only as good as your characterisation data.</div></div>
+  </div>
+
+  <!-- Navigation footer -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:3rem;
+    padding-top:1.5rem;border-top:1px solid var(--border);flex-wrap:wrap;gap:1rem">
+    <a href="chapter10.html" style="display:flex;align-items:center;gap:0.5rem;color:var(--text-muted);
+      font-family:var(--font-hud);font-size:0.72rem;text-decoration:none;
+      padding:0.6rem 1.2rem;border:1px solid var(--border);border-radius:6px;transition:all 0.2s"
+      onmouseover="this.style.borderColor='var(--c7)';this.style.color='var(--c7)'"
+      onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
+      ← Ch 10: Sustainability
+    </a>
+    <a href="index.html" style="display:flex;align-items:center;gap:0.5rem;color:var(--c2);
+      font-family:var(--font-hud);font-size:0.72rem;text-decoration:none;
+      padding:0.6rem 1.4rem;border:1px solid var(--c2);border-radius:6px;
+      background:rgba(0,245,255,0.06);transition:all 0.2s"
+      onmouseover="this.style.background='rgba(0,245,255,0.15)'"
+      onmouseout="this.style.background='rgba(0,245,255,0.06)'">
+      ⌂ Return to Knowledge Base Index
+    </a>
+  </div>
+</div>
+</section>
+
+</main>
+</div><!-- end page-wrapper -->
+
+<!-- BACK TO TOP -->
+<button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+/* ════════════════════════════════════════════════════════
+   SYSTEM_OVERVIEW — JARVIS HUD ANIMATIONS
+   ════════════════════════════════════════════════════════ */
+
+/* ── BOOT SEQUENCE ── */
+(function(){
+  const lines=['bl0','bl1','bl2','bl3','bl4'];
+  let i=0;
+  function showNext(){
+    if(i<lines.length){document.getElementById(lines[i]).classList.add('show');i++; setTimeout(showNext,280);}
+    else{setTimeout(()=>{document.getElementById('boot-bar').style.width='100%';setTimeout(()=>{const o=document.getElementById('boot-overlay');o.style.opacity='0';setTimeout(()=>o.remove(),600);},1400);},200);}
+  }
+  showNext();
+})();
+
+/* ── HUD CLOCK ── */
+function updateClock(){
+  const n=new Date(),pad=v=>String(v).padStart(2,'0');
+  const el=document.getElementById('hud-clock');
+  if(el)el.textContent=pad(n.getHours())+':'+pad(n.getMinutes())+':'+pad(n.getSeconds());
+}
+setInterval(updateClock,1000);updateClock();
+
+
+/* ── MOUSE TRACKING GLOW ── */
+(function(){
+  let mx=window.innerWidth/2,my=window.innerHeight/2;
+  document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
+  const hero=document.querySelector('.hero');
+  if(!hero)return;
+  document.addEventListener('mousemove',e=>{
+    const rect=hero.getBoundingClientRect();
+    if(e.clientY<rect.bottom){
+      const x=((e.clientX-rect.left)/rect.width*100).toFixed(1);
+      const y=((e.clientY-rect.top)/rect.height*100).toFixed(1);
+      hero.style.background=`radial-gradient(circle at ${x}% ${y}%,rgba(0,245,255,0.1) 0%,rgba(168,85,247,0.05) 40%,transparent 70%),radial-gradient(ellipse at 70% 50%,rgba(168,85,247,0.06) 0%,transparent 60%),#020204`;
+    }
+  });
+})();
+
+/* ── HUD BOOT COUNTER ── */
+(function(){
+  const el=document.getElementById('hud-counter');
+  if(!el)return;
+  let v=0,target=32;
+  const iv=setInterval(()=>{v+=1;el.textContent=v;if(v>=target)clearInterval(iv);},60);
+})();
+
+/* ── INTERSECTION OBSERVER (section reveals + sidebar active) ── */
+const revealObs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');});
+},{threshold:0.08});
+document.querySelectorAll('.reveal').forEach(el=>revealObs.observe(el));
+
+const sectionObs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      const id=e.target.id;
+      document.querySelectorAll('.nav-link').forEach(l=>{
+        l.classList.toggle('active',l.getAttribute('href')==='#'+id);
+      });
+    }
+  });
+},{threshold:0.3});
+document.querySelectorAll('section[id]').forEach(s=>sectionObs.observe(s));
+
+/* ── BACK TO TOP ── */
+window.addEventListener('scroll',()=>{
+  document.getElementById('btt').classList.toggle('show',window.scrollY>400);
+});
+
+
+/* ── GLITCH HERO TITLE ── */
+(function(){
+  const h=document.querySelector('.hero-title');
+  if(!h)return;
+  const txt=h.getAttribute('data-text')||h.textContent;
+  h.setAttribute('data-text',txt);
+  if(!document.getElementById('__glitch-style')){
+    const s=document.createElement('style');s.id='__glitch-style';
+    s.textContent=`.hero-title::before{content:attr(data-text);color:rgba(255,0,110,0.5);animation:__g1 4s infinite 2s}.hero-title::after{content:attr(data-text);color:rgba(0,245,255,0.5);animation:__g2 3.5s infinite 2.5s}`;
+    document.head.appendChild(s);
+  }
+})();
+
+/* ── TAG FLICKER on topbar ── */
+(function(){
+  const tags=document.querySelectorAll('.topbar span');
+  setInterval(()=>{
+    if(Math.random()<0.15){
+      const t=tags[Math.floor(Math.random()*tags.length)];
+      if(t){t.style.opacity='0.2';setTimeout(()=>t.style.opacity='',80);}
+    }
+  },2000);
+})();
+
+</script>
+
+<!-- ═══════════════════════════════════════════════════════
+     SYSTEM SANDBOX — Multi-variable BMS Explorer
+═══════════════════════════════════════════════════════════ -->
+<style>
+.sandbox-panel{background:#06060e;border:1px solid rgba(0,245,255,0.18);border-radius:14px;padding:1.8rem;margin:2rem 0;font-family:'Space Grotesk',sans-serif}
+.sandbox-panel h3{font-family:'Orbitron',monospace;font-size:0.78rem;color:#00F5FF;letter-spacing:0.12em;margin-bottom:1.2rem;text-transform:uppercase}
+.sb-grid{display:grid;grid-template-columns:320px 1fr;gap:1.5rem;align-items:start}
+@media(max-width:700px){.sb-grid{grid-template-columns:1fr}}
+.sb-controls{display:flex;flex-direction:column;gap:0.7rem}
+.sb-slider{background:rgba(0,245,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:0.8rem 1rem}
+.sb-slider label{font-family:'Orbitron',monospace;font-size:0.6rem;letter-spacing:0.1em;display:block;margin-bottom:0.4rem}
+.sb-slider input[type=range]{width:100%;accent-color:var(--sc,#00F5FF);cursor:pointer}
+.sb-slider .sb-val{font-family:'JetBrains Mono',monospace;font-size:0.82rem;text-align:right;display:block;color:var(--sc,#00F5FF)}
+.sb-canvas-wrap{border:1px solid rgba(0,245,255,0.1);border-radius:8px;overflow:hidden}
+.system-state-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-top:1rem}
+.ss-card{background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.05);border-radius:6px;padding:0.6rem 0.8rem;text-align:center;transition:all 0.4s}
+.ss-card .ss-label{font-family:'Orbitron',monospace;font-size:0.55rem;color:#4a5568;letter-spacing:0.1em;margin-bottom:0.3rem}
+.ss-card .ss-val{font-family:'JetBrains Mono',monospace;font-size:0.92rem;font-weight:600}
+.ss-card.alert{border-color:rgba(255,71,87,0.5);background:rgba(255,71,87,0.08)}
+.ss-card.alert .ss-val{color:#FF4757}
+.ss-card.warn{border-color:rgba(255,200,87,0.4);background:rgba(255,200,87,0.06)}
+.ss-card.warn .ss-val{color:#FFC857}
+.ss-card.ok .ss-val{color:#00FF88}
+.cause-chain{margin-top:1rem;font-size:0.8rem;color:#4a5568;font-family:'JetBrains Mono',monospace;line-height:2;padding:0.8rem 1rem;background:rgba(0,0,0,0.2);border-radius:6px;min-height:48px;transition:all 0.3s}
+.cause-chain span{color:#00F5FF}
+</style>
+
+<section class="section" id="s-sandbox" style="background:rgba(0,245,255,0.015)">
+<div class="section-inner">
+  <div class="section-label">System Sandbox</div>
+  <h2 class="section-title">BMS System Sandbox — Change One Thing, Watch Everything React</h2>
+  <p class="section-intro">
+    This is the whole system in one view. Move any slider and watch the cascade: how one variable
+    affects the SoC estimate, protection thresholds, FET states, and CAN outputs simultaneously.
+    <strong style="color:var(--c2)">This is how a senior engineer mentally models the system.</strong>
+  </p>
+
+  <div class="sandbox-panel">
+    <h3>⚡ Live BMS System State — Manipulate All Variables</h3>
+    <div class="sb-grid">
+      <!-- CONTROLS -->
+      <div class="sb-controls">
+        <div class="sb-slider" style="--sc:#FFC857">
+          <label style="color:#FFC857">CELL VOLTAGE (max cell)</label>
+          <input type="range" id="sb-vcell" min="2500" max="3700" value="3295" oninput="sbUpdate()">
+          <span class="sb-val" id="sb-vcell-v">3.295V</span>
+        </div>
+        <div class="sb-slider" style="--sc:#00F5FF">
+          <label style="color:#00F5FF">CURRENT (+ = charge, - = disch)</label>
+          <input type="range" id="sb-ibat" min="-280" max="280" value="-50" oninput="sbUpdate()">
+          <span class="sb-val" id="sb-ibat-v">-50A</span>
+        </div>
+        <div class="sb-slider" style="--sc:#FF6B35">
+          <label style="color:#FF6B35">TEMPERATURE (max sensor)</label>
+          <input type="range" id="sb-temp" min="-15" max="70" value="28" oninput="sbUpdate()">
+          <span class="sb-val" id="sb-temp-v">28°C</span>
+        </div>
+        <div class="sb-slider" style="--sc:#00FF88">
+          <label style="color:#00FF88">STATE OF CHARGE</label>
+          <input type="range" id="sb-soc" min="0" max="100" value="65" oninput="sbUpdate()">
+          <span class="sb-val" id="sb-soc-v">65%</span>
+        </div>
+        <div class="sb-slider" style="--sc:#A855F7">
+          <label style="color:#A855F7">CELL IMBALANCE (ΔV max)</label>
+          <input type="range" id="sb-dv" min="0" max="200" value="5" oninput="sbUpdate()">
+          <span class="sb-val" id="sb-dv-v">5mV</span>
+        </div>
+      </div>
+
+      <!-- CANVAS + STATE -->
+      <div>
+        <div class="sb-canvas-wrap">
+          <canvas id="sb-canvas" width="560" height="200" style="width:100%;display:block;background:#050510"></canvas>
+        </div>
+        <div class="system-state-grid" id="ss-grid">
+          <div class="ss-card ok" id="ss-chg"><div class="ss-label">CHG FET</div><div class="ss-val" id="ss-chg-v">ON</div></div>
+          <div class="ss-card ok" id="ss-dsg"><div class="ss-label">DSG FET</div><div class="ss-val" id="ss-dsg-v">ON</div></div>
+          <div class="ss-card ok" id="ss-bal"><div class="ss-label">BALANCER</div><div class="ss-val" id="ss-bal-v">OFF</div></div>
+          <div class="ss-card ok" id="ss-prot"><div class="ss-label">PROT STATE</div><div class="ss-val" id="ss-prot-v">NORMAL</div></div>
+          <div class="ss-card ok" id="ss-can"><div class="ss-label">CAN 0x351</div><div class="ss-val" id="ss-can-v">56A max</div></div>
+          <div class="ss-card ok" id="ss-soh"><div class="ss-label">SoH EST.</div><div class="ss-val" id="ss-soh-v">98%</div></div>
+        </div>
+        <div class="cause-chain" id="sb-chain">← Move sliders to see cause→effect chain</div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<script>
+(function(){
+const canvas=document.getElementById('sb-canvas');if(!canvas)return;
+const ctx=canvas.getContext('2d');
+
+function ocvLookup(s){const t=[[0,2.5],[10,3.1],[20,3.25],[30,3.28],[50,3.295],[70,3.315],[80,3.33],[90,3.38],[100,3.65]];for(let i=0;i<t.length-1;i++){if(s>=t[i][0]&&s<=t[i+1][0]){const f=(s-t[i][0])/(t[i+1][0]-t[i][0]);return t[i][1]+f*(t[i+1][1]-t[i][1]);}}return 3.3;}
+
+function drawGauge(ctx,cx,cy,r,val,min,max,label,color,unit){
+  const start=Math.PI*0.75,end=Math.PI*2.25;
+  const ang=start+(val-min)/(max-min)*(end-start);
+  ctx.beginPath();ctx.arc(cx,cy,r,start,end);ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=8;ctx.lineCap='round';ctx.stroke();
+  const dangerAng=start+(0.85)*(end-start);
+  ctx.beginPath();ctx.arc(cx,cy,r,start,ang);ctx.strokeStyle=color;ctx.lineWidth=8;ctx.stroke();
+  ctx.fillStyle=color;ctx.font=`bold 13px JetBrains Mono`;ctx.textAlign='center';
+  ctx.fillText(val+(unit||''),cx,cy+5);
+  ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='7px Orbitron';ctx.fillText(label,cx,cy+18);
+}
+
+window.sbUpdate=function(){
+  const vc=+document.getElementById('sb-vcell').value/1000;
+  const ib=+document.getElementById('sb-ibat').value;
+  const te=+document.getElementById('sb-temp').value;
+  const sc=+document.getElementById('sb-soc').value;
+  const dv=+document.getElementById('sb-dv').value;
+
+  document.getElementById('sb-vcell-v').textContent=vc.toFixed(3)+'V';
+  document.getElementById('sb-ibat-v').textContent=(ib>=0?'+':'')+ib+'A';
+  document.getElementById('sb-temp-v').textContent=te+'°C';
+  document.getElementById('sb-soc-v').textContent=sc+'%';
+  document.getElementById('sb-dv-v').textContent=dv+'mV';
+
+  // compute system state
+  const ovp=vc>=3.65;const uvp=vc<=2.8;const otp=te>=55;const utc=te<0&&ib>0;
+  const ocp=Math.abs(ib)>280;const lowSoc=sc<20;const nearFull=sc>90;
+  const balOn=dv>=10;
+  let chgOn=true,dsgOn=true,protState='NORMAL';
+  if(ovp){chgOn=false;protState='OVP_TRIP';}
+  if(uvp){dsgOn=false;protState='DSG_TRIP';}
+  if(otp){dsgOn=false;protState='OTP_TRIP';}
+  if(utc){chgOn=false;protState='UTC_TRIP';}
+  if(ocp){dsgOn=false;protState='OCP_TRIP';}
+  if(lowSoc&&vc<2.5){dsgOn=false;protState='DEEP_DSCH';}
+  const canMax=chgOn?(nearFull?'5A max':(ovp?'0A':'56A max')):'0A — FAULT';
+  const soh=Math.max(60,98-Math.max(0,(dv-5)*0.3)-Math.max(0,(te-45)*0.4)).toFixed(0);
+
+  // update state cards
+  const chgEl=document.getElementById('ss-chg');chgEl.className='ss-card '+(chgOn?'ok':'alert');document.getElementById('ss-chg-v').textContent=chgOn?'ON':'OFF';
+  const dsgEl=document.getElementById('ss-dsg');dsgEl.className='ss-card '+(dsgOn?'ok':'alert');document.getElementById('ss-dsg-v').textContent=dsgOn?'ON':'OFF';
+  const balEl=document.getElementById('ss-bal');balEl.className='ss-card '+(balOn?'warn':'ok');document.getElementById('ss-bal-v').textContent=balOn?'ACTIVE':'OFF';
+  const protEl=document.getElementById('ss-prot');protEl.className='ss-card '+(protState==='NORMAL'?'ok':(protState.includes('TRIP')?'alert':'warn'));document.getElementById('ss-prot-v').textContent=protState;
+  const canEl=document.getElementById('ss-can');canEl.className='ss-card '+(canMax==='0A — FAULT'?'alert':(nearFull?'warn':'ok'));document.getElementById('ss-can-v').textContent=canMax;
+  const sohEl=document.getElementById('ss-soh');sohEl.className='ss-card '+(+soh<80?'alert':(+soh<90?'warn':'ok'));document.getElementById('ss-soh-v').textContent=soh+'%';
+
+  // draw gauges
+  const W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#050510';ctx.fillRect(0,0,W,H);
+  const vcCol=ovp?'#FF4757':(uvp?'#FF6B35':(nearFull?'#FFC857':'#00F5FF'));
+  const ibCol=ocp?'#FF4757':(Math.abs(ib)>200?'#FFC857':(ib<0?'#A855F7':'#00FF88'));
+  const teCol=otp?'#FF4757':(te>45?'#FFC857':(te<0?'#00CFFF':'#00FF88'));
+  const scCol=lowSoc?'#FF4757':(sc<30?'#FFC857':(nearFull?'#FFC857':'#00FF88'));
+  drawGauge(ctx,90,H/2,62,vc.toFixed(2),2.5,3.7,'VCELL',vcCol,'V');
+  drawGauge(ctx,230,H/2,62,Math.abs(ib),0,280,'|IBAT|',ibCol,'A');
+  drawGauge(ctx,370,H/2,62,te,-20,70,'TEMP',teCol,'°C');
+  drawGauge(ctx,500,H/2,62,sc,0,100,'SoC',scCol,'%');
+
+  // cause chain
+  let chain='';
+  if(ovp)chain=`<span>Vcell=${vc.toFixed(3)}V > 3.65V</span> → OVP detected → CHG FET OFF → CAN fault 0x359 → Inverter stops charging`;
+  else if(uvp)chain=`<span>Vcell=${vc.toFixed(3)}V < 2.8V</span> → UVP detected → DSG FET OFF → Inverter switches to grid`;
+  else if(otp)chain=`<span>T=${te}°C > 55°C</span> → OTP detected → DSG FET OFF → thermal recovery begins`;
+  else if(utc)chain=`<span>T=${te}°C < 0°C</span> → UTC: charging blocked → cell lithium plating risk avoided`;
+  else if(ocp)chain=`<span>|I|=${Math.abs(ib)}A > 280A</span> → OCP detected → DSG FET OFF → 30s lockout`;
+  else if(balOn)chain=`<span>ΔV=${dv}mV > 10mV</span> → Balancer activates on highest cell → bleeds ${Math.round(dv/100*100)}mA → ΔV will reduce`;
+  else if(lowSoc)chain=`<span>SoC=${sc}%</span> → Low battery → CAN 0x351: Ichrg_max increased → Inverter prioritises charging`;
+  else if(nearFull)chain=`<span>SoC=${sc}%</span> → Near full → CAN 0x351: Ichrg_max throttled to 5A → CV float mode`;
+  else chain=`All parameters normal. <span>NORMAL state</span> — Measuring → Estimating → Communicating every 10ms.`;
+  document.getElementById('sb-chain').innerHTML=chain;
+};
+sbUpdate();
+})();
+</script>
+
+
+
+<style>
+.ch-journey{position:fixed;bottom:0;left:0;width:100%;z-index:9999;background:rgba(2,2,10,0.96);border-top:1px solid rgba(255,255,255,0.08);padding:.4rem 1rem;display:flex;align-items:center;justify-content:center;gap:.2rem;font-family:'Orbitron',monospace;font-size:.58rem;letter-spacing:.04em;backdrop-filter:blur(16px);box-shadow:0 -2px 20px rgba(0,0,0,.6);flex-wrap:nowrap;overflow-x:auto;}
+.cj-stop{padding:.28rem .6rem;border-radius:.3rem;text-decoration:none;transition:all .2s;white-space:nowrap;color:#444;}
+.cj-stop:hover{background:rgba(255,255,255,.08);color:#aaa;}
+.cj-current{background:rgba(255,200,87,.15)!important;color:#FFC857!important;border:1px solid rgba(255,200,87,.4);cursor:default;}
+.cj-link{color:#555;}.cj-link:hover{color:#ccc;background:rgba(255,255,255,.08);}
+.cj-arrow{color:#1a1a1a;font-size:.7rem;flex-shrink:0;}
+@media(max-width:768px){.ch-journey{font-size:.5rem;gap:.1rem;}.cj-stop{padding:.2rem .4rem;}.cj-arrow{display:none;}}
+</style>
+<div class="ch-journey"><a href="chapter1.html" class="cj-stop cj-link" title="Fundamentals">CH1</a><span class="cj-arrow">›</span><a href="chapter2.html" class="cj-stop cj-link" title="Cell Physics">CH2</a><span class="cj-arrow">›</span><a href="chapter3.html" class="cj-stop cj-link" title="Thermal">CH3</a><span class="cj-arrow">›</span><a href="chapter4.html" class="cj-stop cj-link" title="Protection">CH4</a><span class="cj-arrow">›</span><a href="chapter5.html" class="cj-stop cj-link" title="Standards">CH5</a><span class="cj-arrow">›</span><a href="chapter6.html" class="cj-stop cj-link" title="Architecture">CH6</a><span class="cj-arrow">›</span><a href="chapter7.html" class="cj-stop cj-link" title="UPS & ESS">CH7</a><span class="cj-arrow">›</span><a href="chapter8.html" class="cj-stop cj-link" title="Hardware">CH8</a><span class="cj-arrow">›</span><a href="chapter9.html" class="cj-stop cj-link" title="Firmware">CH9</a><span class="cj-arrow">›</span><a href="chapter10.html" class="cj-stop cj-link" title="Future">CH10</a><span class="cj-arrow">›</span><span class="cj-stop cj-current" title="System View">SYS</span></div>
+</body>
+</html>

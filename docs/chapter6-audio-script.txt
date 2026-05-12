@@ -1,0 +1,1074 @@
+================================================================================
+NOTEBOOKLM PROMPT — USE THIS WHEN UPLOADING THE SCRIPT
+================================================================================
+
+You are producing a deep-dive audio podcast episode about Battery Management
+System hardware and firmware architecture for LFP (lithium iron phosphate)
+battery packs. The episode is based on Chapter 6 of a technical knowledge base.
+
+FORMAT: Two-host conversational podcast
+- HOST 1 (Alex): The curious learner — smart but new to batteries and embedded
+  systems. Asks real questions. Expresses genuine "aha!" moments. Makes
+  everyday analogies.
+- HOST 2 (Blake): The experienced BMS engineer. Explains everything from first
+  principles. Uses precise numbers. Connects hardware choices back to physics.
+  Occasionally says "here's the thing most engineers miss..."
+
+TONE: Engaging, informative, deeply technical but always accessible. Like a
+great university lecture crossed with a documentary. No filler. Every sentence
+either teaches something or builds excitement about what comes next.
+
+LENGTH TARGET: 70–90 minutes
+
+COVERAGE RULES:
+- Cover EVERY numbered section (6.1 through 6.6 plus Summary)
+- State EVERY specific number mentioned in the script — voltages, timings,
+  capacities, part numbers — and explain what each one means
+- For each hardware component, explain WHY it exists (the physics problem it
+  solves) before HOW it works
+- Tesla, BYD, and CATL sections: treat as compelling real-world stories
+- State machine section: walk through each state transition as a narrative
+- SOX section: for each of the four estimates (SoC, SoH, SoF, SoP), give a
+  concrete worked example with real numbers
+- 12 Principles summary: read and explain each principle; end with a memorable
+  closing line
+
+CRITICAL INSTRUCTION: Do NOT summarise — expand and explain. Add real-world
+context, vivid analogies, and concrete examples wherever the script gives an
+opening. The listener should feel they understand BMS architecture deeply by
+the end of the episode.
+
+================================================================================
+CHAPTER 6 AUDIO SCRIPT — BMS HARDWARE & FIRMWARE ARCHITECTURE DEEP DIVE
+Two-host podcast format | Target: 70–90 minutes
+================================================================================
+
+[INTRO — ~3 minutes]
+
+ALEX: Welcome back to the LFP BMS Knowledge Base podcast. I'm Alex, and as
+always I'm joined by Blake, who has spent more time thinking about battery
+management systems than most people spend thinking about anything.
+
+BLAKE: Ha. That's probably true. And Chapter 6 is the one I've been waiting
+for, honestly — because this is where everything comes together. We've talked
+about cells, about electrochemistry, about protection circuits, about
+standards. Chapter 6 is the full picture. Hardware architecture, firmware
+architecture, how the world's best companies design their BMS systems, and the
+complete SOX state estimation framework.
+
+ALEX: SOX — that's the collective name for the four state estimates, right?
+State of Charge, State of Health, State of Function, State of Power?
+
+BLAKE: Exactly. And by the end of this episode you'll understand not just what
+those four numbers mean, but how they're calculated, how they feed into each
+other, and why getting them right is the difference between a battery that
+serves you well for a decade and one that surprises you with a cliff-edge
+failure at year three.
+
+ALEX: Big promises. Let's start at the beginning.
+
+BLAKE: Section 6.1 — BMS Requirement Traceability. And I want to frame this
+before we dive in, because it's a philosophy as much as a diagram.
+
+---
+
+[SECTION 6.1 — BMS REQUIREMENT TRACEABILITY — ~10 minutes]
+
+BLAKE: The traceability matrix is built on one idea: every single component in
+a BMS exists because a specific battery physics problem requires it. Nothing is
+there by accident. If you can't trace a component back to a battery weakness,
+you don't need it.
+
+ALEX: So it's like a justification chain.
+
+BLAKE: Exactly. Four columns: battery weakness, physics root cause, BMS module,
+firmware feature. Read each row left to right and you understand why that piece
+of hardware had to be invented.
+
+ALEX: Let's walk through them.
+
+BLAKE: Row one: Narrow Voltage Window. LFP cells are safe only between 2.5
+volts and 3.65 volts per cell. That's a 1.15-volt window. The physics root
+cause: above 3.65 volts, lithium starts plating on the anode — metallic lithium
+depositing where it shouldn't, permanently damaging the cell. Below 2.5 volts,
+the copper current collector starts dissolving into the electrolyte — that's
+irreversible too. So the BMS module is the AFE — the Analog Front End chip —
+which measures every cell voltage with 16-bit precision. And the firmware
+feature is OVP, Over-Voltage Protection, which cuts the charge FET within 100
+milliseconds, and UVP, Under-Voltage Protection, which cuts the discharge FET
+within one second.
+
+ALEX: Why different response times? 100ms for OVP but a full second for UVP?
+
+BLAKE: Because the failure modes have different speeds. Lithium plating
+accelerates quickly once you're over 3.65 volts — damage accumulates fast. But
+copper dissolution below 2.5 volts is slower, and rushing the UVP response
+would cause false trips every time a heavy load causes a brief voltage sag. One
+second filters out momentary dips while still protecting against real deep
+discharge.
+
+ALEX: Smart. Row two?
+
+BLAKE: Thermal Sensitivity. LFP cells are much safer than other lithium
+chemistries — thermal runaway requires getting them to 270 degrees Celsius
+before the chemistry decomposes. But other lithium types go into runaway at
+130 degrees or less. Either way, once a cell starts heating, the Arrhenius
+equation doubles the aging rate for every 10-degree temperature increase. The
+BMS module is the NTC thermistor network — typically 5 to 6 temperature sensors
+distributed across the pack. The firmware monitors OTP (Over Temperature
+Protection) and UTP (Under Temperature Protection) cutoffs, and it also watches
+the rate of temperature rise — called dT/dt — for early thermal runaway
+detection.
+
+ALEX: Row three — Cell Manufacturing Variation.
+
+BLAKE: This one is subtle. Even cells from the same production batch have
+slightly different internal resistances and slightly different capacity. That
+difference — even a few percent — means one cell reaches its voltage limit
+before the others. The weakest cell limits the whole pack. And worse: as the
+pack ages, that delta grows. The solution is the balancing FETs — small
+transistors that burn off energy from the highest cells to even out the
+voltages. Firmware target: keep the cell-to-cell voltage difference below 20
+millivolts.
+
+ALEX: That's a very tight window. 20 millivolts.
+
+BLAKE: Tight but achievable. And critically — especially for LFP — because the
+voltage plateau is so flat from about 20% to 80% State of Charge, you have to
+do your balancing at the very top or very bottom of the charge range, where
+cell voltages finally start to diverge. The firmware has to know this.
+
+ALEX: Row four — No Visual State Indicator.
+
+BLAKE: This is the famous LFP blind spot. You can't just look at the voltage
+and know how full the battery is. A cell at 3.28 volts could be 20% full or 80%
+full — the voltage is practically the same across that entire middle range. The
+physics reason is the flat OCV curve — OCV stands for Open Circuit Voltage. So
+the BMS needs a dedicated SoC algorithm running on the MCU. The primary method
+is coulomb counting: you measure how much current flows in and out, multiply by
+time, and divide by total capacity. You integrate the current. Like keeping
+score by counting every amp-hour that crosses the terminal.
+
+ALEX: Row five is the scariest one — Short Circuit Energy Dump.
+
+BLAKE: Yes. A 16S LFP pack at 280 amp-hours holds about 14.3 kilowatt-hours of
+energy. If that pack is short-circuited, you can get thousands of amps of fault
+current. The physics is I-squared-R — the energy release scales with the square
+of the current. Copper bus bars can literally melt in milliseconds. The MCU is
+far too slow for this — microcontroller interrupt latency is one to two
+milliseconds, and the damage is already done by then. So the BMS needs a
+dedicated hardware comparator inside the AFE chip. When the shunt resistor
+voltage exceeds the short-circuit threshold — set in a register, not in
+firmware — the AFE opens the discharge FET directly, in under 500 microseconds,
+without waiting for the MCU.
+
+ALEX: The MCU finds out afterwards via an interrupt.
+
+BLAKE: Right. The MCU gets a fault pin notification and logs it. But the
+physical protection already fired. This is why we say hardware protection must
+be independent of software.
+
+ALEX: Rows six through ten follow the same pattern?
+
+BLAKE: Yes. Row six: No Self-Regulating Chemistry. A lithium cell cannot limit
+its own current or voltage — it is a passive device. So the BMS needs a
+three-tier protection system: the AFE hardware layer, the MCU firmware layer,
+and the physical hardware backup layer — watchdog, fuse, and contactor. Each
+layer must be capable of protecting the pack even if both other layers fail.
+
+Row seven: No Built-In State Memory. A battery cell has no memory — it can't
+remember what its charge level was before it lost power. So the BMS needs
+persistent storage: backup SRAM for fast saves every second, EEPROM flash for
+checkpoints every 60 seconds, and an RTC (Real Time Clock) to keep calendar
+time even when the main battery is dead.
+
+Row eight: Communication Blindness. The inverter can't safely charge or
+discharge the battery if it doesn't know the SoC, the fault status, and the
+current limits. So the BMS needs a CAN bus — industry standard 250 kilobits
+per second — to broadcast that information every second.
+
+Rows nine and ten cover calibration over time and field serviceability — the
+need for firmware-updatable algorithms and a diagnostic interface.
+
+ALEX: And the whole matrix together describes the BMS as a necessary and
+sufficient system, not an arbitrary collection of chips.
+
+BLAKE: That's exactly it. When a junior engineer asks "why do we need the RTC?"
+you point to row seven and say — because battery cells have no memory, because
+calendar time is required for aging calculations, because without it we're
+blind to one of the biggest degradation mechanisms.
+
+---
+
+[SECTION 6.2 — HARDWARE ARCHITECTURE — ~15 minutes]
+
+ALEX: Section 6.2 — the full hardware picture. Six layers.
+
+BLAKE: Six layers, stacked. Let's go bottom to top. Layer one: the cell stack.
+For the reference design we use throughout this knowledge base, that's 16 cells
+in series, each cell 280 amp-hours, LFP chemistry. 16 cells at 3.2 volts
+nominal gives you 51.2 volts. 51.2 volts times 280 amp-hours equals 14.3
+kilowatt-hours. That's enough to power an average home for roughly 12 to 14
+hours.
+
+ALEX: Layer two is the AFE.
+
+BLAKE: The Analog Front End. The reference design uses the Texas Instruments
+BQ76952. This is an extraordinary chip. It connects to all 16 cell tap wires
+and measures each cell voltage with 16-bit precision — that's about 1 millivolt
+resolution. It uses a delta-sigma ADC, which means instead of a single
+instantaneous sample, it averages thousands of tiny measurements over a short
+window. Extremely accurate, extremely noise-immune. It also has 5 temperature
+ADC channels for the NTC thermistor network. And here's the key: it has a
+dedicated hardware comparator for short-circuit detection — completely
+independent of any software.
+
+ALEX: How does it access all 16 cell voltages without getting confused by the
+different ground references?
+
+BLAKE: Great question. The flying capacitor multiplexer. The AFE charges a
+small capacitor to the voltage of one cell — say, cell 7 — then disconnects it
+from the stack and connects it to the ADC with a common ground reference. The
+capacitor "flies" off the stack and gets measured cleanly. Then it moves to cell
+8, and so on. This clever circuit solves the level-shifting problem elegantly
+and without needing galvanic isolation for routine measurements.
+
+ALEX: The alternative — TI's main competitor for premium applications?
+
+BLAKE: Analog Devices LTC6813-1. Same basic function but rated for harsher
+environments, guaranteed over a wider temperature range, and supports daisy-
+chain SPI — you can stack multiple AFE chips to monitor packs with more than 16
+cells without redesigning your communication bus. Both are excellent; the
+BQ76952 is the more cost-optimised choice for standard home storage.
+
+ALEX: Layer three — the MCU.
+
+BLAKE: The Microcontroller Unit. The brain. For the reference design, we
+specify the STM32G431CB — a Cortex-M4 running at up to 170 megahertz, 128
+kilobytes of Flash, 32 kilobytes of RAM. It has hardware CAN-FD, hardware
+I2C at 400 kilohertz (that's how it talks to the AFE), a 16-bit ADC for the
+shunt resistor current measurement, and critically — 4 kilobytes of backup SRAM
+powered by the coin cell, completely separate from the main power domain.
+
+ALEX: Why does the RAM and Flash size matter so much?
+
+BLAKE: Because the BMS firmware has many things running at the same time. The
+10 millisecond measurement loop, the 100 millisecond SOX computation, the 1
+second balancing and CAN loop, the event log writer, the state machine
+evaluator, the Kalman filter — if you're using one. All of that plus the entire
+firmware stack needs to fit in 128 kilobytes of Flash, and the state machine
+variables plus sensor buffers plus the Kalman filter matrices need to fit in 32
+kilobytes of RAM. It's tight but achievable with disciplined firmware design.
+
+ALEX: Three MCU options are covered — which one goes in what application?
+
+BLAKE: The STM32G0B1 is the cost-optimised choice for residential home storage
+where you want to keep the BOM cost down. The STM32G431 is the performance
+choice for UPS and demanding applications — it has a floating-point unit and
+runs fast enough for the Extended Kalman Filter at 100 milliseconds without
+stressing the CPU. And the TI TMS570LS is for high-reliability and safety-
+critical applications — it's certified to SIL 2, has lockstep dual-core for
+fault detection, and is used in automotive and industrial BMS. For most
+residential and light commercial applications, the G431 is the sweet spot.
+
+ALEX: Layer four — the CAN bus.
+
+BLAKE: The most important communication layer in the BMS. CAN — Controller Area
+Network. Invented by Bosch for automotive in the 1980s and now the dominant
+standard for battery energy storage systems worldwide. The BMS transmits at
+250 kilobits per second, using what's called the PYLON-compatible message set —
+CAN IDs from 0x351 to 0x380.
+
+ALEX: What's in those messages?
+
+BLAKE: Let me walk through the key ones. 0x351 — sent every second — contains
+the charge current limit and charge voltage limit. This is what the inverter
+reads to know how hard it can push charge into the battery. 0x355 contains SoC
+and SoH, also every second. 0x356 contains pack voltage, current, and
+temperature. 0x359 and 0x35A contain the fault and alarm flags — if an OVP
+fault fires, the bit appears here immediately. 0x370 is the cycle count message.
+
+ALEX: How does CAN handle noisy environments? It's running through a battery
+system with large switching currents.
+
+BLAKE: Differential signalling. CAN uses two wires — CAN High and CAN Low.
+The logical value is encoded as the difference between the two voltages, not
+the absolute voltage on either wire. So if electrical noise hits both wires
+equally — which it usually does — the difference is unchanged, and the signal
+is read correctly. This gives CAN excellent noise immunity over cable runs up to
+250 meters at 250 kilobits per second.
+
+ALEX: What happens if the BMS loses CAN communication?
+
+BLAKE: The CAN controller has error counters — Transmit Error Counter and
+Receive Error Counter. Every transmission error increments the counter. If the
+Transmit Error Counter reaches 128, the node enters Error Passive mode —
+it keeps trying but with longer wait times. If TEC reaches 256, the node goes
+Bus-Off — it stops transmitting entirely and waits for 128 consecutive recessive
+bits before attempting recovery. Critically, UL 1973 requires that the host
+system detect BMS silence within 5 seconds and enter a safe state. The BMS
+firmware monitors host silence on its side too.
+
+ALEX: Layers five and six — NVM and physical protection.
+
+BLAKE: NVM — Non-Volatile Memory — is the AT24C256 EEPROM, 32 kilobytes. This
+stores the event log — 256 entries at 10 bytes each, that's 2.56 kilobytes. It
+also stores SoC checkpoints every 60 seconds, SoH snapshots every hour, and the
+cycle count. The critical design feature is wear leveling: the BMS writes to
+16 different pages in a rotating pattern, so no single EEPROM address wears out.
+At 60-second write intervals over 10 years, that's 5.25 million writes — which
+without wear leveling would exceed the EEPROM endurance of 1 million write
+cycles per address. With 16 pages rotating, each page sees only about 328,000
+writes over 10 years. Well within spec.
+
+ALEX: And the backup SRAM is different from EEPROM?
+
+BLAKE: Very different. Backup SRAM is volatile — it loses its contents without
+power — but it's powered by a CR1225 coin cell even when the main system is off.
+Writing to backup SRAM takes microseconds, not milliseconds like EEPROM. So the
+BMS saves SoC to backup SRAM every single second, and only writes to EEPROM
+every 60 seconds. After a sudden power cut, the BMS recovers from backup SRAM
+almost instantly with a SoC error of less than 1 second of charge movement.
+
+ALEX: And the coin cell runs for how long?
+
+BLAKE: About 11 years. The CR1225 holds 48 milliamp-hours. The STM32 RTC draws
+about 0.5 microamps. 48,000 divided by 0.5 equals 96,000 hours, which is
+roughly 11 years. Add in the backup SRAM draw of another microamp, and you
+still get 7-plus years. The RTC keeps ticking through deep discharges, storage
+periods, and shipping. When the pack powers back on, it has accurate calendar
+time and the last known SoC.
+
+ALEX: Tell me about the physical protection layer — the FETs.
+
+BLAKE: Two MOSFETs in series on the main power path: one CHG FET (charge
+transistor) and one DSG FET (discharge transistor), both N-channel, both
+back-to-back. Opening the CHG FET stops charging without stopping discharge.
+Opening the DSG FET stops discharge without stopping charging. Opening both
+isolates the pack completely. The back-to-back arrangement solves the body diode
+problem — every MOSFET has an intrinsic diode from source to drain, so you need
+two transistors oriented oppositely to block current in both directions.
+
+---
+
+[AFE DEEP DIVE — ~5 minutes]
+
+BLAKE: Let me go deeper on the AFE for a moment, because engineers consistently
+underestimate how important this chip is. The BQ76952 has seven major functions
+packed into one IC.
+
+First: 16-channel cell voltage ADC. Uses a flying-capacitor multiplexer so each
+cell is measured at a common reference, then digitized with the delta-sigma ADC.
+16-bit resolution gives approximately 1 millivolt per bit. Measurement time for
+all 16 cells: about 16 milliseconds.
+
+Second: 5-channel temperature ADC. Reads NTC thermistors using the Steinhart-
+Hart equation to convert resistance to degrees Celsius.
+
+Third: CC2 coulomb counter. A dedicated current integrator that is separate from
+the main MCU — it accumulates charge continuously and the MCU reads the total.
+This gives very high accuracy coulomb counting even if the MCU is busy.
+
+Fourth and fifth: CHG and DSG FET driver outputs. Direct digital outputs that
+control the gate voltages of the MOSFETs.
+
+Sixth: Hardware OVP and UVP comparators. These operate independently of any
+firmware — if a cell exceeds 3.65 volts and the AFE is configured correctly,
+it will trip the protection output even if the MCU is frozen.
+
+Seventh and most important: Short-circuit detection comparator. Monitors the
+shunt resistor voltage. Set threshold in register. When exceeded, opens the
+discharge FET in under 500 microseconds — faster than any microcontroller
+interrupt service routine can respond.
+
+ALEX: That seventh function is the one that gets engineers' attention.
+
+BLAKE: It's the reason you need an AFE and can't just use a cheap op-amp and an
+MCU GPIO. The physics demands sub-millisecond response. No software can do that.
+The AFE is the safety core, and the MCU is the intelligence layer.
+
+---
+
+[SECTION 6.3 — FIRMWARE ARCHITECTURE — ~12 minutes]
+
+ALEX: Section 6.3 — Firmware Architecture. This is where the software side of
+the BMS comes together.
+
+BLAKE: And I want to start with the fundamental insight: BMS firmware is not a
+simple sequential program. It is a real-time system where different tasks run at
+radically different speeds, each set by physics. You cannot run all the tasks at
+the same rate — that would either be too slow for safety or too fast and wasteful
+of CPU time.
+
+ALEX: So the timing architecture is driven by what the physics requires.
+
+BLAKE: Exactly. Let me walk through the six timing loops.
+
+Hardware interrupt layer — under 1 millisecond. When the AFE detects a short
+circuit, it fires a hardware interrupt to the MCU. This bypasses all software
+scheduling. The interrupt service routine latches the fault and sets a flag.
+The AFE has already opened the FET. No measurement loop needed. This path exists
+because physics requires a sub-millisecond response.
+
+10 millisecond loop — the core safety heartbeat. Every 10ms, the MCU reads all
+16 cell voltages and 6 temperatures from the AFE over SPI. It reads the pack
+current from the shunt ADC. It applies a filter to smooth noise. It checks every
+value against every protection threshold — OVP, UVP, OCP, OTP, UTP. If any
+threshold is exceeded, it opens the appropriate FET. And it kicks the watchdog
+timer to prove the loop is still alive.
+
+ALEX: What happens if the 10ms loop dies?
+
+BLAKE: The watchdog timer — set to 100ms — fires. That's 10 missed measurement
+cycles before the watchdog trips. When the watchdog fires, it resets the MCU.
+And the AFE has its own independent watchdog register — if the MCU doesn't write
+to that register every 500 milliseconds, the AFE goes into autonomous protection
+mode, opening the FETs without any MCU involvement. Two independent watchdog
+mechanisms.
+
+ALEX: 100 millisecond loop.
+
+BLAKE: The SOX computation loop. Every 100ms, the MCU runs coulomb counting —
+integrating the current since the last 100ms. If the pack is at rest, it checks
+if an OCV correction should be applied. It calculates the current SoF and SoP.
+It evaluates the state machine for transitions. If an Extended Kalman Filter is
+enabled, it runs one EKF update cycle — takes about 3 milliseconds of CPU time.
+If the SoC changed by more than 0.5 percent, a CAN message is queued.
+
+ALEX: 1 second loop.
+
+BLAKE: Housekeeping loop. Evaluates cell imbalance and enables or disables
+balancing resistors. Transmits all CAN status messages. Saves SoC to backup
+SRAM — takes only 2 microseconds. Checks whether the inverter has been silent
+for more than 5 seconds.
+
+60 second loop: writes SoC to EEPROM with wear leveling and CRC protection.
+
+1 hour loop: runs the full SoH update — calculates full-cycle-equivalent count,
+applies Arrhenius aging from accumulated temperature data, updates the SoH
+estimate, saves it to EEPROM, transmits the cycle count on CAN.
+
+ALEX: Five loops with very different periods, all running simultaneously.
+
+BLAKE: Running simultaneously in a superloop or under FreeRTOS. The 10ms loop
+is the highest priority. If you're using FreeRTOS, the 10ms task preempts
+everything else.
+
+ALEX: Now the state machine. Walk me through the states.
+
+BLAKE: The BMS state machine is the master controller — everything happens
+through it. Nine states in the reference design.
+
+POWER_ON: The MCU just booted. Every FET is open — safe default. All peripherals
+initialize. Watchdog starts. The state machine immediately transitions to INIT.
+
+INIT: Self-test phase. The MCU reads NVM and validates the CRC. If the data is
+valid, it restores SoC, SoH, and cycle count. If the NVM is corrupt, it
+initializes defaults. It measures the open-circuit voltage on all 16 cells. If
+the pack has been resting for more than 5 minutes, it uses the OCV to seed the
+SoC estimate. It configures all AFE protection thresholds. It verifies CAN bus
+operation. If everything passes, it transitions to IDLE.
+
+IDLE: Both charge and discharge FETs are open. All monitoring is active at 10ms.
+CAN messages transmit every second. The BMS is watching and reporting but not
+allowing power flow. If a charger announces itself on CAN message 0x35C, the
+state machine transitions to PRE_CHARGE.
+
+PRE_CHARGE: This state exists to protect the inverter's capacitors. When you
+first connect a discharged inverter input to a 51.2 volt pack, the inrush
+current would be enormous — potentially thousands of amps. PRE_CHARGE limits
+the current through a resistor bypass circuit for about 100 milliseconds, until
+the capacitors are charged enough that the current is safe. Then the main charge
+FET closes and the state transitions to CHARGE.
+
+CHARGE: Charge FET closed. The pack is accepting energy. The BMS monitors cell
+voltages every 10ms, runs balancing, tracks SoC, and reports charge limits to
+the charger via CAN. When any cell reaches 3.65 volts, the BMS transitions to
+IDLE, preventing overcharge. When all cells are balanced and SoC hits 100
+percent, charging is complete.
+
+DISCHARGE: Discharge FET closed. Energy flowing out. The BMS tracks SoC
+continuously, calculates SoP (State of Power) to tell the inverter the current
+limit, and monitors for UVP. When any cell drops to 2.5 volts, the discharge
+FET opens and the state machine transitions to IDLE to prevent deep discharge.
+
+BALANCING: Sub-state during charging. Resistance bleed on highest cells.
+
+SLEEP: After 5 minutes of inactivity in IDLE — no charge, no discharge, very
+low current — the BMS enters SLEEP. Most peripherals are powered down. Only the
+RTC, backup SRAM, and a timed wakeup remain active. Current draw drops from
+milliamps to microamps. The pack can sit in SLEEP for months.
+
+FAULT: Any protection threshold fires — OVP, UVP, OCP, OTP, short circuit —
+and the state machine jumps to FAULT from any other state. Both FETs open
+immediately. The fault is logged with timestamp. CAN alarm bits are set. The
+FAULT state is latched — the pack cannot restart without an explicit recovery
+sequence.
+
+RECOVERY: From FAULT, after the fault condition is confirmed to have cleared,
+the BMS transitions to RECOVERY, re-validates all conditions, and then either
+returns to IDLE or stays in fault if the conditions haven't resolved.
+
+ALEX: One thing I want to understand — what's the protection response time
+hierarchy?
+
+BLAKE: Five levels, each faster than the one below it.
+
+Level one — under 500 microseconds: Hardware short circuit detection. AFE
+comparator, no MCU involved, fastest possible protection. Required because copper
+bus bars can melt in milliseconds.
+
+Level two — under 10 milliseconds: Over-current detection. MCU reads current
+every 10ms. If it exceeds the OCD threshold for more than 10ms, the FET opens.
+Slower than SCD but handles sustained overcurrent below the SCD threshold.
+
+Level three — under 100 milliseconds: Over-voltage protection. Cell voltages
+checked every 10ms with a 100ms debounce filter. The filter prevents false trips
+from ADC noise spikes.
+
+Level four — under 1 second: Under-voltage and temperature protection. These
+failure modes develop over seconds, so a 1-second response is appropriate.
+Faster would cause false trips from momentary load spikes.
+
+Level five — over 2 degrees per second temperature rise rate: Thermal runaway
+detection. Watches the rate of temperature rise, not the absolute temperature.
+If temperature rises faster than 2 degrees Celsius per second, something is
+actively going wrong and the BMS takes emergency action — all FETs open, fault
+latch, external fire alarm signal.
+
+ALEX: That last one is chilling. Literally monitoring for the onset of thermal
+runaway in real time.
+
+BLAKE: It's the most important one for life safety. By the time a cell hits 130
+degrees Celsius, thermal runaway in a non-LFP chemistry is often already
+unstoppable. But watching the rate of rise gives you warning before the absolute
+temperature gets critical. LFP is much safer — needs to reach 270 degrees — but
+the dT/dt monitoring is still there and is required by UL 1973 for all
+chemistries.
+
+---
+
+[SECTION 6.4 — WORLD-CLASS BMS COMPANIES — ~14 minutes]
+
+ALEX: Section 6.4 — Tesla, BYD, and CATL. These are the companies that have
+refined BMS design through millions of real-world deployments.
+
+BLAKE: And the insight this section gives us is remarkable. Despite wildly
+different applications — Tesla for vehicles, BYD for vehicles and stationary
+storage, CATL for everything — they all converge on the same fundamental
+architectural principles. Let's start with Tesla.
+
+ALEX: Tesla — Distributed Cell-Level Intelligence.
+
+BLAKE: Tesla's most distinctive design choice is cell-level fusing. Every single
+cell in a Tesla pack has its own thin invar wire fuse bonded directly to its
+terminal — one fuse per cell. If that cell develops an internal short and starts
+pulling dangerous current, its wire melts. The cell disconnects. The rest of the
+pack continues operating at slightly reduced capacity. In the 4680-format pack
+with 960 cells, losing 10 cells is less than 1 percent capacity reduction. The
+pack degrades gracefully rather than failing catastrophically.
+
+ALEX: That's protection at a level below even the BMS.
+
+BLAKE: Below even the BMS — that's exactly the phrase. It's what UL 1973 calls
+Tier 1 protection: cell-intrinsic, no software, no firmware, no power required.
+Even if the entire BMS system failed completely, those wire fuses would still
+protect individual cells.
+
+ALEX: The thermal propagation barrier.
+
+BLAKE: If one cell goes into thermal runaway despite all the protections, Tesla
+wants to contain it. Between rows of cells in the structural battery pack sits
+intumescent foam — a material that expands dramatically when heated. The cell
+heats up, the foam swells, and it physically blocks heat from spreading to
+adjacent cell rows. Meanwhile the BMS detects the dT/dt alarm, opens all FETs,
+and signals the venting system. The cell-level fuse disconnects the failing cell
+electrically. The foam barrier contains the heat physically. Multiple independent
+systems working together.
+
+ALEX: Tesla's distributed BMS architecture.
+
+BLAKE: Instead of one central BMS chip monitoring everything, Tesla uses a two-
+tier structure. Each module of about 46 cells has its own Battery Module
+Controller — a BMC — with its own AFE. Multiple BMCs all connect via CAN to a
+central Battery Management Unit, the BMU. The BMU does the heavy computation —
+SOX algorithms, state machine, CAN communication to the vehicle. The BMCs just
+do measurement and local protection. If one AFE fails, it takes down only its
+46-cell module, not the entire 960-cell pack.
+
+ALEX: And Tesla's precision current measurement.
+
+BLAKE: 500 microohm shunt resistors with 24-bit ADCs. Most designers use 1
+milliohm shunts and 16-bit ADCs. Tesla goes 2 times more precise in hardware
+and 256 times more resolution in the analog-to-digital converter. At 500
+microohms with 500 amps peak current, the shunt voltage is 250 millivolts — a
+strong, easy-to-measure signal. The 24-bit ADC resolves that to approximately
+30 milliamp steps. Over hundreds of cycles, this precision compounds into SoC
+accuracy well below plus or minus 1 percent. That's why Tesla can tell you
+"you have 3 miles of range left" and be right.
+
+ALEX: And OTA firmware updates.
+
+BLAKE: Four mandatory design rules for safe over-the-air BMS firmware updates.
+One: dual-bank Flash. New firmware loads into Bank B while Bank A runs the live
+system. The switch happens only after the new firmware is fully verified.
+Two: the CAN bootloader lives in a dedicated protected Flash region that
+application code can never overwrite — you can never accidentally brick the
+bootloader.
+Three: cryptographic signature verification. Every firmware update is signed.
+The BMS refuses unsigned code. This prevents malicious firmware injection.
+Four: automatic rollback. If the new firmware fails its health checks in the
+first 100 cycles, the BMS rolls back to the previous version automatically.
+Tesla has used this OTA capability to improve SoH algorithms, adjust OVP
+thresholds, and tune thermal management years after the pack left the factory.
+
+ALEX: Now BYD — the Blade Battery.
+
+BLAKE: BYD made a radical architectural choice: eliminate the module layer
+entirely. Conventional packs go cells → modules → pack. BYD goes directly cells
+→ pack. The long flat blade cells — prismatic, about 100 millimeters tall and
+only 13.5 millimeters wide — are arranged side-by-side in the pack housing like
+books on a shelf. Their shape gives the structure mechanical rigidity without a
+separate frame. This simplifies the BMS: only one AFE layer needed, not the two-
+tier BMC-plus-BMU structure Tesla uses.
+
+ALEX: And the famous nail penetration test.
+
+BLAKE: BYD drove a nail through an LFP Blade cell on stage — on camera — and
+nothing happened. No fire, no smoke. This is directly because of LFP's P-O
+bond. The phosphate oxygen bond in lithium iron phosphate holds at 544 kilojoules
+per mole — one of the strongest bonds in battery chemistry. Even when a nail
+mechanically shorts the cell and causes a local heating spike, the oxygen cannot
+be released from the cathode structure. Without oxygen, there is no combustion.
+The BMS contribution: its dT/dt monitor sees the temperature spike from the nail
+short, logs it as a safety event with a timestamp, and the event record proves
+the cell survived.
+
+ALEX: BYD's temperature uniformity approach.
+
+BLAKE: Most BMS designs put one temperature sensor for every 10 cells. BYD
+uses one sensor for every 4 cells — much denser. But BYD goes further: the
+firmware runs a per-cell temperature model that uses cell impedance data to
+estimate the internal temperature of every cell, not just the ones adjacent to a
+physical sensor. The model is calibrated using the measured voltage response to
+dynamic current loads — that voltage signature encodes thermal resistance
+information. This gives temperature accuracy that no sensor array alone can
+match.
+
+ALEX: CATL — System-Level Intelligence.
+
+BLAKE: CATL's signature innovation is cloud-based fleet SoH calibration. Their
+products transmit battery health data to a central cloud platform at the end of
+every charge cycle — cell voltages, temperatures, current profiles, and SoH
+estimates. The cloud platform compares data across the entire fleet. If it
+notices that a particular batch of cells in a particular operating region is
+fading faster than the on-device model predicted, it pushes a calibration update
+to all 50,000 packs in the fleet within 24 hours. A SoH error discovered in one
+customer's pack gets corrected in everyone's pack — without a service visit.
+
+ALEX: And CATL's impedance sensing.
+
+BLAKE: This one is remarkable from a signal-processing standpoint. During rest
+periods, CATL's BMS injects tiny AC current signals at frequencies ranging from
+0.1 to 1000 hertz, and measures the cell's voltage response at each frequency.
+This is a simplified form of Electrochemical Impedance Spectroscopy — a
+technique that normally requires expensive lab equipment. The BMS microcontroller
+runs FFT analysis on the response to extract three distinct resistance
+components: R-zero, the ohmic resistance — basically the resistance of the cell's
+internal materials at high frequency. R-one, the SEI layer impedance — the
+resistance of the solid electrolyte interface at mid-frequency. And diffusion
+impedance at low frequency. From those three numbers, the BMS can detect the
+early signs of lithium plating and abnormal SEI growth 50 to 100 charge cycles
+before they would appear in normal SoH degradation tracking.
+
+ALEX: They're catching failures before they happen.
+
+BLAKE: Before the cell owner would ever notice anything was wrong. That is the
+power of in-situ impedance spectroscopy.
+
+And CATL's final innovation: adaptive charging. Most chargers use a fixed CC/CV
+profile — the same current regardless of how old or stressed the cell is. CATL's
+BMS adjusts the charge current in real time based on the impedance measurement.
+If the SEI layer has thickened — R-one has grown — it reduces the CC charge
+current to prevent lithium plating on the anode. As the cell ages over thousands
+of cycles, the charging algorithm continuously adapts. This is why CATL cells in
+products with adaptive charging often exceed 3,000 cycles while the same cells
+on fixed-protocol chargers typically reach 2,200. The difference is entirely
+the algorithm.
+
+ALEX: What do all three companies have in common?
+
+BLAKE: Four properties every world-class BMS shares. Hardware fail-safe
+independent of firmware. Persistent state that survives any power loss.
+Timestamped event logs for every fault. Adaptive algorithms that improve with
+accumulated data. The gap between a $200 BMS board and a $2,000 world-class BMS
+is almost entirely in points three and four — the intelligence layer, not the
+silicon.
+
+---
+
+[SECTION 6.5 — COMMUNICATION STACK — ~7 minutes]
+
+ALEX: Section 6.5 — the communication stack. CAN, SMBus, and UART.
+
+BLAKE: Three protocols, each serving a different purpose, and no single one can
+do all three jobs well.
+
+CAN is the primary host interface — it's what talks to the inverter and charger
+in real time. High speed, noise-immune, the industry standard for energy storage.
+The PYLON-compatible message set we've discussed.
+
+SMBus is the legacy compatibility layer. Stands for System Management Bus.
+Defined in the Smart Battery Data Specification, version 1.1. This is an I2C
+bus running at 100 kilobits per second, and it defines a standard register map
+for battery data. Any charger with SMBus support can plug into any SBDS-
+compatible battery and automatically discover the chemistry, capacity, and charge
+limits without any manual configuration. This was designed before CAN for BMS
+use — it's the protocol inside your laptop battery. Still very common in UPS
+systems.
+
+ALEX: What registers does SMBus expose?
+
+BLAKE: The important ones for a BMS: register 0x09 — pack voltage in
+millivolts. Register 0x0A — current, signed, in milliamps. Positive means
+charging, negative means discharging. Register 0x0D — State of Charge as a
+percentage. Register 0x10 — Full Charge Capacity in milliamp-hours. Register
+0x14 and 0x15 — charging current limit and charging voltage limit. Those two
+are the most important: the charger reads them and knows exactly what current
+and voltage to apply. Register 0x16 — battery status flags, including
+OVER_CHARGED, OVER_TEMP, and low SoC alarm. Register 0x17 — cycle count.
+Register 0x18 — design capacity.
+
+ALEX: So a dumb charger that only knows SMBus can still charge the pack safely.
+
+BLAKE: Without any manual configuration. It reads register 0x14 to learn the
+current limit, register 0x15 to learn the voltage limit, and applies exactly
+those values. If the BMS decides the pack is too cold for fast charging, it
+reduces the value in register 0x14 dynamically. The charger complies
+automatically.
+
+ALEX: UART for field service.
+
+BLAKE: UART at 115,200 baud — or Modbus RTU over RS-485 for industrial
+installations with long cable runs up to 1,200 meters. This is the port an
+engineer plugs a laptop into to download the event log, run a diagnostic test,
+update firmware, or check calibration. Not real-time, not for the inverter —
+purely for human interaction with the BMS. A production BMS should always have
+this interface, even if most users never touch it.
+
+ALEX: How do the three protocols compare on performance?
+
+BLAKE: Speed: CAN at 250 to 500 kilobits per second, SMBus at 100 kilobits,
+UART up to 115,200 baud. Cable length: CAN up to 250 meters at 250 kbps, SMBus
+only 5 meters maximum, UART on RS-485 up to 1,200 meters. Error detection: CAN
+has CRC-15 plus bit stuffing — excellent error detection. SMBus has only
+acknowledgment bits — minimal error detection. Modbus RTU has CRC-16. Noise
+immunity: CAN is excellent due to differential signalling. SMBus is poor —
+single-ended — which is why it's limited to 5 meters. RS-485 is good for long
+runs. For any serious ESS installation, CAN is the right primary interface.
+SMBus is compatibility, UART is serviceability.
+
+---
+
+[SECTION 6.6 — SOX STATE ESTIMATION — ~15 minutes]
+
+ALEX: Section 6.6 — SOX State Estimation. The full reference for all four
+estimates. Let's take them one at a time.
+
+BLAKE: SOX — State of X — is the collective term. SoC: State of Charge. SoH:
+State of Health. SoF: State of Function. SoP: State of Power.
+
+ALEX: SoC first — how full is the battery?
+
+BLAKE: Three methods, working together. Primary method: coulomb counting.
+The formula is SoC(t) equals SoC-zero minus the integral of current over time
+divided by total capacity. In plain language: track every amp-hour that flows in
+or out. Start with an initial SoC, add charge, subtract discharge. Like a water
+meter that counts every drop.
+
+The problem: this method drifts. Measurement error in the current sensor
+accumulates over time. At 1C discharge, drift is roughly 0.5 percent per hour.
+Over a long discharge cycle, that adds up.
+
+Correction method: OCV lookup. Open Circuit Voltage. When the battery has been
+resting for more than 30 minutes with current below C/20 — that's 14 amps for
+a 280 amp-hour pack — the terminal voltage equals the true open-circuit voltage.
+Look that voltage up in a 50-point table and get the corrected SoC. Problem for
+LFP: the voltage plateau from 20% to 80% SoC is so flat that the voltage
+resolution is terrible in that range. A 5 millivolt measurement error could mean
+a 10 percent SoC error. OCV correction works best at the top and bottom of the
+charge range.
+
+Advanced method: Extended Kalman Filter. The EKF models the battery as an
+equivalent circuit — a voltage source with an internal resistance and an RC
+network. The state vector contains SoC and the RC capacitor voltage. Every
+100 milliseconds, the EKF predicts what the terminal voltage should be based on
+the model, then compares to the actual measured voltage. The difference — the
+innovation — is used to correct the SoC estimate. The Kalman gain balances trust
+in the model versus trust in the new measurement. The result: drift-free SoC
+even during active charge and discharge, without needing rest periods for OCV
+correction.
+
+ALEX: Temperature compensation.
+
+BLAKE: Cold batteries shrink. At minus 20 degrees Celsius, an LFP cell delivers
+only about 60 percent of its room-temperature capacity. The temperature
+efficiency factor, eta-T, adjusts both the coulomb counter and the OCV lookup.
+Lookup table values: at minus 20, eta equals 0.60. At 0 degrees, 0.82. At 25
+degrees, 1.00. At 45 degrees, 1.02 — slightly higher because warm cells are
+slightly more efficient. Apply this factor and the SoC reading reflects actual
+usable capacity, not just nominal capacity.
+
+ALEX: State of Health — how degraded is the battery?
+
+BLAKE: Four components. Capacity SoH: the ratio of current full charge capacity
+to the original design capacity. The formula is SoH-C equals C-full-now divided
+by C-design. Industry standard replacement threshold: 80 percent. For the 280
+amp-hour reference pack, that's replacement when you can only get 224 amp-hours
+out of a full charge. To measure it accurately, you need a calibration cycle —
+full charge, full discharge, count the amp-hours.
+
+Resistance SoH: internal resistance doubles by end of life. Measure it from
+voltage pulse response — R-zero equals delta-V divided by delta-I at 10
+milliseconds. A battery with high R-zero wastes energy as heat and delivers less
+peak power, even if capacity is acceptable. Resistance degradation often shows
+up before capacity degradation.
+
+Cycle aging: every partial charge or discharge is counted as a fraction of a
+full cycle. The full-cycle-equivalent count, N-equiv, equals the sum of delta-
+amp-hours divided by full capacity, times 0.5. Each full equivalent cycle
+degrades LFP capacity by about 0.02 percent. After 3,000 full-equivalent cycles,
+cycling alone has cost 60 percent of the original capacity. LFP's characteristic
+flat degradation curve means it degrades slowly and predictably all the way to
+that point.
+
+Calendar aging: the Arrhenius equation. SoH-calendar equals 1 minus A times
+square root of t times exp of minus Ea divided by RT. The square root of time
+comes from the physics of SEI growth — the layer grows fast at first, then
+slows as it thickens, following diffusion kinetics. The exponential term
+captures the temperature dependence — calendar aging doubles for every 10 degree
+Celsius increase in temperature. A pack stored at 45 degrees ages twice as fast
+as one stored at 25 degrees. The activation energy Ea for LFP SEI is about 0.35
+electron volts. This is why storage temperature matters even for a battery you
+are not using.
+
+ALEX: State of Function — the combined readiness indicator.
+
+BLAKE: SoF asks a single practical question: can this battery actually do its
+job right now? It multiplies three factors together. How full is it — that's SoC.
+How cold is it — that's eta-T, the temperature efficiency. How degraded is it —
+that's SoH-C. The formula is SoF equals SoC times eta-T times SoH-C.
+
+Let me walk through a real example. Pack at 75 percent SoC. Temperature is
+minus 5 degrees, so eta equals 0.75 — cold reduces available capacity by 25
+percent. SoH is 0.90 — 10 percent degraded from aging. SoF equals 0.75 times
+0.75 times 0.90. That's 0.506 — 50.6 percent.
+
+ALEX: So that pack can only deliver 50 percent of what it was designed to
+deliver, even though it reads 75 percent full.
+
+BLAKE: Exactly. And the inverter uses SoF to calculate real backup time. On a
+5 kilowatt-hour pack with a 1 kilowatt load and 50.6 percent SoF: expected
+runtime equals 5 times 0.506 divided by 1 — that's 2.53 hours. Without SoF,
+the inverter would calculate 3.75 hours based on SoC alone. In a UPS scenario,
+that 1.2-hour error could be the difference between controlled shutdown and
+hard power loss.
+
+ALEX: State of Power — the current limits.
+
+BLAKE: SoP answers: what is the maximum power I can safely deliver right now?
+It's calculated separately for charge and discharge. The formula for maximum
+charge power: P-charge-max equals the minimum of the constant-current limit, the
+constant-voltage limit, and the temperature-derated current limit — all
+multiplied by pack voltage.
+
+Temperature squeezes the limits hard. At minus 20 degrees, only 0.2C is
+allowed — that's 56 amps for the 280 amp-hour pack. At 0 degrees, 0.5C — 140
+amps. At 25 degrees, the full 1C — 280 amps. At 45 degrees, back off to 0.8C —
+224 amps — to prevent heat buildup.
+
+SoC also clamps the limits. Below 10 percent SoC, the discharge limit tapers
+linearly to zero at 5 percent. This prevents cell reversal — a cell reversing
+polarity under deep discharge dissolves the copper current collector. Above 95
+percent SoC, the charge limit drops to 0.2C to prevent lithium plating on an
+almost-full cell.
+
+ALEX: The inverter reads SoP every 100 milliseconds and adjusts accordingly.
+
+BLAKE: Every 100 milliseconds. CAN message 0x351 carries the charge current
+limit and discharge current limit values. The inverter reads this and adjusts its
+output in real time. If you charge the pack hard in cold weather and the BMS
+doesn't send accurate SoP values, the inverter can push too much current and
+cause lithium plating. Getting SoP right is a life-safety issue.
+
+---
+
+[SUMMARY — TWELVE PRINCIPLES — ~8 minutes]
+
+ALEX: Let's close with the twelve principles of BMS architecture from the
+chapter summary.
+
+BLAKE: These twelve principles are the distillation of everything we've covered
+today. If you remember nothing else, remember these.
+
+One: Physics drives architecture. Every BMS module exists because a battery
+physics problem requires it. If you can't trace a component back to a row in the
+traceability matrix, you don't need it. Start with physics, let hardware follow.
+
+Two: The AFE is the safety core. Not the MCU. The AFE's hardware short-circuit
+comparator reacts in under 500 microseconds — faster than any software. Its
+watchdog can protect the pack even if the firmware is completely frozen. Never
+design a BMS where the microcontroller is the only protection path.
+
+Three: Dedicated MCU, always. Sharing the MCU with the inverter creates priority
+conflicts that can delay the 10-millisecond safety loop. That loop catches
+overvoltage before damage accumulates. A dedicated BMS MCU costs $2 and can
+prevent a $200 warranty claim.
+
+Four: CAN is the language of ESS. 250 kilobits per second, PYLON-compatible
+message set, IDs 0x351 to 0x380. Implement bus-off recovery. Implement the 5-
+second silence timeout. Your BMS will work with every major inverter brand in
+the world.
+
+Five: SoC must never be lost. Three-tier persistence: backup SRAM every second,
+EEPROM every 60 seconds, OCV re-initialisation as a fallback. Without backup
+SRAM, every unexpected power cut leaves the BMS guessing.
+
+Six: NVM requires wear leveling. 60-second SoC writes over 10 years equals 5.25
+million writes. Without wear leveling, a single EEPROM address wears out before
+year 2. Rotate across 16-plus pages. Protect every record with CRC-16.
+
+Seven: RTC enables aging intelligence. Calendar aging doubles every 10 degrees
+Celsius. Without a real-time clock, the BMS cannot track time at temperature.
+For storage applications, calendar aging can dominate over cycle aging. A $0.50
+coin cell keeps the clock running for 11 years.
+
+Eight: Log everything, always. A 256-entry timestamped event log costs 2.5
+kilobytes of EEPROM. Without it, a failed pack in the field is a black box.
+With it, an engineer can diagnose the failure, prove who is at fault, and
+determine whether a firmware fix will prevent the next one. Always log first,
+question storage size second.
+
+Nine: State machine prevents undefined behaviour. A BMS without a formal state
+machine will eventually reach an undefined state under race conditions — both
+FETs open when they shouldn't be, or both closed during a fault. The state
+machine with formal transition guards is the only way to guarantee deterministic
+behaviour in all possible operating conditions.
+
+Ten: SOX is a system, not four numbers. SoC, SoH, SoF, and SoP feed each other.
+SoP uses SoC and temperature. SoF uses SoC, SoH, and temperature. The inverter
+adapts its power strategy every 100 milliseconds based on SoP. An error in any
+one of the four propagates into all the others.
+
+Eleven: World-class equals hardware fail-safe plus persistent state plus adaptive
+algorithms. Tesla, BYD, and CATL all converge on the same design principles
+despite different applications. The $2,000 gap between a budget BMS and a world-
+class one is almost entirely firmware intelligence, not component cost.
+
+Twelve: Timing is physics. Under 500 microseconds for short-circuit detection
+because copper melts in milliseconds. Under 10 milliseconds for overvoltage
+because lithium plating accelerates in seconds. 100 milliseconds for SoC because
+load steps are fast. One second for balancing because imbalance is slow. 60
+seconds for EEPROM. One hour for SoH. Every timing deadline is set by the
+physics of the failure it prevents.
+
+ALEX: Twelve principles. Any one of them could be a chapter in its own right.
+
+BLAKE: And honestly, that's the point of this chapter. It's not just about
+knowing what chips to use — it's about understanding why each chip is there,
+what physics problem it's solving, how the firmware layers interact, and how the
+world's most successful battery companies have answered these same questions at
+scale.
+
+ALEX: For listeners who want the quick reference numbers — what are the key
+figures to memorise?
+
+BLAKE: The protection thresholds: 3.65 volts OVP, 2.5 volts UVP, 55 degrees
+charge OTP, minus 10 degrees charge UTP. The timing hierarchy: 500 microseconds,
+10 milliseconds, 100 milliseconds, 1 second, 60 seconds, 1 hour. The SoC
+accuracy targets: plus or minus 3 percent for coulomb counting, plus or minus
+5 percent for SoH. The communication standard: 250 kilobits CAN, PYLON
+protocol, 0x351 through 0x380. The reference pack: 16S1P, 280 amp-hours, 51.2
+volts, 14.3 kilowatt-hours.
+
+ALEX: This has been the most technically complete episode of the series.
+Chapter 7 — UPS and Home ESS Applications — is next.
+
+BLAKE: Chapter 7 is where all of this comes together in a real-world product
+design. UPS float charging, home energy storage cycling profiles, the NFPA 855
+indoor safety requirements, the complete system integration from solar array to
+grid. Everything we've built up comes to life.
+
+ALEX: Can't wait. Thanks everyone for listening — we'll see you there.
+
+[END]
+
+================================================================================
+QUICK REFERENCE — KEY NUMBERS FOR HOST REVIEW
+================================================================================
+
+CELL AND PACK SPECS:
+- 16S1P LFP, 280Ah, 51.2V nominal, 14.3 kWh
+- Cell voltage: 2.5V (UVP) to 3.65V (OVP)
+- OVP response: <100ms | UVP response: <1s
+
+AFE:
+- TI BQ76952 (primary) | ADI LTC6813-1 (premium)
+- 16-bit delta-sigma ADC, 1mV resolution
+- Flying capacitor multiplexer
+- SCD response: <500μs (hardware, no MCU)
+
+MCU:
+- STM32G0B1 (cost), STM32G431 (performance), TI TMS570LS (SIL2)
+- 128KB Flash, 32KB RAM, 4KB backup SRAM
+- CR1225 coin cell → 11 years RTC runtime
+
+CAN:
+- 250 kbps, PYLON-compatible, 0x351–0x380
+- 5-second host silence timeout (UL 1973)
+- TEC 128 → Error Passive | TEC 256 → Bus-Off
+
+NVM:
+- AT24C256, 32KB EEPROM, 16-page wear leveling
+- 5.25M writes over 10 years → leveling gives 328K per page
+- CRC-16 validation on every record
+
+TIMING LOOPS:
+- <500μs: SCD hardware interrupt
+- 10ms: measurement + protection (watchdog 100ms)
+- 100ms: SOX computation + state machine
+- 1s: balancing + CAN TX + backup SRAM
+- 60s: EEPROM NVM checkpoint
+- 1hr: SoH update + calendar aging
+
+TESLA:
+- Cell-level invar wire fuses, 1 per cell
+- 4680 pack: 960 cells, losing 10 = <1% capacity loss
+- Distributed: BMC (46 cells each) + BMU
+- Shunt: 500μΩ, 24-bit ADC → <±1% SoC accuracy
+- OTA: dual-bank Flash + cryptographic signature
+
+BYD:
+- Blade: cell-to-pack, no module layer
+- Nail penetration: no fire due to LFP P-O bond (544 kJ/mol)
+- 1 NTC per 4 cells (vs industry standard 1 per 10)
+- Isolation resistance: <100Ω/V triggers fault
+
+CATL:
+- Fleet SoH cloud calibration: 50,000 packs updated in 24 hours
+- EIS frequency range: 0.1 to 1000 Hz
+- Adaptive charging: 3,000+ cycles vs 2,200 fixed protocol
+
+SOX:
+- SoC: Coulomb counting ±0.5%/hr drift, OCV correction at rest
+- SoH: Replace at <80% | Calibration cycle every 30 cycles
+- SoF = SoC × η(T) × SoH_C
+- SoP derating: -20°C→0.2C, 0°C→0.5C, 25°C→1.0C, 45°C→0.8C
+- Calendar aging: doubles every 10°C (Arrhenius, Ea=0.35eV LFP)
+- Cycle aging: ~0.02% per full-equivalent cycle (LFP)
+
+COMMUNICATION:
+- CAN: 250m range, CRC-15, excellent noise immunity
+- SMBus: 5m range, 100kbps, register 0x14=charge current limit
+- UART/Modbus: 1200m on RS-485, field service only
+================================================================================

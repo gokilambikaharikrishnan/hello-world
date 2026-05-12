@@ -1,0 +1,3166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 3: Thermal & Mechanical | LFP BMS Knowledge Base</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       DESIGN TOKENS
+    ============================================================ */
+    :root {
+      --bg-deep:      #07090f;
+      --bg-card:      #0d1117;
+      --bg-elevated:  #161b22;
+      --bg-hover:     #1c2330;
+      --border:       rgba(255,255,255,0.07);
+      --border-med:   rgba(255,255,255,0.12);
+
+      --text-primary:  #e6edf3;
+      --text-secondary:#8b949e;
+      --text-muted:    #484f58;
+
+      --accent-green:  #48bb78;
+      --accent-blue:   #63b3ed;
+      --accent-orange: #f6ad55;
+      --accent-red:    #fc8181;
+      --accent-purple: #b794f4;
+      --accent-cyan:   #00d9ff;
+      --accent-yellow: #f6e05e;
+
+      --thermal-red:   #ff4444;
+      --thermal-orange:#ff8c00;
+      --thermal-yellow:#ffd700;
+      --thermal-green: #48bb78;
+      --thermal-blue:  #63b3ed;
+
+      --font-sans: 'Inter', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      --sidebar-w: 260px;
+      --radius:    8px;
+      --radius-lg: 14px;
+    }
+
+    /* ============================================================
+       RESET & BASE
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 16px;
+      line-height: 1.7;
+      display: block;
+    }
+
+
+    /* Page layout wrapper — same pattern as ch1/ch2 */
+    .page-wrapper { display: flex; min-height: calc(100vh - 44px); margin-top: 44px; }
+
+    /* ============================================================
+       SIDEBAR
+    ============================================================ */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-width: var(--sidebar-w);
+      background: var(--bg-card);
+      border-right: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 1.5rem 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+      flex-shrink: 0;
+    }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-track { background: transparent; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--border-med); border-radius: 2px; }
+
+    .sidebar-logo {
+      padding: 0 1.25rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1rem;
+    }
+    .sidebar-logo-text {
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      color: var(--accent-orange);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .sidebar-title {
+      font-size: 0.85rem;
+      color: var(--text-primary);
+      font-weight: 600;
+      margin-top: 0.25rem;
+      line-height: 1.3;
+    }
+    .sidebar-nav-label {
+      font-size: 0.65rem;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      padding: 0.75rem 1.25rem 0.3rem;
+    }
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.45rem 1.25rem;
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: all 0.18s;
+      border-left: 2px solid transparent;
+    }
+    .sidebar-link:hover { color: var(--text-primary); background: var(--bg-elevated); }
+    .sidebar-link.active {
+      color: var(--accent-orange);
+      border-left-color: var(--accent-orange);
+      background: rgba(246,173,85,0.06);
+    }
+    .dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0.5;
+      flex-shrink: 0;
+    }
+    .sidebar-link.active .dot { opacity: 1; }
+
+    /* ============================================================
+       MAIN CONTENT
+    ============================================================ */
+    .main { flex: 1; min-width: 0; padding: 3rem 3rem; max-width: none; }
+    @media (max-width: 900px) { .main { padding: 2rem 1.5rem; } }
+
+    /* ============================================================
+       HERO
+    ============================================================ */
+    .hero {
+      margin-bottom: 4rem;
+      padding: 3rem;
+      background: linear-gradient(135deg, rgba(255,68,68,0.08) 0%, rgba(255,140,0,0.06) 40%, rgba(7,9,15,0) 100%);
+      border: 1px solid rgba(255,68,68,0.15);
+      border-radius: var(--radius-lg);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 220px; height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,140,0,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-chapter-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--accent-orange);
+      background: rgba(246,173,85,0.1);
+      border: 1px solid rgba(246,173,85,0.25);
+      padding: 0.3rem 0.75rem;
+      border-radius: 20px;
+      margin-bottom: 1.25rem;
+    }
+    .hero-title {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 0.75rem;
+      background: linear-gradient(135deg, #ff6b6b 0%, #ffa94d 60%, #e6edf3 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-subtitle {
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      max-width: 600px;
+      line-height: 1.7;
+      margin-bottom: 1.5rem;
+    }
+    .hero-stats {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+    .hero-stat { text-align: center; }
+    .hero-stat-val {
+      font-size: 1.5rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: var(--accent-orange);
+    }
+    .hero-stat-lbl {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* ============================================================
+       SECTION STRUCTURE
+    ============================================================ */
+    .section {
+      margin-bottom: 5rem;
+      padding-bottom: 3rem;
+      border-bottom: 1px solid var(--border);
+      max-width: 1100px;
+    }
+    .section:last-of-type { border-bottom: none; }
+    .section-number {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--accent-orange);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+    .section-title {
+      font-size: 1.75rem;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+    }
+    .section-intro {
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      line-height: 1.8;
+      max-width: 750px;
+      margin-bottom: 2rem;
+    }
+    .subsection { margin-bottom: 2.5rem; }
+    .subsection-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--accent-orange);
+      margin-bottom: 1rem;
+      padding-left: 0.75rem;
+      border-left: 3px solid var(--accent-orange);
+    }
+
+    /* ============================================================
+       CALLOUT BOXES
+    ============================================================ */
+    .callout {
+      display: flex;
+      gap: 1rem;
+      padding: 1.25rem 1.5rem;
+      border-radius: var(--radius);
+      margin: 1.5rem 0;
+      border: 1px solid;
+    }
+    .callout-icon { font-size: 1.3rem; flex-shrink: 0; line-height: 1.4; }
+    .callout-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 0.4rem; }
+    .callout-body p { font-size: 0.88rem; line-height: 1.75; margin-top: 0.5rem; color: var(--text-secondary); }
+    .callout-body ul { font-size: 0.88rem; line-height: 1.9; color: var(--text-secondary); }
+    .callout-info    { background: rgba(99,179,237,0.06); border-color: rgba(99,179,237,0.25); }
+    .callout-info    .callout-title { color: var(--accent-blue); }
+    .callout-warning { background: rgba(246,173,85,0.06); border-color: rgba(246,173,85,0.25); }
+    .callout-warning .callout-title { color: var(--accent-orange); }
+    .callout-danger  { background: rgba(252,129,129,0.06); border-color: rgba(252,129,129,0.3); }
+    .callout-danger  .callout-title { color: var(--accent-red); }
+    .callout-success { background: rgba(72,187,120,0.06); border-color: rgba(72,187,120,0.25); }
+    .callout-success .callout-title { color: var(--accent-green); }
+    .callout-thermal { background: rgba(255,68,68,0.08); border-color: rgba(255,68,68,0.3); }
+    .callout-thermal .callout-title { color: var(--thermal-red); }
+    .callout-physics { background: rgba(183,148,244,0.06); border-color: rgba(183,148,244,0.25); }
+    .callout-physics .callout-title { color: var(--accent-purple); }
+
+    /* ============================================================
+       FORMULA BLOCKS
+    ============================================================ */
+    .formula-block {
+      background: var(--bg-card);
+      border: 1px solid var(--border-med);
+      border-left: 3px solid var(--accent-orange);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      margin: 1.25rem 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .formula-label {
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      color: var(--accent-orange);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.2rem;
+    }
+    .formula-line {
+      font-family: var(--font-mono);
+      font-size: 0.92rem;
+      color: var(--text-primary);
+      background: rgba(255,255,255,0.03);
+      padding: 0.35rem 0.75rem;
+      border-radius: 4px;
+    }
+    .formula-caption {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-top: 0.25rem;
+      line-height: 1.6;
+    }
+
+    /* ============================================================
+       STAT GRID
+    ============================================================ */
+    .stat-grid { display: grid; gap: 1rem; margin: 1.5rem 0; }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      transition: border-color 0.2s;
+    }
+    .stat-card:hover { border-color: var(--border-med); }
+    .stat-value { font-size: 1.8rem; font-weight: 800; font-family: var(--font-mono); color: var(--accent-orange); }
+    .stat-label { font-size: 0.78rem; font-weight: 600; color: var(--text-primary); margin: 0.2rem 0; }
+    .stat-desc  { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5; }
+
+    /* ============================================================
+       COMPARISON TABLE
+    ============================================================ */
+    .comparison-table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+    .comparison-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 0.84rem;
+    }
+    .comparison-table th {
+      background: var(--bg-elevated);
+      color: var(--text-secondary);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border-med);
+      text-align: left;
+    }
+    .comparison-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-secondary);
+      vertical-align: top;
+    }
+    .comparison-table tr:last-child td { border-bottom: none; }
+    .comparison-table tr:hover td { background: var(--bg-elevated); }
+    .metric-name { color: var(--text-primary); font-weight: 600; white-space: nowrap; }
+    .metric-sub { display: block; font-size: 0.72rem; color: var(--text-muted); font-weight: 400; }
+
+    /* ============================================================
+       DIAGRAM / SVG CONTAINERS
+    ============================================================ */
+    .diagram-wrap {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      margin: 2rem 0;
+      overflow: hidden;
+    }
+    .diagram-title {
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .diagram-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .diagram-caption {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 1rem;
+      line-height: 1.6;
+    }
+
+    /* ============================================================
+       THERMAL CASCADE STAGE CARDS
+    ============================================================ */
+    .cascade-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin: 2rem 0;
+    }
+    .cascade-stage {
+      display: flex;
+      gap: 1.5rem;
+      align-items: flex-start;
+      position: relative;
+      padding-bottom: 0;
+    }
+    .cascade-stage::before {
+      content: '';
+      position: absolute;
+      left: 24px;
+      top: 52px;
+      width: 2px;
+      height: calc(100% - 10px);
+      background: linear-gradient(to bottom, var(--stage-color, #ff4444), transparent);
+      opacity: 0.4;
+    }
+    .cascade-stage:last-child::before { display: none; }
+    .cascade-icon-wrap {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+      border: 2px solid var(--stage-color, #ff4444);
+      background: rgba(255,68,68,0.1);
+      margin-top: 0.25rem;
+      position: relative;
+      z-index: 1;
+    }
+    .cascade-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--stage-color, #ff4444);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      flex: 1;
+      margin-bottom: 1.5rem;
+      transition: border-color 0.2s;
+    }
+    .cascade-content:hover { border-color: var(--stage-color, #ff4444); }
+    .cascade-temp {
+      font-family: var(--font-mono);
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--stage-color, #ff4444);
+      margin-bottom: 0.25rem;
+    }
+    .cascade-label {
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+    }
+    .cascade-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+    .cascade-desc {
+      font-size: 0.87rem;
+      color: var(--text-secondary);
+      line-height: 1.75;
+    }
+
+    /* ============================================================
+       ANIMATED TEMPERATURE GRADIENT BAR
+    ============================================================ */
+    .temp-gradient-bar {
+      height: 32px;
+      border-radius: 6px;
+      background: linear-gradient(to right,
+        var(--thermal-blue) 0%,
+        var(--thermal-green) 20%,
+        var(--thermal-yellow) 50%,
+        var(--thermal-orange) 75%,
+        var(--thermal-red) 100%
+      );
+      position: relative;
+      margin: 1rem 0;
+      overflow: visible;
+    }
+    .temp-gradient-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      margin-top: 0.4rem;
+    }
+    .temp-pointer {
+      position: absolute;
+      top: -6px;
+      transform: translateX(-50%);
+      width: 2px;
+      height: 44px;
+      background: white;
+      opacity: 0.8;
+    }
+    .temp-pointer::after {
+      content: attr(data-label);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.68rem;
+      font-family: var(--font-mono);
+      color: white;
+      white-space: nowrap;
+      background: rgba(0,0,0,0.7);
+      padding: 2px 6px;
+      border-radius: 3px;
+      margin-bottom: 4px;
+    }
+
+    /* ============================================================
+       INTERACTIVE BAR CHART
+    ============================================================ */
+    .bar-chart-wrap {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      margin: 2rem 0;
+    }
+    .bar-chart-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+    .bar-chart-tabs {
+      display: flex;
+      gap: 0.4rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .bar-chart-tab {
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      padding: 0.35rem 0.85rem;
+      border-radius: 20px;
+      border: 1px solid var(--border-med);
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .bar-chart-tab:hover { background: var(--bg-elevated); color: var(--text-primary); }
+    .bar-chart-tab.active { background: var(--accent-orange); border-color: var(--accent-orange); color: #07090f; font-weight: 700; }
+    .bar-chart-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.65rem; }
+    .bar-label { font-size: 0.78rem; font-family: var(--font-mono); color: var(--text-secondary); width: 110px; flex-shrink: 0; text-align: right; }
+    .bar-track { flex: 1; background: rgba(255,255,255,0.05); border-radius: 4px; height: 26px; overflow: hidden; }
+    .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      padding: 0 0.5rem;
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: rgba(0,0,0,0.85);
+      transition: width 0.7s cubic-bezier(0.4,0,0.2,1);
+      width: 0%;
+      white-space: nowrap;
+    }
+    .bar-value { font-size: 0.78rem; font-family: var(--font-mono); color: var(--text-muted); width: 70px; flex-shrink: 0; }
+
+    /* ============================================================
+       TRACEABILITY / TRACE ROWS
+    ============================================================ */
+    .trace-container { display: flex; flex-direction: column; gap: 0.75rem; margin: 1.5rem 0; }
+    .trace-row {
+      display: grid;
+      grid-template-columns: 200px 30px 1fr;
+      align-items: start;
+      gap: 0.75rem;
+    }
+    .trace-left { background: var(--bg-elevated); border-radius: var(--radius); padding: 0.75rem 1rem; }
+    .trace-number { font-size: 0.7rem; font-family: var(--font-mono); color: var(--accent-orange); font-weight: 700; }
+    .trace-label { font-size: 0.82rem; font-weight: 600; color: var(--text-primary); margin-top: 0.15rem; }
+    .trace-arrow { font-size: 1rem; color: var(--text-muted); padding-top: 0.75rem; text-align: center; }
+    .trace-right { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.7; padding-top: 0.75rem; }
+
+    /* ============================================================
+       NTC PLACEMENT DIAGRAM — GRID
+    ============================================================ */
+    .ntc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .ntc-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .ntc-card:hover { border-color: var(--border-med); }
+    .ntc-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--ntc-color, var(--accent-orange));
+    }
+    .ntc-position {
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      color: var(--ntc-color, var(--accent-orange));
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.4rem;
+    }
+    .ntc-name {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+    .ntc-desc { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.6; }
+
+    /* ============================================================
+       CHAPTER FOOTER / NAVIGATION
+    ============================================================ */
+    .chapter-footer {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 1rem;
+      align-items: center;
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+    }
+    .nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 1.25rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-med);
+      border-radius: var(--radius);
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .nav-btn:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--accent-orange); }
+    .nav-btn-next { justify-self: end; color: var(--accent-orange); border-color: rgba(246,173,85,0.3); }
+
+    /* ============================================================
+       PULSE / GLOW ANIMATIONS
+    ============================================================ */
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+    @keyframes heat-flicker {
+      0%   { opacity: 0.7; transform: scaleX(1); }
+      25%  { opacity: 1;   transform: scaleX(1.02); }
+      50%  { opacity: 0.8; transform: scaleX(0.99); }
+      75%  { opacity: 1;   transform: scaleX(1.01); }
+      100% { opacity: 0.7; transform: scaleX(1); }
+    }
+    @keyframes rise {
+      from { transform: translateY(10px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+    @keyframes thermal-spread {
+      0%   { r: 4; opacity: 0.9; }
+      50%  { r: 8; opacity: 0.6; }
+      100% { r: 4; opacity: 0.9; }
+    }
+    @keyframes spin-slow {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    .anim-rise { animation: rise 0.5s ease both; }
+
+    /* ============================================================
+       SWELLING ANIMATION BAR
+    ============================================================ */
+    .swell-bar-wrap { margin: 1.5rem 0; }
+    .swell-label { font-size: 0.78rem; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 0.4rem; }
+    .swell-track {
+      background: rgba(255,255,255,0.05);
+      border-radius: 6px;
+      height: 36px;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 0.75rem;
+    }
+    .swell-fill {
+      height: 100%;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      padding: 0 0.75rem;
+      font-size: 0.78rem;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: rgba(0,0,0,0.85);
+      transition: width 1s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* ============================================================
+       STEP LIST
+    ============================================================ */
+    .step-list { list-style: none; padding: 0; margin: 1rem 0; }
+    .step-list li {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .step-list li:last-child { border-bottom: none; }
+    .step-num {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: rgba(246,173,85,0.15);
+      border: 1px solid rgba(246,173,85,0.4);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      color: var(--accent-orange);
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .step-content { flex: 1; }
+    .step-title { font-weight: 600; color: var(--text-primary); font-size: 0.9rem; margin-bottom: 0.25rem; }
+    .step-desc { font-size: 0.84rem; color: var(--text-secondary); line-height: 1.65; }
+
+    /* ============================================================
+       CODE BLOCK
+    ============================================================ */
+    .code-block {
+      background: #0d1117;
+      border: 1px solid var(--border-med);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      margin: 1.25rem 0;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 0.84rem;
+      line-height: 1.7;
+      color: var(--text-secondary);
+    }
+    .code-kw { color: #ff7b72; }
+    .code-fn { color: #d2a8ff; }
+    .code-num { color: #79c0ff; }
+    .code-comment { color: #484f58; }
+    .code-str { color: #a5d6ff; }
+    .code-type { color: #ffa657; }
+
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .trace-row { grid-template-columns: 1fr; }
+      .hero-stats { gap: 1rem; }
+      .chapter-footer { grid-template-columns: 1fr; text-align: center; }
+      .nav-btn-next { justify-self: stretch; text-align: center; }
+    }
+  
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Space+Grotesk:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{--hud-acc:#FF6B35;--hud-acc-rgb:rgba(255,107,53,}
+body{background:#050507!important;font-family:'Space Grotesk',sans-serif!important;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,107,53,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,107,53,0.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px);pointer-events:none;z-index:1;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:rgba(0,245,255,0.25);}
+.sidebar{background:#050507!important;border-right:1px solid rgba(0,245,255,0.1)!important;}
+.sidebar-link{font-family:'JetBrains Mono',monospace!important;font-size:0.72rem!important;color:rgba(234,234,234,0.4)!important;border-left:2px solid transparent!important;}
+.sidebar-link:hover,.sidebar-link.active{color:#FF6B35!important;border-left-color:#FF6B35!important;background:rgba(255,107,53,0.05)!important;}
+.sidebar-link.active .dot{background:#FF6B35!important;box-shadow:0 0 6px #FF6B35!important;}
+nav.sidebar,.sidebar{background:#050507!important;}
+
+/* HUD HERO */
+.hero,.hero-section,.hero-wrap{background:linear-gradient(180deg,rgba(0,245,255,0.04) 0%,transparent 100%)!important;border-bottom:1px solid rgba(0,245,255,0.1)!important;padding:4rem 3rem 3rem!important;}
+.hero-title,.hero-chapter-badge+h1,.hero h1{font-family:'Orbitron',sans-serif!important;font-size:clamp(1.8rem,5vw,3.2rem)!important;font-weight:900!important;letter-spacing:0.04em!important;color:#fff!important;text-shadow:0 0 40px rgba(0,245,255,0.3)!important;line-height:1.15!important;}
+.hero-badge,.hero-chapter-badge{font-family:'JetBrains Mono',monospace!important;font-size:0.62rem!important;letter-spacing:0.2em!important;background:rgba(0,245,255,0.07)!important;border:1px solid rgba(0,245,255,0.25)!important;color:#00F5FF!important;border-radius:0!important;padding:0.3rem 0.8rem!important;}
+.hero-subtitle,.hero-sub,.hero p{font-size:0.88rem!important;color:rgba(234,234,234,0.55)!important;line-height:1.8!important;border-left:2px solid rgba(0,245,255,0.25)!important;padding-left:1rem!important;max-width:700px!important;}
+.hero-stat-val,.hero-stat-num{font-family:'Orbitron',sans-serif!important;font-size:1.8rem!important;font-weight:700!important;color:#00F5FF!important;text-shadow:0 0 20px rgba(0,245,255,0.4)!important;}
+.hero-stat-lbl,.hero-stat-label{font-family:'JetBrains Mono',monospace!important;font-size:0.58rem!important;letter-spacing:0.15em!important;color:rgba(0,245,255,0.4)!important;text-transform:uppercase!important;}
+/* HUD SECTION HEADS */
+h2:not(.hero-title){font-family:'Orbitron',sans-serif!important;font-size:clamp(1.2rem,3vw,1.9rem)!important;font-weight:700!important;letter-spacing:0.05em!important;color:#fff!important;text-shadow:0 0 25px rgba(0,245,255,0.2)!important;margin-bottom:1.2rem!important;}
+h3{font-family:'Orbitron',sans-serif!important;font-size:1rem!important;font-weight:600!important;color:rgba(0,245,255,0.9)!important;letter-spacing:0.06em!important;margin-bottom:0.8rem!important;}
+p{color:rgba(234,234,234,0.6)!important;font-size:0.88rem!important;line-height:1.8!important;}
+strong{color:#EAEAEA!important;}
+code{font-family:'JetBrains Mono',monospace!important;background:rgba(0,245,255,0.06)!important;color:#00F5FF!important;padding:2px 5px!important;border:1px solid rgba(0,245,255,0.15)!important;border-radius:0!important;font-size:0.82em!important;}
+pre{font-family:'JetBrains Mono',monospace!important;background:#080810!important;border:1px solid rgba(0,245,255,0.15)!important;border-left:2px solid #00F5FF!important;padding:1.5rem!important;color:rgba(0,245,255,0.85)!important;border-radius:0!important;font-size:0.78rem!important;}
+
+/* HUD CALLOUTS */
+.callout,.info-box,.warning-box,.danger-box,.success-box,.physics-box,.note-box{border-radius:0!important;background:rgba(0,0,0,0.25)!important;backdrop-filter:blur(8px)!important;position:relative!important;margin-top:1.5rem!important;}
+.callout-info,.info-box{border:1px solid rgba(0,245,255,0.28)!important;background:rgba(0,245,255,0.04)!important;}
+.callout-warning,.warning-box{border:1px solid rgba(255,200,87,0.3)!important;background:rgba(255,200,87,0.04)!important;}
+.callout-danger,.danger-box{border:1px solid rgba(255,45,85,0.3)!important;background:rgba(255,45,85,0.04)!important;}
+.callout-success,.success-box{border:1px solid rgba(0,255,136,0.28)!important;background:rgba(0,255,136,0.04)!important;}
+.callout-physics,.physics-box{border:1px solid rgba(10,132,255,0.3)!important;background:rgba(10,132,255,0.04)!important;}
+.callout-title,.callout-icon+*{font-family:'JetBrains Mono',monospace!important;font-size:0.62rem!important;letter-spacing:0.18em!important;text-transform:uppercase!important;}
+/* HUD TABLES */
+table{border-collapse:collapse!important;width:100%!important;border:1px solid rgba(0,245,255,0.12)!important;}
+th{font-family:'JetBrains Mono',monospace!important;font-size:0.62rem!important;letter-spacing:0.14em!important;text-transform:uppercase!important;background:rgba(0,245,255,0.07)!important;color:#00F5FF!important;padding:0.65rem 1rem!important;font-weight:500!important;border-bottom:1px solid rgba(0,245,255,0.15)!important;}
+td{font-size:0.82rem!important;padding:0.6rem 1rem!important;border-bottom:1px solid rgba(0,245,255,0.05)!important;color:rgba(234,234,234,0.65)!important;}
+tr:hover td{background:rgba(0,245,255,0.03)!important;}
+.good{color:#00FF88!important;}.bad,.worst{color:#FF2D55!important;}.fair,.warn{color:#FFC857!important;}.best{color:#00F5FF!important;}
+/* HUD FOOTER */
+.chapter-footer,.nav-footer,.footer-nav{background:#050507!important;border-top:1px solid rgba(0,245,255,0.1)!important;padding:2rem 3rem!important;}
+.nav-btn,.footer-btn,a.nav-btn{font-family:'JetBrains Mono',monospace!important;font-size:0.68rem!important;letter-spacing:0.12em!important;padding:0.55rem 1.2rem!important;border:1px solid rgba(0,245,255,0.28)!important;color:#00F5FF!important;background:rgba(0,245,255,0.04)!important;transition:all 0.2s!important;border-radius:0!important;text-decoration:none!important;}
+.nav-btn:hover{background:rgba(0,245,255,0.1)!important;box-shadow:0 0 18px rgba(0,245,255,0.15)!important;}
+/* HUD PROGRESS BAR */
+#hud-progress{position:fixed;top:0;left:0;height:2px;width:0%;background:linear-gradient(90deg,#00F5FF,#0A84FF);z-index:9999;box-shadow:0 0 8px #00F5FF;pointer-events:none;}
+</style>
+
+
+</head>
+<body>
+
+<div id="hud-progress"></div>
+<div id="ch-topbar" style="position:fixed;top:0;left:0;width:100%;height:44px;background:rgba(5,5,7,0.9);backdrop-filter:blur(20px);border-bottom:1px solid rgba(0,245,255,0.1);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;z-index:9000;font-family:'JetBrains Mono',monospace;font-size:0.65rem;">
+  <span style="color:rgba(0,245,255,0.6);letter-spacing:0.15em;">// LFP-BMS-KB &nbsp;·&nbsp; MOD_03 — THERMAL</span>
+  <div style="display:flex;gap:1rem;">
+    <span style="color:rgba(0,255,136,0.7);letter-spacing:0.1em;">● ONLINE</span>
+    <span style="color:rgba(0,245,255,0.35);letter-spacing:0.1em;">CH 03/10</span>
+  </div>
+</div>
+<script>
+(function(){
+  var p=document.getElementById('hud-progress');
+  window.addEventListener('scroll',function(){
+    var s=document.documentElement.scrollTop;
+    var h=document.documentElement.scrollHeight-window.innerHeight;
+    if(p)p.style.width=(s/h*100)+'%';
+  });
+})();
+</script>
+
+
+
+
+<!-- ============================================================
+     SIDEBAR
+============================================================ -->
+<div class="page-wrapper">
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-text">LFP BMS Knowledge Base</div>
+    <div class="sidebar-title">Chapter 3 — Thermal &amp; Mechanical</div>
+  </div>
+
+  <div class="sidebar-nav-label">Chapters</div>
+  <a class="sidebar-link" href="chapter1.html"><span class="dot"></span> Ch 1: Li-ion & LFP</a>
+  <a class="sidebar-link" href="chapter2.html"><span class="dot"></span> Ch 2: Cell Physics</a>
+  <a class="sidebar-link" href="chapter4.html"><span class="dot"></span> Ch 4: Protection</a>
+  <a class="sidebar-link" href="chapter5.html"><span class="dot"></span> Ch 5: Standards</a>
+  <a class="sidebar-link" href="chapter6.html"><span class="dot"></span> Ch 6: Architecture</a>
+  <a class="sidebar-link" href="chapter7.html"><span class="dot"></span> Ch 7: UPS & ESS</a>
+  <a class="sidebar-link" href="chapter8.html"><span class="dot"></span> Ch 8: Hardware</a>
+  <a class="sidebar-link" href="chapter9.html"><span class="dot"></span> Ch 9: Firmware</a>
+  <a class="sidebar-link" href="chapter10.html"><span class="dot"></span> Ch 10: Future</a>
+  <a class="sidebar-link" href="SYSTEM_OVERVIEW.html"><span class="dot"></span> System Overview</a>
+</nav>
+
+<!-- ============================================================
+     MAIN CONTENT
+============================================================ -->
+<main class="main" id="main">
+
+  <!-- HERO -->
+  <div class="hero" id="hero">
+    <div class="hero-chapter-badge">🔥 Chapter 3 · Thermal &amp; Mechanical</div>
+    <h1 class="hero-title">Heat, Runaway, and<br>Mechanical Integrity</h1>
+    <p class="hero-subtitle">
+      The BMS is not just an electrical device — it is a thermal safety system.
+      Understanding heat generation physics, thermal runaway cascade, and mechanical
+      swelling in LFP cells is the foundation of every protection threshold in the firmware.
+    </p>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-val">270°C+</div>
+        <div class="hero-stat-lbl">LFP TR onset</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">~2%</div>
+        <div class="hero-stat-lbl">LFP volume expansion per cycle</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">1°C/s</div>
+        <div class="hero-stat-lbl">BMS dT/dt alarm threshold</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">5°C</div>
+        <div class="hero-stat-lbl">Max pack temperature gradient target</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============================================================
+       SECTION 3.1: HEAT GENERATION IN LI-ION CELLS
+  ============================================================ -->
+  <section class="section" id="s3-1">
+    <div class="section-number">3.1</div>
+    <h2 class="section-title">Heat Generation in Li-ion Cells</h2>
+    <p class="section-intro">
+      Every Li-ion cell produces heat when it charges or discharges. To design a safe battery
+      system and set the right protection limits, you need to know where that heat comes from
+      and how much of it to expect. There are three separate sources of heat inside the cell,
+      and all three matter to the BMS.
+    </p>
+
+    <!-- Animated heat source diagram -->
+    <div class="diagram-wrap">
+      <div class="diagram-title">🔥 Three Sources of Heat in a Li-ion Cell</div>
+      <svg viewBox="0 0 700 200" width="100%" style="max-height:200px;">
+        <!-- Joule heating block -->
+        <rect x="20" y="40" width="180" height="120" rx="10"
+          fill="rgba(255,68,68,0.08)" stroke="rgba(255,68,68,0.4)" stroke-width="1.5"/>
+        <text x="110" y="75" text-anchor="middle" fill="#ff4444" font-size="11" font-family="JetBrains Mono,monospace" font-weight="700">JOULE HEATING</text>
+        <text x="110" y="95"  text-anchor="middle" fill="#8b949e" font-size="9.5" font-family="Inter,sans-serif">Q_J = I² × R</text>
+        <text x="110" y="112" text-anchor="middle" fill="#8b949e" font-size="9.5" font-family="Inter,sans-serif">Scales with I²</text>
+        <text x="110" y="129" text-anchor="middle" fill="#8b949e" font-size="9.5" font-family="Inter,sans-serif">Dominant at high C-rate</text>
+        <text x="110" y="148" text-anchor="middle" fill="#ff8c00" font-size="10" font-family="JetBrains Mono,monospace" font-weight="600">~60-80% of total</text>
+        <!-- animated glow -->
+        <circle cx="110" cy="40" r="6" fill="#ff4444" opacity="0.8">
+          <animate attributeName="r" values="5;9;5" dur="2s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.8;0.3;0.8" dur="2s" repeatCount="indefinite"/>
+        </circle>
+
+        <!-- Arrow 1 -->
+        <line x1="200" y1="100" x2="240" y2="100" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" stroke-dasharray="4,3"/>
+        <polygon points="238,96 248,100 238,104" fill="rgba(255,255,255,0.3)"/>
+
+        <!-- Reaction heat block -->
+        <rect x="250" y="40" width="180" height="120" rx="10"
+          fill="rgba(246,173,85,0.08)" stroke="rgba(246,173,85,0.35)" stroke-width="1.5"/>
+        <text x="340" y="75" text-anchor="middle" fill="#f6ad55" font-size="11" font-family="JetBrains Mono,monospace" font-weight="700">REACTION HEAT</text>
+        <text x="340" y="95"  text-anchor="middle" fill="#8b949e" font-size="9.5" font-family="Inter,sans-serif">Q_rxn = I × (V − OCV)</text>
+        <text x="340" y="112" text-anchor="middle" fill="#8b949e" font-size="9.5" font-family="Inter,sans-serif">Exo during discharge</text>
+        <text x="340" y="129" text-anchor="middle" fill="#8b949e" font-size="9.5" font-family="Inter,sans-serif">Endo during charge</text>
+        <text x="340" y="148" text-anchor="middle" fill="#f6ad55" font-size="10" font-family="JetBrains Mono,monospace" font-weight="600">~15-30% of total</text>
+        <circle cx="340" cy="40" r="6" fill="#f6ad55" opacity="0.7">
+          <animate attributeName="r" values="5;8;5" dur="2.4s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.7;0.3;0.7" dur="2.4s" repeatCount="indefinite"/>
+        </circle>
+
+        <!-- Arrow 2 -->
+        <line x1="430" y1="100" x2="470" y2="100" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" stroke-dasharray="4,3"/>
+        <polygon points="468,96 478,100 468,104" fill="rgba(255,255,255,0.3)"/>
+
+        <!-- Entropy heat block -->
+        <rect x="480" y="40" width="200" height="120" rx="10"
+          fill="rgba(183,148,244,0.08)" stroke="rgba(183,148,244,0.3)" stroke-width="1.5"/>
+        <text x="580" y="75" text-anchor="middle" fill="#b794f4" font-size="11" font-family="JetBrains Mono,monospace" font-weight="700">ENTROPIC HEAT</text>
+        <text x="580" y="95"  text-anchor="middle" fill="#8b949e" font-size="9.5" font-family="Inter,sans-serif">Q_S = I × T × dU/dT</text>
+        <text x="580" y="112" text-anchor="middle" fill="#8b949e" font-size="9.5" font-family="Inter,sans-serif">Reversible — absorbs</text>
+        <text x="580" y="129" text-anchor="middle" fill="#8b949e" font-size="9.5" font-family="Inter,sans-serif">or releases by SoC</text>
+        <text x="580" y="148" text-anchor="middle" fill="#b794f4" font-size="10" font-family="JetBrains Mono,monospace" font-weight="600">~5-10% of total</text>
+        <circle cx="580" cy="40" r="6" fill="#b794f4" opacity="0.7">
+          <animate attributeName="r" values="5;7;5" dur="3s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.7;0.3;0.7" dur="3s" repeatCount="indefinite"/>
+        </circle>
+      </svg>
+      <p class="diagram-caption">
+        Three independent heat generation mechanisms in a Li-ion cell. Joule heating dominates at
+        high current; reaction heat depends on the difference between terminal voltage and OCV;
+        entropic heat is reversible and small but measurable.
+      </p>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Source 1: Joule Heating — The Dominant Term</div>
+      <p>
+        Joule heating is the heat produced when current flows through the cell's internal resistance
+        — the same reason a wire gets warm when electricity runs through it. It is the biggest
+        source of heat in almost all normal operating conditions.
+      </p>
+      <div class="formula-block">
+        <span class="formula-label">Joule Heating Power</span>
+        <span class="formula-line">Q_J = I² × R_internal  (Watts)</span>
+        <span class="formula-line">Q_J = I² × (R₀ + R₁)  (simplified Thevenin model)</span>
+        <span class="formula-caption">
+          The key point: heat grows with the square of the current, not the current itself.
+          Double the current → four times the heat. Our 280Ah cell at 1C (280 A) produces 31.4 W
+          of heat. At 2C (560 A) it produces 125.4 W — four times more, not two times.
+        </span>
+      </div>
+      <p>
+        This squared relationship matters for pack design too. If you add a second parallel cell,
+        the current splits between them — each cell carries half. Half the current means one quarter
+        the heat per cell. That is why high-power packs use more parallel cells: it cuts the
+        thermal load dramatically without changing the total energy delivered.
+      </p>
+
+      <div class="callout callout-physics">
+        <div class="callout-icon">⚛</div>
+        <div class="callout-body">
+          <div class="callout-title">Why Internal Resistance Is Made Up of Several Parts</div>
+          <p>
+            The cell's internal resistance is not one simple resistor — it is the combined effect of
+            several things happening at once:
+            <br>• <strong>Electrolyte resistance</strong> — how easily lithium ions move through the liquid between the electrodes
+            <br>• <strong>SEI resistance</strong> — how easily ions pass through the protective layer on the anode surface
+            <br>• <strong>Charge transfer resistance</strong> — the energy needed to push lithium in and out of the crystal
+            <br>• <strong>Contact resistance</strong> — friction at joints between the cell tabs, busbars, and terminals
+            <br>• <strong>Current collector resistance</strong> — the copper foil at the anode and aluminium foil at the cathode
+            <br><br>
+            The SEI portion grows as the cell ages. Contact resistance varies with temperature and
+            how well the pack was assembled. When the BMS measures R₀ using a pulse test, it sees
+            all of these lumped together as one number.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Real Numbers — Heat at Different C-Rates for LFP 280Ah</div>
+      <p>
+        Using R_internal = 0.5 mΩ (R₀ + R₁, 25°C), nominal capacity 280Ah:
+      </p>
+      <div class="comparison-table-wrap">
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>C-Rate</th>
+              <th>Current (A)</th>
+              <th>Joule Heat (W)</th>
+              <th>Heat in 1h (Wh)</th>
+              <th>Typical Use Case</th>
+              <th>BMS Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="metric-name">0.1C</td>
+              <td>28 A</td>
+              <td>0.39 W</td>
+              <td>0.39 Wh</td>
+              <td>Float charge, idle</td>
+              <td style="color:var(--accent-green);">No action needed</td>
+            </tr>
+            <tr>
+              <td class="metric-name">0.5C</td>
+              <td>140 A</td>
+              <td>9.8 W</td>
+              <td>9.8 Wh</td>
+              <td>Normal home ESS charge/discharge</td>
+              <td style="color:var(--accent-green);">Monitor temperature</td>
+            </tr>
+            <tr>
+              <td class="metric-name">1C</td>
+              <td>280 A</td>
+              <td>39.2 W</td>
+              <td>39.2 Wh</td>
+              <td>UPS discharge, peak demand</td>
+              <td style="color:var(--accent-orange);">Active monitoring, derate if >40°C</td>
+            </tr>
+            <tr>
+              <td class="metric-name">2C</td>
+              <td>560 A</td>
+              <td>156.8 W</td>
+              <td>156.8 Wh</td>
+              <td>High-power UPS switchover burst</td>
+              <td style="color:var(--accent-red);">Time-limited, OTP armed at 45°C</td>
+            </tr>
+            <tr>
+              <td class="metric-name">3C</td>
+              <td>840 A</td>
+              <td>352.8 W</td>
+              <td>352.8 Wh</td>
+              <td>Short circuit / fault condition</td>
+              <td style="color:var(--accent-red);">SCP must fire within &lt;500 μs</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Notice that at 3C, the cell generates <strong>352.8 W of heat</strong> — roughly equivalent
+        to a clothes iron. In a 16-cell series pack all dissipating simultaneously, that is 5.6 kW of
+        heat into the enclosure. Without short-circuit protection firing in microseconds, the pack
+        would reach thermal runaway onset temperatures in minutes.
+      </p>
+    </div>
+
+    <!-- Interactive heat chart -->
+    <div class="bar-chart-wrap" id="heatBarChart">
+      <div class="bar-chart-title">LFP 280Ah Cell — Heat Generation vs C-Rate</div>
+      <div class="bar-chart-tabs">
+        <button class="bar-chart-tab" onclick="showHeatMetric('joule',this)">Joule Heat (W)</button>
+        <button class="bar-chart-tab" onclick="showHeatMetric('temp_rise',this)">Temp Rise/hr (°C)</button>
+        <button class="bar-chart-tab" onclick="showHeatMetric('efficiency',this)">Round-trip Loss (%)</button>
+      </div>
+      <div id="heatChartContent"></div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Source 2: Electrochemical Reaction Heat</div>
+      <p>
+        The second heat source comes from the electrochemical reactions themselves. No chemical
+        reaction is perfectly efficient — some of the energy that goes in (or comes out) gets
+        lost as heat. You can measure this by comparing the actual terminal voltage to the
+        resting OCV: the gap between them represents energy being wasted as heat.
+      </p>
+      <div class="formula-block">
+        <span class="formula-label">Reaction Heat Power</span>
+        <span class="formula-line">Q_rxn = I × η_total  where η_total = V_terminal − OCV</span>
+        <span class="formula-line">During discharge (I &gt; 0): V_terminal &lt; OCV → heat generated</span>
+        <span class="formula-line">During charge  (I &lt; 0): V_terminal &gt; OCV → heat generated</span>
+        <span class="formula-caption">
+          For LFP at moderate charge rates, this gap is about 10–20 mV per cell — contributing
+          roughly 3–6 W at 280 A. Small compared to Joule heating, but adds up across 16 cells.
+        </span>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Source 3: Entropic Heat — The Reversible Component</div>
+      <p>
+        The third heat source is caused by entropy changes as lithium moves in and out of the
+        crystal. Unlike the first two sources — which always produce heat — this one can go
+        either way: it can add heat or actually absorb heat from the surroundings, depending
+        on the cell's charge level.
+      </p>
+      <div class="formula-block">
+        <span class="formula-label">Entropic Heat</span>
+        <span class="formula-line">Q_S = I × T × (dU/dT)</span>
+        <span class="formula-caption">
+          dU/dT is how much the resting voltage changes with temperature — about +0.1 to −0.3 mV
+          per degree Kelvin for LFP, and it changes sign across the charge range. At room temperature
+          (298 K) and 280 A: Q_S ≈ 16.7 W. Positive means the cell absorbs heat (self-cooling).
+          Negative means it adds heat on top of Joule heating. Advanced BMS thermal models include
+          this term for accurate temperature prediction.
+        </span>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-icon">🧊</div>
+        <div class="callout-body">
+          <div class="callout-title">LFP's Mild Self-Cooling at Mid Charge Levels</div>
+          <p>
+            Between 20–50% state of charge, LFP actually absorbs a small amount of heat from
+            its surroundings during discharge — partially cancelling the Joule heating. This is
+            one reason LFP runs slightly cooler than NMC at moderate rates in the mid-range.
+            The effect is only a few watts but is measurable, and is why some BMS firmware
+            includes a state-of-charge-dependent thermal correction in its temperature model.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Thermal Gradient Inside the Cell — Surface vs Core</div>
+      <p>
+        Even if you cool the outside of a cell perfectly, the inside still gets hotter than the
+        surface. Heat is generated deep in the electrode stack and has to travel outward through
+        the cell material — but that material is a poor heat conductor, so a temperature gap builds
+        up between the centre (core) and the outer casing (surface).
+      </p>
+      <div class="diagram-wrap">
+        <div class="diagram-title">🌡 Temperature Profile Across a 280Ah Prismatic Cell at 1C Discharge</div>
+        <svg viewBox="0 0 600 180" width="100%" style="max-height:180px;">
+          <!-- Cell outline -->
+          <rect x="50" y="30" width="500" height="120" rx="8"
+            fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+
+          <!-- Temperature gradient fill (hotter in middle) -->
+          <defs>
+            <linearGradient id="cellTempGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stop-color="#63b3ed" stop-opacity="0.3"/>
+              <stop offset="25%"  stop-color="#48bb78" stop-opacity="0.3"/>
+              <stop offset="50%"  stop-color="#ff8c00" stop-opacity="0.4"/>
+              <stop offset="75%"  stop-color="#48bb78" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="#63b3ed" stop-opacity="0.3"/>
+            </linearGradient>
+          </defs>
+          <rect x="50" y="30" width="500" height="120" rx="8" fill="url(#cellTempGrad)"/>
+
+          <!-- Labels -->
+          <text x="300" y="80"  text-anchor="middle" fill="#ff8c00" font-size="12" font-family="JetBrains Mono,monospace" font-weight="700">CORE: T+8°C</text>
+          <text x="300" y="98"  text-anchor="middle" fill="#8b949e" font-size="9.5" font-family="Inter,sans-serif">Peak temperature zone</text>
+          <text x="300" y="116" text-anchor="middle" fill="#8b949e" font-size="9" font-family="Inter,sans-serif">λ_radial ≈ 0.5 W/m·K (LFP)</text>
+
+          <!-- Left surface label -->
+          <text x="75" y="74" text-anchor="middle" fill="#63b3ed" font-size="10" font-family="JetBrains Mono,monospace">Surface</text>
+          <text x="75" y="89" text-anchor="middle" fill="#63b3ed" font-size="11" font-family="JetBrains Mono,monospace" font-weight="700">T_ref</text>
+          <text x="75" y="104" text-anchor="middle" fill="#8b949e" font-size="9" font-family="Inter,sans-serif">NTC reads here</text>
+
+          <!-- Right surface label -->
+          <text x="525" y="74" text-anchor="middle" fill="#63b3ed" font-size="10" font-family="JetBrains Mono,monospace">Surface</text>
+          <text x="525" y="89" text-anchor="middle" fill="#63b3ed" font-size="11" font-family="JetBrains Mono,monospace" font-weight="700">T_ref</text>
+          <text x="525" y="104" text-anchor="middle" fill="#8b949e" font-size="9" font-family="Inter,sans-serif">NTC reads here</text>
+
+          <!-- Gradient arrows -->
+          <line x1="150" y1="90" x2="250" y2="90" stroke="rgba(255,255,255,0.2)" stroke-width="1" stroke-dasharray="3,3"/>
+          <line x1="450" y1="90" x2="350" y2="90" stroke="rgba(255,255,255,0.2)" stroke-width="1" stroke-dasharray="3,3"/>
+
+          <!-- Temperature scale at bottom -->
+          <rect x="50" y="158" width="500" height="8" rx="4"
+            fill="url(#cellTempGrad)" opacity="0.8"/>
+          <text x="50"  y="175" text-anchor="middle" fill="#63b3ed" font-size="8" font-family="JetBrains Mono,monospace">Surface</text>
+          <text x="300" y="175" text-anchor="middle" fill="#ff8c00" font-size="8" font-family="JetBrains Mono,monospace">Core +8°C</text>
+          <text x="550" y="175" text-anchor="middle" fill="#63b3ed" font-size="8" font-family="JetBrains Mono,monospace">Surface</text>
+        </svg>
+        <p class="diagram-caption">
+          At a 1C discharge rate, the inside of the cell is roughly 5–10°C hotter than the outside.
+          Your temperature sensor (NTC) is glued to the surface, so it reads the cool side — not the
+          hot centre. The BMS has to add a correction to estimate how much hotter the core actually is.
+        </p>
+      </div>
+
+      <div class="formula-block">
+        <span class="formula-label">Core-to-Surface Temperature Gradient</span>
+        <span class="formula-line">ΔT = Q_gen × R_thermal_cell</span>
+        <span class="formula-line">R_thermal ≈ thickness / (2 × λ × Area)  for a slab geometry</span>
+        <span class="formula-caption">
+          For our 280Ah reference cell (45mm thick), the thermal resistance from core to surface is about
+          1.125 K/W. At 1C it generates ~39W of heat, giving a core-to-surface gap of up to ~22°C with
+          cooling on both faces. This is why the BMS sets its over-temperature cutoff conservatively —
+          the sensor on the outside always reads lower than the actual hottest point inside.
+        </span>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       SECTION 3.2: THERMAL RUNAWAY
+  ============================================================ -->
+  <section class="section" id="s3-2">
+    <div class="section-number">3.2</div>
+    <h2 class="section-title">Thermal Runaway</h2>
+    <p class="section-intro">
+      Thermal runaway is the worst thing that can happen to a lithium battery. It is not a slow
+      decline — it is a runaway chain reaction. Heat makes the cell hotter; the hotter the cell
+      gets, the faster it generates even more heat; which makes it hotter still. Once this loop
+      starts, it cannot be stopped. The battery burns itself up from the inside. The entire job
+      of the BMS is to make sure this chain reaction never begins.
+    </p>
+
+    <div class="callout callout-thermal">
+      <div class="callout-icon">⚡</div>
+      <div class="callout-body">
+        <div class="callout-title">Definition: Thermal Runaway</div>
+        <p>
+          Thermal runaway happens when the cell produces heat faster than it can lose it — and the
+          extra heat speeds up the very reactions causing the heat. It's a vicious circle: more heat
+          → faster reactions → even more heat. Once it starts, nothing outside the cell can stop it.
+          The only winning move is to prevent it from starting in the first place, which is exactly
+          what the BMS is designed to do.
+        </p>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">What Triggers Thermal Runaway</div>
+      <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:1.5rem 0;">
+        <div class="stat-card" style="--c: var(--accent-red);">
+          <div class="stat-value" style="color:var(--accent-red); font-size:2rem;">⚡</div>
+          <div class="stat-label" style="color:var(--accent-red);">Overcharge</div>
+          <div class="stat-desc">Push a cell above 3.65V and lithium starts depositing as metal rather than inserting cleanly — the cathode also becomes unstable. The BMS over-voltage protection must cut the charge before this point.</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color:var(--accent-orange); font-size:2rem;">🔥</div>
+          <div class="stat-label" style="color:var(--accent-orange);">External Heat</div>
+          <div class="stat-desc">A neighbouring cell going into runaway, a nearby fire, or a stuck heater can bake a healthy cell hot enough to trigger its own chain reaction. Physical spacing and firewall barriers between cells are the main defence.</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color:var(--accent-purple); font-size:2rem;">🔩</div>
+          <div class="stat-label" style="color:var(--accent-purple);">Internal Short</div>
+          <div class="stat-desc">Dendrites (metallic spikes that grow during repeated overcharge or fast charge) can punch through the separator and connect the two electrodes directly inside the cell. All stored energy dumps as heat in seconds — with no external warning.</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color:var(--accent-blue); font-size:2rem;">💥</div>
+          <div class="stat-label" style="color:var(--accent-blue);">Mechanical Damage</div>
+          <div class="stat-desc">Crushing, a nail puncture, or a heavy drop can physically collapse the electrode layers inside the cell, creating the same kind of internal short as a dendrite. The BMS may see a sudden voltage drop or resistance change as the first warning.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">The Three-Stage Thermal Runaway Cascade</div>
+      <p>
+        Thermal runaway doesn't happen all at once — it unfolds in three stages, each one hotter
+        than the last. Each stage can trigger the next. Knowing where you are in the cascade tells
+        the BMS engineer whether there is still a chance to stop it — or whether it's already too late.
+      </p>
+
+      <!-- Animated cascade timeline SVG -->
+      <div class="diagram-wrap" style="padding:1.5rem;">
+        <div class="diagram-title">🔥 Thermal Runaway Cascade — Temperature Timeline</div>
+        <svg viewBox="0 0 680 260" width="100%" style="max-height:260px;">
+          <defs>
+            <linearGradient id="trGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stop-color="#48bb78"/>
+              <stop offset="30%"  stop-color="#ffd700"/>
+              <stop offset="60%"  stop-color="#ff8c00"/>
+              <stop offset="100%" stop-color="#ff1111"/>
+            </linearGradient>
+          </defs>
+
+          <!-- Timeline base -->
+          <line x1="40" y1="200" x2="660" y2="200" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>
+
+          <!-- Temperature curve (LFP) -->
+          <polyline
+            points="40,190 100,188 160,182 220,140 260,100 300,60 380,35 460,28 540,22 620,18 660,16"
+            fill="none" stroke="url(#trGrad)" stroke-width="3" stroke-linejoin="round">
+            <animate attributeName="stroke-dasharray" from="0,800" to="800,0" dur="3s" fill="freeze"/>
+          </polyline>
+
+          <!-- NMC comparison curve (dashed, steeper) -->
+          <polyline
+            points="40,190 100,188 160,178 220,130 250,80 270,40 290,18 320,12"
+            fill="none" stroke="rgba(99,179,237,0.5)" stroke-width="2" stroke-dasharray="5,4" stroke-linejoin="round">
+            <animate attributeName="stroke-dasharray" from="0 1000" to="5,4" dur="3.5s" fill="freeze"/>
+          </polyline>
+
+          <!-- Stage markers -->
+          <!-- Stage 0 — normal -->
+          <line x1="40" y1="195" x2="40" y2="205" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+          <text x="40" y="218" text-anchor="middle" fill="#8b949e" font-size="9" font-family="JetBrains Mono,monospace">25°C</text>
+          <text x="40" y="228" text-anchor="middle" fill="#8b949e" font-size="8.5" font-family="Inter,sans-serif">Normal</text>
+
+          <!-- Stage 1 marker — 80-120°C SEI -->
+          <line x1="220" y1="140" x2="220" y2="210" stroke="#ffd700" stroke-width="1.5" stroke-dasharray="4,3">
+            <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite"/>
+          </line>
+          <text x="220" y="220" text-anchor="middle" fill="#ffd700" font-size="9" font-family="JetBrains Mono,monospace">90–120°C</text>
+          <text x="220" y="232" text-anchor="middle" fill="#ffd700" font-size="8" font-family="Inter,sans-serif">SEI decomp.</text>
+
+          <!-- Stage 2 marker — 130°C separator -->
+          <line x1="300" y1="60" x2="300" y2="210" stroke="#ff8c00" stroke-width="1.5" stroke-dasharray="4,3">
+            <animate attributeName="opacity" values="0.5;1;0.5" dur="1.8s" repeatCount="indefinite"/>
+          </line>
+          <text x="300" y="220" text-anchor="middle" fill="#ff8c00" font-size="9" font-family="JetBrains Mono,monospace">130–160°C</text>
+          <text x="300" y="232" text-anchor="middle" fill="#ff8c00" font-size="8" font-family="Inter,sans-serif">Separator melts</text>
+
+          <!-- Stage 3 marker — 180°C / 270°C cathode -->
+          <line x1="390" y1="33" x2="390" y2="210" stroke="#ff1111" stroke-width="2" stroke-dasharray="4,3">
+            <animate attributeName="opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite"/>
+          </line>
+          <text x="390" y="220" text-anchor="middle" fill="#ff1111" font-size="9" font-family="JetBrains Mono,monospace">180°C / 270°C</text>
+          <text x="390" y="232" text-anchor="middle" fill="#ff1111" font-size="8" font-family="Inter,sans-serif">Cathode O₂</text>
+
+          <!-- LFP label -->
+          <text x="620" y="12" fill="#48bb78" font-size="9" font-family="JetBrains Mono,monospace" font-weight="700">LFP</text>
+          <!-- NMC label -->
+          <text x="340" y="10" fill="#63b3ed" font-size="9" font-family="JetBrains Mono,monospace">NMC</text>
+
+          <!-- Legend box -->
+          <rect x="480" y="170" width="175" height="45" fill="rgba(13,17,23,0.9)" stroke="rgba(255,255,255,0.1)" rx="5"/>
+          <line x1="490" y1="184" x2="510" y2="184" stroke="#48bb78" stroke-width="2.5"/>
+          <text x="516" y="188" fill="#48bb78" font-size="9" font-family="Inter,sans-serif">LFP (270°C+ onset)</text>
+          <line x1="490" y1="200" x2="510" y2="200" stroke="#63b3ed" stroke-width="2" stroke-dasharray="5,4"/>
+          <text x="516" y="204" fill="#63b3ed" font-size="9" font-family="Inter,sans-serif">NMC (~180°C onset)</text>
+
+          <!-- Y-axis label -->
+          <text x="15" y="200" fill="#484f58" font-size="8" font-family="JetBrains Mono,monospace" transform="rotate(-90 15 200)">Temperature →</text>
+          <!-- X-axis label -->
+          <text x="350" y="252" text-anchor="middle" fill="#484f58" font-size="8" font-family="JetBrains Mono,monospace">Time after trigger →</text>
+        </svg>
+        <p class="diagram-caption">
+          Thermal runaway progression in LFP vs NMC. NMC reaches catastrophic oxygen release at ~180°C;
+          LFP requires ~270°C due to iron-phosphate bond stability. The animated curves show how rapidly
+          temperature escalates once Stage 1 begins. BMS intervention window is Stage 0 → pre-Stage 1.
+        </p>
+      </div>
+
+      <div class="cascade-container">
+        <!-- Stage 0 -->
+        <div class="cascade-stage" style="--stage-color: #48bb78;">
+          <div class="cascade-icon-wrap" style="--stage-color:#48bb78; background:rgba(72,187,120,0.12);">🟢</div>
+          <div class="cascade-content" style="--stage-color:#48bb78;">
+            <div class="cascade-label">Stage 0 — Normal Operation</div>
+            <div class="cascade-temp">25–60°C</div>
+            <div class="cascade-title">Safe Operating Zone — BMS Monitoring Active</div>
+            <div class="cascade-desc">
+              The cell is working normally. Heat generated by current flow and chemistry is balanced
+              by the cooling system. The BMS is watching temperature, voltage, and current the whole time.
+              <strong>You have plenty of room to act here.</strong> Any sign of overheating should be
+              caught and dealt with at this stage — that's the whole point of continuous thermal monitoring.
+            </div>
+          </div>
+        </div>
+        <!-- Stage 1 -->
+        <div class="cascade-stage" style="--stage-color: #ffd700;">
+          <div class="cascade-icon-wrap" style="--stage-color:#ffd700; background:rgba(255,215,0,0.12);">⚠</div>
+          <div class="cascade-content" style="--stage-color:#ffd700;">
+            <div class="cascade-label">Stage 1 — SEI Decomposition (Last BMS Window)</div>
+            <div class="cascade-temp">90–120°C</div>
+            <div class="cascade-title">SEI Layer Begins to Break Down</div>
+            <div class="cascade-desc">
+              The protective SEI layer (the thin film that keeps the graphite anode stable) starts
+              to break apart in an exothermic reaction — meaning it releases heat as it decomposes.
+              This creates CO and CO₂ gas inside the cell, raising internal pressure.
+              This is <strong>the last moment the BMS can stop escalation</strong> — by cutting the load,
+              activating cooling, and alerting the host system. The temperature is rising at only
+              0.5–2°C per minute at this stage, which is fast enough to detect but slow enough to act on.
+            </div>
+          </div>
+        </div>
+        <!-- Stage 2 -->
+        <div class="cascade-stage" style="--stage-color: #ff8c00;">
+          <div class="cascade-icon-wrap" style="--stage-color:#ff8c00; background:rgba(255,140,0,0.12);">🔥</div>
+          <div class="cascade-content" style="--stage-color:#ff8c00;">
+            <div class="cascade-label">Stage 2 — Separator Failure (Unrecoverable)</div>
+            <div class="cascade-temp">130–160°C</div>
+            <div class="cascade-title">Polyolefin Separator Melts — Internal Short Circuit Forms</div>
+            <div class="cascade-desc">
+              The thin plastic sheet (separator) that keeps the positive and negative electrodes apart
+              melts at 130–160°C. Once it collapses, the two electrodes touch — creating a permanent
+              short circuit inside the cell. All the stored energy now dumps as heat, right inside the
+              cell stack. For our 280Ah reference cell at 90% charge that's over 800 Wh — released in
+              seconds to minutes. <strong>At this point, thermal runaway is irreversible.</strong>
+              There is nothing the BMS can do — it's physically over.
+            </div>
+          </div>
+        </div>
+        <!-- Stage 3 NMC -->
+        <div class="cascade-stage" style="--stage-color: #fc8181;">
+          <div class="cascade-icon-wrap" style="--stage-color:#fc8181; background:rgba(252,129,129,0.12);">💥</div>
+          <div class="cascade-content" style="--stage-color:#fc8181;">
+            <div class="cascade-label">Stage 3A — Cathode Oxygen Release (NMC/NCA)</div>
+            <div class="cascade-temp">180–250°C</div>
+            <div class="cascade-title">Layered Oxide Cathode Releases Oxygen — Fire and Explosion Risk</div>
+            <div class="cascade-desc">
+              In NMC and NCA chemistries, the cathode crystal falls apart at high temperatures and
+              releases pure oxygen. That oxygen then reacts explosively with the liquid electrolyte
+              (which is flammable) — creating a self-feeding fire inside the cell. The result is
+              venting, sustained fire, and potentially an explosion that can jump to neighbouring cells
+              in seconds. This is why NMC packs need flame-retardant separators, ceramic coatings,
+              and dedicated gas venting channels — none of which are needed in LFP packs.
+            </div>
+          </div>
+        </div>
+        <!-- Stage 3 LFP -->
+        <div class="cascade-stage" style="--stage-color: #48bb78;">
+          <div class="cascade-icon-wrap" style="--stage-color:#48bb78; background:rgba(72,187,120,0.12);">🛡</div>
+          <div class="cascade-content" style="--stage-color:#48bb78;">
+            <div class="cascade-label">Stage 3B — LFP Thermal Limit (Superior Safety)</div>
+            <div class="cascade-temp">270°C+</div>
+            <div class="cascade-title">Olivine Structure Prevents Oxygen Release — No Combustion Chain</div>
+            <div class="cascade-desc">
+              LFP's olivine crystal structure holds oxygen so tightly (bond energy: 544 kJ/mol) that
+              even at 270°C the bonds don't break — so oxygen is never released. Without oxygen, there
+              is no combustion chain reaction. If an LFP cell does reach full runaway, you get cell
+              venting and electrolyte vapour — unpleasant, but not a sustained fire.
+              <strong>This physical difference is why LFP is the standard chemistry for indoor UPS and home energy storage.</strong>
+              Many building codes and insurance policies specifically allow LFP but require additional
+              fire suppression for NMC in residential settings.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Cell-to-Cell Thermal Propagation in a Pack</div>
+      <p>
+        One cell going into thermal runaway doesn't have to destroy the whole pack — but without
+        careful design, it usually does. Heat from the failed cell bakes the cells next to it,
+        pushing them toward their own runaway threshold, which then bakes the next cells, and so on.
+      </p>
+      <div class="diagram-wrap">
+        <div class="diagram-title">🔥 Thermal Propagation in a 16-Cell Pack</div>
+        <svg viewBox="0 0 660 120" width="100%" style="max-height:120px;">
+          <defs>
+            <radialGradient id="fireGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%"   stop-color="#ff1111" stop-opacity="0.9"/>
+              <stop offset="100%" stop-color="#ff8c00" stop-opacity="0.2"/>
+            </radialGradient>
+          </defs>
+          <!-- 16 cells -->
+          <!-- Cell 1-7 (cool) -->
+          <rect x="10"  y="20" width="34" height="80" rx="4" fill="rgba(99,179,237,0.15)" stroke="rgba(99,179,237,0.4)" stroke-width="1"/>
+          <rect x="50"  y="20" width="34" height="80" rx="4" fill="rgba(99,179,237,0.15)" stroke="rgba(99,179,237,0.4)" stroke-width="1"/>
+          <rect x="90"  y="20" width="34" height="80" rx="4" fill="rgba(99,179,237,0.15)" stroke="rgba(99,179,237,0.4)" stroke-width="1"/>
+          <rect x="130" y="20" width="34" height="80" rx="4" fill="rgba(72,187,120,0.15)"  stroke="rgba(72,187,120,0.4)"  stroke-width="1"/>
+          <rect x="170" y="20" width="34" height="80" rx="4" fill="rgba(72,187,120,0.15)"  stroke="rgba(72,187,120,0.4)"  stroke-width="1"/>
+          <!-- Cell 6 — warming -->
+          <rect x="210" y="15" width="34" height="90" rx="4" fill="rgba(255,215,0,0.2)"    stroke="rgba(255,215,0,0.6)"    stroke-width="1.5"/>
+          <!-- Cell 7 — hot (failed) -->
+          <rect x="250" y="10" width="34" height="100" rx="4" fill="url(#fireGrad)"         stroke="#ff1111"                stroke-width="2">
+            <animate attributeName="stroke-width" values="2;3;2" dur="0.8s" repeatCount="indefinite"/>
+          </rect>
+          <text x="267" y="65" text-anchor="middle" fill="white" font-size="9" font-family="JetBrains Mono,monospace" font-weight="700">TR</text>
+          <!-- Cell 8 — warming -->
+          <rect x="290" y="15" width="34" height="90" rx="4" fill="rgba(255,140,0,0.25)"   stroke="rgba(255,140,0,0.7)"    stroke-width="1.5">
+            <animate attributeName="fill-opacity" values="0.25;0.45;0.25" dur="1.5s" repeatCount="indefinite"/>
+          </rect>
+          <!-- Cells 9-11 — approaching -->
+          <rect x="330" y="18" width="34" height="84" rx="4" fill="rgba(255,215,0,0.18)"   stroke="rgba(255,215,0,0.5)"    stroke-width="1"/>
+          <rect x="370" y="20" width="34" height="80" rx="4" fill="rgba(72,187,120,0.15)"  stroke="rgba(72,187,120,0.4)"   stroke-width="1"/>
+          <rect x="410" y="20" width="34" height="80" rx="4" fill="rgba(99,179,237,0.15)"  stroke="rgba(99,179,237,0.4)"   stroke-width="1"/>
+          <rect x="450" y="20" width="34" height="80" rx="4" fill="rgba(99,179,237,0.15)"  stroke="rgba(99,179,237,0.4)"   stroke-width="1"/>
+          <rect x="490" y="20" width="34" height="80" rx="4" fill="rgba(99,179,237,0.15)"  stroke="rgba(99,179,237,0.4)"   stroke-width="1"/>
+          <rect x="530" y="20" width="34" height="80" rx="4" fill="rgba(99,179,237,0.15)"  stroke="rgba(99,179,237,0.4)"   stroke-width="1"/>
+          <rect x="570" y="20" width="34" height="80" rx="4" fill="rgba(99,179,237,0.15)"  stroke="rgba(99,179,237,0.4)"   stroke-width="1"/>
+          <rect x="610" y="20" width="34" height="80" rx="4" fill="rgba(99,179,237,0.15)"  stroke="rgba(99,179,237,0.4)"   stroke-width="1"/>
+          <!-- Propagation arrows -->
+          <path d="M 244 60 Q 227 35 215 60" fill="none" stroke="rgba(255,140,0,0.6)" stroke-width="1.5" marker-end="url(#arr)"/>
+          <path d="M 284 60 Q 310 35 322 60" fill="none" stroke="rgba(255,140,0,0.6)" stroke-width="1.5" marker-end="url(#arr)"/>
+          <defs>
+            <marker id="arr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L6,3 Z" fill="rgba(255,140,0,0.6)"/>
+            </marker>
+          </defs>
+        </svg>
+        <p class="diagram-caption">
+          Cell 7 (red) has gone into thermal runaway. Heat is radiating into cells 6 and 8 (orange/yellow),
+          pushing them toward their own danger threshold. The cells further away are still cool (blue/green).
+          Proper cell spacing, insulating gap-filler pads, and pyro fuses at each cell can stop the
+          spread at cells 6 and 8 before it turns into a full pack failure.
+        </p>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-icon">🛡</div>
+        <div class="callout-body">
+          <div class="callout-title">Propagation Mitigation Strategies</div>
+          <ul style="margin:0.5rem 0 0 1rem; line-height:2;">
+            <li><strong>Cell spacing ≥ 3 mm</strong> — reduces thermal coupling (air gap is an insulator)</li>
+            <li><strong>Low-conductivity gap fillers</strong> — vermiculite or ceramic pads at 0.3–0.5 W/m·K between cells</li>
+            <li><strong>Pyro fuses at each cell terminal</strong> — disconnect failed cell electrically within microseconds</li>
+            <li><strong>BMS early detection</strong> — dT/dt monitoring triggers pack disconnect before Stage 2</li>
+            <li><strong>Pack venting paths</strong> — allow gas to escape without pressurising the enclosure</li>
+            <li><strong>Fire barrier plates</strong> — stainless steel or mica sheets between cells in high-density packs</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  
+<style>
+.rnd-block{background:linear-gradient(135deg,rgba(255,107,53,.06),rgba(255,107,53,.02));border-left:3px solid #FF6B35;border-radius:.5rem;padding:1.2rem 1.5rem;margin:1.5rem 0;font-size:.92rem;line-height:1.7;}
+.rnd-block .rnd-label{font-family:'Orbitron',monospace;font-size:.65rem;letter-spacing:.12em;color:#FF6B35;text-transform:uppercase;margin-bottom:.6rem;}
+.pause-think{background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.2);border-radius:.5rem;padding:1rem 1.4rem;margin:1.5rem 0;font-size:.9rem;}
+.pause-think .pt-label{font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:.1em;color:#00FF88;margin-bottom:.5rem;}
+.pause-think ol{margin:.3rem 0 0 1rem;color:#aaa;}
+</style>
+
+<div class="rnd-block">
+  <div class="rnd-label">⚗ R&amp;D Thinking — Why Thermal Runaway Is Unstoppable Once Started</div>
+  <p>The core problem isn't just heat — it's <strong>self-acceleration</strong>. Every bit of heat released speeds up the chemical reactions, which release even more heat. Reaction rates roughly double for every 10°C rise (Arrhenius law). So by the time you detect 80°C inside the cell, it's already committed to destroying itself in 200–400 milliseconds — far too fast for any firmware to respond.</p>
+  <p>This is why the BMS can't "stop" thermal runaway once it's started. Its only tools are: <em>prevent</em> the conditions that start it (cut off on over-voltage, over-temperature, or short circuit) and <em>contain</em> propagation by opening the pack contactor before neighbouring cells get too hot.</p>
+  <p>The 130°C separator melt is the point of no return. After that, the internal short is physical — the electrodes are literally touching. No software can undo that.</p>
+</div>
+<div class="pause-think">
+  <div class="pt-label">⏸ Pause &amp; Think</div>
+  <ol>
+    <li>If a cell reaches 95°C, what should the BMS do first — disconnect load, disconnect charger, or alert CAN?</li>
+    <li>Why does a 16S pack have 16× the thermal runaway risk compared to a single-cell design?</li>
+    <li>A UPS pack is in a sealed cabinet. How does this change your thermal management strategy?</li>
+  </ol>
+</div>
+</section>
+
+
+  <!-- ============================================================
+       SECTION 3.3: THERMAL MANAGEMENT IN ESS/UPS
+  ============================================================ -->
+  <section class="section" id="s3-3">
+    <div class="section-number">3.3</div>
+    <h2 class="section-title">Thermal Management in ESS and UPS Systems</h2>
+    <p class="section-intro">
+      Thermal management means keeping every cell in the pack at the right temperature — ideally
+      between 15°C and 35°C — all the time. This isn't just about preventing fires. Temperature
+      is the single biggest factor in how long a battery lasts. Run your pack 10°C hotter than
+      necessary, and it ages twice as fast. Get the thermal management right and you can double
+      the usable life of the pack.
+    </p>
+
+    <div class="subsection">
+      <div class="subsection-title">Why Thermal Management Directly Determines Cycle Life</div>
+      <div class="formula-block">
+        <span class="formula-label">Arrhenius Aging Acceleration</span>
+        <span class="formula-line">k(T) = k_ref × exp[Eₐ/R × (1/T_ref − 1/T)]</span>
+        <span class="formula-line">Rule of thumb: aging rate doubles every +10°C</span>
+        <span class="formula-caption">
+          A pack running at 35°C instead of 25°C ages about twice as fast.
+          At 45°C, it ages four times faster. Over ten years, this is the difference between
+          replacing the pack once or replacing it four times.
+          For a home ESS pack costing $5,000–$8,000 to replace, keeping it just 5°C cooler
+          on average can pay for the entire thermal management system many times over.
+        </span>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Passive Cooling — Natural Convection</div>
+      <p>
+        Passive cooling uses no fans, pumps, or any powered components. Instead, heat travels
+        through the cell casing and pack structure by conduction, then the warm air naturally
+        rises and carries the heat away (natural convection). It's the simplest and most reliable
+        approach — nothing to break or maintain.
+      </p>
+      <div class="callout callout-success">
+        <div class="callout-icon">✓</div>
+        <div class="callout-body">
+          <div class="callout-title">When Passive Cooling Is Sufficient</div>
+          <p>
+            For a home ESS with LFP cells, if the average charge/discharge rate is below 0.5C
+            and the room temperature stays below 30°C, passive cooling is generally enough to
+            keep cells below 35°C. LFP has low internal resistance (≈ 0.5 mΩ), so at 0.5C it
+            generates relatively little heat — typically 5–10 W per cell — and natural air
+            movement can carry that heat away without the cell rising more than 10°C above room temperature.
+          </p>
+        </div>
+      </div>
+      <div class="comparison-table-wrap">
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>Passive Cooling Element</th>
+              <th>Function</th>
+              <th>Design Requirement</th>
+              <th>Failure Mode</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="metric-name">Cell spacing (air gap)</td>
+              <td>Convective heat transfer path between cells</td>
+              <td>≥ 3–5 mm between adjacent cell faces</td>
+              <td>Cells touching → zero convection → hot spot</td>
+            </tr>
+            <tr>
+              <td class="metric-name">Aluminium end plates</td>
+              <td>Conduct heat from cell tabs to pack shell</td>
+              <td>λ_Al = 200 W/m·K — use ≥ 3mm thickness</td>
+              <td>Corrosion at tab contact → high thermal resistance</td>
+            </tr>
+            <tr>
+              <td class="metric-name">Thermal gap filler</td>
+              <td>Fill air gaps between cell and heat spreader</td>
+              <td>λ ≥ 3 W/m·K, compressible to fill voids</td>
+              <td>Dry-out or delamination over thermal cycles</td>
+            </tr>
+            <tr>
+              <td class="metric-name">Pack vents / louvers</td>
+              <td>Allow chimney-effect airflow through pack</td>
+              <td>Bottom inlet + top outlet, ≥50 cm² free area</td>
+              <td>Blocked vents trap heat — pack temperature rises steadily</td>
+            </tr>
+            <tr>
+              <td class="metric-name">Pack enclosure material</td>
+              <td>Radiate heat to environment</td>
+              <td>Painted steel or anodised aluminium (ε ≈ 0.85)</td>
+              <td>Unpainted aluminium (ε ≈ 0.05) radiates 17× less heat</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Active Cooling — Forced Air and Liquid</div>
+      <p>
+        When passive cooling can't keep up — usually when the discharge rate exceeds 1C continuously,
+        or when the surrounding air is already above 35°C — you need active cooling, which means
+        powered fans or a liquid cooling loop.
+      </p>
+
+      <div class="stat-grid" style="grid-template-columns:1fr 1fr; gap:1.25rem; margin:1.5rem 0;">
+        <!-- Forced air -->
+        <div class="stat-card">
+          <div class="stat-value" style="color:var(--accent-blue); font-size:1.4rem; margin-bottom:0.5rem;">💨 Forced Air</div>
+          <div style="font-size:0.84rem; color:var(--text-secondary); line-height:1.7;">
+            <strong style="color:var(--text-primary);">Heat transfer coefficient:</strong> 20–80 W/m²·K<br>
+            <strong style="color:var(--text-primary);">Suitable for:</strong> &lt;5 kW continuous, ambient &lt;40°C<br>
+            <strong style="color:var(--text-primary);">Fan power:</strong> 5–30 W per kW of pack output<br>
+            <strong style="color:var(--text-primary);">Pro:</strong> Simple, no liquid risk, easy maintenance<br>
+            <strong style="color:var(--text-primary);">Con:</strong> Dust ingress, noise, limited at high power<br>
+            <strong style="color:var(--text-primary);">BMS integration:</strong> Fan speed proportional to T_cell − T_setpoint via PID
+          </div>
+        </div>
+        <!-- Liquid cooling -->
+        <div class="stat-card">
+          <div class="stat-value" style="color:var(--accent-cyan); font-size:1.4rem; margin-bottom:0.5rem;">💧 Liquid Cooling</div>
+          <div style="font-size:0.84rem; color:var(--text-secondary); line-height:1.7;">
+            <strong style="color:var(--text-primary);">Heat transfer coefficient:</strong> 500–5000 W/m²·K<br>
+            <strong style="color:var(--text-primary);">Suitable for:</strong> &gt;10 kW, all ambient conditions<br>
+            <strong style="color:var(--text-primary);">Coolant:</strong> Water/glycol or dielectric fluid<br>
+            <strong style="color:var(--text-primary);">Pro:</strong> Best thermal uniformity, scalable<br>
+            <strong style="color:var(--text-primary);">Con:</strong> Leak risk, pump maintenance, cost<br>
+            <strong style="color:var(--text-primary);">BMS integration:</strong> Coolant flow rate controlled by BMS via CAN to thermal management ECU
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-icon">⚠</div>
+        <div class="callout-body">
+          <div class="callout-title">BMS Must Control the Cooling System — Not Just Monitor</div>
+          <p>
+            A common design mistake is to treat the BMS and the cooling system as two completely
+            separate things with their own controllers. This creates a dangerous race condition:
+            the BMS sees the pack overheating and cuts the load — but the cooling system is still
+            blasting cold air and can push the cells below their minimum charge temperature limit.
+            The BMS must control the cooling directly (fan speed, coolant valve position) via CAN
+            or a dedicated interface. There should be one authority over the pack's thermal state:
+            the BMS.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Temperature Gradients — The Hidden Threat to Pack Longevity</div>
+      <p>
+        Even if the average temperature across the pack looks fine, a large difference between
+        the hottest and coolest cells is still damaging. Cells age faster when they're hotter —
+        a 10°C difference means the hot cells age twice as fast as the cool ones. Over time,
+        this causes the cells to drift apart in capacity, even if they all started identical
+        and the BMS has been balancing them perfectly.
+      </p>
+
+      <!-- Temperature gradient visualisation -->
+      <div class="diagram-wrap">
+        <div class="diagram-title">🌡 Pack Temperature Gradient — Acceptable vs Problematic</div>
+        <svg viewBox="0 0 660 200" width="100%" style="max-height:200px;">
+          <defs>
+            <linearGradient id="goodGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stop-color="#48bb78" stop-opacity="0.5"/>
+              <stop offset="100%" stop-color="#48bb78" stop-opacity="0.2"/>
+            </linearGradient>
+            <linearGradient id="badGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stop-color="#48bb78" stop-opacity="0.3"/>
+              <stop offset="60%"  stop-color="#ffd700" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#ff4444" stop-opacity="0.7"/>
+            </linearGradient>
+          </defs>
+
+          <!-- Good pack — ΔT < 5°C -->
+          <text x="160" y="20" text-anchor="middle" fill="#48bb78" font-size="11" font-family="JetBrains Mono,monospace" font-weight="700">GOOD: ΔT &lt; 5°C</text>
+          <rect x="20" y="30" width="280" height="100" rx="8" fill="url(#goodGrad)" stroke="rgba(72,187,120,0.4)" stroke-width="1.5"/>
+          <!-- Cells uniform -->
+          <rect x="30"  y="40" width="22" height="80" rx="3" fill="rgba(72,187,120,0.4)" stroke="rgba(72,187,120,0.6)" stroke-width="1"/>
+          <rect x="58"  y="40" width="22" height="80" rx="3" fill="rgba(72,187,120,0.4)" stroke="rgba(72,187,120,0.6)" stroke-width="1"/>
+          <rect x="86"  y="40" width="22" height="80" rx="3" fill="rgba(72,187,120,0.4)" stroke="rgba(72,187,120,0.6)" stroke-width="1"/>
+          <rect x="114" y="40" width="22" height="80" rx="3" fill="rgba(72,187,120,0.4)" stroke="rgba(72,187,120,0.6)" stroke-width="1"/>
+          <rect x="142" y="40" width="22" height="80" rx="3" fill="rgba(72,187,120,0.4)" stroke="rgba(72,187,120,0.6)" stroke-width="1"/>
+          <rect x="170" y="40" width="22" height="80" rx="3" fill="rgba(72,187,120,0.45)" stroke="rgba(72,187,120,0.6)" stroke-width="1"/>
+          <rect x="198" y="40" width="22" height="80" rx="3" fill="rgba(72,187,120,0.45)" stroke="rgba(72,187,120,0.6)" stroke-width="1"/>
+          <rect x="226" y="40" width="22" height="80" rx="3" fill="rgba(72,187,120,0.4)" stroke="rgba(72,187,120,0.6)" stroke-width="1"/>
+          <rect x="254" y="40" width="22" height="80" rx="3" fill="rgba(72,187,120,0.4)" stroke="rgba(72,187,120,0.6)" stroke-width="1"/>
+          <text x="160" y="148" text-anchor="middle" fill="#48bb78" font-size="9" font-family="JetBrains Mono,monospace">All cells 27–30°C · Uniform aging</text>
+
+          <!-- Bad pack — ΔT > 15°C -->
+          <text x="490" y="20" text-anchor="middle" fill="#fc8181" font-size="11" font-family="JetBrains Mono,monospace" font-weight="700">BAD: ΔT &gt; 15°C</text>
+          <rect x="350" y="30" width="280" height="100" rx="8" fill="url(#badGrad)" stroke="rgba(252,129,129,0.4)" stroke-width="1.5"/>
+          <rect x="360" y="43" width="22" height="74" rx="3" fill="rgba(72,187,120,0.4)"  stroke="rgba(72,187,120,0.6)"  stroke-width="1"/>
+          <rect x="388" y="41" width="22" height="78" rx="3" fill="rgba(72,187,120,0.4)"  stroke="rgba(72,187,120,0.6)"  stroke-width="1"/>
+          <rect x="416" y="40" width="22" height="80" rx="3" fill="rgba(255,215,0,0.35)"   stroke="rgba(255,215,0,0.6)"   stroke-width="1"/>
+          <rect x="444" y="38" width="22" height="84" rx="3" fill="rgba(255,140,0,0.45)"   stroke="rgba(255,140,0,0.7)"   stroke-width="1"/>
+          <rect x="472" y="35" width="22" height="90" rx="3" fill="rgba(255,68,68,0.55)"   stroke="rgba(255,68,68,0.8)"   stroke-width="1.5"/>
+          <rect x="500" y="35" width="22" height="90" rx="3" fill="rgba(255,68,68,0.55)"   stroke="rgba(255,68,68,0.8)"   stroke-width="1.5"/>
+          <rect x="528" y="37" width="22" height="86" rx="3" fill="rgba(255,68,68,0.45)"   stroke="rgba(255,68,68,0.6)"   stroke-width="1"/>
+          <rect x="556" y="40" width="22" height="80" rx="3" fill="rgba(255,140,0,0.35)"   stroke="rgba(255,140,0,0.5)"   stroke-width="1"/>
+          <rect x="584" y="42" width="22" height="76" rx="3" fill="rgba(255,215,0,0.25)"   stroke="rgba(255,215,0,0.4)"   stroke-width="1"/>
+          <text x="360" y="148" text-anchor="left" fill="#fc8181" font-size="9" font-family="JetBrains Mono,monospace">22°C</text>
+          <text x="484" y="148" text-anchor="middle" fill="#ff4444" font-size="9" font-family="JetBrains Mono,monospace">44°C hot cells</text>
+          <text x="600" y="148" text-anchor="end" fill="#f6ad55" font-size="9" font-family="JetBrains Mono,monospace">29°C</text>
+
+          <!-- Labels bottom -->
+          <text x="160" y="170" text-anchor="middle" fill="#8b949e" font-size="8.5" font-family="Inter,sans-serif">Uniform cooling → all cells age together → balanced pack</text>
+          <text x="490" y="170" text-anchor="middle" fill="#8b949e" font-size="8.5" font-family="Inter,sans-serif">Poor cooling → hot cells age 4× faster → capacity imbalance in 2 years</text>
+        </svg>
+        <p class="diagram-caption">
+          Left: a well-cooled pack with less than 5°C temperature spread — cells age at the same rate.
+          Right: a poorly designed pack with a 22°C spread — the hot (red) cells age four times faster,
+          gradually drifting out of balance even if the BMS is actively balancing them.
+          Design goal: keep the spread below 5°C across all cells at all times.
+        </p>
+      </div>
+
+      <div class="formula-block">
+        <span class="formula-label">Pack Temperature Uniformity Target</span>
+        <span class="formula-line">ΔT_pack = T_max − T_min  across all cell temperature sensors</span>
+        <span class="formula-line">Target: ΔT_pack &lt; 5°C during normal operation</span>
+        <span class="formula-line">Warning threshold: ΔT_pack &gt; 8°C → reduce load, increase cooling</span>
+        <span class="formula-line">Alarm threshold: ΔT_pack &gt; 12°C → investigate thermal path failure</span>
+        <span class="formula-caption">
+          The BMS calculates ΔT_pack every measurement cycle and logs it as a health indicator.
+          If ΔT_pack slowly grows over months (with the same load), that's a warning sign of a
+          deteriorating thermal path — maybe the gap-filler pad dried out, a vent got blocked, or
+          a fan is starting to fail — caught early, before any single cell crosses its temperature limit.
+        </span>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">NTC Placement Strategy — Where to Measure and Why</div>
+      <p>
+        The BMS's thermal model is only as good as where its sensors are placed. A single
+        temperature sensor on the circuit board tells you almost nothing about what's happening
+        inside the cells in a 16-cell pack. Placement matters enormously.
+      </p>
+      <div class="ntc-grid">
+        <div class="ntc-card" style="--ntc-color: var(--accent-red);">
+          <div class="ntc-position">Critical</div>
+          <div class="ntc-name">Cell Midpoint Surface</div>
+          <div class="ntc-desc">Pressed flat against the large face of the cell at mid-height — this is where the surface temperature peaks. You need at least one sensor for every two cells.</div>
+        </div>
+        <div class="ntc-card" style="--ntc-color: var(--accent-orange);">
+          <div class="ntc-position">Important</div>
+          <div class="ntc-name">Positive Tab Junction</div>
+          <div class="ntc-desc">Placed at or near where the busbar is welded to the cell tab. The tab carries the full pack current, making it the hottest electrical connection point. This spot must stay below 80°C.</div>
+        </div>
+        <div class="ntc-card" style="--ntc-color: var(--accent-yellow);">
+          <div class="ntc-position">Important</div>
+          <div class="ntc-name">Pack Inlet Air / Coolant</div>
+          <div class="ntc-desc">Measures how warm the incoming air or coolant already is. The BMS uses this to figure out how much cooling headroom is available and to pre-adjust fan or pump speed.</div>
+        </div>
+        <div class="ntc-card" style="--ntc-color: var(--accent-yellow);">
+          <div class="ntc-position">Important</div>
+          <div class="ntc-name">Pack Outlet Air / Coolant</div>
+          <div class="ntc-desc">Comparing outlet temperature to inlet temperature (multiplied by flow rate) tells you exactly how much heat the cooling system is actually removing. This is how the BMS verifies that cooling is working as expected.</div>
+        </div>
+        <div class="ntc-card" style="--ntc-color: var(--accent-blue);">
+          <div class="ntc-position">Recommended</div>
+          <div class="ntc-name">BMS PCB Ambient</div>
+          <div class="ntc-desc">A reference for the BMS chip itself — the AFE ICs have their own temperature limits (typically −40°C to +85°C) and this sensor tells the firmware whether the BMS electronics are getting too hot.</div>
+        </div>
+        <div class="ntc-card" style="--ntc-color: var(--accent-green);">
+          <div class="ntc-position">Optional</div>
+          <div class="ntc-name">Cell Bottom Centre</div>
+          <div class="ntc-desc">The best spot to catch a developing hot spot inside the cell. The core heats up 30–120 seconds before the surface at 1C — bottom sensors pick this up faster than side sensors on prismatic cells.</div>
+        </div>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-icon">⚠</div>
+        <div class="callout-body">
+          <div class="callout-title">Surface Temperature Underestimates Core Temperature</div>
+          <p>
+            At 1C discharge, the cell's interior is typically 5–15°C hotter than what the surface
+            sensor reads. If your surface sensor shows 50°C, the core might already be at 60–65°C —
+            dangerously close to the temperature where the SEI layer starts to break down.
+            The BMS must correct for this lag using a simple formula based on current and cell
+            thermal resistance:
+          </p>
+          <div style="font-family:var(--font-mono); font-size:0.82rem; background:rgba(0,0,0,0.3); padding:0.75rem; border-radius:4px; margin-top:0.5rem; color:var(--accent-orange);">
+            T_core_est = T_surface + k_lag × I² × R_thermal_cell
+          </div>
+          <p style="margin-top:0.5rem;">
+            k_lag is a correction factor you measure once during cell testing — by inserting a
+            thermocouple into the centre of a test cell and comparing it with the surface sensor at
+            different currents. For a 280Ah prismatic LFP cell, k_lag ≈ 0.08 K/A².
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       SECTION 3.4: MECHANICAL CONSIDERATIONS
+  ============================================================ -->
+  <section class="section" id="s3-4">
+    <div class="section-number">3.4</div>
+    <h2 class="section-title">Mechanical Considerations — Swelling, Compression, and Vibration</h2>
+    <p class="section-intro">
+      Lithium-ion cells aren't just chemical devices — they're also mechanical ones. Every time
+      you charge or discharge, the electrodes physically swell and shrink. Do this thousands of
+      times and the accumulated mechanical stress damages cell health, loosens electrical contacts
+      between cells, and can crack the pack structure. The BMS can't measure swelling directly,
+      but the pack's physical design has to be built around it.
+    </p>
+
+    <div class="subsection">
+      <div class="subsection-title">LFP Electrode Swelling — The Lithiation Expansion</div>
+      <p>
+        When the cell charges, lithium ions squeeze into the graphite anode — and this forces the
+        carbon crystal to expand, like packing more people into a crowd. When the cell discharges,
+        the lithium leaves and the graphite contracts again. This happens every single cycle:
+      </p>
+      <div class="formula-block">
+        <span class="formula-label">Volume Change During Intercalation</span>
+        <span class="formula-line">LFP cathode: LiFePO₄ ↔ FePO₄ + Li⁺ + e⁻</span>
+        <span class="formula-line">LFP volume change: ΔV/V ≈ 6.8% (a-axis contracts, b-axis expands)</span>
+        <span class="formula-line">Graphite anode: Li_x C₆ — expands ~10% at full lithiation (x=1)</span>
+        <span class="formula-line">Net prismatic cell thickness change: ~2% (LFP) vs ~4–5% (NMC)</span>
+        <span class="formula-caption">
+          Our 280Ah reference cell (45mm thick when empty) swells by about 0.9mm when fully charged.
+          In a 16-cell pack, all cells expand together — that's 16 × 0.9mm = 14.4mm of total
+          movement, nearly 1.5 cm. The pack's mounting frame and end-plates must be designed
+          to flex with this, or they'll crack or crush the cells.
+        </span>
+      </div>
+
+      <!-- Swelling animation bars -->
+      <div class="swell-bar-wrap">
+        <div class="swell-label">Cell Thickness at 0% SoC (reference)</div>
+        <div class="swell-track">
+          <div class="swell-fill" id="swell-lfp-0" style="width:80%; background:rgba(72,187,120,0.6);">LFP — 45.0 mm (ref)</div>
+        </div>
+        <div class="swell-label">Cell Thickness at 100% SoC (fully charged)</div>
+        <div class="swell-track">
+          <div class="swell-fill" id="swell-lfp-100" style="width:82%; background:rgba(72,187,120,0.8);">LFP — 45.9 mm (+2.0%)</div>
+        </div>
+        <div class="swell-label">NMC equivalent at 100% SoC</div>
+        <div class="swell-track">
+          <div class="swell-fill" id="swell-nmc-100" style="width:86%; background:rgba(99,179,237,0.7);">NMC — 47.3 mm (+5.1%)</div>
+        </div>
+        <div class="swell-label">Aged LFP at 100% SoC (after 2000 cycles — SEI growth)</div>
+        <div class="swell-track">
+          <div class="swell-fill" id="swell-aged" style="width:85%; background:rgba(246,173,85,0.7);">LFP aged — 47.0 mm (+4.4%)</div>
+        </div>
+      </div>
+      <p style="font-size:0.83rem; color:var(--text-muted); font-family:var(--font-mono); margin-top:0.5rem;">
+        ↑ Swelling comparison for 280Ah prismatic cells. Notice that an aged LFP cell swells almost
+        as much as a brand-new NMC cell — the extra SEI layer that builds up over 2000 cycles takes
+        up real physical space. Pack brackets and end-plates must be sized for the largest (aged) case.
+      </p>
+
+      <div class="callout callout-warning">
+        <div class="callout-icon">⚠</div>
+        <div class="callout-body">
+          <div class="callout-title">Irreversible Swelling — The Gassing Indicator</div>
+          <p>
+            The swelling that happens every charge/discharge cycle is completely normal — the cell
+            returns to the same thickness each time. The problem is <em>irreversible</em> swelling,
+            where the cell gets permanently thicker over time. This means gas is being generated
+            inside the cell, most commonly from:
+            (1) overcharging above 3.65V (electrolyte breaks down at the cathode),
+            (2) the SEI layer continuing to grow on the anode (producing CO₂),
+            or (3) water contamination in the electrolyte (which generates corrosive HF gas).
+            Permanent swelling is an early warning that the cell is approaching end of life. Advanced
+            packs fit a strain gauge or load cell into the compression frame to track this as a
+            health metric — a slowly growing force reading means the cells are gassing.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Compression Fixtures — Controlled Pressure for Better Performance</div>
+      <p>
+        It sounds counterintuitive, but squeezing prismatic LFP cells with a controlled, steady
+        pressure actually <em>improves</em> their performance and helps them last longer. Here's why:
+      </p>
+      <ul style="color:var(--text-secondary); line-height:2; padding-left:1.5rem;">
+        <li>Keeps the electrode layers pressed tightly together, reducing the resistance between them</li>
+        <li>Stops the layers peeling apart as the cell expands and contracts through each cycle</li>
+        <li>Leaves less free space inside for gas bubbles to collect in the electrode stack</li>
+        <li>Slows SEI layer growth by limiting how much the anode can expand each cycle</li>
+      </ul>
+      <div class="formula-block">
+        <span class="formula-label">Optimal Compression Pressure</span>
+        <span class="formula-line">P_optimal = 10–30 kPa (1.5–4.4 PSI) for prismatic LFP 280Ah</span>
+        <span class="formula-line">P_max = 100 kPa — above this, electrolyte expulsion and capacity loss</span>
+        <span class="formula-caption">
+          The pressure is applied using end-plates and tie-rods, or an aluminium channel that wraps around
+          the cell stack. Critically, the fixture must include springs (Belleville washers or spring plates)
+          so that pressure stays roughly constant even as the cells swell. A rigid, non-spring fixture
+          lets pressure build as the cells expand — eventually crushing them beyond P_max.
+          Design target: 15 kPa preload at 50% SoC (the midpoint), with a ±10 kPa range as cells breathe.
+        </span>
+      </div>
+
+      <!-- Compression fixture diagram -->
+      <div class="diagram-wrap">
+        <div class="diagram-title">🔧 Prismatic Cell Compression Fixture Assembly</div>
+        <svg viewBox="0 0 660 180" width="100%" style="max-height:180px;">
+          <!-- End plate left -->
+          <rect x="20" y="30" width="25" height="120" rx="3" fill="rgba(99,179,237,0.25)" stroke="rgba(99,179,237,0.6)" stroke-width="2"/>
+          <text x="32" y="98" text-anchor="middle" fill="#63b3ed" font-size="8" font-family="JetBrains Mono,monospace" transform="rotate(-90 32 98)">END PLATE</text>
+
+          <!-- Spring washers left -->
+          <ellipse cx="60"  cy="55"  rx="8" ry="5" fill="rgba(246,173,85,0.5)" stroke="#f6ad55" stroke-width="1.5">
+            <animate attributeName="ry" values="5;6;5" dur="2s" repeatCount="indefinite"/>
+          </ellipse>
+          <ellipse cx="60"  cy="145" rx="8" ry="5" fill="rgba(246,173,85,0.5)" stroke="#f6ad55" stroke-width="1.5">
+            <animate attributeName="ry" values="5;6;5" dur="2s" repeatCount="indefinite"/>
+          </ellipse>
+
+          <!-- 6 cells -->
+          <rect x="72"  y="35" width="70" height="110" rx="4" fill="rgba(72,187,120,0.15)"  stroke="rgba(72,187,120,0.5)"  stroke-width="1.5"/>
+          <rect x="148" y="35" width="70" height="110" rx="4" fill="rgba(72,187,120,0.15)"  stroke="rgba(72,187,120,0.5)"  stroke-width="1.5"/>
+          <rect x="224" y="35" width="70" height="110" rx="4" fill="rgba(72,187,120,0.15)"  stroke="rgba(72,187,120,0.5)"  stroke-width="1.5"/>
+          <rect x="300" y="35" width="70" height="110" rx="4" fill="rgba(72,187,120,0.15)"  stroke="rgba(72,187,120,0.5)"  stroke-width="1.5"/>
+          <rect x="376" y="35" width="70" height="110" rx="4" fill="rgba(72,187,120,0.15)"  stroke="rgba(72,187,120,0.5)"  stroke-width="1.5"/>
+          <rect x="452" y="35" width="70" height="110" rx="4" fill="rgba(72,187,120,0.15)"  stroke="rgba(72,187,120,0.5)"  stroke-width="1.5"/>
+
+          <!-- Gap filler pads between cells -->
+          <rect x="142" y="40" width="6"  height="100" rx="2" fill="rgba(183,148,244,0.4)"/>
+          <rect x="218" y="40" width="6"  height="100" rx="2" fill="rgba(183,148,244,0.4)"/>
+          <rect x="294" y="40" width="6"  height="100" rx="2" fill="rgba(183,148,244,0.4)"/>
+          <rect x="370" y="40" width="6"  height="100" rx="2" fill="rgba(183,148,244,0.4)"/>
+          <rect x="446" y="40" width="6"  height="100" rx="2" fill="rgba(183,148,244,0.4)"/>
+
+          <!-- Spring washers right -->
+          <ellipse cx="535" cy="55"  rx="8" ry="5" fill="rgba(246,173,85,0.5)" stroke="#f6ad55" stroke-width="1.5">
+            <animate attributeName="ry" values="5;6;5" dur="2s" repeatCount="indefinite"/>
+          </ellipse>
+          <ellipse cx="535" cy="145" rx="8" ry="5" fill="rgba(246,173,85,0.5)" stroke="#f6ad55" stroke-width="1.5">
+            <animate attributeName="ry" values="5;6;5" dur="2s" repeatCount="indefinite"/>
+          </ellipse>
+
+          <!-- End plate right -->
+          <rect x="547" y="30" width="25" height="120" rx="3" fill="rgba(99,179,237,0.25)" stroke="rgba(99,179,237,0.6)" stroke-width="2"/>
+          <text x="560" y="98" text-anchor="middle" fill="#63b3ed" font-size="8" font-family="JetBrains Mono,monospace" transform="rotate(-90 560 98)">END PLATE</text>
+
+          <!-- Tie rod top -->
+          <line x1="20" y1="42" x2="572" y2="42" stroke="#8b949e" stroke-width="2.5"/>
+          <circle cx="20"  cy="42" r="5" fill="#8b949e"/>
+          <circle cx="572" cy="42" r="5" fill="#8b949e"/>
+          <!-- Tie rod bottom -->
+          <line x1="20" y1="138" x2="572" y2="138" stroke="#8b949e" stroke-width="2.5"/>
+          <circle cx="20"  cy="138" r="5" fill="#8b949e"/>
+          <circle cx="572" cy="138" r="5" fill="#8b949e"/>
+
+          <!-- Labels -->
+          <text x="107" y="172" text-anchor="middle" fill="#48bb78" font-size="8" font-family="Inter,sans-serif">280Ah LFP cells</text>
+          <text x="300" y="172" text-anchor="middle" fill="#b794f4" font-size="8" font-family="Inter,sans-serif">Thermal gap-filler pads (3 W/m·K)</text>
+          <text x="535" y="172" text-anchor="middle" fill="#f6ad55" font-size="8" font-family="Inter,sans-serif">Spring washers</text>
+          <text x="300" y="25"  text-anchor="middle" fill="#8b949e" font-size="8" font-family="Inter,sans-serif">Tie rods (M8 stainless steel)</text>
+        </svg>
+        <p class="diagram-caption">
+          Six 280Ah LFP cells in a compression fixture. Belleville spring washers (orange, animated) maintain
+          constant ~15 kPa preload as cells expand/contract. Purple gap-filler pads (3 W/m·K) conduct heat
+          to end plates and provide electrical isolation. Tie rods (grey) constrain the assembly.
+        </p>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Vibration and Shock — UPS and Home ESS Requirements</div>
+      <p>
+        UPS and home ESS packs go through physical stress before they even arrive at the installation
+        site — vibration during shipping, rough handling during installation, and (for floor-mounted
+        systems) constant low-level building vibration once in service. Industry standards specify
+        exactly what tests a pack must survive:
+      </p>
+      <div class="comparison-table-wrap">
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>Standard</th>
+              <th>Test</th>
+              <th>Condition</th>
+              <th>Relevance to BMS/Pack Design</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="metric-name">IEC 62133-2:2017</td>
+              <td>Vibration test</td>
+              <td>7–50 Hz, 1.0g, 3 axes, 30 min each</td>
+              <td>Cell hold-down fixtures must not loosen; busbars must not fatigue</td>
+            </tr>
+            <tr>
+              <td class="metric-name">IEC 62133-2:2017</td>
+              <td>Shock test</td>
+              <td>100g, 6ms, 3 directions</td>
+              <td>BMS connectors must remain seated; cell tabs must not crack</td>
+            </tr>
+            <tr>
+              <td class="metric-name">IEC 60068-2-27</td>
+              <td>Shock (transport)</td>
+              <td>40g, 11ms half-sine, 18 shocks</td>
+              <td>Pack enclosure must protect cells from deformation during shipping</td>
+            </tr>
+            <tr>
+              <td class="metric-name">IEC 60068-2-64</td>
+              <td>Random vibration</td>
+              <td>Broadband 10–500 Hz, 1.0 g_rms</td>
+              <td>Screw-terminal BMS connections must maintain &lt;5 mΩ contact resistance after test</td>
+            </tr>
+            <tr>
+              <td class="metric-name">UN 38.3</td>
+              <td>Transportation test</td>
+              <td>Vibration + shock + altitude + thermal</td>
+              <td>Required for all Li-ion packs shipped by air — BMS must survive without triggering</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        From the BMS's perspective, vibration and shock testing mostly stress the <em>physical
+        connections</em> rather than the firmware. The typical failure points are crimped cell-sense
+        wires, balancing lead connections, and NTC mounts coming loose. Use proper vibration-rated
+        connectors (such as Molex MX150) — not the hobby-grade JST or Dupont headers — for any
+        wiring inside the BMS assembly.
+      </p>
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       SECTION 3.5: BMS THERMAL FEATURES DERIVED FROM PHYSICS
+  ============================================================ -->
+  <section class="section" id="s3-5">
+    <div class="section-number">3.5</div>
+    <h2 class="section-title">BMS Thermal Features — From Physics to Firmware</h2>
+    <p class="section-intro">
+      Every temperature number in BMS firmware has a real physical reason behind it. This section
+      traces each protection limit and control action back to the electrochemistry and physics that
+      justify it — so you understand not just <em>what</em> the thresholds are, but
+      <em>why they are set where they are</em>.
+    </p>
+
+    <div class="subsection">
+      <div class="subsection-title">Overtemperature Charge Cutoff — Why 45°C</div>
+      <p>
+        Most LFP BMS designs use 45°C as a charge warning and 55°C as a hard cutoff. These
+        numbers aren't guesses — they come directly from how fast the SEI layer grows at different
+        temperatures.
+      </p>
+      <div class="formula-block">
+        <span class="formula-label">SEI Growth Rate vs Temperature</span>
+        <span class="formula-line">d(SEI)/dt ∝ exp(−Eₐ_SEI / RT)   [Arrhenius]</span>
+        <span class="formula-line">At 35°C (308K):  relative rate = exp(−50000 / 8.314 / 308) = 1.0 (reference)</span>
+        <span class="formula-line">At 45°C (318K):  relative rate = exp(−50000 / 8.314 / 318) ≈ 2.1 × reference</span>
+        <span class="formula-line">At 55°C (328K):  relative rate = exp(−50000 / 8.314 / 328) ≈ 4.3 × reference</span>
+        <span class="formula-caption">
+          Charging is what drives SEI growth, because it pushes lithium ions into the graphite surface
+          where the SEI forms. Above 45°C, this growth rate doubles — which means cycle life is halved
+          if you keep charging at that temperature. The 45°C warning gives the BMS time to slow down
+          before hitting the hard cutoff. Above 55°C, SEI is growing four times faster than baseline —
+          continued charging is unacceptable. Importantly, discharge is allowed up to 60°C, because
+          discharging pulls lithium out of the graphite (no SEI formation opportunity) — the only
+          concern then is electrolyte stability, which has a higher limit.
+        </span>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Undertemperature Charge Cutoff — Why 0°C is Absolute</div>
+      <p>
+        Below 0°C, the BMS must block all charging — not reduce it, not slow it down, but stop it
+        completely. This is the single most important temperature rule in the entire firmware.
+      </p>
+      <div class="callout callout-danger">
+        <div class="callout-icon">🧊</div>
+        <div class="callout-body">
+          <div class="callout-title">Charging Below 0°C = Lithium Plating = Dendritic Short Circuit Risk</div>
+          <p>
+            Below 0°C, the graphite anode can't absorb lithium ions fast enough during charging.
+            The ions arrive at the surface but can't squeeze into the crystal lattice in time —
+            so instead they deposit as solid metallic lithium on the surface. This metallic lithium
+            grows as thin needle-like spikes called dendrites. If a dendrite grows long enough to
+            punch through the separator and touch the cathode, you have a sudden internal short circuit
+            — all the stored energy dumps as heat in seconds, with thermal runaway a real possibility.
+            <br><br>
+            <strong>The BMS rule is unconditional: charge current = 0 when any cell is below 0°C.</strong>
+            No exceptions. Not "just 0.1C". Not "gentle warm-up charge". Any charge at sub-zero
+            temperatures risks dendrite formation.
+          </p>
+        </div>
+      </div>
+      <div class="formula-block">
+        <span class="formula-label">Temperature-Derated Charge Rate Table (LFP)</span>
+        <span class="formula-caption" style="font-family:var(--font-mono); white-space:pre; font-size:0.82rem;">
+T_min (°C)  | Max I_charge | Reason
+------------|--------------|-------------------------------------------
+  &lt;0        | 0.0C  (OFF)  | Lithium plating — absolute prohibition
+  0 –  5    | 0.1C         | Minimal plating risk at very low rate
+  5 – 10    | 0.2C         | Low rate, monitor dV/dI for plating signs
+ 10 – 15    | 0.5C         | Normal low-temperature charging
+ 15 – 35    | 1.0C (max)   | Optimal temperature range — full rate
+ 35 – 45    | 0.7C         | Derated to reduce self-heating
+ 45 – 55    | 0.3C         | Approaching hard cutoff — minimal current
+  &gt;55       | 0.0C  (OFF)  | Electrolyte degradation risk</span>
+      </div>
+      <p>
+        This table lives in the BMS firmware as a lookup, indexed by the coldest cell temperature
+        across all sensors. The maximum allowed charge current is whichever is smaller: what the
+        charger is asking for, or what the table allows at the current temperature. The BMS
+        enforces this limit — the charger doesn't get a vote.
+      </p>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Temperature-Derated Charging — Linear Derating Curve</div>
+      <p>
+        Between the warning and hard cutoff temperatures, the BMS doesn't just switch off abruptly —
+        it smoothly reduces the allowed charge current using a linear derating curve:
+      </p>
+      <!-- Derating curve SVG -->
+      <div class="diagram-wrap">
+        <div class="diagram-title">📉 Charge Current Derating vs Cell Temperature</div>
+        <svg viewBox="0 0 620 220" width="100%" style="max-height:220px;">
+          <defs>
+            <linearGradient id="derateGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stop-color="#63b3ed" stop-opacity="0.7"/>
+              <stop offset="20%"  stop-color="#63b3ed" stop-opacity="0.7"/>
+              <stop offset="35%"  stop-color="#48bb78" stop-opacity="0.7"/>
+              <stop offset="65%"  stop-color="#48bb78" stop-opacity="0.7"/>
+              <stop offset="80%"  stop-color="#f6ad55" stop-opacity="0.7"/>
+              <stop offset="90%"  stop-color="#fc8181" stop-opacity="0.7"/>
+              <stop offset="100%" stop-color="#fc8181" stop-opacity="0.7"/>
+            </linearGradient>
+          </defs>
+
+          <!-- Axes -->
+          <line x1="60" y1="180" x2="590" y2="180" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+          <line x1="60" y1="20"  x2="60"  y2="180" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+
+          <!-- X axis labels (temperature) -->
+          <!-- -20=65 | 0=143 | 10=183 | 25=243 | 35=283 | 45=323 | 55=363 | 60=383 | 65=403 -->
+          <text x="65"  y="196" fill="#8b949e" font-size="9" font-family="JetBrains Mono,monospace" text-anchor="middle">−20°C</text>
+          <text x="143" y="196" fill="#8b949e" font-size="9" font-family="JetBrains Mono,monospace" text-anchor="middle">0°C</text>
+          <text x="243" y="196" fill="#48bb78" font-size="9" font-family="JetBrains Mono,monospace" text-anchor="middle">25°C</text>
+          <text x="323" y="196" fill="#8b949e" font-size="9" font-family="JetBrains Mono,monospace" text-anchor="middle">35°C</text>
+          <text x="363" y="196" fill="#f6ad55" font-size="9" font-family="JetBrains Mono,monospace" text-anchor="middle">45°C</text>
+          <text x="403" y="196" fill="#fc8181" font-size="9" font-family="JetBrains Mono,monospace" text-anchor="middle">55°C</text>
+          <text x="450" y="196" fill="#fc8181" font-size="9" font-family="JetBrains Mono,monospace" text-anchor="middle">60°C</text>
+
+          <!-- Y axis labels (current %) -->
+          <text x="50" y="183" fill="#8b949e" font-size="9" font-family="JetBrains Mono,monospace" text-anchor="end">0%</text>
+          <text x="50" y="133" fill="#8b949e" font-size="9" font-family="JetBrains Mono,monospace" text-anchor="end">50%</text>
+          <text x="50" y="83"  fill="#8b949e" font-size="9" font-family="JetBrains Mono,monospace" text-anchor="end">100%</text>
+          <text x="50" y="53"  fill="#8b949e" font-size="9" font-family="JetBrains Mono,monospace" text-anchor="end">130%</text>
+
+          <!-- Derating curve -->
+          <polyline
+            points="65,183  143,183  183,163  243,83  323,83  363,113  403,163  450,183"
+            fill="none" stroke="url(#derateGrad)" stroke-width="3" stroke-linejoin="round">
+            <animate attributeName="stroke-dasharray" from="0,800" to="800,0" dur="2s" fill="freeze"/>
+          </polyline>
+          <!-- Fill under curve -->
+          <polygon
+            points="65,183  143,183  183,163  243,83  323,83  363,113  403,163  450,183"
+            fill="rgba(72,187,120,0.06)" stroke="none"/>
+
+          <!-- Key point annotations -->
+          <circle cx="143" cy="183" r="5" fill="#63b3ed"/>
+          <text x="143" y="173" text-anchor="middle" fill="#63b3ed" font-size="8.5" font-family="JetBrains Mono,monospace">0.1C</text>
+
+          <circle cx="243" cy="83"  r="5" fill="#48bb78"/>
+          <text x="255" y="75"  text-anchor="start" fill="#48bb78" font-size="8.5" font-family="JetBrains Mono,monospace">1.0C max</text>
+
+          <circle cx="363" cy="113" r="5" fill="#f6ad55"/>
+          <text x="363" y="103" text-anchor="middle" fill="#f6ad55" font-size="8.5" font-family="JetBrains Mono,monospace">0.7C</text>
+
+          <circle cx="403" cy="163" r="5" fill="#fc8181"/>
+          <text x="415" y="162" text-anchor="start" fill="#fc8181" font-size="8.5" font-family="JetBrains Mono,monospace">0.3C</text>
+
+          <!-- Optimal zone shading -->
+          <rect x="183" y="20" width="140" height="160" fill="rgba(72,187,120,0.04)" stroke="rgba(72,187,120,0.15)" stroke-width="1" stroke-dasharray="4,3"/>
+          <text x="253" y="36" text-anchor="middle" fill="rgba(72,187,120,0.6)" font-size="8" font-family="Inter,sans-serif">Optimal zone</text>
+          <text x="253" y="47" text-anchor="middle" fill="rgba(72,187,120,0.6)" font-size="8" font-family="Inter,sans-serif">15–35°C</text>
+        </svg>
+        <p class="diagram-caption">
+          How the BMS derates charge current with temperature. It smoothly interpolates between the
+          key setpoints and sends the resulting current limit to the charger via CAN or a PWM signal.
+          The green zone (15–35°C) is the sweet spot — full charge rate allowed. Below that, the rate
+          is reduced to avoid lithium plating; above that, it's reduced to slow down SEI growth.
+        </p>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Thermal Runaway Detection in BMS Firmware — dT/dt Monitoring</div>
+      <p>
+        The best early warning sign for thermal runaway is how fast the temperature is rising —
+        the dT/dt (rate of temperature rise). A cell entering Stage 1 decomposition will get hotter
+        faster than the current level alone can explain — the temperature climbs even without any
+        increase in load. That's the signature the BMS is looking for.
+      </p>
+      <div class="formula-block">
+        <span class="formula-label">dT/dt Detection Thresholds</span>
+        <span class="formula-line">Normal operation:  dT/dt &lt; 0.1°C/s  (6°C/min)</span>
+        <span class="formula-line">Level 1 alarm:     dT/dt &gt; 0.5°C/s  (30°C/min) → reduce load, increase cooling</span>
+        <span class="formula-line">Level 2 alarm:     dT/dt &gt; 1.0°C/s  (60°C/min) → disconnect pack immediately</span>
+        <span class="formula-line">Thermal runaway:   dT/dt &gt; 2.0°C/s  (120°C/min) → alert fire suppression</span>
+        <span class="formula-caption">
+          These thresholds apply to the fastest-rising sensor in the pack.
+          A healthy cell running at 2C generates heat slowly enough to produce only about 0.1°C/s
+          of temperature rise. When the SEI layer starts decomposing (Stage 1), you see 0.5–1°C/s
+          — without any matching increase in current. That disconnect between temperature rise and
+          current is the unmistakable thermal runaway signature the BMS is trained to catch.
+        </span>
+      </div>
+
+      <!-- Firmware code block -->
+      <div class="code-block">
+<span class="code-comment">/* ============================================================
+   BMS Thermal Runaway Detection — Embedded C
+   Runs in 100ms task (10 Hz sampling)
+   ============================================================ */</span>
+
+<span class="code-type">typedef struct</span> {
+    <span class="code-type">float</span>   T_prev[MAX_SENSORS];     <span class="code-comment">/* Previous temperature readings      */</span>
+    <span class="code-type">float</span>   dTdt[MAX_SENSORS];       <span class="code-comment">/* Rate of temperature rise (°C/s)    */</span>
+    <span class="code-type">float</span>   dTdt_max;               <span class="code-comment">/* Maximum dT/dt across all sensors   */</span>
+    <span class="code-type">uint8_t</span> alarm_level;           <span class="code-comment">/* 0=OK 1=warn 2=critical 3=runaway   */</span>
+} ThermalMonitor_t;
+
+<span class="code-type">void</span> <span class="code-fn">BMS_ThermalRunawayCheck</span>(ThermalMonitor_t *tm, <span class="code-type">float</span> *T_now) {
+    <span class="code-type">const float</span> DT_SAMPLE  = <span class="code-num">0.1f</span>;    <span class="code-comment">/* 100ms sample period (seconds)      */</span>
+    <span class="code-type">const float</span> L1_THRESH  = <span class="code-num">0.5f</span>;    <span class="code-comment">/* dT/dt Level 1 alarm threshold °C/s */</span>
+    <span class="code-type">const float</span> L2_THRESH  = <span class="code-num">1.0f</span>;    <span class="code-comment">/* dT/dt Level 2 cutoff threshold     */</span>
+    <span class="code-type">const float</span> TR_THRESH  = <span class="code-num">2.0f</span>;    <span class="code-comment">/* Thermal runaway threshold          */</span>
+
+    tm-&gt;dTdt_max = <span class="code-num">0.0f</span>;
+
+    <span class="code-kw">for</span> (<span class="code-type">int</span> i = <span class="code-num">0</span>; i &lt; MAX_SENSORS; i++) {
+        <span class="code-comment">/* Low-pass filter to reject noise */</span>
+        tm-&gt;dTdt[i] = <span class="code-num">0.8f</span> * tm-&gt;dTdt[i]
+                    + <span class="code-num">0.2f</span> * (T_now[i] - tm-&gt;T_prev[i]) / DT_SAMPLE;
+        tm-&gt;T_prev[i] = T_now[i];
+
+        <span class="code-kw">if</span> (tm-&gt;dTdt[i] &gt; tm-&gt;dTdt_max)
+            tm-&gt;dTdt_max = tm-&gt;dTdt[i];
+    }
+
+    <span class="code-comment">/* Classify alarm level */</span>
+    <span class="code-kw">if</span>      (tm-&gt;dTdt_max &gt;= TR_THRESH) tm-&gt;alarm_level = <span class="code-num">3</span>; <span class="code-comment">/* THERMAL RUNAWAY */</span>
+    <span class="code-kw">else if</span> (tm-&gt;dTdt_max &gt;= L2_THRESH) tm-&gt;alarm_level = <span class="code-num">2</span>; <span class="code-comment">/* CRITICAL — cutoff */</span>
+    <span class="code-kw">else if</span> (tm-&gt;dTdt_max &gt;= L1_THRESH) tm-&gt;alarm_level = <span class="code-num">1</span>; <span class="code-comment">/* WARNING — derate */</span>
+    <span class="code-kw">else</span>                                  tm-&gt;alarm_level = <span class="code-num">0</span>; <span class="code-comment">/* NORMAL */</span>
+
+    <span class="code-comment">/* Level 2+: open main FETs immediately */</span>
+    <span class="code-kw">if</span> (tm-&gt;alarm_level &gt;= <span class="code-num">2</span>) {
+        <span class="code-fn">BMS_OpenAllFETs</span>();               <span class="code-comment">/* Disconnect pack from load         */</span>
+        <span class="code-fn">BMS_SetFaultLatch</span>(FAULT_THERMAL); <span class="code-comment">/* Latch — requires manual reset     */</span>
+        <span class="code-fn">CAN_SendAlert</span>(ALERT_THERMAL_RUNAWAY_RISK);
+    }
+
+    <span class="code-comment">/* Level 3: fire suppression alert if connected */</span>
+    <span class="code-kw">if</span> (tm-&gt;alarm_level &gt;= <span class="code-num">3</span>) {
+        <span class="code-fn">GPIO_Assert</span>(PIN_FIRE_SUPPRESSION_TRIGGER);
+        <span class="code-fn">BMS_LogEvent</span>(<span class="code-str">"THERMAL_RUNAWAY"</span>, T_now, tm-&gt;dTdt);
+    }
+}
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-icon">💡</div>
+        <div class="callout-body">
+          <div class="callout-title">Low-Pass Filter Is Essential for dT/dt Measurement</div>
+          <p>
+            Calculating dT/dt directly from raw sensor readings is noisy — tiny electrical noise on
+            the 12-bit ADC creates phantom temperature spikes every 100ms that look like rapid heating.
+            The exponential moving average filter (α = 0.2 in the code) smooths these out while still
+            responding within about 1 second to a real thermal event. Getting α right matters: set it
+            too low (too much smoothing) and the BMS responds too slowly to real runaway; too high
+            (too little smoothing) and electrical noise causes false disconnections.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Multi-Sensor Voting Logic — Preventing False Alarms</div>
+      <p>
+        A single faulty temperature sensor — shorted, open, or just drifted — can generate a
+        fake overtemperature reading and shut the pack down unnecessarily. In a UPS, that's the
+        worst possible outcome: the power fails exactly when the backup is needed. To guard against
+        this, production BMS firmware uses voting logic — it requires multiple sensors to agree
+        before triggering a protection action:
+      </p>
+      <div class="code-block">
+<span class="code-comment">/* Multi-sensor voting — require 2 of N sensors to agree on alarm
+   Prevents single-sensor failures from taking the pack offline    */</span>
+
+<span class="code-type">uint8_t</span> <span class="code-fn">ThermalVote</span>(<span class="code-type">float</span> *T, <span class="code-type">uint8_t</span> n_sensors, <span class="code-type">float</span> threshold) {
+    <span class="code-type">uint8_t</span> votes = <span class="code-num">0</span>;
+    <span class="code-kw">for</span> (<span class="code-type">int</span> i = <span class="code-num">0</span>; i &lt; n_sensors; i++) {
+        <span class="code-kw">if</span> (T[i] &gt; threshold) votes++;
+    }
+    <span class="code-kw">return</span> (votes &gt;= <span class="code-num">2</span>) ? <span class="code-num">1</span> : <span class="code-num">0</span>; <span class="code-comment">/* Require 2+ sensors to confirm     */</span>
+}
+      </div>
+      <p>
+        For thermal runaway detection specifically, drop to a 1-of-N vote — any single sensor showing
+        runaway-level dT/dt should immediately disconnect the pack. A false positive (UPS briefly offline)
+        is a minor inconvenience; a missed true positive (cell fire) is catastrophic. Use 2-of-N
+        voting only for the lower warning thresholds, where false positives are common but consequences
+        are manageable.
+      </p>
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       SECTION SUMMARY
+  ============================================================ -->
+  <section class="section" id="s3-summary">
+    <div class="section-number">Summary</div>
+    <h2 class="section-title">Chapter 3 Summary — The Thermal Physics Behind Every BMS Threshold</h2>
+    <p class="section-intro">
+      Thermal and mechanical physics aren't side topics — they are the direct physical foundation
+      for the BMS's most important safety features. The following traces each key concept from
+      physical reality to the firmware behaviour it drives.
+    </p>
+
+    <div class="trace-container">
+      <div class="trace-row">
+        <div class="trace-left">
+          <div class="trace-number">01</div>
+          <div class="trace-label">Q_J = I² × R</div>
+        </div>
+        <div class="trace-arrow">→</div>
+        <div class="trace-right">Heat scales with current squared, not linearly. Doubling the current quadruples the heat. This is why high charge/discharge rates are thermally dangerous, and why adding cells in parallel dramatically reduces heat per cell.</div>
+      </div>
+      <div class="trace-row">
+        <div class="trace-left">
+          <div class="trace-number">02</div>
+          <div class="trace-label">Surface ≠ Core Temp</div>
+        </div>
+        <div class="trace-arrow">→</div>
+        <div class="trace-right">The surface sensor reads 5–15°C below the actual cell core temperature at 1C. A surface reading of 45°C might mean the core is already at 55°C. The BMS applies a correction formula to estimate core temperature from surface + current.</div>
+      </div>
+      <div class="trace-row">
+        <div class="trace-left">
+          <div class="trace-number">03</div>
+          <div class="trace-label">Stage 1 = Last Window</div>
+        </div>
+        <div class="trace-arrow">→</div>
+        <div class="trace-right">The SEI layer starts breaking down at 90–120°C — this is the last moment the BMS can intervene and stop full runaway. If dT/dt exceeds 0.5°C/s while temperature is still below 90°C, Stage 1 is just beginning. Disconnect immediately.</div>
+      </div>
+      <div class="trace-row">
+        <div class="trace-left">
+          <div class="trace-number">04</div>
+          <div class="trace-label">LFP — P–O Bond</div>
+        </div>
+        <div class="trace-arrow">→</div>
+        <div class="trace-right">LFP's crystal bonds are strong enough (544 kJ/mol) to hold oxygen at temperatures below 270°C. No oxygen release means no self-feeding fire. This is the exact physical property that makes LFP safe for indoor use without special fire suppression.</div>
+      </div>
+      <div class="trace-row">
+        <div class="trace-left">
+          <div class="trace-number">05</div>
+          <div class="trace-label">Arrhenius Aging</div>
+        </div>
+        <div class="trace-arrow">→</div>
+        <div class="trace-right">Every 10°C above the optimal zone doubles how fast the cell ages. Dropping the average operating temperature by just 5°C extends calendar life by about 40%. This is the economic case for spending money on thermal management.</div>
+      </div>
+      <div class="trace-row">
+        <div class="trace-left">
+          <div class="trace-number">06</div>
+          <div class="trace-label">ΔT_pack &lt; 5°C</div>
+        </div>
+        <div class="trace-arrow">→</div>
+        <div class="trace-right">A large temperature spread across the pack means some cells age 2–4× faster than others. The BMS balancer cannot fix aging-driven imbalance — only uniform temperature can. Keep the spread below 5°C.</div>
+      </div>
+      <div class="trace-row">
+        <div class="trace-left">
+          <div class="trace-number">07</div>
+          <div class="trace-label">I_charge = 0 at &lt;0°C</div>
+        </div>
+        <div class="trace-arrow">→</div>
+        <div class="trace-right">Charging below freezing deposits metallic lithium as spikes (dendrites) rather than inserting it cleanly. Dendrites punch through the separator and create an internal short that can trigger thermal runaway. No charge at all below 0°C — no exceptions.</div>
+      </div>
+      <div class="trace-row">
+        <div class="trace-left">
+          <div class="trace-number">08</div>
+          <div class="trace-label">Cell Swelling ~2%</div>
+        </div>
+        <div class="trace-arrow">→</div>
+        <div class="trace-right">A 280Ah LFP cell swells about 0.9mm every charge cycle. Pack frames must use spring-loaded fixtures to absorb this. If the swelling is permanent (doesn't spring back), gas is building up inside — an early sign the cell is approaching end of life.</div>
+      </div>
+      <div class="trace-row">
+        <div class="trace-left">
+          <div class="trace-number">09</div>
+          <div class="trace-label">dT/dt Monitoring</div>
+        </div>
+        <div class="trace-arrow">→</div>
+        <div class="trace-right">How fast temperature is rising matters more than the absolute reading. dT/dt above 1°C/s without a matching increase in current means an exothermic reaction is running inside the cell. Catch this early — it requires sampling temperature at least 10 times per second.</div>
+      </div>
+      <div class="trace-row">
+        <div class="trace-left">
+          <div class="trace-number">10</div>
+          <div class="trace-label">2-of-N Sensor Vote</div>
+        </div>
+        <div class="trace-arrow">→</div>
+        <div class="trace-right">One failed sensor can send the UPS offline at the worst possible moment. Require at least 2 sensors to agree before triggering a warning-level action. For thermal runaway detection, flip to 1-of-N: a single sensor seeing runaway-level dT/dt is enough — you cannot afford to miss it.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       QUICK REFERENCE
+  ============================================================ -->
+  <section class="section" id="s3-ref">
+    <div class="section-number">Reference</div>
+    <h2 class="section-title">Quick Reference — Thermal Constants and Thresholds</h2>
+
+    <div class="subsection">
+      <div class="subsection-title">LFP 280Ah Thermal Parameters (25°C Reference)</div>
+      <div class="comparison-table-wrap">
+        <table class="comparison-table">
+          <thead>
+            <tr><th>Parameter</th><th>Symbol</th><th>Value</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="metric-name">Specific heat capacity</td><td>c_p</td><td>1.0–1.1 kJ/kg·K</td><td>Average for LFP electrode + casing</td></tr>
+            <tr><td class="metric-name">Cell mass (280Ah)</td><td>m_cell</td><td>~5.5 kg</td><td>Varies by manufacturer</td></tr>
+            <tr><td class="metric-name">Radial thermal conductivity</td><td>λ_r</td><td>0.4–0.8 W/m·K</td><td>Low — limits heat removal from core</td></tr>
+            <tr><td class="metric-name">Axial thermal conductivity</td><td>λ_a</td><td>20–30 W/m·K</td><td>Along tab direction — preferred cooling path</td></tr>
+            <tr><td class="metric-name">SEI decomp. onset</td><td>T_SEI</td><td>90–120°C</td><td>Stage 1 thermal runaway threshold</td></tr>
+            <tr><td class="metric-name">Separator melt point</td><td>T_sep</td><td>130–160°C</td><td>Stage 2 — internal short forms</td></tr>
+            <tr><td class="metric-name">LFP TR onset</td><td>T_TR</td><td>270°C+</td><td>Stage 3 — O₂ cannot be released</td></tr>
+            <tr><td class="metric-name">NMC TR onset</td><td>T_TR_NMC</td><td>~180°C</td><td>Stage 3 for NMC — 90°C lower than LFP</td></tr>
+            <tr><td class="metric-name">OT charge cutoff</td><td>T_OTC</td><td>55°C</td><td>Hard cutoff; 45°C = warning, derate starts</td></tr>
+            <tr><td class="metric-name">UT charge cutoff</td><td>T_UTC</td><td>0°C</td><td>Absolute prohibition; 5°C = 0.1C max rate</td></tr>
+            <tr><td class="metric-name">OT discharge cutoff</td><td>T_OTD</td><td>60°C</td><td>Electrolyte degradation threshold</td></tr>
+            <tr><td class="metric-name">Optimal operating range</td><td>T_opt</td><td>15–35°C</td><td>Minimum aging, maximum capacity</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Thermal Formula Index</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+        <div class="formula-block" style="margin:0;">
+          <span class="formula-label">Joule Heating</span>
+          <span class="formula-line">Q_J = I² × R_internal</span>
+        </div>
+        <div class="formula-block" style="margin:0;">
+          <span class="formula-label">Arrhenius Rate</span>
+          <span class="formula-line">k(T) = A × exp(−Eₐ/RT)</span>
+        </div>
+        <div class="formula-block" style="margin:0;">
+          <span class="formula-label">Core Temperature Estimate</span>
+          <span class="formula-line">T_core ≈ T_surf + k_lag × I²</span>
+        </div>
+        <div class="formula-block" style="margin:0;">
+          <span class="formula-label">Thermal Gradient</span>
+          <span class="formula-line">ΔT = Q_gen × R_thermal</span>
+        </div>
+        <div class="formula-block" style="margin:0;">
+          <span class="formula-label">dT/dt (Low-Pass Filtered)</span>
+          <span class="formula-line">dTdt = 0.8×dTdt_prev + 0.2×ΔT/Δt</span>
+        </div>
+        <div class="formula-block" style="margin:0;">
+          <span class="formula-label">Entropic Heat</span>
+          <span class="formula-line">Q_S = I × T × (dU/dT)</span>
+        </div>
+        <div class="formula-block" style="margin:0;">
+          <span class="formula-label">Total Cell Heat</span>
+          <span class="formula-line">Q_total = Q_J + Q_rxn + Q_S</span>
+        </div>
+        <div class="formula-block" style="margin:0;">
+          <span class="formula-label">Optimal Compression</span>
+          <span class="formula-line">P_fixture = 10–30 kPa</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-success" style="margin:2rem 0;">
+      <div class="callout-icon">✓</div>
+      <div class="callout-body">
+        <div class="callout-title">Chapter 3 Complete — You Understand the Thermal Safety System</div>
+        <p>
+          You've now seen how heat is generated, how it can spiral into thermal runaway, how to
+          manage it at the pack level, how mechanical swelling must be accommodated, and how all
+          of this translates into actual BMS firmware thresholds and rules. Chapter 4 moves to
+          BMS hardware: the AFE chips, protection FETs, gate drivers, current sensors, and MCU
+          that physically implement everything you've just learned.
+        </p>
+      </div>
+    </div>
+
+    <!-- ══════ CH3 ANIMATIONS ══════ -->
+    <section class="section" id="ch3-animations" style="background:#060610;border-top:3px solid #fb923c">
+      <div class="section-number" style="color:#fb923c">Interactive Animations</div>
+      <h2 class="section-title" style="color:#fb923c">Chapter 3 — Visual Explainers</h2>
+
+      <!-- Heat Generation Visualizer -->
+      <div style="margin:2rem 0;padding:1.5rem;background:#0a0a18;border:2px solid #1e293b;border-radius:8px">
+        <h3 style="color:#fb923c;margin-bottom:.5rem;font-size:1.1rem">🔥 Heat Generation Visualizer — P = I²R</h3>
+        <p style="color:#64748b;font-size:.85rem;margin-bottom:1rem">Drag the slider to increase current. Watch the cell heat up. Heat scales as I² — doubling current = 4× heat.</p>
+        <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:.8rem">
+          <label style="color:#94a3b8;font-size:.9rem">C-Rate: <span id="crate-label">0.5C</span></label>
+          <input type="range" id="crate-slider" min="1" max="50" value="5" style="flex:1;min-width:150px" oninput="updateHeat()">
+          <span id="heat-display" style="font-family:monospace;color:#fb923c;font-size:1rem">Heat: 0.25W</span>
+        </div>
+        <canvas id="heat-canvas" width="700" height="220" style="width:100%;background:#080814;border-radius:6px;display:block"></canvas>
+      </div>
+
+      <!-- Thermal Runaway Cascade -->
+      <div style="margin:2rem 0;padding:1.5rem;background:#0a0a18;border:2px solid #1e293b;border-radius:8px">
+        <h3 style="color:#fb923c;margin-bottom:.5rem;font-size:1.1rem">💥 Thermal Runaway Cascade — Stage by Stage</h3>
+        <p style="color:#64748b;font-size:.85rem;margin-bottom:1rem">Click START to trigger the cascade. LFP stops at Stage 1. NMC/NCA continues to Stage 3B.</p>
+        <div style="display:flex;gap:.8rem;margin-bottom:1rem;flex-wrap:wrap">
+          <button onclick="startRunaway()" style="padding:.5rem 1.2rem;background:#3b0000;border:2px solid #ef4444;color:#ef4444;cursor:pointer;font-weight:700;font-family:inherit;border-radius:4px">🔥 START RUNAWAY</button>
+          <button onclick="resetRunaway()" style="padding:.5rem 1.2rem;background:#1a1a2e;border:2px solid #475569;color:#94a3b8;cursor:pointer;font-family:inherit;border-radius:4px">↺ RESET</button>
+          <span id="temp-display" style="font-family:monospace;color:#fb923c;font-size:1rem">Temp: 25°C</span>
+        </div>
+        <svg id="runaway-svg" viewBox="0 0 700 260" style="width:100%;height:auto">
+          <defs><filter id="glow-r"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+          <!-- Stage boxes -->
+          <rect id="r0" x="10" y="60" width="110" height="140" rx="6" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+          <text x="65" y="100" text-anchor="middle" fill="#64748b" font-size="11" font-weight="700">STAGE 0</text>
+          <text x="65" y="115" text-anchor="middle" fill="#64748b" font-size="9">Normal</text>
+          <text x="65" y="128" text-anchor="middle" fill="#64748b" font-size="9">Operation</text>
+          <text x="65" y="145" text-anchor="middle" fill="#64748b" font-size="8">25°C</text>
+
+          <rect id="r1" x="140" y="60" width="110" height="140" rx="6" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+          <text x="195" y="100" text-anchor="middle" fill="#64748b" font-size="11" font-weight="700">STAGE 1</text>
+          <text x="195" y="115" text-anchor="middle" fill="#64748b" font-size="9">SEI Decomp.</text>
+          <text x="195" y="128" text-anchor="middle" fill="#64748b" font-size="9">~100–130°C</text>
+          <text id="lfp-label" x="195" y="165" text-anchor="middle" fill="#34d399" font-size="8" opacity="0">✓ LFP STOPS</text>
+          <text id="lfp-label2" x="195" y="178" text-anchor="middle" fill="#34d399" font-size="8" opacity="0">HERE — SAFE</text>
+
+          <rect id="r2" x="270" y="60" width="110" height="140" rx="6" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+          <text x="325" y="100" text-anchor="middle" fill="#64748b" font-size="11" font-weight="700">STAGE 2</text>
+          <text x="325" y="115" text-anchor="middle" fill="#64748b" font-size="9">Electrolyte</text>
+          <text x="325" y="128" text-anchor="middle" fill="#64748b" font-size="9">Decomp. 150°C</text>
+
+          <rect id="r3" x="400" y="60" width="110" height="140" rx="6" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+          <text x="455" y="100" text-anchor="middle" fill="#64748b" font-size="11" font-weight="700">STAGE 3A</text>
+          <text x="455" y="115" text-anchor="middle" fill="#64748b" font-size="9">O₂ Release</text>
+          <text x="455" y="128" text-anchor="middle" fill="#64748b" font-size="9">200–270°C</text>
+
+          <rect id="r4" x="530" y="60" width="160" height="140" rx="6" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+          <text x="610" y="100" text-anchor="middle" fill="#64748b" font-size="11" font-weight="700">STAGE 3B</text>
+          <text x="610" y="115" text-anchor="middle" fill="#64748b" font-size="9">Propagation</text>
+          <text x="610" y="128" text-anchor="middle" fill="#64748b" font-size="9">Adjacent Cells</text>
+
+          <!-- Temperature gauge -->
+          <rect x="10" y="215" width="680" height="16" rx="4" fill="#1e293b"/>
+          <rect id="temp-bar" x="10" y="215" width="0" height="16" rx="4" fill="#22c55e"/>
+          <text x="350" y="227" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">TEMPERATURE</text>
+
+          <!-- Arrows -->
+          <text x="127" y="133" fill="#475569" font-size="20">→</text>
+          <text x="257" y="133" fill="#475569" font-size="20">→</text>
+          <text x="387" y="133" fill="#475569" font-size="20">→</text>
+          <text x="517" y="133" fill="#475569" font-size="20">→</text>
+        </svg>
+      </div>
+
+      <!-- Pack Heatmap -->
+      <div style="margin:2rem 0;padding:1.5rem;background:#0a0a18;border:2px solid #1e293b;border-radius:8px">
+        <h3 style="color:#fb923c;margin-bottom:.5rem;font-size:1.1rem">🗺️ Pack Temperature Heatmap — 16 Cells</h3>
+        <p style="color:#64748b;font-size:.85rem;margin-bottom:1rem">Center cells run hotter due to lower surface area. NTC sensor positions shown as white dots.</p>
+        <canvas id="heatmap-canvas" width="700" height="220" style="width:100%;background:#080814;border-radius:6px;display:block"></canvas>
+      </div>
+    </section>
+
+    <script>
+    // ── HEAT VISUALIZER ───────────────────────────────────────
+    (function() {
+      const canvas = document.getElementById('heat-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      let cRate = 0.5, heatW = 0;
+
+      window.updateHeat = function() {
+        const slider = document.getElementById('crate-slider');
+        cRate = slider.value / 10;
+        document.getElementById('crate-label').textContent = cRate.toFixed(1) + 'C';
+        const heat = (cRate * cRate * 0.1).toFixed(2);
+        document.getElementById('heat-display').textContent = 'Heat: ' + heat + 'W';
+        heatW = parseFloat(heat);
+      };
+
+      function draw() {
+        ctx.clearRect(0, 0, W, H);
+        const norm = Math.min(cRate / 5, 1);
+        // Cell color
+        const r = Math.floor(norm * 239 + (1-norm)*30);
+        const g = Math.floor((1-norm) * 180 + (norm > 0.5 ? 0 : (0.5-norm)*200));
+        const b = Math.floor((1-norm) * 200);
+        ctx.fillStyle = `rgb(${r},${g},${b})`;
+        ctx.fillRect(W/2-60, H/2-70, 120, 140);
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(W/2-60, H/2-70, 120, 140);
+
+        // Heat waves
+        if (norm > 0.3) {
+          const t = Date.now() * 0.002;
+          for (let i = 0; i < 5; i++) {
+            const wy = H/2 - 80 - (i+1)*20 + Math.sin(t + i) * 5;
+            ctx.beginPath();
+            ctx.moveTo(W/2 - 40, wy);
+            ctx.quadraticCurveTo(W/2 - 20, wy - 10, W/2, wy);
+            ctx.quadraticCurveTo(W/2 + 20, wy + 10, W/2 + 40, wy);
+            ctx.strokeStyle = `rgba(${r},${Math.floor(g/2)},0,${norm * 0.6})`;
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+          }
+        }
+
+        // Labels
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 12px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillText('LFP Cell', W/2, H/2 + 5);
+        ctx.font = '10px system-ui';
+        ctx.fillStyle = norm > 0.7 ? '#fff' : '#94a3b8';
+        ctx.fillText(heatW.toFixed(2) + 'W heat loss', W/2, H/2 + 20);
+
+        // I²R label
+        ctx.fillStyle = '#fb923c';
+        ctx.font = '11px system-ui';
+        ctx.textAlign = 'left';
+        ctx.fillText('P = I² × R = (' + cRate + 'C × 280A)² × 1mΩ', 20, 25);
+        ctx.fillText('I²R scales quadratically — 5C = 25× more heat than 1C', 20, 42);
+
+        // C-rate bar
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(20, H - 30, W - 40, 16);
+        ctx.fillStyle = `rgb(${r},${Math.floor(g*0.7)},0)`;
+        ctx.fillRect(20, H - 30, (W - 40) * norm, 16);
+        ctx.fillStyle = '#fff';
+        ctx.font = '9px system-ui';
+        ctx.fillText('C-Rate: ' + cRate.toFixed(1) + 'C', 25, H - 18);
+
+        requestAnimationFrame(draw);
+      }
+      updateHeat();
+      draw();
+    })();
+
+    // ── THERMAL RUNAWAY ───────────────────────────────────────
+    let runawaystage = -1, runawayTimer = null;
+    const stageColors = ['#22c55e','#f97316','#ef4444','#dc2626','#7f1d1d'];
+    const stageTemps = [25, 120, 160, 240, 350];
+
+    function setStage(n) {
+      const ids = ['r0','r1','r2','r3','r4'];
+      const bar = document.getElementById('temp-bar');
+      for (let i = 0; i <= n && i < ids.length; i++) {
+        const el = document.getElementById(ids[i]);
+        if (el) {
+          el.setAttribute('fill', stageColors[i] + '33');
+          el.setAttribute('stroke', stageColors[i]);
+          el.setAttribute('stroke-width', '3');
+        }
+      }
+      const temp = stageTemps[Math.min(n, stageTemps.length-1)];
+      document.getElementById('temp-display').textContent = 'Temp: ' + temp + '°C';
+      const tempNorm = (temp - 25) / 350;
+      if (bar) {
+        bar.setAttribute('width', Math.floor(680 * tempNorm));
+        bar.setAttribute('fill', stageColors[Math.min(n,4)]);
+      }
+      if (n >= 1) {
+        const l1 = document.getElementById('lfp-label');
+        const l2 = document.getElementById('lfp-label2');
+        if (l1) l1.setAttribute('opacity','1');
+        if (l2) l2.setAttribute('opacity','1');
+      }
+    }
+
+    window.startRunaway = function() {
+      resetRunaway();
+      let s = 0;
+      function nextStage() {
+        setStage(s);
+        runawaystage = s;
+        s++;
+        if (s < 5) runawayTimer = setTimeout(nextStage, 1200);
+      }
+      nextStage();
+    };
+
+    window.resetRunaway = function() {
+      clearTimeout(runawayTimer);
+      runawaystage = -1;
+      ['r0','r1','r2','r3','r4'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.setAttribute('fill','#1e293b'); el.setAttribute('stroke','#334155'); el.setAttribute('stroke-width','2'); }
+      });
+      document.getElementById('temp-display').textContent = 'Temp: 25°C';
+      const bar = document.getElementById('temp-bar');
+      if (bar) { bar.setAttribute('width','0'); bar.setAttribute('fill','#22c55e'); }
+      const l1 = document.getElementById('lfp-label');
+      const l2 = document.getElementById('lfp-label2');
+      if (l1) l1.setAttribute('opacity','0');
+      if (l2) l2.setAttribute('opacity','0');
+    };
+
+    // ── PACK HEATMAP ──────────────────────────────────────────
+    (function() {
+      const canvas = document.getElementById('heatmap-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      // 4×4 grid of cells
+      const cols = 4, rows = 4;
+      const cw = 120, ch = 44;
+      const startX = (W - cols*cw) / 2;
+      const startY = (H - rows*ch) / 2;
+      // Center cells hotter
+      const baseTemps = [
+        [28,32,32,28],
+        [32,38,38,32],
+        [32,38,38,32],
+        [28,32,32,28]
+      ];
+      const ntcPositions = [[0,0],[1,1],[1,2],[3,3]]; // NTC sensor cells
+
+      function tempToColor(t) {
+        const norm = (t - 25) / 25;
+        const r = Math.floor(norm * 239 + (1-norm)*34);
+        const g = Math.floor((1-norm) * 197 + (norm > 0.5 ? 0 : 100));
+        const b = Math.floor((1-norm) * 94);
+        return `rgb(${r},${g},${b})`;
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, W, H);
+        const t = Date.now() * 0.001;
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const x = startX + c * cw;
+            const y = startY + r * ch;
+            const temp = baseTemps[r][c] + Math.sin(t + r*0.7 + c*0.5) * 2;
+            ctx.fillStyle = tempToColor(temp);
+            ctx.fillRect(x+3, y+3, cw-6, ch-6);
+            ctx.strokeStyle = '#0a0a18';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x+3, y+3, cw-6, ch-6);
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 10px system-ui';
+            ctx.textAlign = 'center';
+            ctx.fillText('Cell ' + (r*cols+c+1), x+cw/2, y+ch/2-3);
+            ctx.font = '9px system-ui';
+            ctx.fillText(temp.toFixed(1) + '°C', x+cw/2, y+ch/2+10);
+          }
+        }
+        // NTC sensors
+        ntcPositions.forEach(([r,c]) => {
+          const x = startX + c*cw + cw/2;
+          const y = startY + r*ch + ch/2;
+          ctx.beginPath();
+          ctx.arc(x+40, y-12, 6, 0, Math.PI*2);
+          ctx.fillStyle = '#fff';
+          ctx.fill();
+          ctx.fillStyle = '#000';
+          ctx.font = 'bold 7px system-ui';
+          ctx.textAlign = 'center';
+          ctx.fillText('T', x+40, y-9);
+        });
+        ctx.fillStyle = '#64748b';
+        ctx.font = '9px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillText('● White dot = NTC sensor  |  Center cells 10°C warmer than edges', W/2, H - 8);
+        requestAnimationFrame(draw);
+      }
+      draw();
+    })();
+    </script>
+
+    <!-- Chapter Navigation Footer -->
+
+
+<!-- CH3 Interactive: Thermal Power Calculator -->
+<style>
+#ch3-sim{padding:3rem 0;border-top:1px solid rgba(255,107,53,0.15);}
+.th-panel{background:#07070f;border:1px solid rgba(255,107,53,.2);border-radius:.75rem;padding:1.5rem;margin-bottom:1.5rem;}
+.th-panel h3{font-family:'Orbitron',monospace;font-size:.85rem;color:#FF6B35;letter-spacing:.08em;margin-bottom:1rem;}
+.th-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
+@media(max-width:640px){.th-grid{grid-template-columns:1fr;}}
+.th-slider-row{margin-bottom:1rem;}
+.th-slider-row label{display:flex;justify-content:space-between;font-size:.8rem;color:#aaa;margin-bottom:.3rem;}
+.th-slider-row label span{color:#FF6B35;font-family:'JetBrains Mono',monospace;font-weight:700;}
+.th-slider-row input[type=range]{width:100%;accent-color:#FF6B35;}
+.th-result-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.8rem;margin-top:.8rem;}
+.th-result-card{background:rgba(255,107,53,.06);border:1px solid rgba(255,107,53,.2);border-radius:.5rem;padding:.8rem;text-align:center;}
+.th-result-card .val{font-family:'Orbitron',monospace;font-size:1.3rem;color:#FF6B35;}
+.th-result-card .unit{font-size:.68rem;color:#666;margin-top:.2rem;}
+.th-result-card .lbl{font-size:.7rem;color:#aaa;margin-top:.2rem;}
+.th-warn{background:rgba(255,107,53,.12);border:1px solid rgba(255,107,53,.5);border-radius:.4rem;padding:.6rem 1rem;font-size:.82rem;color:#FF9A6C;margin-top:.8rem;display:none;}
+.th-warn.show{display:block;}
+.th-ok{background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.3);border-radius:.4rem;padding:.6rem 1rem;font-size:.82rem;color:#00FF88;margin-top:.8rem;display:none;}
+.th-ok.show{display:block;}
+</style>
+
+<section id="ch3-sim" style="padding:3rem 0;border-top:1px solid rgba(255,107,53,0.15)">
+<div style="max-width:1100px;">
+<h2 style="font-family:'Orbitron',monospace;font-size:1.05rem;color:#FF6B35;letter-spacing:.1em;margin-bottom:.4rem;">🌡 INTERACTIVE — THERMAL POWER CALCULATOR</h2>
+<p style="color:#888;font-size:.86rem;margin-bottom:1.4rem;">Adjust pack parameters and see how I²R heat scales. This is why thermal design cannot be an afterthought.</p>
+
+<div class="th-grid">
+  <div class="th-panel">
+    <h3>Pack Parameters</h3>
+    <div class="th-slider-row"><label>Discharge Current (A) <span id="v-I">50</span> A</label><input type="range" id="sl-I" min="1" max="280" value="50" oninput="th_update()"></div>
+    <div class="th-slider-row"><label>Cell Internal Resistance (mΩ) <span id="v-R">1.5</span> mΩ</label><input type="range" id="sl-R" min="0.5" max="5" step="0.1" value="1.5" oninput="th_update()"></div>
+    <div class="th-slider-row"><label>Cells in Series <span id="v-S">16</span> S</label><input type="range" id="sl-S" min="4" max="32" value="16" oninput="th_update()"></div>
+    <div class="th-slider-row"><label>Cells in Parallel <span id="v-P">1</span> P</label><input type="range" id="sl-P" min="1" max="8" value="1" oninput="th_update()"></div>
+    <div class="th-slider-row"><label>Ambient Temperature (°C) <span id="v-T">25</span> °C</label><input type="range" id="sl-T" min="-20" max="50" value="25" oninput="th_update()"></div>
+  </div>
+  <div class="th-panel">
+    <h3>Thermal Outputs</h3>
+    <div class="th-result-grid">
+      <div class="th-result-card"><div class="val" id="r-Pcell">—</div><div class="unit">mW/cell</div><div class="lbl">I²R per cell</div></div>
+      <div class="th-result-card"><div class="val" id="r-Ptot">—</div><div class="unit">W total</div><div class="lbl">Pack heat</div></div>
+      <div class="th-result-card"><div class="val" id="r-Tcell">—</div><div class="unit">°C cell</div><div class="lbl">Est. cell temp</div></div>
+      <div class="th-result-card"><div class="val" id="r-Crate">—</div><div class="unit">C-rate</div><div class="lbl">Discharge rate</div></div>
+      <div class="th-result-card"><div class="val" id="r-Vnom">—</div><div class="unit">V nominal</div><div class="lbl">Pack voltage</div></div>
+      <div class="th-result-card"><div class="val" id="r-Eff">—</div><div class="unit">%</div><div class="lbl">Coulombic eff.</div></div>
+    </div>
+    <div class="th-warn" id="th-warn">⚠ High heat — active cooling recommended above this C-rate.</div>
+    <div class="th-ok" id="th-ok">✓ Thermal load within passive cooling limits.</div>
+  </div>
+</div>
+
+<div class="th-panel" style="margin-top:0;">
+  <h3>Cell Temperature vs C-Rate (your pack)</h3>
+  <canvas id="ch3-canvas" width="860" height="190" style="width:100%;border-radius:.4rem;display:block;"></canvas>
+  <p style="font-size:.7rem;color:#666;margin-top:.4rem;">Green band = safe zone (15–45°C). Red dashed = thermal limit. Cyan dot = current operating point.</p>
+</div>
+</div>
+</section>
+
+<script>
+(function(){
+function th_update(){
+  var I=+document.getElementById('sl-I').value;
+  var Rm=+document.getElementById('sl-R').value;
+  var S=+document.getElementById('sl-S').value;
+  var P=+document.getElementById('sl-P').value;
+  var Ta=+document.getElementById('sl-T').value;
+  document.getElementById('v-I').textContent=I;
+  document.getElementById('v-R').textContent=Rm.toFixed(1);
+  document.getElementById('v-S').textContent=S;
+  document.getElementById('v-P').textContent=P;
+  document.getElementById('v-T').textContent=Ta;
+  var R=Rm/1000;
+  var Icell=I/P;
+  var Pcell=Icell*Icell*R*1000;
+  var Ptot=Icell*Icell*R*S*P;
+  var Crate=Icell/280;
+  var dT=Pcell*0.0025;
+  var Tcell=Ta+dT;
+  var Vnom=S*3.2;
+  var Ploss=Ptot/(I*Vnom)*100;
+  var Eff=100-Ploss;
+  document.getElementById('r-Pcell').textContent=Pcell.toFixed(1);
+  document.getElementById('r-Ptot').textContent=Ptot.toFixed(2);
+  document.getElementById('r-Tcell').textContent=Tcell.toFixed(1);
+  document.getElementById('r-Crate').textContent=Crate.toFixed(3);
+  document.getElementById('r-Vnom').textContent=Vnom.toFixed(0);
+  document.getElementById('r-Eff').textContent=Eff.toFixed(2);
+  var warn=document.getElementById('th-warn'),ok=document.getElementById('th-ok');
+  if(Ptot>20||Tcell>45){warn.classList.add('show');ok.classList.remove('show');}
+  else{ok.classList.add('show');warn.classList.remove('show');}
+  drawChart(Rm,P,Ta,Icell);
+}
+window.th_update=th_update;
+
+function drawChart(Rm,P,Ta,curIcell){
+  var cv=document.getElementById('ch3-canvas');
+  if(!cv||!cv.getContext)return;
+  var W=cv.width,H=cv.height;
+  var ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#02020c';ctx.fillRect(0,0,W,H);
+  var R=Rm/1000,maxC=2,LPAD=50,RPAD=20,TPAD=12,BPAD=28;
+  var gw=W-LPAD-RPAD,gh=H-TPAD-BPAD;
+  var minT=Ta-5,maxT=Ta+80;
+  function xOf(c){return LPAD+c/maxC*gw;}
+  function yOf(t){return TPAD+gh-(t-minT)/(maxT-minT)*gh;}
+  // Safe band
+  ctx.fillStyle='rgba(0,255,136,0.07)';
+  ctx.fillRect(LPAD,yOf(Math.min(45,maxT)),gw,yOf(Math.max(15,minT))-yOf(Math.min(45,maxT)));
+  // Grid
+  ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=1;
+  for(var t=Math.ceil(minT/10)*10;t<=maxT;t+=10){
+    ctx.beginPath();ctx.moveTo(LPAD,yOf(t));ctx.lineTo(W-RPAD,yOf(t));ctx.stroke();
+    ctx.fillStyle='#444';ctx.font='10px monospace';ctx.fillText(t+'°C',2,yOf(t)+4);
+  }
+  // 45°C limit
+  ctx.strokeStyle='rgba(255,80,80,0.6)';ctx.lineWidth=1.5;ctx.setLineDash([4,4]);
+  ctx.beginPath();ctx.moveTo(LPAD,yOf(45));ctx.lineTo(W-RPAD,yOf(45));ctx.stroke();
+  ctx.setLineDash([]);
+  // Temp curve
+  ctx.strokeStyle='#FF6B35';ctx.lineWidth=2;ctx.beginPath();
+  var first=true;
+  for(var c=0;c<=maxC;c+=0.02){
+    var Ic=c*280/P,Pc=Ic*Ic*R*1000,Tc=Ta+Pc*0.0025;
+    var x=xOf(c),y=yOf(Tc);
+    if(first){ctx.moveTo(x,y);first=false;}else{ctx.lineTo(x,y);}
+  }
+  ctx.stroke();
+  // Operating point
+  var curC=curIcell/280,curPc=curIcell*curIcell*R*1000,curTc=Ta+curPc*0.0025;
+  ctx.fillStyle='#00F5FF';
+  ctx.beginPath();ctx.arc(xOf(curC),yOf(curTc),6,0,Math.PI*2);ctx.fill();
+  // Axis labels
+  ctx.fillStyle='#555';ctx.font='10px monospace';
+  ctx.fillText('0C',LPAD-5,H-8);ctx.fillText('1C',xOf(1)-5,H-8);ctx.fillText('2C',xOf(2)-5,H-8);
+  ctx.fillText('← C-rate →',W/2-30,H-8);
+}
+th_update();
+})();
+</script>
+
+
+<style>
+.xref-callout{display:inline-flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:.3rem;padding:.3rem .75rem;font-family:'Orbitron',monospace;font-size:.6rem;letter-spacing:.06em;color:#aaa;text-decoration:none;margin:.2rem .3rem .2rem 0;transition:all .15s;}
+.xref-callout:hover{background:rgba(255,255,255,.08);color:#fff;}
+.xref-callout .xr-badge{padding:.1rem .35rem;border-radius:.2rem;font-size:.56rem;font-weight:700;margin-right:.2rem;}
+.xref-block{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07);border-radius:.4rem;padding:.6rem 1rem;margin:1rem 0;font-size:.78rem;color:#888;}
+.xref-block .xr-title{font-family:'Orbitron',monospace;font-size:.56rem;letter-spacing:.1em;color:#444;margin-bottom:.4rem;}
+</style>
+<div class="xref-block">
+  <div class="xr-title">↗ CONNECTS TO</div>
+  <a href="chapter1.html" class="xref-callout" style="border-color:rgba(255,255,255,.15);" title="LFP P-O bond — thermal stability vs NMC"><span class="xr-badge" style="background:rgba(255,200,87,0.2);color:#FFC857;">CH1</span>LFP P-O bond — thermal stability vs NMC</a>
+<a href="chapter4.html" class="xref-callout" style="border-color:rgba(255,255,255,.15);" title="OTP threshold → BMS temperature protection firmware"><span class="xr-badge" style="background:rgba(0,245,255,0.2);color:#00F5FF;">CH4</span>OTP threshold → BMS temperature protection firmware</a>
+<a href="chapter6.html" class="xref-callout" style="border-color:rgba(255,255,255,.15);" title="Thermal fault → OTP_TRIP state in protection SM"><span class="xr-badge" style="background:rgba(168,85,247,0.2);color:#A855F7;">CH6</span>Thermal fault → OTP_TRIP state in protection SM</a>
+
+</div>
+
+<!-- Bridge Section -->
+<section style="padding:2rem 0;border-top:1px solid rgba(255,107,53,0.1);">
+<div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+  <div style="background:rgba(255,107,53,0.04);border:1px solid rgba(255,107,53,0.15);border-radius:.6rem;padding:1.2rem 1.5rem;">
+    <div style="font-family:'Orbitron',monospace;font-size:.6rem;letter-spacing:.12em;color:#FF6B35;margin-bottom:.7rem;">✓ WHAT YOU LEARNED IN THIS CHAPTER</div>
+    <ul style="list-style:none;padding:0;margin:0;font-size:.82rem;line-height:1.8;"><li style="margin-bottom:.4rem;color:#aaa;">Heat generation scales with I²R — doubling current quadruples thermal load on the pack</li><li style="margin-bottom:.4rem;color:#aaa;">Thermal runaway is self-accelerating above 130°C separator melt — firmware can only prevent it, not stop it</li><li style="margin-bottom:.4rem;color:#aaa;">LFP is the safest lithium chemistry but still requires BMS-enforced OTP limits and discharge cutoffs</li><li style="margin-bottom:.4rem;color:#aaa;">Temperature gradients across a pack cause capacity mismatch — thermal management is part of balancing</li></ul>
+  </div>
+  <div style="background:rgba(255,107,53,0.06);border:1px solid rgba(255,107,53,0.25);border-radius:.6rem;padding:1.2rem 1.5rem;display:flex;flex-direction:column;justify-content:space-between;">
+    <div>
+      <div style="font-family:'Orbitron',monospace;font-size:.6rem;letter-spacing:.12em;color:#FF6B35;margin-bottom:.7rem;">→ NEXT</div>
+      <p style="font-size:.86rem;color:#bbb;line-height:1.7;">Chapter 4: Electrical &amp; Protection — OVP/UVP/OTP thresholds, MOSFET switching, cell balancing, and the BQ76952 AFE architecture</p>
+    </div>
+    <a href="chapter4.html" style="display:inline-block;margin-top:1rem;background:rgba(255,107,53,0.15);border:1px solid rgba(255,107,53,0.4);color:#FF6B35;font-family:'Orbitron',monospace;font-size:.68rem;letter-spacing:.08em;padding:.6rem 1.2rem;border-radius:.4rem;text-decoration:none;text-align:center;">Continue → Chapter 4: Protection</a>
+  </div>
+</div>
+</div>
+</section>
+
+        <div class="chapter-footer">
+      <a class="nav-btn" href="chapter2.html">← Chapter 2: Cell Behaviour</a>
+      <div style="text-align:center;">
+        <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.3rem;">You are reading</div>
+        <div style="font-size:0.9rem; color:var(--text-primary); font-weight:700;">Chapter 3: Thermal &amp; Mechanical</div>
+      </div>
+      <a class="nav-btn nav-btn-next" href="chapter4.html">Chapter 4: Protection &amp; AFE →</a>
+    </div>
+  </section>
+
+</main>
+</div><!-- end .page-wrapper -->
+</div>
+
+<script>
+/* ============================================================
+   HEAT GENERATION BAR CHART
+============================================================ */
+const heatMetrics = {
+  joule: {
+    max: 360, unit: 'W', note: 'Joule heat Q=I²×R at R_int=0.5mΩ for 280Ah LFP. Note the quadratic scaling.',
+    bars: [
+      { label: '0.1C (28A)',   value: 0.39,  color: '#48bb78', display: '0.4W' },
+      { label: '0.5C (140A)',  value: 9.8,   color: '#48bb78', display: '9.8W' },
+      { label: '1C   (280A)', value: 39.2,  color: '#f6ad55', display: '39W' },
+      { label: '2C   (560A)', value: 156.8, color: '#fc8181', display: '157W' },
+      { label: '3C   (840A)', value: 352.8, color: '#ff4444', display: '353W' },
+    ]
+  },
+  temp_rise: {
+    max: 60, unit: '°C/h', note: 'Adiabatic temperature rise per hour. Real rise depends on cooling. c_p=1.05 kJ/kg·K, m=5.5kg.',
+    bars: [
+      { label: '0.1C (28A)',  value: 0.24,  color: '#48bb78', display: '0.2°C/h' },
+      { label: '0.5C (140A)', value: 6.1,   color: '#48bb78', display: '6°C/h' },
+      { label: '1C  (280A)',  value: 24.5,  color: '#f6ad55', display: '24°C/h' },
+      { label: '2C  (560A)',  value: 55,    color: '#fc8181', display: '55°C/h' },
+      { label: '3C  (840A)',  value: 60,    color: '#ff4444', display: '>60°C/h' },
+    ]
+  },
+  efficiency: {
+    max: 12, unit: '% energy lost as heat', note: 'Percentage of energy throughput dissipated as heat (round-trip at same C-rate).',
+    bars: [
+      { label: '0.1C (28A)',  value: 0.05,  color: '#48bb78', display: '0.05%' },
+      { label: '0.5C (140A)', value: 0.31,  color: '#48bb78', display: '0.31%' },
+      { label: '1C  (280A)',  value: 1.25,  color: '#f6ad55', display: '1.25%' },
+      { label: '2C  (560A)',  value: 5.0,   color: '#fc8181', display: '5.0%' },
+      { label: '3C  (840A)',  value: 11.2,  color: '#ff4444', display: '11.2%' },
+    ]
+  }
+};
+
+function showHeatMetric(key, tabEl) {
+  document.querySelectorAll('#heatBarChart .bar-chart-tab').forEach(t => t.classList.remove('active'));
+  if (tabEl) tabEl.classList.add('active');
+  const m = heatMetrics[key];
+  const container = document.getElementById('heatChartContent');
+  container.innerHTML = `
+    <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:1rem; font-family:var(--font-mono);">${m.note}</div>
+    ${m.bars.map(bar => `
+      <div class="bar-chart-row">
+        <div class="bar-label">${bar.label}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:0%;background:${bar.color};"
+               data-target="${Math.max(4,(bar.value/m.max*100)).toFixed(1)}">
+            ${bar.display}
+          </div>
+        </div>
+        <div class="bar-value">${bar.display} ${m.unit}</div>
+      </div>
+    `).join('')}
+  `;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    container.querySelectorAll('.bar-fill').forEach(b => { b.style.width = b.dataset.target + '%'; });
+  }));
+}
+
+/* ============================================================
+   SIDEBAR SCROLL OBSERVER
+============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  showHeatMetric('joule', null);
+  document.querySelector('#heatBarChart .bar-chart-tab').classList.add('active');
+
+  const sections = document.querySelectorAll('section[id], div[id]');
+  const links    = document.querySelectorAll('.sidebar-link');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        links.forEach(l => {
+          l.classList.remove('active');
+          if (l.getAttribute('href') === '#' + id) l.classList.add('active');
+        });
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => obs.observe(s));
+});
+</script>
+
+<style>
+.ch-journey{position:fixed;bottom:0;left:0;width:100%;z-index:9999;background:rgba(2,2,10,0.96);border-top:1px solid rgba(255,255,255,0.08);padding:.4rem 1rem;display:flex;align-items:center;justify-content:center;gap:.2rem;font-family:'Orbitron',monospace;font-size:.58rem;letter-spacing:.04em;backdrop-filter:blur(16px);box-shadow:0 -2px 20px rgba(0,0,0,.6);flex-wrap:nowrap;overflow-x:auto;}
+.cj-stop{padding:.28rem .6rem;border-radius:.3rem;text-decoration:none;transition:all .2s;white-space:nowrap;color:#444;}
+.cj-stop:hover{background:rgba(255,255,255,.08);color:#aaa;}
+.cj-current{background:rgba(255,200,87,.15)!important;color:#FFC857!important;border:1px solid rgba(255,200,87,.4);cursor:default;}
+.cj-link{color:#555;}.cj-link:hover{color:#ccc;background:rgba(255,255,255,.08);}
+.cj-arrow{color:#1a1a1a;font-size:.7rem;flex-shrink:0;}
+@media(max-width:768px){.ch-journey{font-size:.5rem;gap:.1rem;}.cj-stop{padding:.2rem .4rem;}.cj-arrow{display:none;}}
+</style>
+<div class="ch-journey"><a href="chapter1.html" class="cj-stop cj-link" title="Fundamentals">CH1</a><span class="cj-arrow">›</span><a href="chapter2.html" class="cj-stop cj-link" title="Cell Physics">CH2</a><span class="cj-arrow">›</span><span class="cj-stop cj-current" title="Thermal">CH3</span><span class="cj-arrow">›</span><a href="chapter4.html" class="cj-stop cj-link" title="Protection">CH4</a><span class="cj-arrow">›</span><a href="chapter5.html" class="cj-stop cj-link" title="Standards">CH5</a><span class="cj-arrow">›</span><a href="chapter6.html" class="cj-stop cj-link" title="Architecture">CH6</a><span class="cj-arrow">›</span><a href="chapter7.html" class="cj-stop cj-link" title="UPS & ESS">CH7</a><span class="cj-arrow">›</span><a href="chapter8.html" class="cj-stop cj-link" title="Hardware">CH8</a><span class="cj-arrow">›</span><a href="chapter9.html" class="cj-stop cj-link" title="Firmware">CH9</a><span class="cj-arrow">›</span><a href="chapter10.html" class="cj-stop cj-link" title="Future">CH10</a><span class="cj-arrow">›</span><a href="SYSTEM_OVERVIEW.html" class="cj-stop cj-link" title="System View">SYS</a></div>
+</body>
+</html>
