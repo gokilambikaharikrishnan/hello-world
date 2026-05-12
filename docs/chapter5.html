@@ -1595,7 +1595,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
 
         <div style="background:#0f1923;border:1px solid #1e3a5f;border-left:4px solid #2dd4bf;border-radius:10px;padding:1.2rem;">
           <div style="color:#2dd4bf;font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">⑦ Watchdog is Non-Negotiable</div>
-          <div style="color:#94a3b8;font-size:13px;line-height:1.6;">UL 1973 Phase 5 explicitly freezes BMS firmware during the test and watches for hardware watchdog response. A BMS without hardware watchdog cannot pass UL 1973. The watchdog is not optional and is not software-implementable.</div>
+          <div style="color:#94a3b8;font-size:13px;line-height:1.6;">During Phase 5 of UL 1973 certification, UL deliberately crashes the BMS firmware and then watches to see if the hardware watchdog timer cuts power to the pack within two seconds. If it doesn't — if the pack stays connected after the BMS stops working — the test fails. There is no way to implement the watchdog in software alone; the timer must live in dedicated hardware inside the AFE chip, completely independent of the microcontroller.</div>
         </div>
 
         <div style="background:#0f1923;border:1px solid #1e3a5f;border-left:4px solid #2dd4bf;border-radius:10px;padding:1.2rem;">
