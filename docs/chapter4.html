@@ -743,20 +743,23 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
 
     <div class="subsection">
       <div class="subsection-title">Short-Circuit Discharge — The 500μs Hard Requirement</div>
-      <p>A hard short circuit across a 16S LFP pack (58V nominal) through a low-resistance fault
-      (e.g. dropped wrench, wiring insulation failure) produces current limited only by the pack's
-      internal resistance. For a 16S pack with R_int = 8 mΩ total:</p>
+      <p>Drop a wrench across the terminals of a 16-cell LFP pack, or let two bare wires touch —
+      the only thing limiting the current is the pack's own internal resistance. Nothing else.
+      For a 16-cell pack with 8mΩ total internal resistance:</p>
       <div class="formula-block">
         <span class="formula-label">Short-Circuit Current Calculation</span>
         <span class="formula-line">I_sc = V_pack / R_fault_total</span>
         <span class="formula-line">R_fault_total = R_pack_int + R_wiring + R_fault</span>
         <span class="formula-line">Example: 58V / (8mΩ + 2mΩ + 0.5mΩ) = 58V / 10.5mΩ ≈ 5,500A</span>
         <span class="formula-caption">
-          5,500A into a 280Ah pack: Joule heat = I²×R = 5500² × 0.008 = 242,000W = 242 kW.
-          At this power, the cell temperature rises at roughly 44,000°C/s (adiabatic) — thermal
-          runaway in under 10ms. The SCD circuit must fire in &lt;500μs to interrupt current
-          before FET and busbar damage occurs. Software loops running at 1kHz (1ms period)
-          cannot achieve this — only a dedicated hardware comparator can.
+          Five-thousand-five-hundred amps through the pack's 8mΩ resistance generates
+          I²R = 5500² × 0.008 = 242,000 watts — two-hundred-and-forty-two kilowatts of heat,
+          all in the cells. At that power level the cell temperature rises roughly forty-four
+          thousand degrees per second in theory (adiabatically) — thermal runaway in under ten
+          milliseconds. The short-circuit disconnect circuit must fire in under five-hundred
+          microseconds to cut the current before the FETs and busbars are destroyed. A software
+          loop running at one-millisecond intervals is four times too slow — only a dedicated
+          hardware comparator wired directly to the FET gate can act fast enough.
         </span>
       </div>
 
