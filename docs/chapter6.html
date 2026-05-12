@@ -3010,7 +3010,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="formula-card">
           <div class="formula-name">Temperature Compensation</div>
           <div class="formula-eq">SoC_T = SoC_25 × η(T)</div>
-          <div class="formula-note">At −20°C, LFP delivers ~60% of 25°C capacity. η(T) lookup table: η(−20°C)=0.60, η(0°C)=0.82, η(25°C)=1.00, η(45°C)=1.02. Apply to both CC integration and OCV lookup.</div>
+          <div class="formula-note">Cold batteries shrink. At −20°C an LFP cell delivers only about 60% of what it would at room temperature. The η(T) factor corrects for this: η(−20°C)=0.60, η(0°C)=0.82, η(25°C)=1.00, η(45°C)=1.02. It is applied to both the coulomb counter and the OCV lookup, so the SoC reading reflects actual usable capacity, not just nominal capacity.</div>
         </div>
       </div>
 
