@@ -1314,13 +1314,17 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="arch-block">
           <div class="arch-block-title">Watchdog Timer Design</div>
           <div class="arch-block-body">
-            A BMS must have two watchdog layers: (1) AFE hardware watchdog — opened by AFE IC if
-            MCU stops writing WDOG register; (2) MCU independent watchdog (IWDG) — resets the MCU
-            if firmware hangs. The IWDG uses the LSI oscillator (32kHz), independent of the main
-            system clock, so a PLL failure does not affect the watchdog. The watchdog must be fed
-            by the measurement loop — not by a separate task. If the measurement loop hangs, the
-            system resets. Configure timeout: 100ms for IWDG (allow measurement loop to slip one
-            cycle), 2s for AFE watchdog (allow MCU reset and reinitialisation).
+            A BMS needs two separate watchdog layers, not one. The first is the AFE hardware
+            watchdog — built into the AFE chip itself. The MCU must write a "keep-alive" value
+            to the AFE's watchdog register regularly. If the MCU stops doing this (because it
+            crashed), the AFE independently opens the main power FETs and disconnects the pack,
+            timeout is 2 seconds. The second is the MCU's own independent watchdog (IWDG) —
+            this one resets the MCU itself if the firmware hangs. It runs off a separate low-speed
+            oscillator at 32kHz, so even if the main clock fails, the watchdog still works.
+            Both watchdogs must be fed by the measurement loop task — not from a background task.
+            This way, if the measurement loop freezes (the most critical part of the firmware),
+            the watchdog fires. Set the IWDG timeout at 100ms to allow one measurement cycle to slip;
+            set the AFE watchdog at 2 seconds to allow time for the MCU to reset and restart.
           </div>
         </div>
       </div>
