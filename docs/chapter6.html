@@ -1678,10 +1678,16 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
     <div class="section-inner">
       <h3 class="subsection-title" style="font-size:1.4rem;margin-top:0;">NVM &amp; Backup SRAM</h3>
       <p style="color:var(--text-muted);font-size:0.95rem;line-height:1.75;max-width:820px;margin-bottom:1.5rem;">
-        When a BMS loses power, it must remember its state — SoC, SoH, cycle count, fault history, calibration.
-        Without this, every power cycle causes SoC to revert to an OCV-based estimate (which is inaccurate on
-        the LFP flat plateau) and cycle count resets to zero. Non-volatile storage and battery-backed SRAM
-        solve this, but each has tradeoffs around write speed, endurance, and data integrity.
+        When the BMS loses power — a normal shutdown, a fault disconnect, or an unexpected blackout —
+        it must remember what it knew. That means the state of charge, state of health, total cycle
+        count, fault history, and calibration data all need to survive a power loss. Without this,
+        every time the system powers back up the BMS would have to guess the state of charge from
+        scratch using the open-circuit voltage — which, as we know from chapter 2, is almost
+        useless in the middle of LFP's flat voltage plateau. And cycle count would reset to zero,
+        losing years of accurate battery health tracking. Two storage technologies solve this
+        problem — non-volatile Flash memory (NVM) and battery-backed SRAM — and they each have
+        different tradeoffs around how fast they write, how many times they can be written, and
+        how reliably data survives.
       </p>
 
       <!-- NVM animated write cycle SVG -->
