@@ -2547,13 +2547,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="arch-block">
           <div class="arch-block-title">Multi-Frequency Impedance Sensing</div>
           <div class="arch-block-body">
-            CATL's advanced BMS injects small AC current signals at multiple frequencies (0.1–1000 Hz)
-            during idle periods and measures the resulting voltage response — a simplified form of
-            Electrochemical Impedance Spectroscopy (EIS). The BMS microcontroller runs FFT on the
-            response to compute R₀ (ohmic resistance), R₁/C₁ (SEI layer impedance), and diffusion
-            impedance. From these, it extracts lithium plating onset detection and early SEI growth
-            prediction — preventing failures 50–100 cycles before they would have been visible to
-            conventional SoH tracking.
+            When the pack is resting, CATL's BMS injects tiny alternating current signals at different frequencies (0.1 to 1000 Hz) and measures how the cell voltage responds. This is a simplified form of Electrochemical Impedance Spectroscopy (EIS) — a technique normally done only in labs. The BMS analyses the response to calculate the internal resistance at different timescales: ohmic resistance (R₀), SEI layer resistance (R₁), and diffusion resistance. From those numbers it can detect the early signs of lithium plating and SEI growth — catching failures 50–100 charge cycles before they would show up in normal SoH tracking.
           </div>
         </div>
         <div class="arch-block">
