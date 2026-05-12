@@ -2553,12 +2553,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="arch-block">
           <div class="arch-block-title">Adaptive Charging Protocol</div>
           <div class="arch-block-body">
-            CATL's BMS adjusts the CC/CV charge profile based on real-time cell impedance. If R₁
-            has grown (SEI thickening), the BMS reduces the CC current limit to prevent lithium
-            plating on the anode. As the cell ages and internal resistance grows, the BMS automatically
-            reduces peak charge rate — extending cycle life at the cost of slightly longer charge time.
-            This adaptive protocol is why CATL cells in premium products often exceed 3,000 cycles
-            while the same cells in fixed-protocol chargers reach 2,200 cycles.
+            Most chargers use a fixed CC/CV profile — the same charge current regardless of how old the cell is. CATL's BMS adjusts the charge current in real time based on the cell's measured impedance. If the SEI layer has thickened (R₁ has grown), the BMS reduces the charge current to avoid lithium plating on the anode. As the cell ages over thousands of cycles, the BMS keeps adapting. This is why CATL cells in products with adaptive charging often exceed 3,000 cycles, while the same cells charged with fixed protocols typically reach only 2,200 — the difference is the algorithm, not the chemistry.
           </div>
         </div>
         <div class="arch-block">
