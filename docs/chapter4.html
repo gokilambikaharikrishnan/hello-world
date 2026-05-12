@@ -1367,9 +1367,11 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <text x="534" y="146" text-anchor="middle" fill="#484f58" font-size="8.5" font-family="JetBrains Mono,monospace">+600ms total</text>
         </svg>
         <p class="diagram-caption">
-          Pre-charge sequence: (1) pack isolated, (2) pre-charge relay bypasses main FET through R_pchg (~100Ω),
-          slowly charging load capacitors, (3) BMS monitors until V_load ≈ V_pack (ΔV &lt; 2V),
-          (4) closes main discharge FET and opens pre-charge relay. Total time ~600ms — imperceptible to users.
+          The four-phase turn-on sequence: (1) pack is isolated, both FETs open; (2) a small pre-charge
+          relay closes, routing current through a series resistor (~100Ω) — this slowly fills the load
+          capacitors without a destructive current spike; (3) the BMS watches the load voltage rise and
+          waits until it's within 2V of the pack voltage; (4) then closes the main discharge FET and
+          opens the pre-charge relay. Total time about 600ms — completely invisible to the user.
         </p>
       </div>
 
@@ -1379,11 +1381,12 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <span class="formula-line">Time constant: τ = R_pchg × C_load</span>
         <span class="formula-line">V_cap(t) = V_pack × (1 − e^(−t/τ))  → 95% charge at t = 3τ</span>
         <span class="formula-caption">
-          Example: V_pack = 58V, C_load = 2000μF, I_max = 500mA safe inrush.
-          R_pchg = 58V / 0.5A = 116Ω → use 100Ω 5W resistor.
-          τ = 100 × 0.002 = 200ms. 95% charged at 3τ = 600ms. ✓
-          The pre-charge relay is typically a small signal relay (5V coil) rated 1A — 
-          it handles the limited pre-charge current easily while the main FETs handle the 280A+ load.
+          Example: pack voltage 58V, load capacitance 2000μF, safe inrush limit 500mA.
+          R_pchg = 58V ÷ 0.5A = 116Ω → round down to a 100Ω 5W resistor.
+          The RC time constant τ = 100Ω × 0.002F = 200ms. The capacitors reach 95% charge at
+          3× that time constant = 600ms. The pre-charge relay is just a small signal relay —
+          5V coil, rated 1A — which is plenty for the gentle pre-charge current. The main FETs
+          then take over to handle the 280A+ operating current.
         </span>
       </div>
     </div>
