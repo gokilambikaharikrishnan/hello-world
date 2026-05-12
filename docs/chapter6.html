@@ -3162,7 +3162,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
 
         <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--arch-purple);border-radius:var(--radius);padding:1.2rem;">
           <div style="color:var(--arch-purple);font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">⑧ Log Everything, Always</div>
-          <div style="color:var(--text-muted);font-size:13px;line-height:1.6;">A 256-entry circular event log with RTC timestamps costs 2.5KB of EEPROM. It enables remote fault diagnosis, warranty root-cause analysis, and field upgrade planning. Without logs, failed packs are undiagnosable. Always log first, question storage size second.</div>
+          <div style="color:var(--text-muted);font-size:13px;line-height:1.6;">A 256-entry timestamped event log costs only 2.5KB of EEPROM — less than a small text file. But without it, a failed pack in the field is a black box: you cannot tell what happened, who is at fault, or whether a firmware fix will prevent the next failure. With logs, a field engineer can answer all three questions in minutes. Always build logging in from day one; never sacrifice it to save memory.</div>
         </div>
 
         <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--arch-purple);border-radius:var(--radius);padding:1.2rem;">
