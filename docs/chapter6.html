@@ -3025,7 +3025,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="formula-card">
           <div class="formula-name">Resistance SoH</div>
           <div class="formula-eq">SoH_R = R₀_initial / R₀_now × 100%</div>
-          <div class="formula-note">R₀ doubles at end-of-life (2× initial). Measure R₀ from voltage pulse response: R₀ = ΔV/ΔI at 10ms step. High R₀ reduces power capability and efficiency, even if capacity remains.</div>
+          <div class="formula-note">Internal resistance (R₀) rises as a battery ages — typically doubling by end of life. The BMS measures it by watching the voltage drop when a large current step occurs: R₀ = ΔV / ΔI at the 10ms mark. A battery with high R₀ gets hot faster, wastes more energy as heat, and can deliver less peak power — even if its capacity is still acceptable. Resistance SoH catches this degradation separately from capacity SoH.</div>
         </div>
         <div class="formula-card">
           <div class="formula-name">Cycle Aging</div>
