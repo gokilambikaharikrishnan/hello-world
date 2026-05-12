@@ -2806,10 +2806,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
       <!-- SMBus Smart Battery -->
       <h3 class="subsection-title">SMBus — Smart Battery Data Specification</h3>
       <p style="color:var(--text-muted);font-size:0.9rem;line-height:1.75;margin-bottom:1rem;">
-        SMBus v1.1 (Smart Battery Data Specification, SBDS) defines a standard I²C-based protocol for
-        battery-to-charger communication. It predates CAN for BMS use, and remains common in UPS
-        and laptop-class applications. Any charger with SMBus support can automatically discover
-        the battery's chemistry, capacity, and charge limits without manual configuration.
+        SMBus (Smart Battery Data Specification, SBDS v1.1) is a simple I²C-based protocol that batteries use to talk to chargers. It pre-dates CAN for BMS use and is still widely found in UPS and laptop chargers. The clever part: a charger that supports SMBus can plug into any SBDS-compatible battery and automatically learn the chemistry, capacity, and the exact voltage and current it should charge at — no manual setup needed.
       </p>
 
       <div style="overflow-x:auto;margin-bottom:1.5rem;">
