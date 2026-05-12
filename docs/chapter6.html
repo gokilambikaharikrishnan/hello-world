@@ -3000,7 +3000,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="formula-card">
           <div class="formula-name">Correction: OCV Lookup (at rest)</div>
           <div class="formula-eq">SoC_ocv = f(V_ocv) from table</div>
-          <div class="formula-note">When pack current &lt;C/20 for &gt;30min, OCV is valid. Look up SoC from 50-point OCV-SoC table. Challenge for LFP: flat plateau from 20–80% SoC gives low accuracy in this range.</div>
+          <div class="formula-note">When the battery has been resting (current less than C/20) for more than 30 minutes, the terminal voltage equals the true open-circuit voltage (OCV). The BMS looks up that voltage in a 50-point table to get SoC. The big problem with LFP: its voltage is almost flat between 20% and 80% SoC, so a small voltage error becomes a huge SoC error in that range.</div>
         </div>
         <div class="formula-card">
           <div class="formula-name">Advanced: Extended Kalman Filter</div>
