@@ -2541,12 +2541,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="arch-block">
           <div class="arch-block-title">Cloud-Based Fleet SoH Calibration</div>
           <div class="arch-block-body">
-            CATL's EVOGO and Horizon products connect pack SoH data to a central cloud platform.
-            When the fleet model observes that cell capacity fade is faster than the cell-level model
-            predicts, a calibration update is pushed to the entire fleet. This means a BMS SoH error
-            discovered in one customer's pack can be corrected in 50,000 packs within 24 hours —
-            without a service visit. The BMS telemetry payload includes cell voltages, temperatures,
-            current profiles, and SoH estimates, transmitted at every charge cycle end.
+            CATL's products send health data to a central cloud platform at the end of every charge cycle — cell voltages, temperatures, current profiles, and SoH estimates. The cloud compares data across the entire fleet. If it notices that cells in one region are fading faster than the on-device model predicted, it pushes a calibration update to all 50,000 packs in the fleet within 24 hours, no service visits needed. A SoH error found in one customer's pack gets fixed for everyone.
           </div>
         </div>
         <div class="arch-block">
