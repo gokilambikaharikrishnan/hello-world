@@ -1882,10 +1882,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
     <div class="section-inner">
       <h3 class="subsection-title" style="font-size:1.4rem;margin-top:0;">RTC &amp; Timestamping</h3>
       <p style="color:var(--text-muted);font-size:0.95rem;line-height:1.75;max-width:820px;margin-bottom:1.5rem;">
-        A Real-Time Clock (RTC) is not optional in a production BMS — it is the foundation of calendar
-        aging calculations, fault event auditing, and SoH trending. Without accurate time, you cannot
-        answer the most important service question: <em>"When exactly did this fault happen, and what
-        was the battery doing for the 30 minutes before?"</em>
+        Every production BMS needs a Real-Time Clock (RTC) — a tiny chip that keeps track of the actual date and time, even when the battery is off. Why does that matter? Because when something goes wrong, you need to know <em>exactly when</em> it happened and what the battery was doing before the fault. An RTC also lets the BMS track how the battery ages over months and years, not just how many times it has been charged.
       </p>
 
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1rem;margin:1.5rem 0;">
