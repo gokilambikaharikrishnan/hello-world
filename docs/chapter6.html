@@ -2479,11 +2479,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
             <div class="arch-block">
               <div class="arch-block-title">Thermal Propagation Barrier</div>
               <div class="arch-block-body">
-                Tesla's structural battery pack uses intumescent foam between cell rows. If one cell goes
-                into thermal runaway, the foam expands under heat and physically blocks heat transfer to
-                adjacent rows. The BMS detects thermal runaway on the affected cell via dT/dt, opens all
-                FETs, and activates venting. The cell-level fuse + thermal barrier give the pack a
-                "graceful degradation" capability most competitors cannot match.
+                Between rows of cells in Tesla's structural battery pack sits an intumescent foam — a material that expands when it gets hot. If one cell goes into thermal runaway, the foam swells and physically blocks heat from reaching the neighbouring row of cells. Meanwhile the BMS detects the rising temperature via the dT/dt alarm, opens all FETs, and signals venting. The foam barrier buys time; the BMS contains the damage. Together they prevent a single bad cell from turning into a pack fire.
               </div>
             </div>
             <div class="arch-block">
