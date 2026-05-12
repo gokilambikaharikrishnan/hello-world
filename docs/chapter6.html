@@ -2485,11 +2485,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
             <div class="arch-block">
               <div class="arch-block-title">Multi-Node Distributed BMS</div>
               <div class="arch-block-body">
-                Tesla's BMS consists of a Battery Management Unit (BMU) plus multiple Battery Module Controllers
-                (BMC), one per module of ~46 cells. Each BMC runs its own AFE and communicates to the BMU via
-                CAN. The BMU aggregates data, runs SoX algorithms, and interfaces to the vehicle/inverter.
-                This distributed architecture means a single AFE failure affects only one module, not the
-                entire pack.
+                Rather than one central BMS chip monitoring the whole pack, Tesla uses a two-tier structure. Each battery module (~46 cells) has its own Battery Module Controller (BMC) with its own AFE. The BMCs all report via CAN to a central Battery Management Unit (BMU), which runs the SoX algorithms and talks to the vehicle. If one AFE fails, it takes down only that module — not the entire pack. Fault isolation through distributed architecture.
               </div>
             </div>
           </div>
