@@ -987,17 +987,19 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <text x="520" y="170" text-anchor="middle" fill="#fc8181" font-size="9" font-family="Inter,sans-serif">Cell 4 hits UVP — 7 cells still full. Pack loses ~30% usable capacity.</text>
         </svg>
         <p class="diagram-caption">
-          Left: balanced pack — all cells reach UVP simultaneously, using full capacity.
-          Right: imbalanced pack — cell 4 (short bar) hits UVP cutoff while other cells have 30% charge
-          remaining. That 30% energy is stranded and unusable. Balancing directly recovers this lost capacity.
+          Left: a balanced pack — all cells hit empty at the same time, so every bit of stored energy
+          gets used. Right: an imbalanced pack — cell 4 (the short red bar) triggers the undervoltage
+          cutoff while the other cells still have 30% of their charge left. That 30% is stranded energy
+          you can never access. Balancing directly recovers this lost usable capacity.
         </p>
       </div>
     </div>
 
     <div class="subsection">
       <div class="subsection-title">Passive Balancing — Burn the Excess</div>
-      <p>Passive balancing bleeds energy from the highest-voltage cells through a resistor until
-      all cells match the lowest. Simple, reliable, and the industry standard for ESS applications.</p>
+      <p>Passive balancing drains energy from whichever cells are highest — through a small resistor
+      that converts the excess charge to heat — until all cells match the lowest one. It's simple,
+      cheap, and reliable. For home ESS and UPS applications it's the industry standard.</p>
 
       <div class="formula-block">
         <span class="formula-label">Passive Balancing Equations</span>
@@ -1005,11 +1007,14 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <span class="formula-line">P_bal = I_bal² × R_bal = (V_cell − V_threshold)² / R_bal</span>
         <span class="formula-line">t_bal = ΔQ / I_bal   where ΔQ = capacity mismatch in Ah</span>
         <span class="formula-caption">
-          Typical R_bal = 10–47Ω. At ΔV = 50mV and R_bal = 10Ω:
-          I_bal = 50mV / 10Ω = 5 mA.  P_bal = 0.25 mW per cell.
-          For 16 cells balancing simultaneously: 4 mW total — negligible heat.
-          But: to correct 100 mAh mismatch at 5 mA takes t = 0.1 Ah / 0.005 A = 20 hours.
-          Passive balancing is slow — only practical at top-of-charge where the pack rests on CV.
+          A typical balancing resistor is 10–47Ω. With a 50mV voltage difference and a 10Ω
+          resistor: the balancing current is 50mV ÷ 10Ω = 5mA. The heat dissipated is only
+          0.25mW per cell — completely harmless. For all 16 cells balancing at once, total heat
+          is just 4mW.
+          The downside: it's slow. To correct a 100mAh capacity mismatch at 5mA, you need
+          0.1Ah ÷ 0.005A = 20 hours of balancing. This is why passive balancing only runs at the
+          top of charge, during the constant-voltage phase when the pack is already sitting at
+          full charge and there's time to do it.
         </span>
       </div>
 
