@@ -2191,7 +2191,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <div class="timing-badge">&lt; 10ms</div>
           <div class="timing-body">
             <div class="timing-title">Over-Current Detection (OCD) — Fast firmware path</div>
-            MCU reads pack current from shunt ADC. If exceeding OCD threshold (e.g., 150A) for &gt;10ms, opens FET. Slower than SCD but handles sustained overcurrent that doesn't reach SCD level. OCD threshold = continuous rating × 1.5×, with configurable filter time to avoid false trips on capacitor inrush.
+            SCD catches sudden massive spikes. OCD handles the slower but still dangerous case: sustained overcurrent. Every 10ms the MCU reads the pack current. If it stays above the OCD threshold (typically 1.5× the continuous rating, e.g., 150A) for more than 10ms, the firmware opens the FET. The 10ms filter prevents false shutdowns from brief capacitor inrush spikes when a device first powers on.
           </div>
         </div>
         <div class="timing-card">
