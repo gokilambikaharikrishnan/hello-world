@@ -3167,7 +3167,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
 
         <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--arch-purple);border-radius:var(--radius);padding:1.2rem;">
           <div style="color:var(--arch-purple);font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">⑨ State Machine Prevents Undefined Behaviour</div>
-          <div style="color:var(--text-muted);font-size:13px;line-height:1.6;">A BMS without a formal state machine will eventually reach an undefined state — charge and discharge FETs both open, or both closed, under race conditions. The state machine with formal transition guards is the only way to guarantee deterministic behaviour.</div>
+          <div style="color:var(--text-muted);font-size:13px;line-height:1.6;">Without a formal state machine, firmware can reach undefined states under race conditions — for example, both the charge and discharge FETs open at the same time (no current can flow at all) or both closed during a fault (current flows when it should not). A state machine with explicit transition rules eliminates this possibility. Every action and every transition must be an intentional decision, not a side effect.</div>
         </div>
 
         <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--arch-purple);border-radius:var(--radius);padding:1.2rem;">
