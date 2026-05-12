@@ -1896,12 +1896,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="arch-block">
           <div class="arch-block-title">RTC Backup Power</div>
           <div class="arch-block-body">
-            The STM32 RTC runs in the backup power domain (VBAT pin), fed by a CR1225 coin cell
-            (3V, 48mAh). At ~0.5μA RTC current draw, a single coin cell runs the RTC for
-            48000 / 0.5 = 96,000 hours = <strong style="color:var(--arch-violet);">~11 years</strong>.
-            The backup domain also powers the 4KB backup SRAM, adding ~1μA — still 7+ years total.
-            This means a BMS retains accurate time and last-known SoC even after the main battery
-            is fully discharged and the power supply is disconnected.
+            The RTC runs off a tiny CR1225 coin cell (the same kind in watches) connected to the STM32's VBAT pin. That coin cell holds 48mAh and the RTC only needs 0.5μA — so the math gives 96,000 hours, or about <strong style="color:var(--arch-violet);">11 years</strong> on one battery. Even when the main pack is completely dead and unplugged, the BMS clock keeps ticking and remembers the last known charge level. The same coin cell also powers the backup SRAM, bringing total draw to ~1.5μA — still 7+ years.
           </div>
         </div>
         <div class="arch-block">
