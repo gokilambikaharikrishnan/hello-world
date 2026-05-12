@@ -842,10 +842,11 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <span class="formula-line">OCD-C threshold:      I &gt; 1.1 × I_max_cont for &gt; 5s  → open FET</span>
         <span class="formula-line">OCD-P threshold:      I &gt; 3.2 × I_max_cont for &gt; 50ms → open FET</span>
         <span class="formula-caption">
-          The 10% headroom (1.1×) on continuous OCD prevents nuisance trips from measurement noise
-          and normal load transients. The pulse threshold at 3.2C allows UPS switchover inrush,
-          motor starting, and capacitor charging loads that last tens of milliseconds but are
-          thermally benign due to their short duration.
+          The 10% headroom above the rated maximum (1.1×) is intentional — it prevents false trips
+          from small measurement noise and the normal momentary spikes that happen with any real load.
+          The 3.2C pulse threshold deliberately allows UPS switchover inrush, motor start-up surges,
+          and large capacitors charging — loads that draw very high current for a fraction of a second
+          but generate so little total heat (because they're so brief) that the cells aren't harmed.
         </span>
       </div>
 
@@ -870,7 +871,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
             <span class="mos-badge" style="background:rgba(72,187,120,0.15);color:var(--accent-green);">HIGH ACCURACY</span>
           </div>
           <div style="font-size:0.84rem;color:var(--text-secondary);line-height:1.85;">
-            <strong style="color:var(--text-primary);">Principle:</strong> V_shunt = I × R_shunt. Ohm's law — the simplest possible sensor.<br>
+            <strong style="color:var(--text-primary);">Principle:</strong> A low-resistance strip of metal (the shunt) sits in the current path. Current flowing through it creates a tiny voltage drop (Ohm's law: V = I × R). Measure that voltage, and you know the current.<br>
             <strong style="color:var(--text-primary);">Typical R:</strong> 0.5–2 mΩ (low to minimise power loss at high current)<br>
             <strong style="color:var(--text-primary);">Accuracy:</strong> ±0.1–0.5% with 16-bit differential ADC<br>
             <strong style="color:var(--text-primary);">Power loss at 280A:</strong> P = I²R = 280² × 0.001 = 78.4W (1mΩ shunt)<br>
@@ -884,8 +885,8 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
             <span class="mos-badge" style="background:rgba(99,179,237,0.15);color:var(--accent-blue);">ISOLATED</span>
           </div>
           <div style="font-size:0.84rem;color:var(--text-secondary);line-height:1.85;">
-            <strong style="color:var(--text-primary);">Principle:</strong> Current through conductor creates magnetic field → Hall voltage proportional to I<br>
-            <strong style="color:var(--text-primary);">Isolation:</strong> Fully galvanic — no connection to high-voltage pack bus<br>
+            <strong style="color:var(--text-primary);">Principle:</strong> Any current flowing through a wire creates a magnetic field around it. A Hall-effect sensor detects that magnetic field and converts it to a voltage — measuring current without any physical connection to the high-voltage wire.<br>
+            <strong style="color:var(--text-primary);">Isolation:</strong> Fully galvanic — the sensor and the high-voltage bus are completely separate circuits<br>
             <strong style="color:var(--text-primary);">Accuracy:</strong> ±1–3% (core saturation, offset drift, temperature sensitivity)<br>
             <strong style="color:var(--text-primary);">Power loss:</strong> Near zero — senses field, not current<br>
             <strong style="color:var(--text-primary);">Pro:</strong> Safe for high-voltage packs, no insertion loss, wide range<br>
@@ -897,12 +898,13 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="callout-icon">📐</div>
         <div class="callout-body">
           <div class="callout-title">Production Choice: Shunt for BMS, Hall for System-Level Monitoring</div>
-          <p>Most production BMS designs use a shunt resistor (0.5–1 mΩ, ±0.1% tolerance, low TCR) 
-          for the primary current measurement feeding the SoC estimator and SCD comparator.
-          The key advantage is DC accuracy — Hall sensors drift at 0°C and above 60°C, introducing
-          exactly the kind of offset error that ruins coulomb counting.
-          A secondary Hall-effect sensor is sometimes added for system-level (pack-to-inverter)
-          monitoring where isolation from the high-voltage bus is required for safety reasons.</p>
+          <p>Most production BMS designs use a shunt resistor (0.5–1 mΩ, ±0.1% tolerance, low temperature
+          coefficient of resistance) as the primary current sensor — the one feeding the SoC estimator
+          and the short-circuit comparator. The key reason is DC accuracy. Hall sensors drift as
+          temperature changes (by 2–5 amps between 0°C and 85°C), and that drift introduces exactly
+          the kind of slow error that corrupts coulomb counting over time. A Hall-effect sensor is
+          sometimes added as a secondary sensor for system-level monitoring (pack to inverter), where
+          full electrical isolation from the high-voltage bus is a safety requirement.</p>
         </div>
       </div>
     </div>
