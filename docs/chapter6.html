@@ -2500,13 +2500,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <div class="arch-block">
             <div class="arch-block-title">OTA Firmware Updates</div>
             <div class="arch-block-body">
-              Tesla regularly updates BMS firmware over-the-air. This means: (1) dual-bank Flash is
-              mandatory — firmware updates to Bank B while Bank A runs; (2) CAN bootloader in dedicated
-              Flash region that cannot be overwritten by application code; (3) cryptographic signature
-              verification before applying update (prevents malicious firmware injection); (4) automatic
-              rollback if new firmware fails health checks in first 100 cycles. Several Tesla SoH
-              improvements, OVP threshold adjustments, and thermal management improvements have been
-              delivered as OTA updates years after pack shipment.
+              Tesla pushes BMS firmware updates over the air — no service visit needed. To do this safely, four design rules are mandatory: (1) the MCU Flash is split into two banks — new firmware loads into Bank B while Bank A runs; (2) the CAN bootloader lives in a protected Flash region that application code can never overwrite; (3) every update is cryptographically signed — a bad actor cannot inject malicious firmware; (4) if the new firmware fails health checks in the first 100 cycles, the BMS automatically rolls back to the old version. Tesla has used OTA to improve SoH algorithms, adjust OVP thresholds, and tune thermal management — years after the pack left the factory.
             </div>
           </div>
         </div>
