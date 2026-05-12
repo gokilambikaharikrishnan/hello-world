@@ -1372,10 +1372,18 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
     <div class="section-inner">
       <h3 class="subsection-title" style="font-size:1.4rem;margin-top:0;">CAN Bus — Deep Dive</h3>
       <p style="color:var(--text-muted);font-size:0.95rem;line-height:1.75;max-width:820px;margin-bottom:1.5rem;">
-        CAN (Controller Area Network) is the dominant communication protocol for BMS-to-inverter communication
-        in stationary ESS. Developed by Bosch in 1986 for automotive, it offers differential signaling (noise
-        immunity), hardware error detection (CRC + bit stuffing), and bus-level arbitration — no master/slave
-        collisions. Understanding CAN framing is essential for BMS integration work.
+        CAN — Controller Area Network — is the communication protocol the BMS uses to talk
+        to the inverter and charger. It was invented by Bosch in 1986 for use in cars, where
+        dozens of electronic control units need to share a single cable without stepping on
+        each other's messages. The reason it became the standard for battery systems too is
+        its robustness: CAN uses two wires carrying opposite signals (called differential
+        signalling), which means electrical noise hits both wires equally and cancels out —
+        a huge advantage in an environment with switching power electronics generating noise
+        constantly. It also has hardware-level error detection built in (CRC checksum and
+        bit-stuffing rules), and a clever arbitration system that lets multiple devices share
+        the bus without any of them needing to be designated as "master". If two devices try
+        to send at the same time, the one with the lower message ID automatically wins and
+        the other waits — no collision, no lost data.
       </p>
 
       <!-- CAN physical layer SVG -->
