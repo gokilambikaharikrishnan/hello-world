@@ -2212,7 +2212,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <div class="timing-badge">&gt; 2°C/s</div>
           <div class="timing-body">
             <div class="timing-title">Thermal Runaway Detection (dT/dt) — Emergency path</div>
-            If rate of temperature rise exceeds 2°C/s, BMS opens ALL FETs, activates fault latch (power-cycle required to clear), logs fault with timestamp, and optionally triggers external fire suppression signal (GPIO output). The dT/dt threshold detects accelerating exothermic reactions before absolute temperature thresholds are reached.
+            This is not a normal temperature alarm — it watches how fast the temperature is rising. If the rate exceeds 2°C per second, thermal runaway may already be starting. The BMS does not wait: it opens all FETs immediately, latches the fault (the pack cannot restart until someone power-cycles it), logs the event with a timestamp, and can trigger an external fire suppression system via a GPIO pin. Catching the temperature rate rather than the absolute value means the BMS can react before a cell has even reached dangerous temperatures.
           </div>
         </div>
       </div>
