@@ -918,10 +918,11 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
     <div class="section-number">4.3</div>
     <h2 class="section-title">Cell Balancing</h2>
     <p class="section-intro">
-      No two cells are identical. Manufacturing tolerances, temperature gradients, and differing
-      self-discharge rates cause cell voltages to drift apart over hundreds of cycles. Without
-      balancing, the weakest cell determines pack capacity while the strongest risks overcharge.
-      The BMS must continuously correct this drift.
+      No two cells are perfectly identical. Even cells from the same factory batch have slight
+      differences that cause their voltages to drift apart over time. Without a balancing system,
+      the weakest cell in the pack determines how much you can charge and discharge the whole pack —
+      while the stronger cells still have energy left over that you can't use. The BMS continuously
+      corrects this drift to keep all cells in step with each other.
     </p>
 
     <div class="subsection">
@@ -930,22 +931,22 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="stat-card">
           <div class="stat-value" style="color:var(--accent-blue);font-size:1.3rem;">±2%</div>
           <div class="stat-label">Manufacturing Capacity Spread</div>
-          <div class="stat-desc">Grade-B cells: ±2–5% capacity variation off the production line. Even "matched" cells diverge over 500+ cycles.</div>
+          <div class="stat-desc">Cells straight off the production line already vary by ±2–5% in capacity. Even carefully matched cells drift apart over five hundred or more cycles as their internal chemistry evolves at slightly different rates.</div>
         </div>
         <div class="stat-card">
           <div class="stat-value" style="color:var(--accent-orange);font-size:1.3rem;">2×</div>
           <div class="stat-label">Temperature Gradient Aging</div>
-          <div class="stat-desc">10°C difference across pack → cells age at 2× different rates → progressive capacity imbalance growing each year.</div>
+          <div class="stat-desc">As covered in Chapter 3, a 10°C temperature difference means the hot cells age twice as fast as the cool ones. Over years, the hot cells lose capacity faster, creating a growing imbalance even if all cells started identical.</div>
         </div>
         <div class="stat-card">
           <div class="stat-value" style="color:var(--accent-purple);font-size:1.3rem;">0.05%</div>
           <div class="stat-label">Self-Discharge Variation</div>
-          <div class="stat-desc">Cell-to-cell self-discharge varies ±20%. Over 30 days idle, this produces ~1% SoC imbalance even with perfect initial balance.</div>
+          <div class="stat-desc">Even when the pack is sitting idle, cells slowly lose charge on their own. That self-discharge rate varies by ±20% from cell to cell. After 30 days of storage, this alone produces about 1% state-of-charge imbalance — even if all cells were perfectly balanced before.</div>
         </div>
         <div class="stat-card">
           <div class="stat-value" style="color:var(--accent-red);font-size:1.3rem;">∑</div>
           <div class="stat-label">Compounding Over Cycles</div>
-          <div class="stat-desc">Each cycle, imbalance compounds. A 1% initial spread can grow to 10–15% over 1000 cycles without active balancing.</div>
+          <div class="stat-desc">The three sources above don't cancel out — they add up and get worse every cycle. A 1% initial capacity spread can grow to 10–15% over one thousand cycles if the BMS isn't actively correcting it.</div>
         </div>
       </div>
 
