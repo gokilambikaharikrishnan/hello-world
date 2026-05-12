@@ -1889,12 +1889,8 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="arch-block">
           <div class="arch-block-title">Why RTC in BMS?</div>
           <div class="arch-block-body">
-            <strong style="color:var(--arch-violet);">Calendar aging:</strong> The Arrhenius aging model requires
-            total time spent at high temperature. Without RTC, you can only count operational hours — not
-            hours at elevated temperature (which matters much more). A pack left at 40°C for 6 months
-            ages twice as fast as one at 25°C — the BMS must know calendar time to predict this.<br><br>
-            <strong style="color:var(--arch-violet);">Fault timestamps:</strong> "Cell 8 hit 3.67V" is useful.
-            "Cell 8 hit 3.67V on 2025-03-15 at 14:32:07" is actionable for warranty and field diagnosis.
+            <strong style="color:var(--arch-violet);">Calendar aging:</strong> Heat ages batteries even when you are not using them. A pack sitting at 40°C for 6 months ages twice as fast as one kept at 25°C. Without an RTC, the BMS can only count charge cycles — it cannot see this invisible time-based wear. With an RTC, it logs how many hours were spent at high temperature and factors that into the battery's health estimate.<br><br>
+            <strong style="color:var(--arch-violet);">Fault timestamps:</strong> "Cell 8 hit 3.67V" tells you something failed. "Cell 8 hit 3.67V on 2025-03-15 at 14:32:07" tells you exactly when — which is what you need to diagnose the problem, honour a warranty claim, or check what the battery was doing in the minutes before.
           </div>
         </div>
         <div class="arch-block">
