@@ -1687,8 +1687,8 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
     <div class="section-number">Summary</div>
     <h2 class="section-title">Chapter 4 Summary — The Protection Hierarchy</h2>
     <p class="section-intro">
-      Every circuit, threshold, and algorithm in this chapter traces back to physical failure modes
-      in the cell. Here is the complete traceability from fault to protection mechanism.
+      Every circuit, threshold, and algorithm in this chapter exists because of a specific physical
+      failure mode in the cell. Here's the complete map — from physical cause to protection mechanism.
     </p>
 
     <div class="trace-container">
@@ -1698,7 +1698,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <div class="trace-label">Pack Voltage ≠ Cell Voltage</div>
         </div>
         <div class="trace-arrow">→</div>
-        <div class="trace-right">Per-cell AFE monitoring with 16-bit ADC. One weak cell at 2.3V is invisible in the pack total. Without per-cell data, UVP cannot fire at the right time.</div>
+        <div class="trace-right">Per-cell AFE monitoring with a 16-bit ADC on every cell. One weak cell at 2.3V is completely hidden in a normal-looking pack total. Without individual cell readings, the BMS can't know which cell is in trouble — or fire UVP at the right moment.</div>
       </div>
       <div class="trace-row">
         <div class="trace-left">
@@ -1706,7 +1706,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <div class="trace-label">Cu Dissolution at &lt;2.5V</div>
         </div>
         <div class="trace-arrow">→</div>
-        <div class="trace-right">UVP hard cutoff at 2.5V with 2.8V warning. Pre-charge sequence required before resuming normal charge after UVP event — prevents high-rate charge onto damaged SEI.</div>
+        <div class="trace-right">UVP hard cutoff at 2.5V (500mV above dissolution onset) with a 2.8V early warning. After a UVP event, a gentle pre-charge sequence must run before normal charging resumes — high-rate charge onto a weakened SEI causes additional damage.</div>
       </div>
       <div class="trace-row">
         <div class="trace-left">
@@ -1714,7 +1714,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <div class="trace-label">Cathode Instability at &gt;3.65V</div>
         </div>
         <div class="trace-arrow">→</div>
-        <div class="trace-right">OVP threshold at 3.65V with 50mV hysteresis. Hardware comparator path for &lt;100ms response. Gas generation and lithium plating begin above this threshold.</div>
+        <div class="trace-right">OVP threshold at 3.65V with 50mV hysteresis band (don't re-enable until voltage drops back to 3.60V). Hardware comparator path gives under-100ms response. Above 3.65V: electrolyte oxidises, gas builds, lithium plates — all permanent damage.</div>
       </div>
       <div class="trace-row">
         <div class="trace-left">
@@ -1722,7 +1722,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <div class="trace-label">I² × R Heat Kills in &lt;1ms</div>
         </div>
         <div class="trace-arrow">→</div>
-        <div class="trace-right">SCD hardware comparator — fires in &lt;500μs, bypasses MCU entirely. Latches after event — manual reset required. Software cannot respond fast enough.</div>
+        <div class="trace-right">Short-circuit discharge hardware comparator — fires in under 500 microseconds, completely bypasses the MCU. Latches after firing — requires a manual reset to reconnect. Software running at normal loop rates is four times too slow to respond in time.</div>
       </div>
       <div class="trace-row">
         <div class="trace-left">
@@ -1730,7 +1730,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <div class="trace-label">Capacitor Inrush on Connect</div>
         </div>
         <div class="trace-arrow">→</div>
-        <div class="trace-right">Pre-charge circuit with R_pchg ≈ 100Ω, relay, and voltage-match detection. Limits inrush from kA to &lt;1A. ~600ms sequence before main FET closes.</div>
+        <div class="trace-right">Pre-charge circuit: 100Ω resistor in series with a small relay charges the load capacitors slowly, bringing inrush down from thousands of amps to under 1A. The BMS waits until load voltage is within 2V of pack voltage, then closes the main FET. Total time: about 600ms.</div>
       </div>
       <div class="trace-row">
         <div class="trace-left">
