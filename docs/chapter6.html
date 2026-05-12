@@ -1298,13 +1298,17 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="arch-block">
           <div class="arch-block-title">Required Peripherals</div>
           <div class="arch-block-body">
-            Must-have: SPI (AFE communication), ADC (NTC temperature, shunt voltage, pack voltage),
-            CAN or CAN-FD (host communication), UART (debug/service interface), timers (measurement
-            loop, balancing timing, watchdog), hardware watchdog timer (WDT — must be separate from
-            RTOS tick), I²C or SPI for EEPROM/Flash NVM, RTC (timestamping), backup domain power
-            (for backup SRAM + RTC on power loss). Nice-to-have: DMA (SPI transfers without CPU
-            intervention), hardware CRC (NVM integrity), IWDG (independent watchdog — clocked from
-            LSI, separate from main clock).
+            Must-have peripherals: SPI port to talk to the AFE chip; ADC channels to read NTC
+            temperature sensors, the shunt resistor voltage, and the total pack voltage; CAN or
+            CAN-FD for communicating with the inverter and charger; UART for a debug and service
+            interface; hardware timers to drive the measurement loop, balancing timing, and watchdog;
+            a hardware watchdog timer that is separate from the software tick (so a software freeze
+            can't also freeze the watchdog); I²C or SPI to read and write the NVM storage chip;
+            an RTC for timestamping fault events; and backup power domain so the RTC and backup RAM
+            survive a main power loss. Nice-to-have: DMA (lets SPI transfers run in background
+            without tying up the CPU), hardware CRC (checks data integrity in NVM without software
+            overhead), and an independent watchdog (IWDG) clocked from a separate low-speed oscillator
+            so even a main clock failure doesn't disable the watchdog.
           </div>
         </div>
         <div class="arch-block">
