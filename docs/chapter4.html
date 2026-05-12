@@ -1770,7 +1770,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <div class="trace-label">FET Fail-Closed = No Protection</div>
         </div>
         <div class="trace-arrow">→</div>
-        <div class="trace-right">Boot self-test: open FET, apply test pulse, verify V_drain rises. Fail-closed FET detected before pack enters service. Series fuse or dual-FET topology as backup.</div>
+        <div class="trace-right">A "fail-closed" MOSFET is one that gets stuck ON even after the BMS commands it to switch OFF — so even if the BMS detects a fault, it cannot cut power. To catch this before the pack leaves the factory, the BMS runs a self-test at boot: it commands the FET open, sends a small test pulse, and checks whether voltage appears on the drain side. If the FET is healthy it opens; if it's welded shut, voltage won't change and the BMS flags it immediately. The backup plan is a series fuse or a second FET in a 2×2 topology — so one stuck FET can't leave the pack totally unprotected.</div>
       </div>
     </div>
   </section>
