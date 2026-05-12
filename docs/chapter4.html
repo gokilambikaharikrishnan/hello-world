@@ -1084,9 +1084,10 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
 
     <div class="subsection">
       <div class="subsection-title">The LFP Balancing Challenge — 50mV of Signal, Nothing Else</div>
-      <p>LFP's flat OCV curve (Chapter 2) creates a fundamental balancing problem: the BMS cannot
-      see voltage-based imbalance across 20–80% SoC because all cells sit within 50mV of each other
-      regardless of their true SoC difference.</p>
+      <p>LFP has a very flat voltage curve across most of its charge range (covered in Chapter 2).
+      This creates a fundamental problem for balancing: in the 20–80% state-of-charge zone, all cells
+      sit within about 50 millivolts of each other — even if their actual charge levels differ
+      dramatically. The BMS can't see the imbalance because there's almost no voltage difference to measure.</p>
 
       <div class="diagram-wrap">
         <div class="diagram-title">🔍 LFP OCV Plateau — The Balancing Blindspot</div>
@@ -1123,10 +1124,12 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <text x="46" y="150" text-anchor="end" fill="#8b949e" font-size="8" font-family="JetBrains Mono,monospace">2.5V</text>
         </svg>
         <p class="diagram-caption">
-          In the plateau (20–80% SoC), a cell at 30% SoC and a cell at 70% SoC differ by only 3mV —
-          within the noise floor of any practical voltage measurement. Balancing must happen at top
-          (CV charge phase, where voltage diverges) or bottom (near UVP, where OCV slopes steeply).
-          LFP packs that never reach full charge will never be properly balanced.
+          In the flat middle zone (20–80% SoC), a cell at 30% charge and a cell at 70% charge differ
+          by only 3mV — which is smaller than the noise level of even a good voltage measurement.
+          The BMS effectively cannot tell them apart. Balancing can only work at the very top of charge
+          (constant-voltage phase, where voltages spread apart) or near the bottom (where the OCV curve
+          gets steep again near empty). If an LFP pack never reaches a full charge, it can never be
+          properly balanced.
         </p>
       </div>
 
@@ -1134,11 +1137,12 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="callout-icon">⚠</div>
         <div class="callout-body">
           <div class="callout-title">Consequence for ESS Charge Management</div>
-          <p>Home ESS systems that never charge above 80% SoC (a common cycle-life optimisation)
-          forfeit the balancing window. The cells will drift apart unnoticed across hundreds of cycles.
-          To prevent this, the BMS should trigger a full charge-to-100% balancing cycle at minimum
-          monthly, even if daily cycling only reaches 80%. Some BMS firmwares implement a
-          "balance cycle scheduler" that forces a full CV phase weekly.</p>
+          <p>Many home ESS systems are deliberately set to only charge to 80% SoC to extend cycle life —
+          a completely valid strategy. But it has a hidden cost: the pack never reaches the top-of-charge
+          window where balancing works. The cells drift apart slowly, undetected, over hundreds of cycles.
+          To prevent this, the BMS should force a full charge-to-100% balancing cycle at least once a month,
+          even if daily cycling stays at 80%. Some BMS firmware includes a scheduled "balance cycle" that
+          automatically triggers a full top-of-charge run once a week.</p>
         </div>
       </div>
     </div>
