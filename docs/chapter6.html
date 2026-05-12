@@ -2419,7 +2419,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <div class="timing-badge">10ms</div>
           <div class="timing-body">
             <div class="timing-title">Measurement + Protection Loop — Core safety loop</div>
-            Reads all 16 cell voltages and 6 temperatures from AFE via SPI. Reads pack current from shunt ADC. Applies IIR filter. Checks all values against protection thresholds. Triggers FETs if fault detected. Feeds IWDG. This loop must never miss a cycle — it is the heartbeat of the BMS.
+            Every 10ms the MCU reads all 16 cell voltages, 6 temperatures, and pack current. It runs those numbers through a noise filter, then checks them against every protection threshold. If anything is out of range, it triggers the FETs. It also "pets" the watchdog timer to prove it is still alive. This loop is the BMS heartbeat — missing even one cycle is a failure.
           </div>
         </div>
         <div class="timing-card">
