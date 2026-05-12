@@ -2184,7 +2184,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <div class="timing-badge">&lt; 500μs</div>
           <div class="timing-body">
             <div class="timing-title">Short Circuit Detection (SCD) — Hardware path</div>
-            AFE dedicated comparator monitors shunt voltage. No MCU involvement. Threshold set in AFE register (e.g., 300μV = 300A for 1mΩ shunt). Opens discharge FET directly via AFE output pin. MCU receives interrupt notification afterward. Required by UL 1973 and UN 38.3 T5.
+            This is the fastest protection layer — and it has to be, because a short circuit can dump thousands of amps in milliseconds. The AFE chip has a dedicated comparator that watches the shunt resistor voltage. The moment it sees too much current (e.g., 300A on a 1mΩ shunt), it slams the discharge FET shut — no MCU needed. The microcontroller only finds out afterward via an interrupt. This hardware speed is required by UL 1973 and UN 38.3 Test T5.
           </div>
         </div>
         <div class="timing-card">
