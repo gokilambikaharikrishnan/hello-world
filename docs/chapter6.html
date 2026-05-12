@@ -1229,11 +1229,14 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
     <div class="section-inner">
       <h3 class="subsection-title" style="font-size:1.4rem;margin-top:0;">MCU Layer</h3>
       <p style="color:var(--text-muted);font-size:0.95rem;line-height:1.75;max-width:820px;margin-bottom:1.5rem;">
-        The MCU is the brain of the BMS — it runs all firmware modules, manages state transitions, and
-        coordinates between the AFE, storage, and communication subsystems. Selecting the wrong MCU
-        is one of the most expensive engineering mistakes: insufficient RAM means SoC algorithms cannot
-        run; insufficient Flash means the OCV lookup table doesn't fit; missing CAN peripheral means
-        an external controller IC is needed.
+        The microcontroller is the brain of the BMS — it runs every software module, makes all
+        the protection decisions, and coordinates data flowing between the AFE, the storage chip,
+        and the CAN bus. Picking the wrong MCU is one of the most expensive mistakes you can make
+        in BMS design, because you often only discover the problem after the PCB is manufactured.
+        Not enough RAM means the state-of-charge algorithm doesn't fit in memory. Not enough Flash
+        means the full OCV lookup table can't be stored. No CAN peripheral on the chip means you
+        have to add an extra SPI-to-CAN converter IC, adding cost, complexity, and failure modes.
+        Pick the right MCU once, up front.
       </p>
 
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem;margin:1.5rem 0;">
