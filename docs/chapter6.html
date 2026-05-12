@@ -3045,17 +3045,14 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="arch-block">
           <div class="arch-block-title">SoF — State of Function</div>
           <div class="arch-block-body">
-            SoF answers: <em>"Is this battery capable of performing its intended function right now?"</em>
-            It combines SoC, SoH, and temperature into a single 0–100% readiness indicator.
+            SoF asks: <em>"Can this battery actually do its job right now?"</em> It multiplies three factors together: how full it is (SoC), how cold it is (η(T)), and how degraded it is (SoH) — combining them into a single readiness percentage.
             <br><br>
             <strong style="color:var(--arch-violet);">SoF = SoC × η(T) × SoH_C</strong>
             <br><br>
-            A pack at SoC=75%, T=−5°C (η=0.75), SoH=0.90:
+            Example: SoC=75%, cold at −5°C (η=0.75), slightly aged SoH=0.90:
             SoF = 0.75 × 0.75 × 0.90 = <strong style="color:var(--arch-violet);">50.6%</strong>
             <br><br>
-            This tells the inverter: "I can currently deliver 50.6% of my design capacity."
-            Used for UPS runtime estimation: at 50.6% SoF and 1kW load on a 5kWh pack,
-            expected runtime = 5 × 0.506 / 1 = 2.53 hours.
+            The inverter uses this to calculate real backup time. On a 5kWh pack with a 1kW load at 50.6% SoF: runtime = 5 × 0.506 / 1 = 2.53 hours. Without SoF, the inverter might report 3.75 hours based on SoC alone — and be dangerously wrong.
           </div>
         </div>
         <div class="arch-block">
