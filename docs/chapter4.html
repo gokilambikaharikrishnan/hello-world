@@ -1277,10 +1277,13 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <line x1="200" y1="200" x2="220" y2="200" stroke="rgba(246,173,85,0.4)" stroke-width="1" stroke-dasharray="3,2"/>
         </svg>
         <p class="diagram-caption">
-          Q1 (discharge FET) and Q2 (charge FET) share a common-source node. With sources tied together,
-          each FET's body diode faces opposite directions — when Q1 is off but Q2 is on, Q1's body diode
-          still allows discharge current to flow. This is why <em>both</em> FETs must be opened to fully
-          isolate the pack. The shunt resistor on the negative bus measures pack current for both paths.
+          Q1 (discharge FET) and Q2 (charge FET) share a common-source connection. Every MOSFET has a
+          built-in "body diode" — a one-way valve that allows current to flow backwards through the device
+          even when the gate is turned off. With the two FETs facing opposite directions, their body
+          diodes face opposite ways too. This means if only Q1 is turned off but Q2 is still on, current
+          can still flow backwards through Q1's body diode. To completely isolate the pack, <em>both</em>
+          FETs must be opened at the same time. The shunt resistor on the negative bus measures all
+          current — both charge and discharge — through the same measurement point.
         </p>
       </div>
 
@@ -1291,10 +1294,13 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <span class="formula-line">Example: I = 280A, target P = 2W → RDS(on) max = 2 / 280² = 25 μΩ</span>
         <span class="formula-line">Solution: parallel 4× FETs at 100 μΩ each → effective RDS = 25 μΩ ✓</span>
         <span class="formula-caption">
-          Modern N-channel power MOSFETs (e.g. IRFB7437, CSD18537) achieve 1–3 mΩ RDS(on) individually.
-          For 280A continuous current a single FET would dissipate 78W — unacceptable.
-          Paralleling 4–8 FETs distributes the thermal load. Each FET must have a small
-          source-degeneration resistor (1–5 mΩ) to ensure equal current sharing during switching transients.
+          Modern N-channel power MOSFETs (like the IRFB7437 or CSD18537) achieve 1–3mΩ of on-resistance
+          each. At 280A through a single FET, that's I²R = 280² × 0.001 = 78W per device — way too hot.
+          The solution is to wire four to eight FETs in parallel, sharing the current equally. Each one
+          then only handles a fraction of the total current and dissipates a fraction of the heat.
+          A small source resistor (1–5mΩ) on each FET is included to force equal current sharing during
+          the switching transient — without it, the FET with the lowest resistance would hog all the
+          current momentarily.
         </span>
       </div>
     </div>
