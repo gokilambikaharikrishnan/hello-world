@@ -2048,11 +2048,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
       <div class="section-label">Section 6.3</div>
       <h2 class="section-title">Firmware Architecture</h2>
       <p class="section-intro">
-        BMS firmware is a real-time embedded system with strict timing requirements. Each module runs
-        at a specific frequency determined by physics: voltage measurements must occur at 10ms intervals
-        (fast enough to catch a runaway charge), SoC updates every 100ms (responsive to load steps),
-        SoH updates hourly (battery aging is slow). Getting the timing architecture right is the
-        difference between a BMS that works in the lab and one that works in production.
+        BMS firmware is not a simple program that reads sensors and reacts — it is a real-time system where timing is everything. Different tasks must run at very different speeds, set by physics. Voltage must be checked every 10ms because a runaway charge can push a cell into danger in milliseconds. Charge level (SoC) updates every 100ms to stay accurate during sudden load changes. Battery health (SoH) only needs to update once an hour because aging is slow. Build the timing wrong and you get a BMS that passes lab tests but fails in the field.
       </p>
 
       <!-- Firmware module overview -->
