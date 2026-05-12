@@ -3035,7 +3035,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="formula-card">
           <div class="formula-name">Calendar Aging (Arrhenius)</div>
           <div class="formula-eq">SoH_cal = 1 − A·√t·exp(−Ea/RT)</div>
-          <div class="formula-note">A = empirical coefficient (~0.002 for LFP). √t relationship from SEI growth kinetics. Ea = 0.57 eV (LFP SEI activation energy). Doubles every 10°C. At 45°C vs 25°C: 2× calendar aging.</div>
+          <div class="formula-note">Even a battery sitting on a shelf is aging — the SEI layer slowly grows over time regardless of cycling. This formula captures that: the √t term comes from the physics of SEI growth (it slows down as the layer thickens). The Arrhenius exponential captures the temperature dependence — calendar aging doubles for every 10°C increase. A battery stored at 45°C ages twice as fast as one stored at 25°C, even if neither is ever used.</div>
         </div>
       </div>
 
