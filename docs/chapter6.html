@@ -2524,11 +2524,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="arch-block">
           <div class="arch-block-title">Temperature Uniformity Focus</div>
           <div class="arch-block-body">
-            BYD's BMS allocates more temperature sensors than typical — one NTC per 4 cells rather than
-            the common 1-per-10-cells approach. The BMS runs a per-cell temperature model that interpolates
-            between sensors using cell impedance data to estimate internal temperature. The cell model is
-            updated in real-time using the thermal resistance calculated from dV/dT during dynamic loads.
-            This gives temperature accuracy well beyond what physical sensors alone can provide.
+            Most BMS designs put one temperature sensor every 10 cells or so. BYD uses one sensor per 4 cells — significantly denser coverage. But sensors only measure at their exact location. BYD's BMS goes further: it runs a temperature model that uses cell impedance data to estimate the internal temperature of every cell, not just the ones next to a sensor. The model is updated live using the thermal resistance calculated from voltage behaviour under varying loads, giving a more accurate picture than sensors alone can provide.
           </div>
         </div>
         <div class="arch-block">
