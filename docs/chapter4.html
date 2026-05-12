@@ -400,15 +400,19 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
     <div class="section-number">4.1</div>
     <h2 class="section-title">Voltage Protection</h2>
     <p class="section-intro">
-      Cell voltage is the primary health signal in a Li-ion pack. Every protection decision
-      — from OVP to UVP — is derived from measuring voltage accurately at the per-cell level.
-      This section explains why per-cell monitoring is non-negotiable, what physics occurs
-      at the threshold boundaries, and how the BMS enforces them.
+      Cell voltage is the most important health signal a BMS reads. Every protection decision
+      — from stopping a charge that's gone too high to catching a cell that's dangerously low —
+      starts with measuring each cell's voltage accurately, individually. This section explains
+      why you must monitor every cell on its own (not just the pack total), what physically
+      happens at each danger threshold, and how the BMS acts on that information.
     </p>
 
     <div class="subsection">
       <div class="subsection-title">Why Per-Cell Voltage Monitoring is Non-Negotiable</div>
-      <p>Pack voltage hides weak cells. This is the single most important lesson in BMS design.</p>
+      <p>Pack voltage hides weak cells — and this is the single most important lesson in BMS design.
+      Think of a series pack like a chain: one weak link that breaks under tension while the rest
+      look fine. If you only measure the total length of the chain, you'll never know one link
+      is about to snap.</p>
 
       <!-- Animated "hidden weak cell" SVG -->
       <div class="diagram-wrap">
@@ -463,9 +467,9 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <text x="326" y="180" text-anchor="middle" fill="#f6ad55" font-size="10" font-family="JetBrains Mono,monospace" font-weight="700">Pack total: 13×3.5 + 1×2.3 = 47.8V → BMS reports "OK" without per-cell monitoring</text>
         </svg>
         <p class="diagram-caption">
-          Cell 9 (red, 2.3V) is below the 2.5V UVP threshold and being damaged by copper dissolution.
-          The 13 healthy cells at 3.5V produce a pack total of 47.8V — well within the expected 14S range of
-          45.5–49V. A pack-level BMS never sees the fault. Only per-cell AFE monitoring catches it.
+          Cell 9 (red, 2.3V) has dropped below the 2.5V danger threshold and is being permanently damaged.
+          But the other 13 cells at 3.5V push the pack total to 47.8V — which looks completely normal for a
+          14-cell pack. A BMS measuring only pack voltage sees nothing wrong. Only per-cell monitoring catches it.
         </p>
       </div>
 
@@ -473,11 +477,12 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="callout-icon">⚡</div>
         <div class="callout-body">
           <div class="callout-title">Pack Voltage Measurement Cannot Replace Per-Cell Monitoring</div>
-          <p>A 14S LFP pack has a nominal voltage range of 35V (empty) to 51.1V (full). One cell
-          at 2.3V (deeply discharged, damaged) while others are at 3.5V gives a pack voltage of 47.8V —
-          a "normal" reading. The damaged cell continues to be discharged, dissolving copper current
-          collector material into the electrolyte. Copper deposits then plate onto the separator,
-          creating internal shorts. This failure chain is invisible without per-cell voltage monitoring.</p>
+          <p>A 14-cell LFP pack normally reads anywhere from 35V (empty) to 51V (full). One cell
+          sitting at 2.3V while the rest are at 3.5V gives a pack total of 47.8V — which looks
+          perfectly normal. Meanwhile, that damaged cell is being over-discharged, which dissolves
+          copper from its current collector into the electrolyte. That copper then plates onto the
+          separator, creating metallic bridges that can cause internal short circuits. The whole
+          failure chain is completely invisible unless you're reading each cell individually.</p>
         </div>
       </div>
     </div>
