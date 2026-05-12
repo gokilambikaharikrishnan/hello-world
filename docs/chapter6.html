@@ -2426,7 +2426,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <div class="timing-badge">100ms</div>
           <div class="timing-body">
             <div class="timing-title">SOX Computation + State Machine — Algorithm layer</div>
-            Coulomb counting SoC update (integrates current since last 100ms). OCV correction if at rest. SoF and SoP calculation (temperature-derated current limits for inverter). State machine evaluation — check for state transitions. EKF update if enabled. Send CAN SoC message if changed &gt;0.5%.
+            Every 100ms the MCU updates the charge level (SoC) by integrating how much current has flowed since the last update. If the pack is resting, it corrects against the open-circuit voltage curve. It also calculates how much power the pack can safely deliver right now (SoP), accounting for temperature effects. The state machine checks whether any conditions have changed enough to move to a different state. If the SoC shifted by more than 0.5%, a CAN message is sent to the inverter.
           </div>
         </div>
         <div class="timing-card">
