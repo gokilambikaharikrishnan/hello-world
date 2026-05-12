@@ -3020,7 +3020,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="formula-card">
           <div class="formula-name">Capacity SoH</div>
           <div class="formula-eq">SoH_C = C_full_now / C_design × 100%</div>
-          <div class="formula-note">Measure C_full_now during a calibration cycle (full charge → full discharge). LFP: replace at SoH &lt;80% (industry standard). A 280Ah cell becomes a 224Ah cell at 80% SoH.</div>
+          <div class="formula-note">The only accurate way to measure SoH_C is a calibration cycle: fully charge, then fully discharge, and measure exactly how many amp-hours came out. The ratio of that number to the original design capacity gives SoH. Industry standard: replace the battery when SoH drops below 80%. For our 280Ah reference pack, that means replacing at 224Ah effective capacity.</div>
         </div>
         <div class="formula-card">
           <div class="formula-name">Resistance SoH</div>
