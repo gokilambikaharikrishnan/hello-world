@@ -1613,11 +1613,16 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="arch-block">
           <div class="arch-block-title">Baud Rate: 250 vs 500 kbps</div>
           <div class="arch-block-body">
-            250 kbps is the industry standard for stationary ESS (PYLON, SMA, Victron, Growatt all
-            use 250kbps). Maximum bus length at 250kbps: ~250m (5 ns/m propagation). 500 kbps halves
-            this to ~100m. For home ESS where BMS and inverter are in the same cabinet, 500 kbps
-            works fine. For UPS with remote monitoring over longer cable runs, stick to 250 kbps.
-            Both ends must match exactly — a baud mismatch produces immediate bus errors.
+            250 kilobits per second is the industry standard speed for stationary ESS systems —
+            every major inverter brand (PYLON, SMA, Victron, Growatt) defaults to 250 kbps.
+            At this speed the CAN bus can reliably carry signals over cable runs up to about 250
+            metres. Running at 500 kbps doubles the speed but cuts the maximum cable length to
+            about 100 metres. For a home ESS where the BMS and inverter sit in the same wall
+            cabinet connected by a 1-metre cable, 500 kbps works fine. For a UPS installation
+            with a remote monitoring terminal at the end of a long cable run, use 250 kbps.
+            One critical rule: both ends of the bus must be set to exactly the same baud rate.
+            A mismatch — even by a small amount — immediately causes bus errors from the first
+            message onwards.
           </div>
         </div>
       </div>
