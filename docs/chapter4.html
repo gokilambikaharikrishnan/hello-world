@@ -489,8 +489,9 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
 
     <div class="subsection">
       <div class="subsection-title">Overvoltage Protection (OVP) — The 3.65V Hard Wall</div>
-      <p>LFP cells must not be charged above 3.65V per cell. Above this threshold, the cathode
-      chemistry begins to destabilise in ways that cause permanent, cumulative damage.</p>
+      <p>LFP cells must never be charged above 3.65V per cell. Cross that line and the chemistry
+      inside the cathode starts breaking down — and the damage is permanent and cumulative.
+      Every millisecond over 3.65V costs you cycle life.</p>
 
       <div class="formula-block">
         <span class="formula-label">LFP OVP Threshold Physics</span>
@@ -499,18 +500,18 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <span class="formula-line">OVP hard cutoff:       V_cell &gt; 3.70V  → open charge FET immediately</span>
         <span class="formula-line">OVP recovery hysteresis: do not allow charge resume until V_cell &lt; 3.60V</span>
         <span class="formula-caption">
-          Hysteresis prevents rapid FET cycling (chattering) near the threshold.
-          Without hysteresis, the FET would open at 3.65V, voltage sags to 3.64V, FET closes,
-          voltage rises to 3.65V again — thousands of cycles per second, destroying the gate driver.
-          The 50mV hysteresis window gives the charger time to ramp down gracefully.
+          The 50mV hysteresis gap (don't re-enable until cell drops back to 3.60V) prevents the FET
+          from chattering — rapidly switching on and off near the threshold. Without it, the FET opens
+          at 3.65V, voltage sags to 3.64V, FET closes, voltage rises back to 3.65V, FET opens again —
+          potentially thousands of times per second, burning out the gate driver within minutes.
         </span>
       </div>
 
-      <p><strong>What physically happens above 3.65V:</strong></p>
+      <p><strong>What physically happens when you push past 3.65V:</strong></p>
       <ul style="color:var(--text-secondary); line-height:2; padding-left:1.5rem; margin-bottom:1rem;">
-        <li><strong>3.65–3.80V:</strong> Electrolyte oxidation at cathode surface accelerates — CO₂ generation begins, internal pressure builds, SEI growth rate increases 5–10×</li>
-        <li><strong>3.80–4.00V:</strong> Lithium plating begins on cathode (Li deposits as metal, not intercalated) — irreversible capacity loss begins</li>
-        <li><strong>Above 4.00V:</strong> Rapid gas generation, possible venting; cathode structural degradation accelerates sharply</li>
+        <li><strong>3.65–3.80V:</strong> The electrolyte starts oxidising (breaking down) at the cathode surface. CO₂ gas is produced, internal pressure builds, and the SEI layer on the anode starts growing five to ten times faster than normal.</li>
+        <li><strong>3.80–4.00V:</strong> Lithium begins depositing as metallic metal on the cathode rather than inserting cleanly into the crystal. Capacity is permanently lost — those lithium atoms are now stuck and can't be recovered.</li>
+        <li><strong>Above 4.00V:</strong> Gas generation accelerates sharply. The cell may vent. Cathode structure breaks down at an increasing rate — the cell is failing fast.</li>
       </ul>
 
       <!-- OVP animated response diagram -->
