@@ -676,10 +676,10 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
     <div class="section-number">4.2</div>
     <h2 class="section-title">Current Protection</h2>
     <p class="section-intro">
-      Overcurrent and short-circuit faults are the most energetically violent events a BMS
-      must handle. The response time requirements span four orders of magnitude — from
-      milliseconds for short-circuit detection to seconds for charge overcurrent — each
-      tier matched to the physical threat it addresses.
+      Overcurrent and short-circuit faults are the most violent events a BMS has to deal with.
+      Different types of faults need responses at completely different speeds — from under
+      half a millisecond for a dead short, to several seconds for a slow overcurrent — and
+      each speed tier exists for a specific physical reason.
     </p>
 
     <!-- Protection response time hierarchy -->
@@ -695,7 +695,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
             </div>
             <div>
               <div class="tier-name">Short-Circuit Discharge (SCD)</div>
-              <div class="tier-desc">Current can reach 50–200× rated (50kA on a large pack). Cell temperature would reach runaway in under 1 second. Hardware comparator fires directly — MCU is bypassed entirely. Cannot rely on software interrupt latency.</div>
+              <div class="tier-desc">A dead short can push current to 50–200× the normal rated level. The cell's temperature would spike toward thermal runaway in under a second. The BMS hardware comparator fires directly and opens the FET — the microcontroller is completely bypassed. Software running at normal loop speeds is simply too slow to respond in time.</div>
             </div>
           </div>
         </div>
@@ -708,7 +708,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
             </div>
             <div>
               <div class="tier-name">Overcurrent Discharge — Pulse (OCD-P)</div>
-              <div class="tier-desc">High transient current (3–5× rated, &lt;10s). Joule heating is significant but not immediately catastrophic. AFE hardware latch with MCU confirmation. Allows UPS inrush and motor-start bursts within the pulse window.</div>
+              <div class="tier-desc">High transient current — three to five times the rated level — but only for a short burst under ten seconds. The Joule heating is real but not immediately dangerous. The AFE chip latches a fault flag and the MCU confirms it. This window deliberately allows UPS inrush events and motor start-up bursts, which are normal operation.</div>
             </div>
           </div>
         </div>
@@ -721,7 +721,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
             </div>
             <div>
               <div class="tier-name">Overcurrent Discharge — Continuous (OCD-C)</div>
-              <div class="tier-desc">Sustained current above 1C. Thermal accumulation over seconds drives cell temperature up. MCU software loop detects, commands FET open. 100ms response is fast enough to prevent thermal damage.</div>
+              <div class="tier-desc">Sustained current above one C-rate. Heat builds steadily over seconds, slowly driving cell temperature up. The MCU's software loop detects this in its normal scan cycle and opens the FET. A 100ms response is plenty fast enough to prevent thermal damage here.</div>
             </div>
           </div>
         </div>
@@ -734,7 +734,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
             </div>
             <div>
               <div class="tier-name">Overcurrent Charge (OCC)</div>
-              <div class="tier-desc">Charger delivering excess current. No immediate catastrophic risk — overcharge is slow. MCU detects, sends current-limit command to charger via CAN/PWM, or opens charge FET. 1s response is acceptable.</div>
+              <div class="tier-desc">The charger is pushing in more current than the cell can safely accept. No immediate catastrophe — overcharging is a slow process. The MCU detects it and either sends a current-limit command to the charger over CAN bus, or simply opens the charge FET. A one-second response is perfectly acceptable here.</div>
             </div>
           </div>
         </div>
