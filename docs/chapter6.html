@@ -1243,12 +1243,14 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="arch-block">
           <div class="arch-block-title">Why Dedicated MCU for BMS</div>
           <div class="arch-block-body">
-            Some designs try to share an MCU between the BMS and inverter control. This is dangerous: if
-            the inverter control loop takes a long CPU burst (e.g., MPPT recalculation), the BMS measurement
-            loop is delayed — a 100ms measurement gap during a fault condition can allow cell damage.
-            Production BMS systems always use a dedicated MCU. The cost of a second $2 MCU is far less
-            than the liability of a missed protection event. Dedicated MCU also simplifies UL 1973
-            fault-injection testing since the entire firmware under test is the BMS.
+            Some designs try to share one microcontroller between the BMS and the inverter controller
+            to save money. This is dangerous: if the inverter's control loop briefly takes over the CPU
+            for a heavy calculation — for example, recalculating the solar MPPT point — the BMS
+            measurement loop is paused. A 100ms gap in cell voltage monitoring during a fault can allow
+            real cell damage. Production BMS designs always use a dedicated MCU just for the BMS.
+            A second MCU costs about $2. A missed protection event costs your company far more than that
+            in liability. A dedicated MCU also makes UL 1973 certification simpler, because the fault
+            injection test only needs to simulate crashing the BMS firmware, not the whole shared system.
           </div>
         </div>
         <div class="arch-block">
