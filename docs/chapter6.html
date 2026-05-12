@@ -3172,7 +3172,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
 
         <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--arch-purple);border-radius:var(--radius);padding:1.2rem;">
           <div style="color:var(--arch-purple);font-family:monospace;font-weight:bold;font-size:13px;margin-bottom:0.5rem;">⑩ SOX is a System, Not Four Numbers</div>
-          <div style="color:var(--text-muted);font-size:13px;line-height:1.6;">SoC, SoH, SoF, SoP feed each other. SoP depends on SoC × T-derating. SoF depends on SoC × SoH × η(T). The host inverter adapts its power strategy every 100ms based on SoP — getting this wrong costs energy efficiency and causes premature cell damage.</div>
+          <div style="color:var(--text-muted);font-size:13px;line-height:1.6;">SoC, SoH, SoF, and SoP are not four independent numbers — they are a chain. SoP needs SoC and temperature. SoF needs SoC, SoH, and temperature. The inverter reads SoP every 100ms and adjusts how hard it pushes the battery. If any link in this chain is wrong, the inverter either wastes energy or pushes the battery harder than it can handle — causing damage that shows up as premature capacity loss.</div>
         </div>
 
         <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--arch-purple);border-radius:var(--radius);padding:1.2rem;">
