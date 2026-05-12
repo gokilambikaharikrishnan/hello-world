@@ -2995,7 +2995,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="formula-card">
           <div class="formula-name">Primary: Coulomb Counting</div>
           <div class="formula-eq">SoC(t) = SoC₀ − ∫(I·dt) / C_full</div>
-          <div class="formula-note">Integrates current over time. Drift accumulates without correction. Must be seeded from NVM or OCV on startup. Temperature factor η(T) corrects for reduced capacity at low temperature.</div>
+          <div class="formula-note">Works like a water flow meter — count how many amps flowed in and out, divide by the total capacity, and you get the SoC. Simple, but the error accumulates over time if not corrected. On startup, the BMS seeds this from the last saved value in NVM or from an OCV reading. A temperature factor η(T) adjusts because cold batteries deliver less usable capacity than warm ones.</div>
         </div>
         <div class="formula-card">
           <div class="formula-name">Correction: OCV Lookup (at rest)</div>
