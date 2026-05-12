@@ -1902,12 +1902,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="arch-block">
           <div class="arch-block-title">Unix Timestamp Format</div>
           <div class="arch-block-body">
-            Store timestamps as <strong style="color:var(--arch-violet);">uint32_t Unix seconds</strong>
-            (seconds since 1970-01-01 00:00:00 UTC). This handles all time arithmetic as simple
-            integer subtraction — no calendar math needed in the BMS. Overflow: uint32_t wraps in
-            year 2106 — not a problem for current designs. For event logs, store timestamp + event type
-            in 6 bytes: 4B timestamp + 1B event type + 1B event data. A 256-entry circular log
-            uses 256 × 6 = 1536 bytes — fits comfortably in EEPROM.
+            The BMS stores time as a single big number — <strong style="color:var(--arch-violet);">Unix seconds</strong> — which counts how many seconds have passed since 1 January 1970. This makes time math trivial: to find out how long ago something happened, you just subtract two numbers. No messy date calculations needed. For event logs, each entry takes just 6 bytes (4 for the timestamp, 1 for the event type, 1 for data), so a 256-event log only uses 1,536 bytes — a tiny slice of the EEPROM.
           </div>
         </div>
         <div class="arch-block">
