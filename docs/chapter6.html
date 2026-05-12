@@ -2433,7 +2433,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <div class="timing-badge">1s</div>
           <div class="timing-body">
             <div class="timing-title">Balancing + CAN TX + Backup SRAM — Secondary loop</div>
-            Evaluate cell imbalance, enable/disable balance FETs. Transmit all CAN status messages (0x351–0x35C). Write current SoC to backup SRAM (fast, 2μs). Pet AFE watchdog register. Check for communication timeouts (host silence detect). Run event log periodic entry (daily peaks).
+            Once per second the BMS handles its housekeeping tasks. It checks which cells are highest in voltage and turns on balancing resistors to drain them slightly. It transmits the full set of CAN status messages to the inverter. It saves the current SoC to backup SRAM (takes just 2 microseconds). It checks whether the inverter has gone silent for too long. And it logs daily peak readings to the event log.
           </div>
         </div>
         <div class="timing-card">
