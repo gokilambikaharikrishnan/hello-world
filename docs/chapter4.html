@@ -1178,15 +1178,20 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
     <div class="section-number">4.4</div>
     <h2 class="section-title">MOSFET Switching</h2>
     <p class="section-intro">
-      The MOSFET is the BMS's actuator — the component that physically disconnects the pack
-      from the load or charger when protection events fire. Understanding the switching topology,
-      body diode behaviour, and the pre-charge circuit separates a safe design from a damaging one.
+      The MOSFET is the BMS's physical switch — the component that actually disconnects the pack
+      from the load or charger when a protection event fires. If the BMS is the brain, the MOSFET
+      is the muscle. Understanding how two back-to-back MOSFETs work together, what their body
+      diodes do, and why the pre-charge circuit is critical separates a safe design from a
+      potentially damaging one.
     </p>
 
     <div class="subsection">
       <div class="subsection-title">Charge FET and Discharge FET — Why Two Separate Switches</div>
-      <p>A BMS uses two back-to-back N-channel MOSFETs (common-source configuration) rather than
-      a single switch. This allows independent control of charge and discharge current paths.</p>
+      <p>Instead of one switch, a BMS uses two back-to-back N-channel MOSFETs wired together at
+      their source pins. This arrangement lets the BMS independently control charging and
+      discharging — so it can, for example, allow discharging but block charging (when the
+      temperature is too cold), or allow charging but block discharging (when under-voltage
+      recovery is in progress).</p>
 
       <!-- MOSFET topology animated SVG -->
       <div class="diagram-wrap">
