@@ -789,11 +789,16 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
       <div class="section-label">Section 6.2</div>
       <h2 class="section-title">Hardware Architecture — Full Picture</h2>
       <p class="section-intro">
-        A production BMS comprises six hardware layers: cells, the Analog Front End (AFE), the
-        microcontroller (MCU), communication interfaces, persistent storage, and physical protection
-        (FETs, fuse, contactor). Each layer has a specific job and communicates with adjacent layers
-        through well-defined interfaces. Failure to understand these boundaries is the most common
-        source of BMS design bugs.
+        A real BMS is built from six distinct hardware layers stacked on top of each other.
+        The cells sit at the bottom — the physical battery. Above them, the AFE chip (Analog
+        Front End) reads all the voltages and temperatures. Above that, the MCU (microcontroller)
+        runs the protection logic and algorithms. The MCU connects outward through communication
+        interfaces — CAN bus, SMBus — to talk to the inverter and charger. Data is saved to
+        persistent storage so nothing is lost if power disappears. And the physical protection
+        layer — the MOSFETs, fuse, and contactor — is what actually cuts the electrical connection
+        when a fault fires. Each layer has one job, and they pass information between them through
+        well-defined connections. Most BMS design bugs come from misunderstanding where one layer
+        ends and the next begins.
       </p>
 
       <!-- Full system block diagram SVG -->
