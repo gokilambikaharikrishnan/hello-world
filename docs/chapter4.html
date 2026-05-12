@@ -1307,15 +1307,17 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
 
     <div class="subsection">
       <div class="subsection-title">Pre-Charge Circuit — Protecting the Load Capacitors</div>
-      <p>When the discharge FET closes onto a discharged load with large input capacitors (e.g.
-      an inverter with 1000μF of DC-link capacitance), the inrush current spike can reach
-      thousands of amps — enough to weld FET contacts or blow fuses.</p>
+      <p>Inverters and other DC loads typically have large capacitors on their input — sometimes
+      a thousand microfarads or more. These capacitors are completely empty when the load is first
+      connected. When you close the discharge FET onto an empty capacitor, it looks like a short circuit
+      for a brief instant — pulling a massive inrush current spike that can reach thousands of amps,
+      enough to weld the FET contacts together or blow fuses before the load even starts working.</p>
 
       <div class="formula-block">
         <span class="formula-label">Inrush Current Without Pre-Charge</span>
         <span class="formula-line">I_peak = V_pack / R_esr_caps  (at t=0, capacitor looks like short circuit)</span>
         <span class="formula-line">Example: 58V pack, R_esr = 5 mΩ → I_peak = 58 / 0.005 = 11,600A</span>
-        <span class="formula-line">This exceeds SCD threshold → BMS trips immediately → FET never closes</span>
+        <span class="formula-line">That 11,600A peak exceeds the short-circuit threshold → BMS trips immediately → FET re-opens before the load starts</span>
       </div>
 
       <!-- Pre-charge sequence animated SVG -->
