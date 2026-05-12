@@ -557,30 +557,32 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <text x="46" y="163" text-anchor="end" fill="#8b949e" font-size="8.5" font-family="JetBrains Mono,monospace">2.5V</text>
         </svg>
         <p class="diagram-caption">
-          Cell voltage rises during charge (blue). At 3.65V the BMS asserts OVP and opens the charge FET
-          within &lt;1s (firmware path) or &lt;100ms (hardware comparator path). Current drops to zero.
-          Voltage relaxes toward OCV (~3.55–3.60V) as the surface concentration gradient dissipates.
+          Cell voltage climbs during charging (blue line). When it hits 3.65V, the BMS fires OVP and
+          opens the charge FET — within 1 second via the firmware path, or under 100ms if a hardware
+          comparator catches it first. Charge current immediately drops to zero. The voltage then
+          relaxes back down toward the resting level (~3.55–3.60V) as the concentration of lithium
+          ions near the surface equalises through the cell.
         </p>
       </div>
     </div>
 
     <div class="subsection">
       <div class="subsection-title">Undervoltage Protection (UVP) — The 2.5V Floor</div>
-      <p>The UVP threshold of 2.5V is chosen because below this point, the copper current
-      collector on the anode begins to dissolve — an irreversible failure mechanism with
-      no recovery path.</p>
+      <p>The 2.5V floor exists because below this voltage, the copper foil that the graphite
+      anode is coated onto starts dissolving into the electrolyte — a damage process that
+      has no reversal. Once it starts, the cell is compromised.</p>
 
       <div class="callout callout-danger">
         <div class="callout-icon">⚠</div>
         <div class="callout-body">
           <div class="callout-title">Copper Dissolution — The UVP Physical Basis</div>
-          <p>At voltages below ~2.0V, Cu²⁺ ions dissolve from the copper anode current collector into
-          the electrolyte. These ions migrate toward the cathode and plate as metallic copper dendrites.
-          These dendrites penetrate the separator, creating a permanent internal short circuit. A cell
-          that has been deeply discharged to 0V then recharged will exhibit dramatically increased
-          self-discharge (the internal short slowly drains it) and may fail catastrophically on
-          the next charge cycle. The UVP threshold of 2.5V provides a 500mV safety margin above
-          the copper dissolution onset.</p>
+          <p>Below about 2.0V, copper ions start dissolving from the anode's copper backing foil
+          into the electrolyte liquid. Those ions travel across to the cathode side and deposit as
+          solid copper metal — forming tiny metallic bridges (dendrites) that grow toward the separator.
+          If one punctures through, you have a permanent internal short circuit. A cell that reaches 0V
+          and is then recharged will have much higher self-discharge than normal (the internal short is
+          slowly draining it), and may fail violently on the next charge cycle. The 2.5V cutoff keeps
+          a 500mV safety buffer above where this dissolution begins.</p>
         </div>
       </div>
 
@@ -591,11 +593,12 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <span class="formula-line">Deep discharge:   V_cell &lt; 2.0V  → flag for inspection, pre-charge required</span>
         <span class="formula-line">Recovery hysteresis: charge resume only after V_cell &gt; 2.8V (post pre-charge)</span>
         <span class="formula-caption">
-          If a cell reaches UVP, the BMS must not allow normal CC charge to resume immediately.
-          The pre-charge sequence (see Section 4.4) first applies a low current (C/20) until all
-          cells are above 2.8V, then transitions to normal CC-CV charge. This safely brings
-          deeply discharged cells back without triggering lithium plating from high-rate charge
-          on a partially failed SEI.
+          When a cell hits UVP, the BMS must not jump straight back to normal charging. Instead,
+          a pre-charge sequence starts: a very gentle current — about one-twentieth of the normal
+          rate (C/20) — is applied first, until all cells climb back above 2.8V. Only then does
+          the BMS switch to the normal charge profile. Going in hard at full current on a depleted
+          cell risks lithium plating on a weakened SEI layer, which would cause more damage than
+          the original over-discharge.
         </span>
       </div>
 
