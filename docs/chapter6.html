@@ -2198,7 +2198,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
           <div class="timing-badge">&lt; 100ms</div>
           <div class="timing-body">
             <div class="timing-title">Over-Voltage Protection (OVP) — Firmware path</div>
-            MCU reads all cell voltages from AFE every 10ms. If any cell exceeds 3.65V (LFP) for &gt;100ms (debounce), opens charge FET. Debounce prevents false trips from ADC noise. Must respond before Li plating begins — Li plating accelerates above 3.65V and becomes irreversible above 3.80V.
+            The MCU reads all 16 cell voltages every 10ms. If any cell climbs above 3.65V (the LFP upper limit) and stays there for more than 100ms, the firmware shuts off the charge FET. The 100ms debounce window filters out brief ADC noise spikes. Acting quickly matters: lithium plating (metallic lithium depositing on the anode) accelerates above 3.65V and becomes permanent above 3.80V — that damage cannot be reversed.
           </div>
         </div>
         <div class="timing-card">
