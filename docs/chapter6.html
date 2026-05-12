@@ -3005,7 +3005,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="formula-card">
           <div class="formula-name">Advanced: Extended Kalman Filter</div>
           <div class="formula-eq">x̂ₖ = Aₖx̂ₖ₋₁ + Bₖuₖ + Kₖ(yₖ − Cₖx̂ₖ)</div>
-          <div class="formula-note">Models pack as an ECM. State vector: [SoC, V_RC1]. Measurement: V_terminal. Kalman gain K adjusts based on process noise Q and measurement noise R. Eliminates drift from coulomb counting.</div>
+          <div class="formula-note">The EKF treats the battery as a mathematical model with hidden internal states — mainly SoC and the voltage across the RC circuit. Every 100ms it compares the model's predicted terminal voltage against the measured one and uses the error to correct its SoC estimate. The Kalman gain K decides how much to trust the new measurement vs the previous prediction. The result: drift-free SoC even during active charging and discharging.</div>
         </div>
         <div class="formula-card">
           <div class="formula-name">Temperature Compensation</div>
