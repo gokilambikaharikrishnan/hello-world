@@ -3030,7 +3030,7 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="formula-card">
           <div class="formula-name">Cycle Aging</div>
           <div class="formula-eq">SoH_cyc = 1 − (N_equiv × k_cyc)</div>
-          <div class="formula-note">N_equiv = Σ(ΔAh / C_full × 0.5) — full-cycle-equivalent count. k_cyc = capacity fade per cycle ≈ 0.02% per cycle for LFP. At 3000 cycles: 60% of capacity lost to cycling alone.</div>
+          <div class="formula-note">Every partial charge or discharge is counted as a fraction of a full cycle — the BMS accumulates these into a "full-cycle-equivalent" count. Each full equivalent cycle degrades LFP capacity by about 0.02%. After 3,000 full-equivalent cycles, cycling alone has cost 60% of the original capacity. (Thankfully, LFP's flat degradation curve means it degrades slowly and predictably all the way to that point.)</div>
         </div>
         <div class="formula-card">
           <div class="formula-name">Calendar Aging (Arrhenius)</div>
