@@ -1270,12 +1270,15 @@ tr:hover td{background:rgba(0,245,255,0.03)!important;}
         <div class="arch-block">
           <div class="arch-block-title">RAM Requirements</div>
           <div class="arch-block-body">
-            Minimum for a 16S LFP BMS: 32KB RAM. Breakdown: cell voltage array (16×2B = 32B),
-            temperature array (6×4B = 24B), EKF state matrix (4×4 float = 64B), OCV-SoC lookup
-            table if in RAM (50×8B = 400B), circular log buffer (256×16B = 4KB), CAN TX/RX buffers
-            (8×16B = 128B), RTOS task stacks (4KB typical per task × 4 tasks = 16KB). Recommended:
-            64KB+ RAM to avoid tight-margin designs that fail in cold (-40°C) when stack depth
-            increases with slower execution.
+            RAM is the working memory where the BMS keeps all its live data. The minimum for a
+            16-cell LFP BMS is 32KB. Here's where it goes: storing the sixteen cell voltages
+            takes 32 bytes; six temperature readings take 24 bytes; the EKF state matrix takes
+            64 bytes; the OCV-SoC lookup table (if kept in RAM) takes 400 bytes; the circular
+            fault log buffer takes 4KB; CAN message buffers take 128 bytes; and the RTOS task
+            stacks take about 16KB across four tasks. That all adds up to roughly 21KB just for
+            the basics. The recommendation is 64KB or more — tight 32KB designs can actually
+            crash in very cold temperatures (−40°C) because slower code execution causes deeper
+            interrupt call stacks, using more RAM than at room temperature.
           </div>
         </div>
         <div class="arch-block">
