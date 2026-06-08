@@ -987,6 +987,399 @@ code, .reg {
   </div>
 </section>
 
+
+<!-- CH 11 -->
+<section class="chapter" id="ch-11">
+  <div class="ch-number">11</div>
+  <div class="ch-title">Why Out-of-Frame? The Propagation Delay Reason</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>Imagine a game of telephone with 31 people in a line. You whisper a question to person 1, it travels all the way to person 31, who whispers the answer back. By the time it returns, you've already moved on to the next question. The out-of-frame protocol is designed exactly for this relay race.</p>
+  </div>
+  <div class="prose">
+    <p>In a single-chip setup, the out-of-frame protocol might seem like unnecessary complexity. But it exists for a very good reason: daisy-chain latency. When you have 31 L9963E devices chained together, a command you send to device #31 must travel through devices #1 through #30 before reaching its destination. Each chip in the chain receives, decodes, and re-transmits the frame — adding a small propagation delay at each hop.</p>
+    <p>By the time device #31 has received your full 40-bit command and prepared its answer, you are already clocking out the next SPI frame from the MCU. The out-of-frame design elegantly handles this: the answer always comes back one frame later, regardless of how many chips are in the chain. This keeps the protocol timing consistent and predictable.</p>
+    <p>For a single-chip setup, this means you simply send a "dummy" second frame to retrieve the answer to your first command. The dummy frame can be anything — a null read, a status check, whatever is convenient. Many firmware drivers pipeline commands: send command N+1 while harvesting the response to command N from the MISO stream. This is efficient and keeps the SPI bus busy with useful work.</p>
+    <p>There is one practical implication: you should never assume the first MISO frame after power-on contains valid data. The very first transaction returns whatever the chip's MISO output was initialized to (typically 0). Always send at least one dummy frame first and discard that MISO data.</p>
+  </div>
+  <div class="svg-wrap">
+    <svg width="600" height="170" viewBox="0 0 600 170" xmlns="http://www.w3.org/2000/svg">
+      <rect width="600" height="170" fill="#0d1929" rx="6"/>
+      <text x="300" y="18" fill="#f5a623" font-size="11" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700">OUT-OF-FRAME: 2-TRANSACTION SEQUENCE</text>
+      <!-- Transaction 1 -->
+      <rect x="10" y="28" width="270" height="50" fill="#1a2847" stroke="#00d4b4" stroke-width="1.5" rx="4"/>
+      <text x="145" y="44" fill="#00d4b4" font-size="10" text-anchor="middle" font-family="JetBrains Mono,monospace">Transaction 1</text>
+      <text x="145" y="58" fill="#e2d9c9" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">MOSI → READ reg 0x12, DevID=1</text>
+      <text x="145" y="70" fill="#8899aa" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">MISO ← (stale / previous response)</text>
+      <!-- Transaction 2 -->
+      <rect x="320" y="28" width="270" height="50" fill="#1a2847" stroke="#4ade80" stroke-width="1.5" rx="4"/>
+      <text x="455" y="44" fill="#4ade80" font-size="10" text-anchor="middle" font-family="JetBrains Mono,monospace">Transaction 2  (dummy OK)</text>
+      <text x="455" y="58" fill="#8899aa" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">MOSI → any valid frame</text>
+      <text x="455" y="70" fill="#4ade80" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">MISO ← DATA from reg 0x12 ✓</text>
+      <!-- Arrow -->
+      <line x1="280" y1="53" x2="320" y2="53" stroke="#f5a623" stroke-width="2"/>
+      <polygon points="320,49 320,57 330,53" fill="#f5a623"/>
+      <text x="300" y="47" fill="#f5a623" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">300ns</text>
+      <!-- Chain diagram below -->
+      <text x="300" y="100" fill="#8899aa" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">IN A DAISY CHAIN — COMMAND TRAVELS RIGHT, ANSWER TRAVELS LEFT</text>
+      <rect x="10" y="112" width="55" height="28" fill="#1a2847" stroke="#4ade80" stroke-width="1.5" rx="3"/>
+      <text x="37" y="130" fill="#4ade80" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">MCU</text>
+      <rect x="100" y="112" width="55" height="28" fill="#1a2847" stroke="#00d4b4" stroke-width="1" rx="3"/>
+      <text x="127" y="130" fill="#00d4b4" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">#1</text>
+      <rect x="195" y="112" width="55" height="28" fill="#1a2847" stroke="#00d4b4" stroke-width="1" rx="3"/>
+      <text x="222" y="130" fill="#00d4b4" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">#2</text>
+      <rect x="290" y="112" width="55" height="28" fill="#1a2847" stroke="#00d4b4" stroke-width="1" rx="3"/>
+      <text x="317" y="130" fill="#8899aa" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">...</text>
+      <rect x="385" y="112" width="55" height="28" fill="#1a2847" stroke="#f472b6" stroke-width="1.5" rx="3"/>
+      <text x="412" y="130" fill="#f472b6" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">#31</text>
+      <line x1="65" y1="126" x2="100" y2="126" stroke="#f5a623" stroke-width="1.5" marker-end="url(#ar1)"/>
+      <line x1="155" y1="126" x2="195" y2="126" stroke="#f5a623" stroke-width="1.5" marker-end="url(#ar1)"/>
+      <line x1="250" y1="126" x2="290" y2="126" stroke="#f5a623" stroke-width="1.5" marker-end="url(#ar1)"/>
+      <line x1="345" y1="126" x2="385" y2="126" stroke="#f5a623" stroke-width="1.5" marker-end="url(#ar1)"/>
+      <line x1="385" y1="140" x2="65" y2="155" stroke="#4ade80" stroke-width="1" stroke-dasharray="4,2"/>
+      <text x="225" y="165" fill="#4ade80" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">← answer returns next frame</text>
+      <defs>
+        <marker id="ar1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#f5a623"/></marker>
+      </defs>
+    </svg>
+    <p class="svg-caption">Two-transaction sequence to read one register. In chains, the out-of-frame design hides propagation latency.</p>
+  </div>
+  <div class="callout firmware">
+    <div class="callout-label">🔧 For your firmware</div>
+    <p>Pattern for a clean register read: (1) <code>spi_transfer(read_frame)</code> — discard MISO. (2) <code>spi_transfer(dummy_frame)</code> — parse MISO, check <code>Addr_feedback</code> matches step 1's address, check CRC, extract <code>DATA_READ</code>. For pipelining: combine step 2 of the previous read with step 1 of the next read into one transfer.</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>You need to read registers at addresses 0x10, 0x11, and 0x12 in sequence. How many total SPI transactions do you need to perform, and which transaction gives you the data for 0x10?</p>
+  </div>
+</section>
+
+<!-- CH 12 -->
+<section class="chapter" id="ch-12">
+  <div class="ch-number">12</div>
+  <div class="ch-title">Reading and Writing Registers: Step by Step</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>Writing a register is like dropping a letter in a mailbox — you write the address, put in the content, seal it with a CRC stamp, and drop it. Reading a register is like sending a request letter and then collecting the reply in your next trip to the mailbox.</p>
+  </div>
+  <div class="prose">
+    <p>Now that you understand the frame format and the out-of-frame protocol, let's put them together into the exact sequence for reading and writing registers.</p>
+    <p><strong>To write a register:</strong> Build a MOSI frame with R/W=1, the target DevID, the register address, and the 18-bit data value you want to write. Compute and append the 6-bit CRC. Perform the SPI transfer. The MISO data during this first frame is the response to whatever command came before — inspect it if useful, but it does not contain the write acknowledgment. To confirm the write was accepted, send any second frame — typically a read of the same register — and inspect the MISO of that second frame, which will contain the chip's acknowledgment of your write (Address_feedback will match, and DATA_READ will show the new register value if it was a readback).</p>
+    <p><strong>To read a register:</strong> Build a MOSI frame with R/W=0, the DevID, the register address. DATA_WRITE bits are ignored — you can set them to zero. Compute and append CRC. Perform the first SPI transfer. Now send a second frame (dummy or another command). During the second transfer, MISO carries the response to your read: check that Addr_feedback matches your requested address, extract the 18-bit DATA_READ value, verify the CRC.</p>
+    <p>A good firmware driver always verifies the CRC of the received MISO frame and checks Addr_feedback to ensure the response corresponds to the expected command. It also checks the 2-bit GSW field on every received frame — if GSW is non-zero, there is a fault condition that needs attention regardless of the register data.</p>
+  </div>
+  <div class="svg-wrap">
+    <svg width="600" height="150" viewBox="0 0 600 150" xmlns="http://www.w3.org/2000/svg">
+      <rect width="600" height="150" fill="#0d1929" rx="6"/>
+      <text x="300" y="16" fill="#f5a623" font-size="11" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700">WRITE then READ-BACK SEQUENCE</text>
+      <!-- Frame 1 -->
+      <rect x="10" y="24" width="170" height="52" fill="#1a2847" stroke="#f472b6" stroke-width="1.5" rx="3"/>
+      <text x="95" y="40" fill="#f472b6" font-size="10" text-anchor="middle" font-family="JetBrains Mono,monospace">Frame 1: WRITE</text>
+      <text x="95" y="54" fill="#e2d9c9" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">MOSI: R/W=1, Addr, Data</text>
+      <text x="95" y="67" fill="#8899aa" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">MISO: previous answer</text>
+      <!-- Frame 2 -->
+      <rect x="210" y="24" width="170" height="52" fill="#1a2847" stroke="#4ade80" stroke-width="1.5" rx="3"/>
+      <text x="295" y="40" fill="#4ade80" font-size="10" text-anchor="middle" font-family="JetBrains Mono,monospace">Frame 2: READ-BACK</text>
+      <text x="295" y="54" fill="#8899aa" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">MOSI: R/W=0, same Addr</text>
+      <text x="295" y="67" fill="#4ade80" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">MISO: write ACK ✓</text>
+      <!-- Frame 3 -->
+      <rect x="410" y="24" width="170" height="52" fill="#1a2847" stroke="#00d4b4" stroke-width="1.5" rx="3"/>
+      <text x="495" y="40" fill="#00d4b4" font-size="10" text-anchor="middle" font-family="JetBrains Mono,monospace">Frame 3: dummy</text>
+      <text x="495" y="54" fill="#8899aa" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">MOSI: any valid frame</text>
+      <text x="495" y="67" fill="#00d4b4" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">MISO: register value ✓</text>
+      <!-- Arrows -->
+      <line x1="180" y1="50" x2="210" y2="50" stroke="#f5a623" stroke-width="1.5" marker-end="url(#aw1)"/>
+      <line x1="380" y1="50" x2="410" y2="50" stroke="#f5a623" stroke-width="1.5" marker-end="url(#aw1)"/>
+      <!-- Bottom note -->
+      <text x="300" y="100" fill="#8899aa" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">Always check: CRC valid? Addr_feedback == requested addr? GSW == 00?</text>
+      <text x="300" y="115" fill="#f5a623" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">⚠ If CRC fails → discard entire frame and retry</text>
+      <text x="300" y="130" fill="#4ade80" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">✓ Best practice: always read-back after every write to verify</text>
+      <defs>
+        <marker id="aw1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#f5a623"/></marker>
+      </defs>
+    </svg>
+    <p class="svg-caption">Write + read-back pattern: 3 frames total. Frame 2 ACKs the write; Frame 3 returns read data.</p>
+  </div>
+  <div class="callout tech">
+    <div class="callout-label">⚙️ Technical Detail</div>
+    <p>Register map width: 18 bits per register. Addresses: <span class="hex">0x00</span>–<span class="hex">0x5F</span>. Read-only registers: writing to them is silently ignored. Some registers have write-protect bits that must be cleared before writing. After a reset, all registers return to NVM defaults. Registers are accessible only in NORMAL state (except <code>chip_ID</code> which is INIT-only).</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>After sending a WRITE command, you receive MISO data with Addr_feedback=0x00 and DATA_READ=0. Does this confirm your write was successful? Why or why not?</p>
+  </div>
+</section>
+
+<!-- CH 13 -->
+<section class="chapter" id="ch-13">
+  <div class="ch-number">13</div>
+  <div class="ch-title">Burst Read: Reading Many Registers Fast</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>Normally, each question and answer requires separate trips to the mailbox. Burst read is like asking "just give me all 20 pieces of mail at once" — the chip hands you a stack without you needing to request each one individually.</p>
+  </div>
+  <div class="prose">
+    <p>A normal register read requires two SPI transactions per register (one to request, one to receive). To read all 14 cell voltages individually, you would need 28+ transactions. Burst read solves this by allowing you to trigger a single command that causes the chip to stream back a pre-defined set of registers automatically.</p>
+    <p>There are three burst commands, each returning a specific set of 20 registers in sequence. <strong>Burst <span class="hex">0x78</span></strong> is the most useful for day-to-day operation: it returns all 14 cell voltages, the stack voltage sum, the VBAT divider measurement, the instantaneous current, and the balancing status. This is the command you'll use in your main measurement loop. <strong>Burst <span class="hex">0x7A</span></strong> returns all fault and diagnostic registers — useful when GSW indicates a problem. <strong>Burst <span class="hex">0x7B</span></strong> returns the Coulomb counter value and GPIO measurements.</p>
+    <p>To start a burst, you send a single 40-bit frame using the burst address (e.g., <span class="hex">0x78</span>) in the Addr field and R/W=0. Then you wait: for ISO_FAST mode, wait at least 400 µs; for ISO_SLOW mode, wait at least 3 ms. After the wait, you clock out 20 more dummy SPI frames, collecting the MISO data on each one. Each MISO frame contains one register's data, with Addr_feedback telling you which register it is.</p>
+    <p>Burst read is by far the most efficient way to gather cell voltages and is the recommended approach for any BMS that needs to update measurements faster than once per second.</p>
+  </div>
+  <div class="svg-wrap">
+    <svg width="600" height="130" viewBox="0 0 600 130" xmlns="http://www.w3.org/2000/svg">
+      <rect width="600" height="130" fill="#0d1929" rx="6"/>
+      <text x="300" y="16" fill="#f5a623" font-size="11" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700">BURST READ 0x78 — TIMELINE</text>
+      <!-- Trigger frame -->
+      <rect x="10" y="26" width="80" height="40" fill="#1a2847" stroke="#f5a623" stroke-width="2" rx="3"/>
+      <text x="50" y="42" fill="#f5a623" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">BURST CMD</text>
+      <text x="50" y="56" fill="#f5a623" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">addr=0x78</text>
+      <!-- Wait -->
+      <rect x="96" y="26" width="70" height="40" fill="#0d1929" stroke="#8899aa" stroke-width="1" stroke-dasharray="3,2" rx="3"/>
+      <text x="131" y="42" fill="#8899aa" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">wait</text>
+      <text x="131" y="56" fill="#8899aa" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">400µs</text>
+      <!-- 20 frames -->
+      <rect x="172" y="26" width="40" height="40" fill="#1a2847" stroke="#00d4b4" stroke-width="1.5" rx="3"/>
+      <text x="192" y="42" fill="#00d4b4" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">VCell1</text>
+      <text x="192" y="56" fill="#8899aa" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">frame1</text>
+      <rect x="218" y="26" width="40" height="40" fill="#1a2847" stroke="#00d4b4" stroke-width="1.5" rx="3"/>
+      <text x="238" y="42" fill="#00d4b4" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">VCell2</text>
+      <text x="238" y="56" fill="#8899aa" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">frame2</text>
+      <rect x="264" y="26" width="40" height="40" fill="#1a2847" stroke="#00d4b4" stroke-width="1" rx="3"/>
+      <text x="284" y="42" fill="#8899aa" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">...</text>
+      <rect x="310" y="26" width="40" height="40" fill="#1a2847" stroke="#00d4b4" stroke-width="1" rx="3"/>
+      <text x="330" y="42" fill="#00d4b4" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">VCell14</text>
+      <rect x="356" y="26" width="40" height="40" fill="#1a2847" stroke="#4ade80" stroke-width="1.5" rx="3"/>
+      <text x="376" y="42" fill="#4ade80" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">Vsum</text>
+      <rect x="402" y="26" width="40" height="40" fill="#1a2847" stroke="#4ade80" stroke-width="1.5" rx="3"/>
+      <text x="422" y="42" fill="#4ade80" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">VBAT</text>
+      <rect x="448" y="26" width="40" height="40" fill="#1a2847" stroke="#a855f7" stroke-width="1.5" rx="3"/>
+      <text x="468" y="42" fill="#a855f7" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">Curr</text>
+      <rect x="494" y="26" width="40" height="40" fill="#1a2847" stroke="#f472b6" stroke-width="1.5" rx="3"/>
+      <text x="514" y="42" fill="#f472b6" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">Bal</text>
+      <text x="514" y="56" fill="#f472b6" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">status</text>
+      <rect x="540" y="26" width="50" height="40" fill="#1a2847" stroke="#8899aa" stroke-width="1" rx="3"/>
+      <text x="565" y="42" fill="#8899aa" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">...+more</text>
+      <!-- total label -->
+      <text x="300" y="90" fill="#8899aa" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">20 MISO frames total · Addr_feedback identifies each register · BST bit=1 during burst</text>
+      <text x="300" y="108" fill="#f5a623" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">⚠ Must wait 400µs (fast) or 3ms (slow ISO) before reading first frame!</text>
+    </svg>
+    <p class="svg-caption">Burst 0x78: 1 trigger frame + 400µs wait + 20 read frames = all cell data in one shot</p>
+  </div>
+  <div class="callout firmware">
+    <div class="callout-label">🔧 For your firmware</div>
+    <p>In your measurement loop: (1) trigger SOC (start conversion), (2) wait for DUTY_ON=0, (3) send burst <span class="hex">0x78</span> frame, (4) wait 400 µs, (5) clock out 20 dummy frames collecting MISO, (6) parse each frame using Addr_feedback to identify which cell's data it carries. Total SPI time for 20 frames at 5 MHz ≈ 160 µs.</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>You initiate burst 0x78 but forget to wait the 400 µs before sending the 20 read frames. What data do you think you will receive, and why?</p>
+  </div>
+</section>
+
+<!-- CH 14 -->
+<section class="chapter" id="ch-14">
+  <div class="ch-number">14</div>
+  <div class="ch-title">The Global Status Word (GSW)</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>On every single response the chip sends you, there are two bits that act like a traffic light: green means all good, yellow means take a look, red means something is wrong, flashing red means emergency. These two bits are the Global Status Word, and you should read them on every single SPI transaction.</p>
+  </div>
+  <div class="prose">
+    <p>The Global Status Word is a 2-bit field embedded in every single MISO frame at bits [25:24]. It provides an instant, at-a-glance health summary of the entire chip without requiring you to read any fault registers. Think of it as a consolidated alarm indicator.</p>
+    <p>The four possible values are: <code>00</code> = all OK, no issues detected; <code>01</code> = warning level event (non-critical, check fault registers when convenient); <code>10</code> = fault condition (action required, check fault registers soon); <code>11</code> = critical fault (immediate attention required, pack safety may be at risk). Each of these levels has specific fault types that trigger it — critical faults include things like cell OV/UV, ADC failure, or communication errors, while warnings might be near-threshold conditions or non-safety diagnostics.</p>
+    <p>The GSW is set by the chip's fault logic and cleared automatically when the underlying fault condition is resolved and the fault latches are reset by firmware. The key insight is that you do not need to read dedicated fault registers on every SPI transaction — you just check the 2-bit GSW. Only when GSW is non-zero do you need to spend the extra SPI transactions reading the detailed fault registers (using burst <span class="hex">0x7A</span>) to find out what went wrong.</p>
+    <p>In your main loop, a good pattern is: execute measurement → read burst <span class="hex">0x78</span> → check GSW on every MISO frame. If any frame shows GSW ≠ 00, trigger your fault-handling routine. This keeps the normal path fast while catching faults immediately.</p>
+  </div>
+  <div class="callout tech">
+    <div class="callout-label">⚙️ Technical Detail</div>
+    <p>GSW field: bits [25:24] of every MISO frame. Values: <code>2'b00</code>=OK, <code>2'b01</code>=warning, <code>2'b10</code>=fault, <code>2'b11</code>=critical. The MCU echoes the last received GSW back in the next MOSI frame (bits [25:24] of MOSI = GSW_echo). This echo mechanism lets the chip track whether the MCU has seen the latest status. GSW is a live summary — it reflects the current state of all fault latches.</p>
+  </div>
+  <div class="callout firmware">
+    <div class="callout-label">🔧 For your firmware</div>
+    <p>After every <code>spi_transfer()</code>: extract bits [25:24] from the 40-bit MISO value. If non-zero, set a <code>fault_pending</code> flag. Store the last seen GSW and echo it in the next MOSI frame. When <code>fault_pending</code> is set, queue a burst <span class="hex">0x7A</span> read to get the full fault details.</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>GSW has been <code>01</code> (warning) for the last 5 measurement cycles. Suddenly it changes to <code>11</code> (critical). What should your firmware do immediately, and what should it do before re-enabling normal operation?</p>
+  </div>
+</section>
+
+<!-- CH 15 -->
+<section class="chapter" id="ch-15">
+  <div class="ch-number">15</div>
+  <div class="ch-title">CRC: Making Sure Data Isn't Corrupted</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>CRC is like a fingerprint of the message. Before sending, you compute the fingerprint and attach it. When received, you compute the fingerprint again from the data — if it matches what was attached, the message is intact. If it doesn't match, something got corrupted in transit.</p>
+  </div>
+  <div class="prose">
+    <p>Every SPI frame — both MOSI and MISO — ends with a 6-bit CRC field. This is not optional: the L9963E checks the CRC on every incoming MOSI frame and will silently discard any frame whose CRC is wrong. It will not send an error back to you. It simply ignores the entire frame as if you never sent it. This "silent ignore" behavior means if your CRC calculation is buggy, your register writes will appear to succeed (no error) but actually do nothing — a maddening failure mode.</p>
+    <p>The CRC is computed over bits [39:7] of the frame — everything except the 6-bit CRC field itself (bits [5:0]). The polynomial used is <strong>x⁶ + x⁴ + x² + x¹ + 1</strong>, which in binary is <code>1010011</code> or hex <span class="hex">0x43</span>. The initial value (seed) is <code>0b111111</code> (all ones). The algorithm processes bits from MSB to LSB of bits [39:7], XOR-ing with the generator polynomial when the topmost bit is 1.</p>
+    <p>On the MISO side, you should also verify the 6-bit CRC of every received frame. If it fails, the frame should be discarded and the transaction retried. CRC failures on MISO indicate electrical noise, EMI issues, or PCB layout problems — and in an automotive battery system, these matter.</p>
+    <p>In practice, you implement the CRC in firmware as a lookup table or a simple bit-by-bit loop. A 64-entry lookup table (6-bit CRC) is fast and small. Many open-source L9963E drivers include a pre-computed CRC table — use one, but verify it against the polynomial above.</p>
+  </div>
+  <div class="callout tech">
+    <div class="callout-label">⚙️ Technical Detail</div>
+    <p>CRC-6, polynomial: x⁶ + x⁴ + x² + x + 1 = <span class="hex">0x43</span>. Seed: <code>0x3F</code> (all ones). Input: bits[39:7] of frame (33 bits). Output: 6-bit CRC placed in bits[5:0]. L9963E rejects MOSI frames with wrong CRC silently — no error flag, no response. MISO CRC uses the same polynomial over the MISO bits[39:7].</p>
+  </div>
+  <div class="callout firmware">
+    <div class="callout-label">🔧 For your firmware</div>
+    <p>Implement a <code>uint8_t compute_crc6(uint64_t frame_bits_39_to_7)</code> function. Start with <code>crc = 0x3F</code>. For each bit from bit 39 down to bit 7: if <code>((crc &gt;&gt; 5) ^ (bit)) &amp; 1</code> is true, <code>crc = (crc &lt;&lt; 1) ^ 0x43</code>; else <code>crc = crc &lt;&lt; 1</code>. Mask to 6 bits. Test against: frame <span class="hex">0x8041800000</span> should produce CRC <span class="hex">0x3A</span>.</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>Your firmware sends a write command but the register value never changes, and you receive no error flag. What is the most likely cause, and how would you diagnose it?</p>
+  </div>
+</section>
+
+<!-- CH 16 -->
+<section class="chapter" id="ch-16">
+  <div class="ch-number">16</div>
+  <div class="ch-title">Device Addressing in a Daisy Chain</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>Imagine 31 employees sharing a single phone line with no name badges yet. Your first job is to assign each one a unique number so you can call them individually. L9963E addressing works exactly this way — unassigned chips all start with ID=0, and you hand out IDs one by one.</p>
+  </div>
+  <div class="prose">
+    <p>When multiple L9963E chips are connected in a daisy chain, each one needs a unique Device ID (DevID) so the MCU can address them individually. At power-on, all chips have DevID=0 (unassigned). The ID assignment process happens during the INIT state and uses a clever sequential scheme.</p>
+    <p>The assignment algorithm works from the farthest device back toward the MCU. You send a broadcast WRITE command (DevID=0 in the MOSI frame) to assign ID to the device currently listening on the INIT-address channel. The farthest device in the chain (let's say there are 5 chips: #5 is farthest) responds to the first assignment command and takes ID=5. It then locks its ID and stops responding to DevID=0 commands. Now the second-farthest chip (#4) is the next to respond to a DevID=0 command, and so on, until all chips have IDs.</p>
+    <p>Once an ID is assigned via the <code>chip_ID</code> register write during INIT, it is locked and only a reset can clear it. Thereafter, you address individual chips using their specific DevID (1–31) in every MOSI frame, and only the chip with that ID will respond. To send a command to all chips simultaneously (for example, a global sleep command), use the broadcast address DevID=0.</p>
+    <p>For a single-chip setup, this is much simpler: you just assign DevID=1 to your one chip during INIT, and from then on use DevID=1 for all communications.</p>
+  </div>
+  <div class="svg-wrap">
+    <svg width="580" height="140" viewBox="0 0 580 140" xmlns="http://www.w3.org/2000/svg">
+      <rect width="580" height="140" fill="#0d1929" rx="6"/>
+      <text x="290" y="16" fill="#f5a623" font-size="11" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700">ID ASSIGNMENT — 3-CHIP CHAIN EXAMPLE</text>
+      <!-- MCU -->
+      <rect x="10" y="30" width="60" height="80" fill="#1a2847" stroke="#4ade80" stroke-width="1.5" rx="3"/>
+      <text x="40" y="55" fill="#4ade80" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">MCU</text>
+      <!-- Chips -->
+      <rect x="120" y="30" width="80" height="80" fill="#1a2847" stroke="#f5a623" stroke-width="1.5" rx="3"/>
+      <text x="160" y="52" fill="#00d4b4" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">L9963E</text>
+      <text x="160" y="66" fill="#8899aa" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">ID=0→1</text>
+      <text x="160" y="80" fill="#f5a623" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">assigned 3rd</text>
+      <rect x="260" y="30" width="80" height="80" fill="#1a2847" stroke="#f5a623" stroke-width="1.5" rx="3"/>
+      <text x="300" y="52" fill="#00d4b4" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">L9963E</text>
+      <text x="300" y="66" fill="#8899aa" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">ID=0→2</text>
+      <text x="300" y="80" fill="#f5a623" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">assigned 2nd</text>
+      <rect x="400" y="30" width="80" height="80" fill="#1a2847" stroke="#f472b6" stroke-width="2" rx="3"/>
+      <text x="440" y="52" fill="#00d4b4" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">L9963E</text>
+      <text x="440" y="66" fill="#f472b6" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">ID=0→3</text>
+      <text x="440" y="80" fill="#f472b6" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">assigned 1st</text>
+      <text x="440" y="94" fill="#8899aa" font-size="7" text-anchor="middle" font-family="JetBrains Mono,monospace">(farthest)</text>
+      <!-- Arrows -->
+      <line x1="70" y1="70" x2="120" y2="70" stroke="#8899aa" stroke-width="1.5" marker-end="url(#aid)"/>
+      <line x1="200" y1="70" x2="260" y2="70" stroke="#8899aa" stroke-width="1.5" marker-end="url(#aid)"/>
+      <line x1="340" y1="70" x2="400" y2="70" stroke="#8899aa" stroke-width="1.5" marker-end="url(#aid)"/>
+      <!-- Step labels -->
+      <text x="290" y="122" fill="#8899aa" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">Step 1: broadcast DevID=0 WRITE chip_ID=3 → farthest chip takes ID=3, locks it</text>
+      <text x="290" y="136" fill="#8899aa" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">Step 2: broadcast → middle takes ID=2. Step 3: broadcast → nearest takes ID=1</text>
+      <defs>
+        <marker id="aid" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#8899aa"/></marker>
+      </defs>
+    </svg>
+    <p class="svg-caption">ID assignment: broadcast from farthest to nearest. Broadcast addr DevID=0 reaches all; DevID=1–31 targets specific chips.</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>You have a 5-chip chain and want to send a "start conversion" command to all chips simultaneously. What DevID do you use in the MOSI frame?</p>
+  </div>
+</section>
+
+<!-- CH 17 -->
+<section class="chapter" id="ch-17">
+  <div class="ch-number">17</div>
+  <div class="ch-title">Init State: The Address Assignment Window</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>After waking up, the chip opens a 60-second window and waits for you to tell it its name (its ID). If you don't show up in time, it gives up, goes back to sleep, and you have to start the whole wake-up process over. Don't miss the window.</p>
+  </div>
+  <div class="prose">
+    <p>After every wakeup — whether from power-on, a wakeup command, or a cyclic wakeup — the L9963E enters INIT state. This is a restricted operating mode with a specific purpose: allowing the MCU to assign the chip's device address.</p>
+    <p>During INIT state, only three fields are writable: <code>chip_ID</code> (the 5-bit device address), <code>isotx_en_h</code> (enable the ISO high-side transmitter), and <code>iso_freq_sel</code> (select ISO communication speed). All other registers are read-only and return their NVM default values. Attempting to write any other register during INIT is silently ignored.</p>
+    <p>The INIT window is time-limited by <code>t_SHUT</code>, which has a maximum of 60 seconds. If the MCU does not write a valid non-zero chip_ID within this window, the chip automatically returns to SLEEP state. You then need to issue another wakeup sequence to try again.</p>
+    <p>Once a valid chip_ID (1–31) is written, the chip immediately and automatically transitions from INIT to NORMAL state. In NORMAL state, all registers become accessible, ADC conversions can be started, balancing can be enabled, and the full SPI protocol is active. The chip_ID is locked from this point until the next reset.</p>
+    <p>For firmware reliability, always perform the INIT step within the first few hundred milliseconds of wakeup, well within the 60-second window. A good practice is to include a check: after writing chip_ID, verify by reading it back. If the read-back matches, you're in NORMAL state and can proceed with full initialization.</p>
+  </div>
+  <div class="callout tech">
+    <div class="callout-label">⚙️ Technical Detail</div>
+    <p>INIT state register access: only <code>chip_ID</code> [bits 4:0], <code>isotx_en_h</code> [bit], and <code>iso_freq_sel</code> [bit] are writable. All others: read-only, return NVM defaults. t_SHUT timeout: max 60 s. Transition to NORMAL: automatic after valid chip_ID write (chip_ID 1–31). Transition back to SLEEP: on t_SHUT expiry without valid ID write.</p>
+  </div>
+  <div class="callout warn">
+    <div class="callout-label">⚠️ Watch Out</div>
+    <p>If your firmware crashes or stalls between wakeup and chip_ID assignment, the chip will silently go back to SLEEP after 60 seconds. Add a watchdog timer in your firmware's initialization sequence, and always verify the chip_ID read-back before proceeding to full configuration.</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>After writing chip_ID=1, you try to write the VCELL_EN register but the value never sticks. What is the most likely explanation, and what might you check?</p>
+  </div>
+</section>
+
+<!-- CH 18 -->
+<section class="chapter" id="ch-18">
+  <div class="ch-number">18</div>
+  <div class="ch-title">ISO (Isolated) SPI: The Daisy Chain System</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>Imagine 14-story building where each floor is at a different electrical potential. You can't run a normal wire between floors because of the voltage difference. The ISO interface uses magnetic pulses through transformers — like sending messages by drum beat — that cross the voltage barrier safely.</p>
+  </div>
+  <div class="prose">
+    <p>In a multi-module battery system, each L9963E module is physically connected to a different section of the battery pack, which means each chip's ground (AGND) is at a different voltage — potentially hundreds of volts apart. A direct SPI bus cannot cross this voltage barrier. The ISO interface solves this by using transformer- or capacitor-isolated differential signaling.</p>
+    <p>Each L9963E has two ISO ports: the <strong>high-side port</strong> (ISOHp and ISOHm) connects upward toward the MCU, and the <strong>low-side port</strong> (ISOLp and ISOLm) connects downward toward the next chip in the chain. Between each pair of chips sits an isolation barrier — either a small transformer (XFMR) or a coupling capacitor (CAP). The signal is differential, which means one pin carries the signal and the other carries its inverse, giving excellent noise immunity.</p>
+    <p>The ISO interface has two speed modes: <code>FISO_SLOW</code> at 333 kbps (default, more robust, better range) and <code>FISO_FAST</code> at 2.66 Mbps (high speed for fast measurement loops). The speed is selected via the <code>iso_freq_sel</code> bit, which must be written during INIT state before transitioning to NORMAL.</p>
+    <p>The practical benefit is remarkable: the datasheet specifies less than 4 ms to convert and read 96 cells from 8 devices, and less than 16 ms for 434 cells from 31 devices at fast speed. The chain regenerates the signal at each hop (regenerative buffer), so signal quality does not degrade with chain length.</p>
+  </div>
+  <div class="svg-wrap">
+    <svg width="580" height="150" viewBox="0 0 580 150" xmlns="http://www.w3.org/2000/svg">
+      <rect width="580" height="150" fill="#0d1929" rx="6"/>
+      <text x="290" y="16" fill="#f5a623" font-size="11" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700">ISO DAISY CHAIN WITH ISOLATION BARRIERS</text>
+      <!-- MCU + L9963T -->
+      <rect x="10" y="30" width="70" height="70" fill="#1a2847" stroke="#4ade80" stroke-width="1.5" rx="3"/>
+      <text x="45" y="55" fill="#4ade80" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">MCU +</text>
+      <text x="45" y="68" fill="#4ade80" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">L9963T</text>
+      <text x="45" y="83" fill="#8899aa" font-size="7" text-anchor="middle" font-family="JetBrains Mono,monospace">transceiver</text>
+      <!-- Chip 1 -->
+      <rect x="130" y="30" width="70" height="70" fill="#1a2847" stroke="#00d4b4" stroke-width="1.5" rx="3"/>
+      <text x="165" y="52" fill="#00d4b4" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">L9963E</text>
+      <text x="165" y="65" fill="#f5a623" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">ID=1</text>
+      <text x="165" y="78" fill="#8899aa" font-size="7" text-anchor="middle" font-family="JetBrains Mono,monospace">GND1</text>
+      <!-- Chip 2 -->
+      <rect x="280" y="30" width="70" height="70" fill="#1a2847" stroke="#00d4b4" stroke-width="1.5" rx="3"/>
+      <text x="315" y="52" fill="#00d4b4" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">L9963E</text>
+      <text x="315" y="65" fill="#f5a623" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">ID=2</text>
+      <text x="315" y="78" fill="#8899aa" font-size="7" text-anchor="middle" font-family="JetBrains Mono,monospace">GND2 +14V</text>
+      <!-- Chip 3 -->
+      <rect x="430" y="30" width="70" height="70" fill="#1a2847" stroke="#00d4b4" stroke-width="1.5" rx="3"/>
+      <text x="465" y="52" fill="#00d4b4" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">L9963E</text>
+      <text x="465" y="65" fill="#f5a623" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">ID=3</text>
+      <text x="465" y="78" fill="#8899aa" font-size="7" text-anchor="middle" font-family="JetBrains Mono,monospace">GND3 +28V</text>
+      <!-- Barriers -->
+      <rect x="100" y="50" width="28" height="30" fill="#131f35" stroke="#f5a623" stroke-width="1" rx="2"/>
+      <text x="114" y="63" fill="#f5a623" font-size="7" text-anchor="middle" font-family="JetBrains Mono,monospace">XFMR</text>
+      <text x="114" y="73" fill="#f5a623" font-size="7" text-anchor="middle" font-family="JetBrains Mono,monospace">ISO</text>
+      <rect x="248" y="50" width="28" height="30" fill="#131f35" stroke="#f5a623" stroke-width="1" rx="2"/>
+      <text x="262" y="63" fill="#f5a623" font-size="7" text-anchor="middle" font-family="JetBrains Mono,monospace">XFMR</text>
+      <text x="262" y="73" fill="#f5a623" font-size="7" text-anchor="middle" font-family="JetBrains Mono,monospace">ISO</text>
+      <rect x="398" y="50" width="28" height="30" fill="#131f35" stroke="#f5a623" stroke-width="1" rx="2"/>
+      <text x="412" y="63" fill="#f5a623" font-size="7" text-anchor="middle" font-family="JetBrains Mono,monospace">XFMR</text>
+      <text x="412" y="73" fill="#f5a623" font-size="7" text-anchor="middle" font-family="JetBrains Mono,monospace">ISO</text>
+      <!-- Lines -->
+      <line x1="80" y1="65" x2="100" y2="65" stroke="#f5a623" stroke-width="1.5"/>
+      <line x1="128" y1="65" x2="130" y2="65" stroke="#f5a623" stroke-width="1.5"/>
+      <line x1="200" y1="65" x2="248" y2="65" stroke="#f5a623" stroke-width="1.5"/>
+      <line x1="276" y1="65" x2="280" y2="65" stroke="#f5a623" stroke-width="1.5"/>
+      <line x1="350" y1="65" x2="398" y2="65" stroke="#f5a623" stroke-width="1.5"/>
+      <line x1="426" y1="65" x2="430" y2="65" stroke="#f5a623" stroke-width="1.5"/>
+      <!-- Speeds -->
+      <text x="290" y="120" fill="#8899aa" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">FISO_SLOW = 333 kbps (default)   |   FISO_FAST = 2.66 Mbps</text>
+      <text x="290" y="135" fill="#8899aa" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">Regenerative buffer at each chip — no signal degradation in long chains</text>
+    </svg>
+    <p class="svg-caption">ISO daisy chain: transformer barriers isolate each chip's ground. Signal regenerated at each hop.</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>In a 31-chip chain at FISO_SLOW (333 kbps), roughly how long does a single 40-bit frame take to reach the last chip after the MCU sends it — and how does this affect your choice between fast and slow ISO modes?</p>
+  </div>
+</section>
+
 </div><!-- end content-wrap -->
 </div><!-- end main -->
 
