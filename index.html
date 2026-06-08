@@ -2054,6 +2054,257 @@ code, .reg {
   </div>
 </section>
 
+
+<!-- ==================== PART 6 ==================== -->
+<div class="part-divider"><span>Part 6 — Cell Balancing</span></div>
+
+<!-- CH 39 -->
+<section class="chapter" id="ch-39">
+  <div class="ch-number">39</div>
+  <div class="ch-title">Why Balancing? The Cell Drift Problem</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>Imagine 14 buckets of water connected by pipes. If they all start equal but one leaks slightly faster, it will always hit empty first and stop the system — even though the other buckets are still full. Balancing is the process of equalizing the buckets so they all hit empty (or full) at the same time.</p>
+  </div>
+  <div class="prose">
+    <p>In a series-connected battery pack, all cells experience the same current — they all charge and discharge together. Over hundreds of cycles, even tiny differences in cell capacity, self-discharge rate, or internal resistance cause some cells to reach full charge (OV limit) or empty (UV limit) before others. This mismatch is called cell imbalance.</p>
+    <p>The consequence is real and significant: the entire pack must stop charging when the highest-capacity cell hits its OV limit, even if the other cells aren't full yet. The pack must stop discharging when the weakest cell hits its UV limit, even if the others still have charge. As imbalance grows, the usable capacity of the pack shrinks — even though the individual cells are still healthy.</p>
+    <p>Passive balancing addresses this by deliberately draining charge from cells that are running "ahead" of the pack. A small resistor is connected across each high cell, allowing current to flow and burn off the excess charge as heat. This equalizes the cells at the top of charge (or any desired voltage target). It is called "passive" because it wastes energy as heat rather than transferring it to lower cells (which would require more complex active balancing circuitry).</p>
+    <p>The L9963E implements passive balancing with per-cell control: each of the 14 cells can be independently enabled or disabled for balancing. The balancing current is set by the external resistor RDIS (the "discharge" resistor), typically 15–20 Ω for approximately 200 mA balancing current per cell at 3.3 V.</p>
+  </div>
+  <div class="callout aha">
+    <div class="callout-label">🧠 Key Insight</div>
+    <p>Passive balancing doesn't add charge to weak cells — it removes charge from strong cells to match the weakest one. This means balancing always works at the top of the charge curve, where cells diverge most. At the bottom, you should stop balancing well above the UV threshold.</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>Your 14-cell pack has one cell consistently 50 mV above the others at the end of charge. After balancing equalizes all cells, what happens to the total pack usable capacity compared to before balancing?</p>
+  </div>
+</section>
+
+<!-- CH 40 -->
+<section class="chapter" id="ch-40">
+  <div class="ch-number">40</div>
+  <div class="ch-title">Balancing Pins: S1–S14 and B-Pins</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>The S-pins are like light switches — the chip flips them on to connect a resistor across a cell, allowing current to flow and bleed off excess charge. The B-pins are shared ground rails between adjacent balancing switches.</p>
+  </div>
+  <div class="prose">
+    <p>The physical implementation of balancing uses three pin types per pair of cells: the S-pins (balancing switch outputs), the B-pins (common terminals), and the external RDIS resistors. Understanding this physical layout is essential for correct PCB design.</p>
+    <p>Each cell has one S-pin: S1 for cell 1, S2 for cell 2, and so on up to S14 for cell 14. Each pair of adjacent cells shares a B-pin: B2_1 is shared between cells 1 and 2, B4_3 between cells 3 and 4, and so on. The internal balancing circuit consists of a power MOSFET connected between Sn and the internal reference. When enabled, the MOSFET turns on and connects Sn to the balancing path.</p>
+    <p>The external discharge resistor RDIS is connected between the Sn pin and the Bn,n-1 pin (or between Sn and the cell's negative terminal, depending on the circuit variant). When the internal MOSFET closes, current flows from the positive terminal of the cell, through RDIS, through the MOSFET, back to the negative terminal — bleeding off charge as heat in RDIS.</p>
+    <p>The typical balancing current is 200 mA with a 15–20 Ω RDIS for a 3.3 V LFP cell. The heat generated in RDIS is P = I² × RDIS = (0.2)² × 15 = 0.6 W per cell. For 14 cells simultaneously balancing, that's 8.4 W of heat in the balance resistors — your PCB thermal design must accommodate this.</p>
+  </div>
+  <div class="svg-wrap">
+    <svg width="400" height="170" viewBox="0 0 400 170" xmlns="http://www.w3.org/2000/svg">
+      <rect width="400" height="170" fill="#0d1929" rx="6"/>
+      <text x="200" y="16" fill="#f5a623" font-size="11" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700">BALANCING CIRCUIT (one cell)</text>
+      <!-- Cell -->
+      <rect x="20" y="40" width="60" height="90" fill="#1a2847" stroke="#4ade80" stroke-width="1.5" rx="3"/>
+      <text x="50" y="82" fill="#4ade80" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">Cell N</text>
+      <text x="50" y="95" fill="#8899aa" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">~3.3V</text>
+      <!-- C(N) top, C(N-1) bottom -->
+      <line x1="80" y1="50" x2="130" y2="50" stroke="#00d4b4" stroke-width="1.5"/>
+      <text x="135" y="54" fill="#00d4b4" font-size="9" font-family="JetBrains Mono,monospace">C(N)</text>
+      <line x1="80" y1="120" x2="130" y2="120" stroke="#00d4b4" stroke-width="1.5"/>
+      <text x="135" y="124" fill="#00d4b4" font-size="9" font-family="JetBrains Mono,monospace">B(N,N-1)</text>
+      <!-- RDIS -->
+      <rect x="160" y="55" width="50" height="18" fill="#1a2847" stroke="#f5a623" stroke-width="1.5" rx="2"/>
+      <text x="185" y="68" fill="#f5a623" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">RDIS</text>
+      <line x1="130" y1="50" x2="160" y2="64" stroke="#f5a623" stroke-width="1.5"/>
+      <line x1="210" y1="64" x2="240" y2="64" stroke="#f5a623" stroke-width="1.5"/>
+      <!-- S pin -->
+      <line x1="240" y1="64" x2="270" y2="64" stroke="#a855f7" stroke-width="1.5"/>
+      <text x="272" y="68" fill="#a855f7" font-size="9" font-family="JetBrains Mono,monospace">S(N)</text>
+      <!-- Internal MOSFET in L9963E -->
+      <rect x="300" y="50" width="80" height="80" fill="#131f35" stroke="#1e3358" stroke-width="1.5" rx="3"/>
+      <text x="340" y="72" fill="#8899aa" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">L9963E</text>
+      <text x="340" y="84" fill="#8899aa" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">internal</text>
+      <text x="340" y="96" fill="#f472b6" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">MOSFET</text>
+      <text x="340" y="108" fill="#8899aa" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">BALx_EN</text>
+      <!-- Connection from B pin to bottom of chip -->
+      <line x1="130" y1="120" x2="300" y2="120" stroke="#4ade80" stroke-width="1.5"/>
+      <text x="215" y="136" fill="#4ade80" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">Current path when enabled</text>
+      <!-- Current arrow -->
+      <text x="200" y="158" fill="#8899aa" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">I_bal = V_cell / RDIS ≈ 3.3V / 15Ω ≈ 220mA</text>
+    </svg>
+    <p class="svg-caption">Balancing current path: cell+ → RDIS → S(N) → internal MOSFET → B(N,N-1) → cell−</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>If RDIS = 20 Ω and cell voltage = 3.5 V, what is the balancing current and what is the power dissipated in RDIS?</p>
+  </div>
+</section>
+
+<!-- CH 41 -->
+<section class="chapter" id="ch-41">
+  <div class="ch-number">41</div>
+  <div class="ch-title">Internal vs. External Balancing</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>Internal balancing uses the chip's own transistors to switch the current — simple and compact. External balancing uses the chip's S-pins to drive bigger external transistors, allowing much higher current. Same idea, different power levels.</p>
+  </div>
+  <div class="prose">
+    <p>The L9963E supports two balancing topologies, and the choice between them depends primarily on the required balancing current for your application.</p>
+    <p><strong>Internal balancing</strong> uses the L9963E's built-in power MOSFETs directly. The S-pins are the outputs of these internal MOSFETs, and the RDIS resistor is connected externally between Sn and Bn,n-1. Current flows through the internal FET, which handles the switching. The internal FETs are rated for up to approximately 200 mA per channel — sufficient for most smaller packs where slow balancing over hours is acceptable. This is the simpler circuit: fewer external components, less PCB area, straightforward design.</p>
+    <p><strong>External balancing</strong> uses the S-pins as gate drivers for external MOSFETs, which carry the actual balancing current. The S-pin voltage swings to control the external FET gate. With external FETs, you can achieve balancing currents of 1 A, 2 A, or more — much faster balancing for large-capacity cells. For a 314 Ah LFP cell, higher balancing current means completing a balancing session in minutes rather than hours.</p>
+    <p>The register configuration is the same for both topologies — you still use the same <code>BAL_CFG</code> register bits to enable and disable individual cells. The physical circuit on the PCB is what differs. The chip does not need to know which topology you're using; it simply drives the S-pins high or low based on the software configuration.</p>
+    <p>The internal FETs also provide overcurrent protection: if balancing current exceeds approximately 400 mA (IBAL_OC threshold), the chip detects a short-circuit condition and shuts off that balancing channel, setting the BALx_SHORT fault flag.</p>
+  </div>
+  <div class="callout firmware">
+    <div class="callout-label">🔧 For your firmware</div>
+    <p>No firmware changes are needed between internal and external balancing topologies — the register interface is identical. The only difference is at the hardware level. For large-format cells (>100 Ah), external FET balancing with 500 mA to 1 A per channel is recommended to complete balancing within a reasonable timeframe (1–4 hours for typical SOC spreads).</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>Your 314 Ah LFP pack has one cell that is 100 mAh ahead of the others. With 200 mA internal balancing, how many hours would it take to drain that extra 100 mAh? With 1 A external balancing?</p>
+  </div>
+</section>
+
+<!-- CH 42 -->
+<section class="chapter" id="ch-42">
+  <div class="ch-number">42</div>
+  <div class="ch-title">Manual Balancing: Turning It On Per Cell</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>Manual balancing is like controlling each light switch yourself — you decide which cells to drain, turn them on, and turn them off yourself. You have full control, but you have to actively manage it.</p>
+  </div>
+  <div class="prose">
+    <p>In manual balancing mode, your firmware directly controls which cells are balancing at any given time. The control register is <code>BAL_CFG</code>, which contains individual enable bits: <code>VCELL1_BAL_EN</code> through <code>VCELL14_BAL_EN</code>. Writing a 1 to any of these bits enables the balancing switch for that cell; writing 0 disables it.</p>
+    <p>The typical manual balancing algorithm in firmware is: (1) measure all cell voltages after a full charge, (2) calculate the target voltage (usually the minimum cell voltage in the pack, or a fixed balance target), (3) for each cell that is above the target by more than a small threshold (to avoid endless micro-balancing), set its balance enable bit, (4) while balancing, periodically re-measure voltages and disable balancing for cells that have reached the target, (5) stop when all cells are within the balance tolerance window.</p>
+    <p>Multiple cells can balance simultaneously — all 14 can be active at the same time if needed. The chip's thermal and current capacity are the limiting factors. Monitoring die temperature (<code>TempChip</code>) during intense balancing is recommended to ensure you don't approach the thermal shutdown threshold.</p>
+    <p>Manual balancing continues until your firmware explicitly disables it (write 0 to the enable bits) or a fault occurs (balance short/open detection, OTchip, or a UV fault which disables balancing automatically to protect the cell from going further below the UV threshold).</p>
+  </div>
+  <div class="callout tech">
+    <div class="callout-label">⚙️ Technical Detail</div>
+    <p>Register: <code>BAL_CFG</code>. Bits: <code>VCELL1_BAL_EN</code>[0] through <code>VCELL14_BAL_EN</code>[13]. Set to 1 to enable, 0 to disable. All 14 can be active simultaneously. Balancing automatically stops on: OTchip, UV fault on that cell, BALx_OPEN or BALx_SHORT fault. Does not auto-stop on OV — firmware must stop it.</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>During balancing, you notice cell 7 has dropped to 3.0 V while you were trying to bring it down from 3.5 V. Your target was 3.3 V. What happened, and what should your firmware do to prevent this in future balancing sessions?</p>
+  </div>
+</section>
+
+<!-- CH 43 -->
+<section class="chapter" id="ch-43">
+  <div class="ch-number">43</div>
+  <div class="ch-title">Timed Balancing: Let the Chip Handle Duration</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>Instead of your firmware constantly checking "have we balanced enough yet?", you calculate the time needed, set a countdown timer, and the chip automatically stops when the timer runs out. Set it and forget it — the chip does the rest.</p>
+  </div>
+  <div class="prose">
+    <p>Timed balancing is an alternative to manual balancing that reduces MCU involvement. Instead of polling voltages and deciding when to stop, you pre-calculate how long to balance and set a timer. The chip counts down and stops balancing automatically when the timer expires, then sets the <code>EOB</code> (End of Balancing) flag.</p>
+    <p>The timer value is programmed into the <code>TimedBalTimer</code> register with a resolution of approximately 1 second. The maximum timer value allows for many hours of continuous balancing. To use timed balancing, you: (1) enable the desired balance channels in <code>BAL_CFG</code>, (2) write the desired duration in seconds to <code>TimedBalTimer</code>, (3) set the timed balance enable bit, (4) the chip starts counting and balancing simultaneously. When the timer reaches zero, balancing stops and EOB is set.</p>
+    <p>To calculate the correct timer value, use the energy balance equation: time = ΔQ / I_bal = (cell_voltage_difference × cell_capacity) / (I_bal × V_avg). More practically: if cell A is 50 mV above cell B, and each cell is 314 Ah with I_bal = 200 mA, the charge to remove is approximately: ΔQ = capacity × ΔV / V_cell = 314 × 0.05 / 3.3 ≈ 4.76 Ah, and time = 4.76 Ah / 0.2 A = 23.8 hours.</p>
+    <p>Timed balancing is particularly useful for Silent Balancing (the next chapter), where the MCU may be asleep and cannot actively poll voltage levels.</p>
+  </div>
+  <div class="callout firmware">
+    <div class="callout-label">🔧 For your firmware</div>
+    <p>Poll the <code>EOB</code> bit after enabling timed balancing — it tells you when the session is complete. Or use it in silent balancing mode where you set the timer and put the chip to sleep; when the chip wakes, check EOB to confirm balancing completed. Formula: <code>bal_time_s = (delta_voltage_V / cell_voltage_V) * cell_capacity_Ah / I_bal_A * 3600</code>.</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>After timed balancing completes (EOB set), you measure the cells and find they are still slightly imbalanced. Give two possible reasons why the calculated timer may have been insufficient.</p>
+  </div>
+</section>
+
+<!-- CH 44 -->
+<section class="chapter" id="ch-44">
+  <div class="ch-number">44</div>
+  <div class="ch-title">Silent Balancing Mode</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>Silent Balancing is like the cleaning crew that works all night while the office sleeps. The MCU shuts down, the chip goes mostly to sleep — but the balancing resistors keep quietly draining the high cells overnight, ready for a balanced pack in the morning.</p>
+  </div>
+  <div class="prose">
+    <p>Silent Balancing is a special low-power state unique to the L9963E: the chip is effectively in a sleep mode (VREG is off, SPI is inactive, no ADC measurements), but the balancing predriver circuits remain powered and balancing continues on all enabled channels. This enables overnight or extended balancing without requiring the MCU to stay active.</p>
+    <p>To enter Silent Balancing: (1) enable the desired balance channels in <code>BAL_CFG</code>, (2) optionally set up timed balancing with <code>TimedBalTimer</code>, (3) set <code>slp_bal_conf = 1</code> in the configuration register, (4) send the "Go to Sleep" SPI command. Instead of entering full sleep, the chip detects that <code>slp_bal_conf = 1</code> and active balancing channels exist, and transitions to Silent Balancing state.</p>
+    <p>In Silent Balancing, current draw is approximately 1.2–2.8 mA, compared to 10–50 µA in true sleep. This is because the balancing predriver circuits need power, and the actual balancing current (200 mA per cell) flows through the cells and RDIS resistors. The chip monitors for the timed balance expiry (EOB) and for any fault conditions that would require waking up (short circuit, overcurrent on the pack).</p>
+    <p>To wake from Silent Balancing, the MCU can send a wakeup SPI sequence, or the chip can wake itself if the timed balance timer expires. After waking, the chip re-enters Normal state and the MCU can read measurement data. Note that cell voltages cannot be read during Silent Balancing — the ADC power is off.</p>
+  </div>
+  <div class="callout warn">
+    <div class="callout-label">⚠️ Watch Out</div>
+    <p>In Silent Balancing, there is no voltage monitoring — the chip cannot check for cell UV or OV while balancing silently. If a cell reaches the UV threshold during overnight balancing, there is no automatic protection. Always use timed balancing with a conservative timer when using Silent Balancing, and measure cell voltages immediately after waking to catch any over-discharged cells.</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>You set a 10-hour timed balance and enter Silent Balancing at midnight. The car is started at 7 AM. What state is the chip in, and what must your startup firmware do before assuming the cells are balanced?</p>
+  </div>
+</section>
+
+<!-- CH 45 -->
+<section class="chapter" id="ch-45">
+  <div class="ch-number">45</div>
+  <div class="ch-title">Balance Faults: Open and Short Detection</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>What if a balancing resistor falls off the PCB (open) or something shorts across the cell while balancing (short)? The chip detects both — a missing resistor means no current flows when expected; a short means too much current flows. Both set fault flags and stop balancing to protect the cells.</p>
+  </div>
+  <div class="prose">
+    <p>The L9963E actively monitors the integrity of every balancing channel and can detect two types of faults: open-circuit and short-circuit conditions.</p>
+    <p><strong>BALx_OPEN detection:</strong> To check for an open-circuit in the balancing path (e.g., a disconnected RDIS resistor or broken S-pin trace), the chip applies a small pull-down current (the open diagnostic current) to the S-pin with the balance switch closed. It then uses an internal comparator to check whether the S-pin voltage is in the expected range. If the balancing path is open, no current flows and the voltage at the S-pin will be at an unexpected level — the comparator detects this discrepancy and sets the <code>BALx_OPEN</code> fault flag.</p>
+    <p><strong>BALx_SHORT detection:</strong> When the balance switch is enabled, the chip monitors the current through the switch using an internal overcurrent comparator. If current exceeds the threshold <code>IBAL_OC</code> (approximately 400 mA for internal balancing), the chip immediately turns off that balance channel and sets the <code>BALx_SHORT</code> flag. This protects against a shorted RDIS (which would allow unrestricted current from the cell) or a shorted external MOSFET.</p>
+    <p>Both types of faults propagate to the GSW and the FAULT line, alerting the MCU. Once a fault is detected, balancing on the affected channel stops automatically. The fault latch must be cleared by firmware before balancing can be re-attempted on that channel. If the fault reappears after clearing and re-enabling, it indicates a persistent hardware problem.</p>
+    <p>The balance comparators themselves are validated by the Hardware Self-Check (HWSC) step of the voltage conversion routine, ensuring that the fault detection mechanism is itself trustworthy.</p>
+  </div>
+  <div class="svg-wrap">
+    <svg width="500" height="130" viewBox="0 0 500 130" xmlns="http://www.w3.org/2000/svg">
+      <rect width="500" height="130" fill="#0d1929" rx="6"/>
+      <text x="250" y="16" fill="#f5a623" font-size="11" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700">BALANCE FAULT SCENARIOS</text>
+      <!-- Normal case -->
+      <rect x="10" y="28" width="130" height="80" fill="#1a2847" stroke="#4ade80" stroke-width="1.5" rx="3"/>
+      <text x="75" y="44" fill="#4ade80" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">Normal</text>
+      <text x="75" y="58" fill="#e2d9c9" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">Cell → RDIS → S(N)</text>
+      <text x="75" y="72" fill="#e2d9c9" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">Current flows OK</text>
+      <text x="75" y="86" fill="#4ade80" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">~200mA ✓</text>
+      <!-- Open case -->
+      <rect x="185" y="28" width="130" height="80" fill="#1a2847" stroke="#f5a623" stroke-width="1.5" rx="3"/>
+      <text x="250" y="44" fill="#f5a623" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">OPEN Fault</text>
+      <text x="250" y="58" fill="#e2d9c9" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">RDIS disconnected</text>
+      <text x="250" y="72" fill="#e2d9c9" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">No current flows</text>
+      <text x="250" y="86" fill="#f5a623" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">BALx_OPEN flag ⚠</text>
+      <!-- Short case -->
+      <rect x="360" y="28" width="130" height="80" fill="#1a2847" stroke="#f472b6" stroke-width="1.5" rx="3"/>
+      <text x="425" y="44" fill="#f472b6" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">SHORT Fault</text>
+      <text x="425" y="58" fill="#e2d9c9" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">RDIS shorted / 0Ω</text>
+      <text x="425" y="72" fill="#e2d9c9" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">Overcurrent</text>
+      <text x="425" y="86" fill="#f472b6" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">BALx_SHORT flag ⚠</text>
+      <text x="250" y="120" fill="#8899aa" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">Both faults: balancing stops, channel locked, GSW fault, FAULT line asserted</text>
+    </svg>
+    <p class="svg-caption">Three scenarios: normal (200 mA), open (0 mA → BALx_OPEN), short (&gt;400 mA → BALx_SHORT)</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>BAL5_SHORT fires during a balancing session. After clearing the fault latch and re-enabling balancing for cell 5, the fault fires again immediately. What does this tell you about the hardware?</p>
+  </div>
+</section>
+
+<!-- CH 46 -->
+<section class="chapter" id="ch-46">
+  <div class="ch-number">46</div>
+  <div class="ch-title">Balance Auto-Pause During ADC Measurement</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>If you try to weigh yourself while jumping on the scale, you get a wrong reading. Balancing current through the RLPF resistor creates a voltage error during measurement — like jumping on the scale. Auto-pause stops balancing briefly while the ADC reads, then resumes automatically.</p>
+  </div>
+  <div class="prose">
+    <p>When balancing is active on a cell, the balancing current (typically 200 mA) flows through the external RLPF (low-pass filter resistor, 1 kΩ) on the C-pin trace. This current creates a voltage drop across RLPF: V_error = I_bal × RLPF = 0.2 A × 1000 Ω = 200 mV. This is an enormous error for a system trying to measure cell voltages to ±2 mV accuracy — it would completely invalidate the measurement.</p>
+    <p>To prevent this, the L9963E includes an automatic balancing pause feature. When <code>BAL_AUTO_PAUSE = 1</code>, the chip automatically stops all active balancing channels just before the cell voltage ADC starts sampling, waits for the cell voltages to settle (the <code>T_CELL_SET</code> settling time), takes the ADC measurements, then automatically re-enables balancing after the cells step of the conversion is complete.</p>
+    <p>A related bit is <code>BAL_TIM_AUTO_PAUSE = 1</code>: this causes the timed balance timer to freeze during the pause period. Without this, the timer keeps counting down while balancing is paused, under-counting the actual balancing time and potentially under-balancing the cells. With this bit set, the timer only counts actual balancing time — fair accounting.</p>
+    <p>The <code>T_CELL_SET</code> (cell settling time) is a configurable delay between stopping balancing and starting the ADC measurement. It allows the cell terminal voltage to stabilize after the balancing current stops. This settling time should account for the RC time constant of the RLPF/CLPF filter: τ = 1 kΩ × 10 nF = 10 µs. A settling time of 5–10 time constants (50–100 µs) is typically sufficient.</p>
+  </div>
+  <div class="callout warn">
+    <div class="callout-label">⚠️ Watch Out</div>
+    <p>ALWAYS set <code>BAL_AUTO_PAUSE = 1</code> and <code>BAL_TIM_AUTO_PAUSE = 1</code> in your initialization sequence if you plan to run balancing and voltage measurements simultaneously. If you forget, your cell voltage readings will be wrong by up to 200 mV whenever balancing is active — which is during most of the charging phase. This error could trigger false OV/UV faults.</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>With BAL_AUTO_PAUSE=1 and BAL_TIM_AUTO_PAUSE=0, you run a 1-hour timed balance session. The conversion cycle is 100 ms with a 10 ms DUTY_ON period (cells step only). How many seconds of balancing time does the timer over-count by the end of the hour?</p>
+  </div>
+</section>
+
 </div><!-- end content-wrap -->
 </div><!-- end main -->
 
