@@ -1742,6 +1742,318 @@ code, .reg {
   </div>
 </section>
 
+
+<!-- ==================== PART 4 ==================== -->
+<div class="part-divider"><span>Part 4 — Measuring Current &amp; Coulomb Counting</span></div>
+
+<!-- CH 29 -->
+<section class="chapter" id="ch-29">
+  <div class="ch-number">29</div>
+  <div class="ch-title">The Current Sense Input (ISENSEp / ISENSEm)</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>Measuring current directly is tricky — you can't easily "see" electrons flowing. Instead, you put a tiny, precise resistor in the current path and measure the tiny voltage drop across it. More current = more voltage drop. The ISENSEp and ISENSEm pins are the two probes that measure that voltage drop.</p>
+  </div>
+  <div class="prose">
+    <p>The L9963E measures pack current using a shunt resistor method. A small, precision resistor (the shunt, value RISENSE) is placed in series with the battery pack's current path. When current flows, Ohm's Law creates a small voltage drop across the shunt: V = I × RISENSE. By measuring this voltage drop, the chip calculates the current.</p>
+    <p>The <strong>ISENSEp</strong> and <strong>ISENSEm</strong> pins connect across this shunt resistor. ISENSEp connects to the higher-potential side (positive terminal) and ISENSEm connects to the lower-potential side (negative terminal). The chip measures the differential voltage: V_diff = V(ISENSEp) − V(ISENSEm).</p>
+    <p>The maximum allowed differential voltage is ±150 mV. This means your shunt resistor value must be chosen so that at maximum pack current, the voltage across the shunt does not exceed ±150 mV. For a 200 A maximum current pack, this limits RISENSE to at most 0.75 mΩ. For a 314 Ah LFP cell pack (typical maximum continuous current ~200–300 A depending on C-rating), a shunt of 500 µΩ (0.5 mΩ) to 1 mΩ is typical.</p>
+    <p>The common-mode range of the ISENSEp/m inputs is ±225 mV around GNDREF. This means both pins must stay within 225 mV of GNDREF, which is why the shunt is placed on the negative side (near GNDREF) rather than the positive side (which would be at pack voltage) in most designs.</p>
+  </div>
+  <div class="svg-wrap">
+    <svg width="540" height="150" viewBox="0 0 540 150" xmlns="http://www.w3.org/2000/svg">
+      <rect width="540" height="150" fill="#0d1929" rx="6"/>
+      <text x="270" y="16" fill="#f5a623" font-size="11" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700">CURRENT SENSE CIRCUIT</text>
+      <!-- Battery pack -->
+      <rect x="10" y="40" width="80" height="80" fill="#1a2847" stroke="#4ade80" stroke-width="1.5" rx="3"/>
+      <text x="50" y="75" fill="#4ade80" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">Battery</text>
+      <text x="50" y="87" fill="#4ade80" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">Pack</text>
+      <!-- Load -->
+      <rect x="400" y="40" width="80" height="80" fill="#1a2847" stroke="#8899aa" stroke-width="1.5" rx="3"/>
+      <text x="440" y="79" fill="#8899aa" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">Load</text>
+      <!-- Current path top -->
+      <line x1="90" y1="55" x2="400" y2="55" stroke="#f5a623" stroke-width="2"/>
+      <polygon points="220,50 230,55 220,60" fill="#f5a623"/>
+      <text x="245" y="50" fill="#f5a623" font-size="9" font-family="JetBrains Mono,monospace">I →</text>
+      <!-- Shunt on bottom path -->
+      <line x1="90" y1="108" x2="190" y2="108" stroke="#f5a623" stroke-width="2"/>
+      <rect x="190" y="100" width="70" height="16" fill="#1a2847" stroke="#00d4b4" stroke-width="2" rx="2"/>
+      <text x="225" y="112" fill="#00d4b4" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">RISENSE</text>
+      <line x1="260" y1="108" x2="400" y2="108" stroke="#f5a623" stroke-width="2"/>
+      <!-- ISENSEp/m taps -->
+      <line x1="193" y1="108" x2="193" y2="135" stroke="#a855f7" stroke-width="1.5"/>
+      <text x="193" y="148" fill="#a855f7" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">ISENSEp</text>
+      <line x1="257" y1="108" x2="257" y2="135" stroke="#a855f7" stroke-width="1.5"/>
+      <text x="257" y="148" fill="#a855f7" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">ISENSEm</text>
+      <!-- L9963E box -->
+      <rect x="160" y="28" width="170" height="20" fill="#131f35" stroke="#1e3358" stroke-width="1" rx="2"/>
+      <text x="245" y="42" fill="#8899aa" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">L9963E CSA: V_diff = ISENSEp - ISENSEm = I × RISENSE</text>
+      <!-- Specs -->
+      <text x="340" y="130" fill="#8899aa" font-size="9" font-family="JetBrains Mono,monospace">Max diff: ±150mV</text>
+      <text x="340" y="143" fill="#8899aa" font-size="9" font-family="JetBrains Mono,monospace">CM range: ±225mV of GNDREF</text>
+    </svg>
+    <p class="svg-caption">Shunt resistor in current path. ISENSEp/m measure differential drop. Place shunt near GNDREF.</p>
+  </div>
+  <div class="callout warn">
+    <div class="callout-label">⚠️ Watch Out</div>
+    <p>If RISENSE × I_max exceeds 150 mV, the current ADC will saturate and report wrong values — without any error flag. Always size your shunt for the absolute maximum current your pack can produce (including fault conditions). For LFP cells, consider 2–3× the rated current as the shunt sizing current to handle short-circuit scenarios.</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>Your pack can deliver up to 300 A peak. What is the maximum shunt resistance you can use while keeping the differential voltage below 150 mV?</p>
+  </div>
+</section>
+
+<!-- CH 30 -->
+<section class="chapter" id="ch-30">
+  <div class="ch-number">30</div>
+  <div class="ch-title">The Current Sense ADC</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>The current sense ADC is a dedicated converter just for the shunt voltage — it never shares time with cell voltage measurements. It's like having a separate checkout lane only for current measurement, running continuously in the background.</p>
+  </div>
+  <div class="prose">
+    <p>The L9963E contains a dedicated Current Sense Amplifier (CSA) and ADC for measuring the shunt voltage, separate from the cell voltage ADCs. This dedicated path ensures that current measurement is continuous and does not interfere with cell voltage measurement timing.</p>
+    <p>The current ADC is enabled by setting the <code>coulombcounter_en</code> bit to 1. When enabled, it runs continuously, taking current samples at regular intervals defined by <code>TCYCLEADC_CUR</code>. The instantaneous calibrated current reading is available in the <code>CUR_INST_calib</code> register, updated after every sample.</p>
+    <p>The current ADC has a built-in offset calibration mechanism. The chip measures the offset error of the CSA when no current is flowing (zero differential input) and stores this calibration offset, which is then subtracted from all subsequent measurements — this is the "calib" in <code>CUR_INST_calib</code>. This reduces the offset error that would otherwise appear as a false current reading when the pack is at rest.</p>
+    <p>The current ADC result is a signed value (current can flow in or out of the pack). Positive values indicate discharge current (current leaving the pack), and negative values indicate charge current (current entering the pack), or vice versa depending on the physical shunt orientation in your design. The resolution depends on your shunt value: with RISENSE = 500 µΩ and a 16-bit CSA, you get approximately 0.45 mA per LSB.</p>
+  </div>
+  <div class="callout tech">
+    <div class="callout-label">⚙️ Technical Detail</div>
+    <p>Enable: <code>coulombcounter_en = 1</code> in conversion config register. Registers: <code>CUR_INST_calib</code> (instantaneous, with offset correction), <code>CUR_INST</code> (raw without correction). Sample interval: <code>TCYCLEADC_CUR</code> (same setting as cell ADC filter for current). Result: signed 18-bit. Range: ±150 mV / RISENSE. Example: 500 µΩ shunt → ±300 A range, ~0.45 mA resolution.</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>With a 500 µΩ shunt and the chip reporting CUR_INST_calib = +12,000 (decimal), what is the approximate current in amps? (Hint: remember the 89 µV/LSB does not apply here — the current ADC has its own scaling.)</p>
+  </div>
+</section>
+
+<!-- CH 31 -->
+<section class="chapter" id="ch-31">
+  <div class="ch-number">31</div>
+  <div class="ch-title">Coulomb Counting: Measuring How Much Charge Has Flowed</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>A Coulomb counter is like a water meter. Current is the flow rate, time is how long the tap was open, and the counter accumulates the total volume flowed. Every time you deliver a known charge (in coulombs), you know the battery's SOC has changed by that amount.</p>
+  </div>
+  <div class="prose">
+    <p>The L9963E's Coulomb counter continuously integrates the current measurement over time, producing a running total of charge that has flowed into or out of the battery pack. Mathematically, charge Q = ∫I dt, where I is the measured current and dt is the sample period.</p>
+    <p>In hardware, the chip implements this as a 32-bit accumulator: <code>CoulombCnt += current_sample × TCYCLEADC_CUR</code> on every current sample. The result is stored in the <code>CoulombCnt</code> register (accessed via burst <span class="hex">0x7B</span>). Reading the register clears the accumulator back to zero, so your firmware is responsible for adding up successive readings to maintain a running total.</p>
+    <p>The 32-bit accumulator will eventually overflow if not read frequently enough. The chip sets the <code>CoCouOvF</code> (Coulomb Counter Overflow) flag when this happens. This flag propagates to the GSW as a fault condition, so you'll notice it even without reading the CoulombCnt register directly. To prevent overflow, read the Coulomb counter at a rate that ensures the accumulator never reaches its maximum value between reads — for a 300 A pack with a 500 µΩ shunt and 2.5 ms sample period, you need to read at least every 30 seconds.</p>
+    <p>The calibrated current value is used for the accumulation, so the same offset correction that applies to <code>CUR_INST_calib</code> also applies to the Coulomb counter, reducing accumulated drift from ADC offset errors.</p>
+  </div>
+  <div class="callout firmware">
+    <div class="callout-label">🔧 For your firmware</div>
+    <p>Maintain a 64-bit accumulator in your firmware: <code>int64_t total_coulombs = 0</code>. Every time you read <code>CoulombCnt</code> (which clears the chip's counter), add the signed 32-bit value to your total: <code>total_coulombs += coulomb_cnt_signed</code>. Convert to Ah: <code>soc_ah = total_coulombs × (TCYCLEADC_CUR_sec / RISENSE_ohm) / 3600</code>.</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>You read CoulombCnt and get a negative value. What does this indicate about the direction of current flow over the accumulation period?</p>
+  </div>
+</section>
+
+<!-- CH 32 -->
+<section class="chapter" id="ch-32">
+  <div class="ch-number">32</div>
+  <div class="ch-title">Overcurrent Detection</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>Overcurrent detection is like a circuit breaker for your firmware alarm system. Instead of waiting for your MCU to poll the current value, the chip is always watching — even while asleep — and immediately raises an alarm if current spikes too high.</p>
+  </div>
+  <div class="prose">
+    <p>The L9963E provides hardware overcurrent detection that operates independently of the microcontroller, using the current sense ADC output. Two separate thresholds exist for different operating modes: <code>adc_ovc_curr_threshold_sleep</code> applies when the chip is in Sleep or Cyclic Wakeup mode, and <code>adc_ovc_curr_threshold_norm</code> applies in Normal mode.</p>
+    <p>When the instantaneous current exceeds the configured threshold in either direction (charge or discharge), the chip sets the <code>OC_curr</code> fault flag. In Sleep mode, an overcurrent event additionally triggers a wakeup — the chip exits Sleep and enters Normal mode to allow the MCU to handle the fault. This is essential for scenarios like a charged battery that is accidentally short-circuited while the BMS is sleeping: the chip wakes up and can alert the MCU via the FAULT line.</p>
+    <p>The thresholds are programmed in units that correspond to the current ADC's output, so the actual current threshold in amps depends on your shunt resistance. For a 314 Ah LFP cell rated at 1C continuous discharge (314 A), you might set the normal-mode threshold at 1.5× rated current (approximately 471 A) and the sleep threshold lower (to catch any unexpected current during standby).</p>
+    <p>Overcurrent detection works even during the cyclic wakeup sleep phase — this is one of the few monitoring functions that remains active when the chip is mostly powered down. This makes the L9963E suitable for applications where the BMS must protect the battery pack even while the main system is off.</p>
+  </div>
+  <div class="callout tech">
+    <div class="callout-label">⚙️ Technical Detail</div>
+    <p>Registers: <code>adc_ovc_curr_threshold_sleep</code> and <code>adc_ovc_curr_threshold_norm</code>. Fault flag: <code>OC_curr</code>. Action: flag set + fault propagated to GSW and FAULT line. In sleep/cyclic: additionally wakes chip to Normal. Threshold format: same scaling as current ADC output. Active during: Normal, Sleep, Cyclic Wakeup.</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>Why might you want to set the sleep-mode overcurrent threshold lower (more sensitive) than the normal-mode threshold?</p>
+  </div>
+</section>
+
+<!-- CH 33 -->
+<section class="chapter" id="ch-33">
+  <div class="ch-number">33</div>
+  <div class="ch-title">Current Sense Open Wire Diagnostic</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>If your thermometer isn't plugged in, it reads 0°C no matter what — and you'd make wrong decisions based on a fake reading. Similarly, if the ISENSEp or ISENSEm wire is broken, the current ADC reads zero — and your Coulomb counter silently stops working. The open-wire diagnostic detects this broken wire.</p>
+  </div>
+  <div class="prose">
+    <p>An open circuit in either the ISENSEp or ISENSEm connection is a silent failure mode: the current ADC will simply read zero differential voltage and report zero current, while in reality any amount of current could be flowing. This would cause the Coulomb counter to stop accumulating charge, leading to SOC estimation errors that only worsen over time.</p>
+    <p>The L9963E detects this condition through dedicated flags: <code>sense_plus_open</code> (ISENSEp connection broken) and <code>sense_minus_open</code> (ISENSEm connection broken). The detection mechanism uses a small bias current injected into the ISENSEp and ISENSEm pins. If the pin is open (disconnected), the bias current causes the pin voltage to rail to a detectable extreme — confirming the break.</p>
+    <p>These diagnostic flags are checked as part of the conversion routine and propagate to the GSW as a fault condition. If either flag is set, the Coulomb counter results should not be trusted. Your firmware should treat a current sense open-wire fault as a serious error and either stop SOC-based state estimation or flag the data as invalid until the hardware is repaired.</p>
+    <p>In addition to the open-wire check, the current sensing path is also validated by a BIST (Built-In Self-Test) as part of the HWSC step, which verifies that the CSA and its associated comparators are functioning correctly.</p>
+  </div>
+  <div class="callout firmware">
+    <div class="callout-label">🔧 For your firmware</div>
+    <p>After any fault burst (<span class="hex">0x7A</span>) read, check <code>sense_plus_open</code> and <code>sense_minus_open</code> bits. If either is set: (1) set a <code>CURRENT_SENSE_FAULT</code> flag in your state machine, (2) invalidate all Coulomb counter data, (3) switch SOC estimation to voltage-only mode, (4) log the event for diagnostics, (5) alert the operator/log system if in a safety-critical mode.</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>The current sense open-wire fault detection works by injecting a bias current. What would happen to the reported current value if the ISENSEp wire broke but there was actually 150 A flowing through the shunt?</p>
+  </div>
+</section>
+
+<!-- CH 34 -->
+<section class="chapter" id="ch-34">
+  <div class="ch-number">34</div>
+  <div class="ch-title">Coulomb Counting Routine</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>The Coulomb counter runs in the background, independently of everything else — like an odometer that keeps ticking even while you're checking the speedometer. You can pause it, but while it's running it silently accumulates every bit of charge that flows.</p>
+  </div>
+  <div class="prose">
+    <p>The Coulomb counting routine operates as a completely separate background process from the voltage measurement routine. While the cell voltage ADC runs periodically (either on-demand or cyclic), the current ADC runs continuously at its own fixed sample rate determined by <code>TCYCLEADC_CUR</code>.</p>
+    <p>Each current sample is accumulated into <code>CoulombCnt</code> without any MCU intervention required. The accumulation is hardware-based, meaning it continues even if the MCU is busy processing other data, handling SPI communication, or executing non-measurement firmware tasks. This ensures no charge "goes missing" during MCU processing gaps.</p>
+    <p>The Coulomb counting routine can be disabled by writing <code>coulombcounter_en = 0</code>. When disabled, both <code>CUR_INST</code> and <code>CoulombCnt</code> registers stop being updated. Disabling saves approximately 1 mA of current consumption — useful in low-power scenarios where current measurement is not needed. Note that disabling also means the current ADC is off, so overcurrent detection thresholds also stop working.</p>
+    <p>When the Coulomb counter is enabled and the chip enters Sleep or Cyclic Wakeup mode, there is a nuance: the current ADC itself may be powered down during the sleep phase of a cyclic wakeup, depending on the configuration. Check the datasheet's power mode table to understand exactly which current-sense functions remain active in each power mode for your specific configuration.</p>
+  </div>
+  <div class="callout tech">
+    <div class="callout-label">⚙️ Technical Detail</div>
+    <p>Coulomb counter sample rate: controlled by <code>TCYCLEADC_CUR</code> (same field family as voltage ADC filter). Accumulator: 32-bit signed, cleared on read (or burst <span class="hex">0x7B</span> read). Overflow flag: <code>CoCouOvF</code>. Current consumption when enabled: adds ~1 mA. Disable: <code>coulombcounter_en = 0</code>. Synchronized with voltage: when SOC triggered, next current sample coincides with start of cell measurement.</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>If you disable the Coulomb counter to save 1 mA during a low-power mode, what other functionality do you lose besides the charge accumulation?</p>
+  </div>
+</section>
+
+<!-- ==================== PART 5 ==================== -->
+<div class="part-divider"><span>Part 5 — Temperature Measurement</span></div>
+
+<!-- CH 35 -->
+<section class="chapter" id="ch-35">
+  <div class="ch-number">35</div>
+  <div class="ch-title">The GPIO Analog Inputs and NTCs</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>An NTC thermistor is a resistor that changes its resistance based on temperature — it resists more when cold and less when hot. By measuring the voltage across it in a divider circuit, the chip indirectly measures temperature. GPIO3–9 are the measurement probes for these thermistors.</p>
+  </div>
+  <div class="prose">
+    <p>Temperature measurement in the L9963E uses external NTC (Negative Temperature Coefficient) thermistors connected to GPIO pins 3 through 9 — up to 7 temperature sensors per chip. Each NTC thermistor is connected in a voltage divider configuration: the VTREF pin (a stable 5 V reference) through a precision pull-up resistor (RVTREF), down to the GPIO pin, then through the NTC to AGND. As temperature changes, the NTC resistance changes, moving the voltage at the GPIO pin.</p>
+    <p>The VTREF pin is the key to accurate temperature measurement. It provides a precise, stable reference voltage that sources current through the voltage divider. Since both VTREF and the pull-up resistor are stable and well-characterized, any change in GPIO voltage directly reflects a change in NTC resistance, which reflects a change in temperature.</p>
+    <p>On the PCB, each GPIO-NTC connection also includes a small filter resistor (RGPIO, typically 1–10 kΩ) in series with the GPIO pin to limit pin current and filter high-frequency noise, and a small capacitor (CNTC, typically 100 nF) from the GPIO pin to AGND to further filter noise. These components form a low-pass filter similar to the cell input filter.</p>
+    <p>GPIO8 and GPIO9 are locked as SPI SCK and SDO when SPIEN=1, so in direct SPI mode, you only have 5 NTC channels available (GPIO3–7). GPIO7 also has a secondary wake-up function that you may need to account for.</p>
+  </div>
+  <div class="svg-wrap">
+    <svg width="400" height="180" viewBox="0 0 400 180" xmlns="http://www.w3.org/2000/svg">
+      <rect width="400" height="180" fill="#0d1929" rx="6"/>
+      <text x="200" y="16" fill="#f5a623" font-size="11" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700">NTC VOLTAGE DIVIDER CIRCUIT</text>
+      <!-- VTREF -->
+      <line x1="80" y1="30" x2="80" y2="60" stroke="#a855f7" stroke-width="2"/>
+      <text x="40" y="46" fill="#a855f7" font-size="9" text-anchor="end" font-family="JetBrains Mono,monospace">VTREF (~5V)</text>
+      <!-- RVTREF -->
+      <rect x="60" y="60" width="40" height="20" fill="#1a2847" stroke="#f5a623" stroke-width="1.5" rx="2"/>
+      <text x="80" y="74" fill="#f5a623" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">RVTREF</text>
+      <line x1="80" y1="80" x2="80" y2="100" stroke="#f5a623" stroke-width="1.5"/>
+      <!-- GPIO tap point -->
+      <circle cx="80" cy="100" r="3" fill="#00d4b4"/>
+      <line x1="80" y1="100" x2="180" y2="100" stroke="#00d4b4" stroke-width="1.5"/>
+      <text x="185" y="104" fill="#00d4b4" font-size="9" font-family="JetBrains Mono,monospace">→ GPIOx pin → L9963E ADC</text>
+      <!-- NTC -->
+      <rect x="60" y="100" width="40" height="20" fill="#1a2847" stroke="#4ade80" stroke-width="1.5" rx="2"/>
+      <text x="80" y="114" fill="#4ade80" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">NTC</text>
+      <line x1="80" y1="120" x2="80" y2="145" stroke="#4ade80" stroke-width="1.5"/>
+      <!-- AGND -->
+      <line x1="60" y1="145" x2="100" y2="145" stroke="#8899aa" stroke-width="1.5"/>
+      <line x1="70" y1="149" x2="90" y2="149" stroke="#8899aa" stroke-width="1"/>
+      <line x1="75" y1="153" x2="85" y2="153" stroke="#8899aa" stroke-width="0.5"/>
+      <text x="80" y="168" fill="#8899aa" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">AGND</text>
+      <!-- Labels right -->
+      <text x="220" y="56" fill="#a855f7" font-size="9" font-family="JetBrains Mono,monospace">VTREF: stable 5V ref</text>
+      <text x="220" y="70" fill="#8899aa" font-size="9" font-family="JetBrains Mono,monospace">(from L9963E VTREF pin)</text>
+      <text x="220" y="90" fill="#f5a623" font-size="9" font-family="JetBrains Mono,monospace">RVTREF: precision pullup</text>
+      <text x="220" y="115" fill="#4ade80" font-size="9" font-family="JetBrains Mono,monospace">NTC: drops with temp ↑</text>
+      <text x="220" y="128" fill="#8899aa" font-size="9" font-family="JetBrains Mono,monospace">High temp → low V_GPIO</text>
+      <text x="220" y="141" fill="#8899aa" font-size="9" font-family="JetBrains Mono,monospace">Low temp → high V_GPIO</text>
+    </svg>
+    <p class="svg-caption">NTC voltage divider: VTREF → RVTREF → GPIO pin → NTC → AGND. GPIO voltage ∝ 1/temperature.</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>In SPI direct mode (SPIEN=1), how many NTC channels are available, and which GPIO pins can you use for them?</p>
+  </div>
+</section>
+
+<!-- CH 36 -->
+<section class="chapter" id="ch-36">
+  <div class="ch-number">36</div>
+  <div class="ch-title">How GPIO Voltage Converts to Temperature</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>The chip measures the voltage at the GPIO pin, but you want the temperature. You need a translation table — the NTC's datasheet gives you a resistance-vs-temperature curve, and knowing VTREF and RVTREF lets you turn that into a voltage-vs-temperature curve. Your firmware does the lookup.</p>
+  </div>
+  <div class="prose">
+    <p>The L9963E's GPIO measurement provides a voltage reading — not a temperature directly. Converting this to temperature is a firmware responsibility, using the NTC's known characteristics. The chip provides two measurement modes for the GPIO ADC to help with accuracy.</p>
+    <p><strong>Absolute mode</strong> (<code>ratio_abs_x_sel = 0</code>): the GPIO voltage is measured as an absolute voltage using the same 89 µV/LSB formula as cell voltages. V_GPIO = code × 89 µV. This is straightforward but can introduce error if VTREF drifts slightly from nominal.</p>
+    <p><strong>Ratiometric mode</strong> (<code>ratio_abs_x_sel = 1</code>): the GPIO voltage is measured as a ratio to VTREF. The result is a dimensionless ratio: V_GPIO / V_VTREF = code × 2⁻¹⁶. Because both the numerator and denominator track any VTREF changes together, any variation in VTREF cancels out — making this mode significantly more accurate. For precise temperature measurements, ratiometric mode is strongly recommended.</p>
+    <p>Once you have the GPIO voltage (or voltage ratio), you calculate the NTC resistance: R_NTC = RVTREF × (V_GPIO / (VTREF − V_GPIO)) in absolute mode, or R_NTC = RVTREF × (ratio / (1 − ratio)) in ratiometric mode. You then use the NTC manufacturer's B-constant formula or a lookup table to convert R_NTC to temperature in °C.</p>
+    <p>The accuracy of the temperature measurement depends strongly on the accuracy of your RVTREF resistor (use 1% tolerance or better) and the quality of the NTC itself.</p>
+  </div>
+  <div class="callout firmware">
+    <div class="callout-label">🔧 For your firmware</div>
+    <p>Use ratiometric mode for all NTC measurements. Formula: <code>ratio = gpio_code / 65536.0f</code>, then <code>R_ntc = R_pullup * ratio / (1.0f - ratio)</code>. Then use the NTC B-constant formula: <code>T_K = 1 / (ln(R_ntc / R_25) / B + 1/298.15)</code>. <code>T_C = T_K - 273.15</code>. Use R_25 and B from your NTC datasheet.</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>If VTREF drops by 2% due to a voltage regulator drift, how does this affect the temperature reading in absolute mode vs. ratiometric mode?</p>
+  </div>
+</section>
+
+<!-- CH 37 -->
+<section class="chapter" id="ch-37">
+  <div class="ch-number">37</div>
+  <div class="ch-title">On-Chip Die Temperature</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>The chip can feel its own temperature — like a person who knows when they have a fever. If the chip gets too hot (from balancing or high ambient temperature), it automatically stops balancing to protect itself before it gets damaged.</p>
+  </div>
+  <div class="prose">
+    <p>The L9963E contains an internal temperature sensor that monitors the chip's own silicon junction temperature (Tj). This is separate from the external NTC measurements — it measures how hot the chip itself is, not the battery cells. The reading is available in the <code>TempChip</code> register.</p>
+    <p>The conversion formula for the die temperature is: Tj (°C) = 1.3828 × binary_code − 99.733. The binary_code is a 2's complement signed integer from the TempChip register. For example, a code of 145 gives Tj = 1.3828 × 145 − 99.733 = 200.5 − 99.7 = 100.8°C. This formula is hardcoded into the chip and is valid across the specified junction temperature range.</p>
+    <p>If the die temperature exceeds the Thermal Shutdown threshold (TSD), which is typically between 175°C and 200°C, the chip automatically stops all balancing activity to prevent self-damage. It sets the <code>OTchip</code> flag in the fault registers, which propagates to the GSW and FAULT line. Normal operation can resume after the chip cools down and the fault latch is cleared.</p>
+    <p>The die temperature is especially relevant during heavy balancing. Each balancing channel that is active generates heat in the chip's internal MOSFETs. For a 14-cell pack with all channels balancing at 200 mA simultaneously, the thermal dissipation inside the chip can be substantial, and you should monitor TempChip during extended balancing sessions.</p>
+  </div>
+  <div class="callout tech">
+    <div class="callout-label">⚙️ Technical Detail</div>
+    <p>Register: <code>TempChip</code> (signed 2's complement). Formula: Tj = 1.3828 × code − 99.733. TSD threshold: ~175–200°C (varies by device, see datasheet electrical tables). OTchip fault: balancing auto-stops, OTchip flag set, GSW fault. Recovery: chip must cool below hysteresis threshold and firmware must clear fault latch.</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>Your TempChip register reads a signed value of +72. What is the chip's die temperature in °C? Is this within the normal operating range for a BMS in an automotive application?</p>
+  </div>
+</section>
+
+<!-- CH 38 -->
+<section class="chapter" id="ch-38">
+  <div class="ch-number">38</div>
+  <div class="ch-title">GPIO OT/UT Thresholds for Automatic Temperature Alarms</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>Instead of your firmware constantly comparing "is it too hot?", you can program the chip to do this comparison in hardware. When a cell gets too hot or too cold, the chip raises an alarm automatically — no firmware polling needed.</p>
+  </div>
+  <div class="prose">
+    <p>Each GPIO configured as an analog input (for NTC measurement) can have programmable Over-Temperature (OT) and Under-Temperature (UT) thresholds. The chip automatically compares every GPIO voltage measurement against these thresholds and sets fault flags if they are crossed.</p>
+    <p>Here is the critical insight: because the NTC voltage divider is inverted (higher temperature = lower GPIO voltage), the threshold polarity is also inverted. An OT (too hot) event corresponds to the GPIO voltage falling below the threshold — in other words, OT triggers on undervoltage of the GPIO pin. A UT (too cold) event corresponds to the GPIO voltage rising above the threshold — UT triggers on overvoltage.</p>
+    <p>Thresholds are configured as GPIO voltage values (not temperatures) using the <code>VGPIOAN_OT</code> and <code>VGPIOAN_UT</code> registers for each GPIO channel. You calculate what GPIO voltage corresponds to your desired temperature threshold using the NTC curve, and program that voltage value. For example, if your OT limit is 60°C and at 60°C the NTC gives 2.1 V at the GPIO pin, you program VGPIOAN_OT = 2.1 V (expressed in the register's LSB units).</p>
+    <p>An additional feature is the <strong>Fast Charge OT</strong> threshold: a second, tighter OT limit that can be activated specifically during fast charging. LFP cells are more sensitive to overtemperature during high-current charging, so having a dedicated fast-charge OT threshold (typically 10–15°C lower than normal OT) allows the charger to be automatically limited without requiring MCU intervention.</p>
+  </div>
+  <div class="callout firmware">
+    <div class="callout-label">🔧 For your firmware</div>
+    <p>Before enabling cyclic conversions, always program all 7 GPIO OT/UT thresholds. Convert your temperature limits to GPIO voltages using your NTC characterization. For LFP: typical OT = 60°C (charging), 70°C (discharging); UT = −20°C (charging) or −30°C (discharging). Set the fast-charge OT ~10°C lower than discharge OT. Check <code>GPIOx_OT</code> and <code>GPIOx_UT</code> flags in the fault register burst.</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>You set VGPIOAN_OT for GPIO3 to 2.0 V and VGPIOAN_UT to 4.5 V. The battery is in a cold garage and the cell temperature drops to −25°C. The NTC voltage at GPIO3 rises to 4.8 V. Which fault flag is set — OT or UT?</p>
+  </div>
+</section>
+
 </div><!-- end content-wrap -->
 </div><!-- end main -->
 
