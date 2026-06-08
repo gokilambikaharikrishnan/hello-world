@@ -1380,6 +1380,368 @@ code, .reg {
   </div>
 </section>
 
+
+<!-- ==================== PART 3 ==================== -->
+<div class="part-divider"><span>Part 3 — Measuring Cell Voltages</span></div>
+
+<!-- CH 19 -->
+<section class="chapter" id="ch-19">
+  <div class="ch-number">19</div>
+  <div class="ch-title">Cell Voltage Pins: C0 Through C14</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>Imagine a stack of 14 coins. The chip measures the thickness of each coin by placing probes between adjacent gaps. C0 is at the bottom (negative terminal), C14 is at the top (positive terminal), and each Cn pin is a probe at the interface between cell n and cell n+1.</p>
+  </div>
+  <div class="prose">
+    <p>The L9963E measures individual cell voltages using 15 analog input pins: C0 through C14. Cell 1's voltage is the difference between C1 and C0, cell 2 is C2 minus C1, and so on. This differential measurement technique is fundamental — the chip measures the voltage across each cell, not each cell's absolute voltage relative to ground.</p>
+    <p>C0 connects to the negative terminal of the bottom cell in the stack, which is near the battery's AGND (ground). C14 connects to the positive terminal of the top cell, which is near VBAT. For a 14-series pack, VBAT − C14 should be very small (essentially 0 V minus wire losses). For packs with fewer than 14 cells, connect the unused upper C-pins to the highest C-pin actually used.</p>
+    <p>Each C-pin connection on the PCB requires a low-pass filter to remove switching noise from the battery before it reaches the ADC. The recommended filter uses a 1 kΩ resistor (RLPF) in series with the C-pin trace, and a 10 nF capacitor (CLPF) from the pin to AGND. This creates an RC low-pass filter with a cutoff around 16 kHz, sufficient to filter out switching noise from inverters and chargers.</p>
+    <p>An important constraint: C10 through C14 have a minimum absolute voltage of 3 V with respect to AGND. This is because the internal measurement circuitry for the upper cells needs a minimum common-mode voltage to function. The lower cells (C1–C9) can be as low as 0 V absolute. This is not an issue in a fully-charged 10+ cell pack, but matters in edge cases.</p>
+  </div>
+  <div class="svg-wrap">
+    <svg width="560" height="200" viewBox="0 0 560 200" xmlns="http://www.w3.org/2000/svg">
+      <rect width="560" height="200" fill="#0d1929" rx="6"/>
+      <text x="280" y="16" fill="#f5a623" font-size="11" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700">CELL INPUT CONNECTIONS (3-CELL EXAMPLE)</text>
+      <!-- Battery cells stacked -->
+      <rect x="60" y="30" width="70" height="40" fill="#1a2847" stroke="#4ade80" stroke-width="1.5" rx="2"/>
+      <text x="95" y="53" fill="#4ade80" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">Cell 3</text>
+      <rect x="60" y="80" width="70" height="40" fill="#1a2847" stroke="#4ade80" stroke-width="1.5" rx="2"/>
+      <text x="95" y="103" fill="#4ade80" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">Cell 2</text>
+      <rect x="60" y="130" width="70" height="40" fill="#1a2847" stroke="#4ade80" stroke-width="1.5" rx="2"/>
+      <text x="95" y="153" fill="#4ade80" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">Cell 1</text>
+      <!-- C pins on right of cells -->
+      <line x1="130" y1="30" x2="200" y2="30" stroke="#00d4b4" stroke-width="1.5"/>
+      <text x="210" y="34" fill="#00d4b4" font-size="10" font-family="JetBrains Mono,monospace">C3</text>
+      <line x1="130" y1="80" x2="200" y2="80" stroke="#00d4b4" stroke-width="1.5"/>
+      <text x="210" y="84" fill="#00d4b4" font-size="10" font-family="JetBrains Mono,monospace">C2</text>
+      <line x1="130" y1="130" x2="200" y2="130" stroke="#00d4b4" stroke-width="1.5"/>
+      <text x="210" y="134" fill="#00d4b4" font-size="10" font-family="JetBrains Mono,monospace">C1</text>
+      <line x1="130" y1="170" x2="200" y2="170" stroke="#00d4b4" stroke-width="1.5"/>
+      <text x="210" y="174" fill="#00d4b4" font-size="10" font-family="JetBrains Mono,monospace">C0</text>
+      <!-- RLPF + CLPF on each line -->
+      <rect x="240" y="24" width="40" height="12" fill="#1a2847" stroke="#f5a623" stroke-width="1" rx="2"/>
+      <text x="260" y="34" fill="#f5a623" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">1kΩ</text>
+      <line x1="200" y1="30" x2="240" y2="30" stroke="#f5a623" stroke-width="1.5"/>
+      <line x1="280" y1="30" x2="320" y2="30" stroke="#f5a623" stroke-width="1.5"/>
+      <line x1="300" y1="30" x2="300" y2="50" stroke="#8899aa" stroke-width="1"/>
+      <rect x="290" y="50" width="20" height="10" fill="#1a2847" stroke="#8899aa" stroke-width="1" rx="1"/>
+      <text x="300" y="58" fill="#8899aa" font-size="7" text-anchor="middle" font-family="JetBrains Mono,monospace">10n</text>
+      <!-- same for C2 -->
+      <rect x="240" y="74" width="40" height="12" fill="#1a2847" stroke="#f5a623" stroke-width="1" rx="2"/>
+      <text x="260" y="84" fill="#f5a623" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">1kΩ</text>
+      <line x1="200" y1="80" x2="240" y2="80" stroke="#f5a623" stroke-width="1.5"/>
+      <line x1="280" y1="80" x2="320" y2="80" stroke="#f5a623" stroke-width="1.5"/>
+      <!-- L9963E chip box -->
+      <rect x="320" y="20" width="90" height="160" fill="#131f35" stroke="#1e3358" stroke-width="2" rx="4"/>
+      <text x="365" y="100" fill="#00d4b4" font-size="10" text-anchor="middle" font-family="JetBrains Mono,monospace">L9963E</text>
+      <text x="365" y="112" fill="#8899aa" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">Cell ADC</text>
+      <line x1="320" y1="30" x2="320" y2="30" stroke="none"/>
+      <!-- V labels -->
+      <text x="450" y="58" fill="#4ade80" font-size="9" font-family="JetBrains Mono,monospace">Vcell3 = C3-C2</text>
+      <text x="450" y="108" fill="#4ade80" font-size="9" font-family="JetBrains Mono,monospace">Vcell2 = C2-C1</text>
+      <text x="450" y="158" fill="#4ade80" font-size="9" font-family="JetBrains Mono,monospace">Vcell1 = C1-C0</text>
+    </svg>
+    <p class="svg-caption">C-pins connect at cell boundaries. RLPF (1 kΩ) + CLPF (10 nF) filter on each. Differential measurement.</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>You have a 10-cell pack and want to use the L9963E. Which C-pins do you connect cells to, and what do you do with the unused C11 through C14 pins?</p>
+  </div>
+</section>
+
+<!-- CH 20 -->
+<section class="chapter" id="ch-20">
+  <div class="ch-number">20</div>
+  <div class="ch-title">The Cell Voltage ADC</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>The ADC is like a very precise ruler. It looks at the voltage across a cell and tells you the measurement in tiny steps — each step is about 89 microvolts. A cell at 3.3 V returns a number that, when multiplied by 89 µV, gives you back 3.3 V.</p>
+  </div>
+  <div class="prose">
+    <p>The L9963E contains two independent 16-bit sigma-delta ADCs dedicated to cell voltage measurement. Having two independent ADCs is both an efficiency feature (they can measure simultaneously) and a safety feature (they provide redundant measurements for cross-checking).</p>
+    <p>The two ADCs are organized by cell parity: the odd-number ADC handles cells 1, 3, 5, 7, 9, 11, 13 and the even-number ADC handles cells 2, 4, 6, 8, 10, 12, 14. Both ADCs run simultaneously during a conversion cycle, so all 14 cells are measured in parallel rather than sequentially. This is why the measurement time is independent of the number of cells — the conversion time is set by TCYCLEADC, not by the cell count.</p>
+    <p>The specified accuracy is ±2 mV maximum error across the voltage range of 0.5 V to 4.3 V, after PCB soldering, over the full automotive temperature range of −40°C to +105°C. For LFP (lithium iron phosphate) cells operating between 2.5 V and 3.65 V, this puts worst-case error at ±0.06% — excellent for SOC estimation. The LSB resolution is approximately 89 µV (16-bit range over ~5.8 V full scale).</p>
+    <p>The voltage conversion formula is simply: V_cell (in millivolts) = register_value × 0.089 mV. Or equivalently: V_cell (in volts) = register_value × 89 × 10⁻⁶. Register values are unsigned 16-bit codes; a zero code means 0 V (cell below measurement range) and the maximum code means approximately 5.8 V.</p>
+  </div>
+  <div class="callout tech">
+    <div class="callout-label">⚙️ Technical Detail</div>
+    <p>ADC type: 16-bit sigma-delta. Accuracy: ±2 mV max in [0.5–4.3] V, after soldering, −40 to +105°C. Resolution: ~89 µV/LSB. Two independent ADCs: odd cells (ADC_ODD), even cells (ADC_EVEN). Formula: V_cell = code × 89 µV. Measurement range: 0 V to ~5.8 V. Simultaneous measurement of all enabled cells in one conversion cycle.</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>A register readout for cell 5 returns the value 37079 (decimal). What is the cell voltage in millivolts, and is this a reasonable LFP cell voltage?</p>
+  </div>
+</section>
+
+<!-- CH 21 -->
+<section class="chapter" id="ch-21">
+  <div class="ch-number">21</div>
+  <div class="ch-title">Enabling Individual Cells</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>Not every board uses all 14 channels. Telling the chip which cells are actually connected is like telling a teacher how many students are in the class — the teacher won't call on students who aren't there.</p>
+  </div>
+  <div class="prose">
+    <p>The L9963E supports between 4 and 14 cells, and you must explicitly tell it which cells are connected. This is done through the <code>VCELL_EN</code> register, which contains individual enable bits for each cell channel: <code>VCELL1_EN</code> through <code>VCELL14_EN</code>.</p>
+    <p>When a cell is disabled (its enable bit is 0), the chip skips that channel entirely during voltage conversions. The corresponding VCell register will not be updated, the data-ready bit (<code>d_rdy_VcellN</code>) will not be set, and the channel is excluded from diagnostics like open-wire detection and OV/UV threshold checking. This means you must match the enabled cells exactly to your physical cell count — enabling more cells than you have connected will cause false open-wire faults; enabling fewer will cause you to miss real measurements.</p>
+    <p>For a 14-series pack, you set all 14 bits high: VCELL1_EN through VCELL14_EN = 1. For a 10-cell pack, you set VCELL1_EN through VCELL10_EN = 1 and leave VCELL11_EN through VCELL14_EN = 0. Also make sure the physical C-pins for disabled cells are connected to the highest enabled C-pin (e.g., for 10 cells, tie C11 through C14 to C10).</p>
+    <p>This configuration must be done before starting any ADC conversion. If you start a conversion with incorrect cell enable settings, you will get wrong results that are very hard to debug.</p>
+  </div>
+  <div class="callout firmware">
+    <div class="callout-label">🔧 For your firmware</div>
+    <p>In your initialization sequence, right after exiting INIT and entering NORMAL state, the first register write should be to <code>VCELL_EN</code>. For 14 cells: write <code>0x3FFF</code> (all 14 bits set). Read it back to verify. Then write the <code>VCELL_BAL_EN</code> bits (balancing enable, separate register). Never start a conversion before setting cell enables.</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>You have a 12-cell pack and accidentally set all 14 VCELL_EN bits. What failure mode might you observe, and why?</p>
+  </div>
+</section>
+
+<!-- CH 22 -->
+<section class="chapter" id="ch-22">
+  <div class="ch-number">22</div>
+  <div class="ch-title">How a Conversion is Started: SOC Bit</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>SOC stands for Start Of Conversion — it's the "go" button for the ADC. You press it, the chip runs through its measurement routine, and when it finishes it sets a flag saying "done, come read your data." You must wait for the "done" flag before reading — looking at the result before it's ready gets you stale data.</p>
+  </div>
+  <div class="prose">
+    <p>To trigger a voltage measurement, you write a 1 to the <code>SOC</code> (Start of Conversion) bit in the <code>ADCV_CONV</code> register. This starts the conversion routine. The chip immediately sets the <code>DUTY_ON</code> flag to indicate that a conversion is in progress. While DUTY_ON is 1, the ADC is actively measuring and you should not attempt to read cell voltage registers — the values are in the middle of being updated.</p>
+    <p>Once the conversion completes, DUTY_ON drops to 0 and the chip sets individual data-ready bits for each cell: <code>d_rdy_Vcell1</code> through <code>d_rdy_Vcell14</code>. Each <code>d_rdy</code> bit is set to 1 when fresh data is available for that cell, and it is automatically cleared when you read the corresponding cell register — so you always know whether the data you're about to read is fresh or previously cached.</p>
+    <p>The conversion routine includes several optional steps beyond just measuring cells. You can configure it to also measure VBAT (always included), GPIO temperatures, and run diagnostics. The optional steps are controlled by configuration bits in the conversion control registers. More active steps mean a longer conversion time (longer DUTY_ON period), so there is a tradeoff between measurement thoroughness and conversion speed.</p>
+    <p>The total conversion time depends on the ADC filter setting (TCYCLEADC) and which optional steps are enabled. For a minimal cell-only conversion with the fastest filter, you can expect the DUTY_ON period to be a few milliseconds. For a full conversion with all steps and the longest filter, it can be 50+ milliseconds.</p>
+  </div>
+  <div class="callout tech">
+    <div class="callout-label">⚙️ Technical Detail</div>
+    <p>SOC bit: in <code>ADCV_CONV</code> register, bit [0]. Write 1 to start; auto-clears. <code>DUTY_ON</code>: in status register, indicates conversion in progress. <code>d_rdy_VcellN</code>: per-cell data ready bits, set on fresh conversion, cleared on register read. Poll <code>DUTY_ON</code> until 0 before reading any cell register.</p>
+  </div>
+  <div class="callout firmware">
+    <div class="callout-label">🔧 For your firmware</div>
+    <p>Pattern: (1) write SOC=1 to <code>ADCV_CONV</code>, (2) poll <code>DUTY_ON</code> flag until it reads 0 (with a timeout of ~100 ms for safety), (3) read cell voltages via burst 0x78. Never read cells while DUTY_ON=1. Set a timeout — if DUTY_ON stays high indefinitely, the chip may be in a fault state.</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>You read a cell voltage register and the <code>d_rdy_Vcell3</code> bit is 0. Does this mean the conversion hasn't run yet, or could there be another explanation?</p>
+  </div>
+</section>
+
+<!-- CH 23 -->
+<section class="chapter" id="ch-23">
+  <div class="ch-number">23</div>
+  <div class="ch-title">On-Demand vs. Cyclic Conversions</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>On-demand is like asking the nurse to check temperature only when you press a button. Cyclic is like setting a timer so the nurse checks automatically every 5 minutes. Both approaches work, but cyclic is better for steady monitoring without constantly tying up the MCU.</p>
+  </div>
+  <div class="prose">
+    <p>The L9963E supports two conversion trigger modes, and you choose which one fits your application best.</p>
+    <p><strong>On-demand mode</strong> is exactly what it sounds like: your firmware writes SOC=1 whenever it needs a fresh measurement, waits for DUTY_ON to clear, then reads the results. This gives your firmware complete control over timing and is useful for testing, calibration, or scenarios where you only need measurements occasionally. The downside is that your MCU must actively drive the measurement timing.</p>
+    <p><strong>Cyclic mode</strong> is enabled by writing <code>CONF_CYCLIC_EN=1</code> and setting the conversion period via the <code>TCYCLE</code> field (programmable from 100 ms to 12.8 s). In cyclic mode, the chip autonomously starts a new conversion at the end of each period — no MCU intervention needed. Your firmware simply reads the latest data at its convenience, knowing it's always fresh within one cycle period.</p>
+    <p>A related configuration bit is <code>CYCLIC_UPDATE</code>. When set to 1, cyclic conversion results are written into the readable cell voltage registers (so your MCU can read them). When 0, results are used only for internal threshold checking (OV/UV comparisons) but the registers are not updated — useful if you want the chip to autonomously watchdog the battery without the MCU reading individual voltages every cycle.</p>
+    <p>In cyclic mode, the chip continues conversions autonomously even during a Cyclic Wakeup state, enabling a low-power watchdog scenario where the MCU sleeps most of the time while the L9963E quietly monitors cells and only wakes the MCU if a threshold is crossed.</p>
+  </div>
+  <div class="svg-wrap">
+    <svg width="580" height="120" viewBox="0 0 580 120" xmlns="http://www.w3.org/2000/svg">
+      <rect width="580" height="120" fill="#0d1929" rx="6"/>
+      <text x="290" y="16" fill="#f5a623" font-size="11" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700">CYCLIC CONVERSION TIMELINE</text>
+      <!-- TCYCLE periods -->
+      <rect x="20" y="28" width="160" height="18" fill="rgba(0,212,180,0.1)" stroke="#00d4b4" stroke-width="1" rx="2"/>
+      <text x="100" y="41" fill="#00d4b4" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">TCYCLE (e.g. 100ms)</text>
+      <rect x="185" y="28" width="160" height="18" fill="rgba(0,212,180,0.1)" stroke="#00d4b4" stroke-width="1" rx="2"/>
+      <text x="265" y="41" fill="#00d4b4" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">TCYCLE</text>
+      <rect x="350" y="28" width="160" height="18" fill="rgba(0,212,180,0.1)" stroke="#00d4b4" stroke-width="1" rx="2"/>
+      <text x="430" y="41" fill="#00d4b4" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">TCYCLE</text>
+      <!-- DUTY_ON pulses inside each cycle -->
+      <rect x="20" y="55" width="60" height="14" fill="#00d4b4" rx="2"/>
+      <text x="50" y="66" fill="#0b1120" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">DUTY_ON</text>
+      <rect x="185" y="55" width="60" height="14" fill="#00d4b4" rx="2"/>
+      <text x="215" y="66" fill="#0b1120" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">DUTY_ON</text>
+      <rect x="350" y="55" width="60" height="14" fill="#00d4b4" rx="2"/>
+      <text x="380" y="66" fill="#0b1120" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">DUTY_ON</text>
+      <!-- MCU reads -->
+      <line x1="120" y1="72" x2="120" y2="90" stroke="#4ade80" stroke-width="1.5"/>
+      <text x="120" y="100" fill="#4ade80" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">MCU reads</text>
+      <line x1="285" y1="72" x2="285" y2="90" stroke="#4ade80" stroke-width="1.5"/>
+      <text x="285" y="100" fill="#4ade80" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">MCU reads</text>
+      <line x1="450" y1="72" x2="450" y2="90" stroke="#4ade80" stroke-width="1.5"/>
+      <text x="450" y="100" fill="#4ade80" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">MCU reads</text>
+      <text x="290" y="115" fill="#8899aa" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">Chip starts each cycle autonomously. MCU reads at its own pace.</text>
+    </svg>
+    <p class="svg-caption">Cyclic mode: chip auto-starts each TCYCLE period. DUTY_ON pulses during conversion. MCU reads after.</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>In cyclic mode with CYCLIC_UPDATE=0, your MCU reads VCell1 and gets the same value 10 times in a row despite the battery discharging. Why might this be, and what does CYCLIC_UPDATE=0 mean for your data?</p>
+  </div>
+</section>
+
+<!-- CH 24 -->
+<section class="chapter" id="ch-24">
+  <div class="ch-number">24</div>
+  <div class="ch-title">The ADC Filter (TCYCLEADC): Speed vs. Accuracy</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>The ADC filter is like how long you hold a measuring tape still before reading it. Hold it for 1 ms and a tiny vibration might throw off your reading. Hold it for 10 ms and the reading averages out any vibration. More time = more accurate, but also slower.</p>
+  </div>
+  <div class="prose">
+    <p>The <code>TCYCLEADC</code> field controls the integration time (effectively the filter bandwidth) of the sigma-delta ADC. A longer integration time means the ADC averages more samples, reducing noise and improving effective resolution, but it also means each conversion takes longer. A shorter time means faster conversions but potentially more noise in the reading.</p>
+    <p>There are eight settings, from <code>TCYCLEADC_000</code> (shortest, approximately 1.25 ms per cell measurement) to <code>TCYCLEADC_111</code> (longest, approximately 9.9 ms). The actual conversion time depends on the combination of this setting and the number of enabled steps in the conversion routine.</p>
+    <p>Two separate TCYCLEADC settings exist: <code>ADC_FILTER_SOC</code> applies to on-demand (SOC-triggered) conversions, and <code>ADC_FILTER_CYCLE</code> applies to cyclic conversions. This lets you, for example, use a fast filter for cyclic monitoring (to minimize DUTY_ON duty cycle) and a slower, more accurate filter for on-demand precision measurements.</p>
+    <p>For a typical BMS application with LFP cells, a mid-range filter setting like <code>TCYCLEADC_010</code> (approximately 2.5 ms) provides a good balance. The ±2 mV accuracy specification is already achieved at the minimum filter setting — longer filters help reduce noise further, which matters for tight SOC estimation algorithms.</p>
+  </div>
+  <div class="svg-wrap">
+    <svg width="560" height="140" viewBox="0 0 560 140" xmlns="http://www.w3.org/2000/svg">
+      <rect width="560" height="140" fill="#0d1929" rx="6"/>
+      <text x="280" y="16" fill="#f5a623" font-size="11" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700">TCYCLEADC FILTER OPTIONS</text>
+      <!-- Table headers -->
+      <text x="40" y="36" fill="#8899aa" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">Setting</text>
+      <text x="140" y="36" fill="#8899aa" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">Time (typ)</text>
+      <text x="250" y="36" fill="#8899aa" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">Noise</text>
+      <text x="380" y="36" fill="#8899aa" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">Best for</text>
+      <line x1="10" y1="40" x2="550" y2="40" stroke="#1e3358" stroke-width="1"/>
+      <!-- Rows -->
+      <text x="40" y="56" fill="#00d4b4" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">000</text>
+      <text x="140" y="56" fill="#e2d9c9" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">~1.25 ms</text>
+      <text x="250" y="56" fill="#f472b6" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">Higher</text>
+      <text x="380" y="56" fill="#e2d9c9" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">HWSC, fast diagnostic</text>
+      <text x="40" y="72" fill="#00d4b4" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">001</text>
+      <text x="140" y="72" fill="#e2d9c9" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">~2.5 ms</text>
+      <text x="250" y="72" fill="#f5a623" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">Medium</text>
+      <text x="380" y="72" fill="#4ade80" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">✓ Recommended cyclic</text>
+      <text x="40" y="88" fill="#00d4b4" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">010</text>
+      <text x="140" y="88" fill="#e2d9c9" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">~5.0 ms</text>
+      <text x="250" y="88" fill="#4ade80" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">Low</text>
+      <text x="380" y="88" fill="#4ade80" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">✓ Recommended SOC-demand</text>
+      <text x="40" y="104" fill="#00d4b4" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">011</text>
+      <text x="140" y="104" fill="#e2d9c9" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">~7.5 ms</text>
+      <text x="250" y="104" fill="#4ade80" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">Very Low</text>
+      <text x="380" y="104" fill="#e2d9c9" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">Precision measurements</text>
+      <text x="40" y="120" fill="#00d4b4" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">111</text>
+      <text x="140" y="120" fill="#e2d9c9" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">~9.9 ms</text>
+      <text x="250" y="120" fill="#4ade80" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">Lowest</text>
+      <text x="380" y="120" fill="#e2d9c9" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">Lab/calibration only</text>
+    </svg>
+    <p class="svg-caption">TCYCLEADC options. Two independent fields: ADC_FILTER_SOC (on-demand) and ADC_FILTER_CYCLE (cyclic).</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>Your system needs to update all cell voltages every 100 ms. The full conversion routine (cells + VBAT + GPIO + HWSC) takes about 80 ms with TCYCLEADC_010. Is this feasible? What would you do if you needed the loop to run at 50 ms?</p>
+  </div>
+</section>
+
+<!-- CH 25 -->
+<section class="chapter" id="ch-25">
+  <div class="ch-number">25</div>
+  <div class="ch-title">Reading a Cell Voltage Register</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>Each cell has its own pigeonhole in the chip's memory. After a conversion, the chip drops the new measurement into the pigeonhole. You collect it by reading the register. A little flag on the pigeonhole says "fresh mail" — that's the d_rdy bit, and it drops after you read.</p>
+  </div>
+  <div class="prose">
+    <p>Each enabled cell has a dedicated 18-bit register in the L9963E's register map: <code>VCell1</code> through <code>VCell14</code>. The layout of each register is similar: the upper bits contain the 16-bit voltage code, and two control bits provide status information — the enable bit and the data-ready bit.</p>
+    <p>The data-ready bit (<code>d_rdy_VcellN</code>) is 1 when a fresh conversion result has been written to that register since the last time you read it. It is automatically cleared when you perform a register read. This lets your firmware confirm it is reading fresh data rather than a stale value from the previous conversion cycle.</p>
+    <p>The conversion formula is straightforward: to get voltage in millivolts, multiply the 16-bit code by 0.089 mV. For example, a code of 37,079 gives 37,079 × 0.089 mV = 3,300 mV = 3.300 V. For LFP cells, you can expect codes in the range of approximately 28,090 (2.5 V) to 40,990 (3.65 V).</p>
+    <p>In your firmware, after triggering an SOC conversion and waiting for DUTY_ON to clear, you have two options for reading: read each cell register individually (14 separate 2-frame SPI transactions = 28 total frames), or use the burst <span class="hex">0x78</span> command which returns all cell voltages in 20 frames. The burst approach is always preferred for normal operation.</p>
+  </div>
+  <div class="svg-wrap">
+    <svg width="560" height="100" viewBox="0 0 560 100" xmlns="http://www.w3.org/2000/svg">
+      <rect width="560" height="100" fill="#0d1929" rx="6"/>
+      <text x="280" y="16" fill="#f5a623" font-size="11" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700">VCell1 REGISTER BIT LAYOUT (18-bit)</text>
+      <!-- Bits 17-16: d_rdy + EN -->
+      <rect x="10" y="26" width="40" height="36" fill="#1a2847" stroke="#f5a623" stroke-width="1.5" rx="2"/>
+      <text x="30" y="40" fill="#f5a623" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">d_rdy</text>
+      <text x="30" y="54" fill="#8899aa" font-size="7" text-anchor="middle" font-family="JetBrains Mono,monospace">bit17</text>
+      <rect x="52" y="26" width="40" height="36" fill="#1a2847" stroke="#4ade80" stroke-width="1.5" rx="2"/>
+      <text x="72" y="40" fill="#4ade80" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">EN</text>
+      <text x="72" y="54" fill="#8899aa" font-size="7" text-anchor="middle" font-family="JetBrains Mono,monospace">bit16</text>
+      <!-- Bits 15-0: voltage code -->
+      <rect x="94" y="26" width="456" height="36" fill="#1a2847" stroke="#00d4b4" stroke-width="2" rx="2"/>
+      <text x="322" y="40" fill="#00d4b4" font-size="10" text-anchor="middle" font-family="JetBrains Mono,monospace">VOLTAGE_CODE [15:0] — 16-bit unsigned</text>
+      <text x="322" y="54" fill="#e2d9c9" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">V_mV = code × 0.089 mV   |   e.g. 37079 → 3300 mV</text>
+      <text x="94" y="74" fill="#8899aa" font-size="7" font-family="JetBrains Mono,monospace">bit15</text>
+      <text x="530" y="74" fill="#8899aa" font-size="7" font-family="JetBrains Mono,monospace">bit0</text>
+      <text x="30" y="86" fill="#f5a623" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">d_rdy cleared on read</text>
+    </svg>
+    <p class="svg-caption">VCell1 register: d_rdy (fresh data flag) + EN (cell enabled) + 16-bit voltage code</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>You read VCell5 and the d_rdy bit is already 0 before you read it. What does this mean, and is the voltage value in that register reliable?</p>
+  </div>
+</section>
+
+<!-- CH 26 -->
+<section class="chapter" id="ch-26">
+  <div class="ch-number">26</div>
+  <div class="ch-title">Stack Voltage: Sum of All Cells</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>Instead of adding up 14 numbers yourself, the chip does it for you during every conversion cycle. It's like a cashier ringing up 14 items and giving you the subtotal automatically — you can check it against your own sum to catch any errors.</p>
+  </div>
+  <div class="prose">
+    <p>During every cell voltage conversion, the L9963E automatically accumulates the sum of all enabled cell voltages into a 20-bit register called <code>Vsum_batt</code>. This gives you the total pack voltage calculated from individual cell measurements — no MCU-side arithmetic needed.</p>
+    <p>The 20-bit width is necessary because 14 cells × maximum 5.8 V per cell = up to 81 V, which requires more bits than the 16-bit individual cell registers. The conversion formula for Vsum_batt is slightly different from individual cells; you'll find the exact scaling factor in the register map section of the datasheet, but it is essentially the sum of all individual cell codes multiplied by 89 µV.</p>
+    <p>In addition to the sum-based measurement, the chip also provides a completely independent direct measurement of the VBAT pin through an internal resistor divider. This result is stored in the <code>VBATTDIV</code> register. Having two independent methods to measure total pack voltage is key to the chip's ASIL-D safety architecture — you can cross-check Vsum_batt against VBATTDIV, and if they disagree by more than a threshold, something is wrong with either the individual cell measurements or the VBAT divider measurement.</p>
+    <p>For a 14-cell LFP pack at nominal charge (3.3 V per cell), you would expect Vsum_batt ≈ 14 × 3.3 V = 46.2 V. A healthy system should show Vsum_batt and VBATTDIV agreeing to within a few hundred millivolts (accounting for any resistance drops in series with the VBAT connection).</p>
+  </div>
+  <div class="callout tech">
+    <div class="callout-label">⚙️ Technical Detail</div>
+    <p><code>Vsum_batt</code>: 20-bit register, auto-accumulated sum of all enabled cell ADC codes during each conversion. <code>VBATTDIV</code>: direct VBAT pin measurement via internal resistor divider, separate ADC path. Both updated simultaneously with cell measurements. Use for cross-check: |Vsum_batt − VBATTDIV| should be &lt; 200 mV in a healthy system.</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>Vsum_batt reads 46,200 mV but VBATTDIV reads 44,800 mV. The difference is 1,400 mV — much larger than expected. What are two possible causes of this discrepancy?</p>
+  </div>
+</section>
+
+<!-- CH 27 -->
+<section class="chapter" id="ch-27">
+  <div class="ch-number">27</div>
+  <div class="ch-title">Burst Read for All Cell Voltages (0x78)</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>Burst 0x78 is your one-stop-shop command. Instead of 28 separate SPI transactions to read 14 cells, you send one trigger and the chip queues up all the data. You then collect 20 consecutive answers. It's like ordering a combo meal instead of every item separately.</p>
+  </div>
+  <div class="prose">
+    <p>In any real BMS firmware, you'll be reading cell voltages hundreds of times per second in the main loop. The burst <span class="hex">0x78</span> command is the cornerstone of this operation, and understanding it in detail is critical for efficient firmware.</p>
+    <p>When you send the burst command, you set the address field to <span class="hex">0x78</span> in the MOSI frame with R/W=0. The chip processes this command and begins internally preparing 20 sequential register responses. You must then wait at least 400 µs (in ISO_FAST mode) or 3 ms (in ISO_SLOW mode) — this delay is mandatory because the chip needs time to assemble all the data internally before it can start streaming it back.</p>
+    <p>After the wait, you send 20 dummy MOSI frames (anything valid with correct CRC) and collect the MISO response on each one. The chip sends back the registers in a fixed order: VCell1 through VCell14, followed by Vsum_batt, VBATTDIV, instantaneous current (CUR_INST), and balancing status. The <code>BST</code> bit (bit 38) in the MISO frame is set to 1 for all frames that are part of a burst response, helping you track that you're still in burst mode.</p>
+    <p>The <code>Addr_feedback</code> field in each MISO frame tells you exactly which register that frame contains, so even if you miss-count frames, you can always recover. After the 20th response frame, the burst is complete and normal (non-burst) operation resumes.</p>
+  </div>
+  <div class="callout firmware">
+    <div class="callout-label">🔧 For your firmware</div>
+    <p>Suggested burst read function: <code>void read_all_cells(uint16_t* vcell_mv)</code>: (1) send burst <span class="hex">0x78</span> frame, (2) <code>HAL_Delay_us(400)</code>, (3) for i in 0..19: transfer dummy frame, parse MISO — use <code>addr_feedback</code> to map to cell array index, multiply code by 89 µV, store in <code>vcell_mv</code>. Check CRC and GSW on every frame.</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>During a burst 0x78 read, you notice that frame 15 has BST=0 instead of BST=1. What does this indicate, and should you trust the rest of the burst data?</p>
+  </div>
+</section>
+
+<!-- CH 28 -->
+<section class="chapter" id="ch-28">
+  <div class="ch-number">28</div>
+  <div class="ch-title">Synchronized Voltage and Current Measurement</div>
+  <div class="callout eli5">
+    <div class="callout-label">🧒 In plain English</div>
+    <p>If you want to calculate power (P = V × I), you need voltage and current measured at exactly the same instant. Measuring them 5 ms apart during a dynamic load change would give you a wrong power calculation. Synchronization makes the chip take both readings simultaneously — like pressing the shutter on a camera that captures both values in a single snapshot.</p>
+  </div>
+  <div class="prose">
+    <p>Accurate power calculation and State-of-Charge estimation both require that voltage and current are measured at the same instant. The L9963E addresses this with an optional synchronization feature: when the Coulomb Counter is enabled (<code>coulombcounter_en=1</code>), the SOC-triggered voltage conversion is automatically held back until the next current ADC sample occurs.</p>
+    <p>In practice, this means when you write SOC=1, the chip does not immediately start the cell voltage measurement. Instead, it waits for the next current sample interval (set by <code>TCYCLEADC_CUR</code>) and then starts both measurements simultaneously — the cell voltage ADC and the current ADC sample at precisely the same moment. The resulting voltage and current readings are guaranteed to correspond to the exact same instant in time.</p>
+    <p>The implication for firmware is that the DUTY_ON period may be slightly longer than expected when Coulomb Counting is enabled — you must add up to one TCYCLEADC_CUR to your polling timeout when waiting for DUTY_ON to clear. Failing to account for this extra delay could cause a false timeout in your firmware.</p>
+    <p>This synchronization is transparent — you do not need to do anything special to receive it. Just ensure the Coulomb Counter is enabled before triggering conversions, and the chip handles the rest. The burst <span class="hex">0x78</span> read always returns both cell voltages and instantaneous current in the same burst, naturally delivering the synchronized pair to your firmware.</p>
+  </div>
+  <div class="callout aha">
+    <div class="callout-label">🧠 Key Insight</div>
+    <p>Synchronized sampling eliminates a subtle but significant error source: in dynamic load conditions, a 5 ms offset between V and I measurements can create a false power spike or hole in your SOC calculation. This is especially important for fast-charging LFP cells where current can change rapidly.</p>
+  </div>
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>Your firmware has a 50 ms timeout for DUTY_ON to clear. With TCYCLEADC_010 (5 ms filter) and coulombcounter enabled (TCYCLEADC_CUR = 2.5 ms), is your timeout sufficient? What is the maximum possible DUTY_ON period for a cells-only conversion?</p>
+  </div>
+</section>
+
 </div><!-- end content-wrap -->
 </div><!-- end main -->
 
