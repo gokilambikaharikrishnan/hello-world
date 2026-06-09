@@ -157,6 +157,36 @@ section.chapter { padding: 48px 0 32px; border-bottom: 1px solid var(--border); 
 .callout.warn .callout-label { color: var(--amber); }
 .callout.aha { border-color: var(--purple); background: rgba(168,85,247,0.07); font-style: italic; }
 .callout.aha .callout-label { color: var(--purple); font-style: normal; }
+.reg-table {
+  width: 100%; border-collapse: collapse; margin: 1.2rem 0; font-size: 13px;
+  background: var(--surface); border-radius: 6px; overflow: hidden;
+}
+.reg-table th {
+  background: var(--surface2); color: var(--teal);
+  font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.8px; padding: 8px 10px;
+  border-bottom: 1px solid var(--border); text-align: left;
+}
+.reg-table td {
+  padding: 7px 10px; border-bottom: 1px solid var(--border);
+  color: var(--text); vertical-align: top; font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px; line-height: 1.5;
+}
+.reg-table tr:last-child td { border-bottom: none; }
+.reg-table tr:hover td { background: rgba(0,212,180,0.04); }
+.chapter h3 {
+  font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600;
+  color: var(--amber); margin: 1.6rem 0 0.6rem;
+}
+pre {
+  background: var(--code-bg); border: 1px solid var(--border);
+  border-radius: 6px; padding: 14px 16px; overflow-x: auto;
+  margin: 1rem 0;
+}
+pre code {
+  font-family: 'JetBrains Mono', monospace; font-size: 12.5px;
+  color: var(--text); background: none; padding: 0;
+}
 .quick-check {
   background: var(--surface2); border: 1px solid var(--border);
   border-radius: 8px; padding: 14px 18px; margin-top: 28px;
@@ -267,6 +297,13 @@ code, .reg {
   <a href="#ch-62">Ch 62: Oscillator &amp; Clock</a>
   <a href="#ch-63">Ch 63: Regulator Monitoring</a>
   <a href="#ch-64">Ch 64: Firmware Startup Sequence</a>
+  <div class="part-label">Part IX — HW/FW Reference</div>
+  <a href="#ch-65">Ch 65: Init Register Sequence</a>
+  <a href="#ch-66">Ch 66: Power Supply Registers</a>
+  <a href="#ch-67">Ch 67: Startup, Reset &amp; Shutdown</a>
+  <a href="#ch-68">Ch 68: ADC Deep Dive</a>
+  <a href="#ch-69">Ch 69: Fault Management</a>
+  <a href="#ch-70">Ch 70: Register Quick Reference</a>
 </nav>
 
 <div id="main">
@@ -2954,6 +2991,497 @@ code, .reg {
   <div class="quick-check">
     <div class="qc-label">🧠 Quick Check</div>
     <p>You have completed the startup sequence and are in cyclic mode. Suddenly GSW shows <code>10</code> (fault). Walk through the complete firmware response sequence from detecting the non-zero GSW to resuming normal cyclic operation.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PART 9 — HW/FW ENGINEER DEEP REFERENCE
+═══════════════════════════════════════════════════════════ -->
+<div class="part-header" id="part-9">
+  <div class="part-number">Part IX</div>
+  <div class="part-title">HW / FW Engineer Deep Reference</div>
+  <div class="part-desc">Register-level detail, exact SPI transactions, startup / shutdown sequences, ADC internals, and fault management for engineers writing production firmware.</div>
+</div>
+
+<!-- ── Ch 65 ──────────────────────────────────────────── -->
+<section class="chapter" id="ch-65">
+  <div class="ch-number">65</div>
+  <h2 class="ch-title">AFE Initialisation Register Sequence</h2>
+  <p>When the L9963E exits RESET it enters INIT state. No measurement, balancing, or balancing watchdog runs until firmware completes the full init sequence and writes <code>CONF_CYCLIC_EN = 1</code>. The order below is mandatory — several registers are write-locked once the device leaves INIT.</p>
+
+  <h3>Step-by-Step Init Register Writes</h3>
+  <div class="callout firmware">
+    <div class="callout-label">🔧 Mandatory Init Order</div>
+    <p>The table below lists every register write required during INIT, in order. Registers marked <strong>INIT-only</strong> cannot be changed after <code>CONF_CYCLIC_EN = 1</code> is set without returning to INIT via software reset.</p>
+  </div>
+
+  <table class="reg-table">
+    <thead><tr><th>Step</th><th>Register</th><th>Addr (hex)</th><th>Key Bits</th><th>Typical Value</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>DEV_ADDR</td><td>0x01</td><td>ADDR[3:0]</td><td>0x01–0x0F</td><td>Unique per device in chain. Write before any broadcast.</td></tr>
+      <tr><td>2</td><td>NCELLS_CFG</td><td>0x0C</td><td>NCELLS[3:0]</td><td>0x0E (14-cell)</td><td>Sets how many cell inputs the ADC scans. INIT-only.</td></tr>
+      <tr><td>3</td><td>GPIO_CFG1</td><td>0x0D</td><td>GPIOx_FUNC[1:0]</td><td>Application-specific</td><td>Set each GPIO as ADC input / digital out / NTC / VTREF.</td></tr>
+      <tr><td>4</td><td>GPIO_CFG2</td><td>0x0E</td><td>GPIOx_PULL, GPIOx_DIR</td><td>Application-specific</td><td>Pull-up/down enable per GPIO.</td></tr>
+      <tr><td>5</td><td>ADC_CFG</td><td>0x10</td><td>ADC_FILT[1:0], ADC_RATE[1:0]</td><td>See Ch 68</td><td>Filter OSR and round-robin rate. INIT-only.</td></tr>
+      <tr><td>6</td><td>OV_THRESH</td><td>0x14</td><td>OV_TH[11:0]</td><td>0xC49 (4.20 V)</td><td>OV comparator threshold = TH × 305 µV + 2.5 V offset.</td></tr>
+      <tr><td>7</td><td>UV_THRESH</td><td>0x15</td><td>UV_TH[11:0]</td><td>0x4B0 (2.70 V)</td><td>UV comparator threshold, same formula.</td></tr>
+      <tr><td>8</td><td>OT_THRESH</td><td>0x16</td><td>OT_TH[11:0]</td><td>NTC curve dependent</td><td>Over-temperature threshold (GPIO NTC mode).</td></tr>
+      <tr><td>9</td><td>UT_THRESH</td><td>0x17</td><td>UT_TH[11:0]</td><td>NTC curve dependent</td><td>Under-temperature threshold.</td></tr>
+      <tr><td>10</td><td>BAL_CFG</td><td>0x18</td><td>BAL_AUTO_PAUSE, BAL_EXT</td><td>BAL_AUTO_PAUSE=1</td><td>Always set AUTO_PAUSE to halt balancing during ADC measurement.</td></tr>
+      <tr><td>11</td><td>COMM_TIMEOUT</td><td>0x1A</td><td>TIMEOUT_SEL[1:0]</td><td>0x2 (256 ms)</td><td>SPI communication watchdog. 00=32ms, 01=256ms, 10=1024ms, 11=2048ms.</td></tr>
+      <tr><td>12</td><td>FAULT_MASK1</td><td>0x1C</td><td>See Ch 69</td><td>Application-specific</td><td>Mask non-critical faults from asserting FAULT pin.</td></tr>
+      <tr><td>13</td><td>FAULT_MASK2</td><td>0x1D</td><td>See Ch 69</td><td>Application-specific</td><td>Second fault mask register.</td></tr>
+      <tr><td>14</td><td>NVM_CFG</td><td>0x1F</td><td>NVM_LOCK</td><td>0x1 after prog</td><td>Lock NVM after final config write. Irreversible until power cycle.</td></tr>
+      <tr><td>15</td><td>HWSC_CFG</td><td>0x20</td><td>NCYCLE_HWSC[7:0]</td><td>0x0A (every 10 cycles)</td><td>How often cyclic HWSC runs automatically in NORMAL state.</td></tr>
+      <tr><td>16</td><td>CONF_CYCLIC_EN</td><td>0x05</td><td>CYCLIC_EN</td><td>0x1</td><td>Final step — transitions device from INIT to NORMAL. Starts ADC.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>SPI Write Frame Example — Writing OV_THRESH</h3>
+  <p>Every SPI write is a 40-bit frame: <code>[ADDR:6][R/W:1][DATA:27][CRC:6]</code>. Writing <code>OV_THRESH = 0xC49</code> to device address 1:</p>
+  <pre><code>/* Build 40-bit MOSI frame */
+// ADDR field  = 0x14 (OV_THRESH register), shifted to bits [39:34]
+// R/W bit     = 0 (write), bit 33
+// DATA field  = 0x000C49 (27-bit data, right-aligned), bits [32:6]
+// CRC field   = CRC6(frame[39:6]), bits [5:0]
+
+uint64_t frame = ((uint64_t)0x14 << 34)   // register address
+               | ((uint64_t)0x00 << 33)   // write bit
+               | ((uint64_t)0xC49 << 6)   // data
+               | crc6_calc(frame >> 6);   // 6-bit CRC
+
+// MOSI hex (5 bytes, MSB-first): 0x50 0x03 0x12 0x40 [CRC]
+// MISO during this frame = response to PREVIOUS command (out-of-frame protocol)
+// To verify the write, send a READ of 0x14 in the next transaction</code></pre>
+
+  <div class="callout tech">
+    <div class="callout-label">⚙️ Tech Note</div>
+    <p><strong>Device address in broadcast vs unicast:</strong> During init, use the device-specific address in the SPI frame's device-address nibble to configure each AFE individually. Use broadcast address <code>0x0F</code> only for commands that all devices in the chain should execute simultaneously (e.g., SOC trigger).</p>
+  </div>
+
+  <h3>Verifying INIT Completion</h3>
+  <pre><code>/* After writing CONF_CYCLIC_EN=1, read STATUS1 and verify */
+uint32_t status1 = l9963_read_reg(DEV_ADDR, REG_STATUS1);
+if ((status1 & STATUS1_INIT_DONE) == 0) {
+    handle_init_fault();   // check fault registers for root cause
+}
+if (last_gsw != GSW_OK) {
+    l9963_read_faults();
+}</code></pre>
+
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>You write <code>CONF_CYCLIC_EN = 1</code> but <code>STATUS1_INIT_DONE</code> remains 0. Name three register settings that, if incorrect, could prevent INIT from completing successfully.</p>
+  </div>
+</section>
+
+<!-- ── Ch 66 ──────────────────────────────────────────── -->
+<section class="chapter" id="ch-66">
+  <div class="ch-number">66</div>
+  <h2 class="ch-title">Power Supply Configuration &amp; Monitoring Registers</h2>
+  <p>The L9963E power tree: VBAT feeds an internal LDO producing VREG (3.3 V nominal), which powers VANA (analog core), VCOM (daisy-chain transceiver), VTREF (GPIO ADC reference), and VDIG (digital logic). Each rail is monitored continuously by dedicated comparators — firmware must know which register bits report rail health and what each error means.</p>
+
+  <h3>Power Rail Architecture</h3>
+  <svg viewBox="0 0 680 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:680px;display:block;margin:1.5rem auto;">
+    <rect width="680" height="200" fill="#0b1120"/>
+    <rect x="20" y="80" width="80" height="36" fill="#1a2847" stroke="#f5a623" stroke-width="2" rx="4"/>
+    <text x="60" y="101" fill="#f5a623" font-size="10" text-anchor="middle" font-family="JetBrains Mono,monospace">VBAT</text>
+    <text x="60" y="112" fill="#8899aa" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">6–40 V</text>
+    <line x1="100" y1="98" x2="135" y2="98" stroke="#8899aa" stroke-width="1.5"/>
+    <polygon points="132,94 140,98 132,102" fill="#8899aa"/>
+    <rect x="140" y="68" width="100" height="60" fill="#1a2847" stroke="#00d4b4" stroke-width="2" rx="4"/>
+    <text x="190" y="93" fill="#00d4b4" font-size="10" text-anchor="middle" font-family="JetBrains Mono,monospace">Internal LDO</text>
+    <text x="190" y="107" fill="#e2d9c9" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">VREG 3.3 V</text>
+    <text x="190" y="120" fill="#8899aa" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">±3% tolerance</text>
+    <line x1="240" y1="98" x2="300" y2="48" stroke="#8899aa" stroke-width="1.2"/>
+    <line x1="240" y1="98" x2="300" y2="82" stroke="#8899aa" stroke-width="1.2"/>
+    <line x1="240" y1="98" x2="300" y2="118" stroke="#8899aa" stroke-width="1.2"/>
+    <line x1="240" y1="98" x2="300" y2="154" stroke="#8899aa" stroke-width="1.2"/>
+    <rect x="300" y="33" width="80" height="30" fill="#1a2847" stroke="#4ade80" stroke-width="1.5" rx="3"/>
+    <text x="340" y="52" fill="#4ade80" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">VANA</text>
+    <rect x="300" y="70" width="80" height="30" fill="#1a2847" stroke="#a855f7" stroke-width="1.5" rx="3"/>
+    <text x="340" y="89" fill="#a855f7" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">VCOM</text>
+    <rect x="300" y="106" width="80" height="30" fill="#1a2847" stroke="#f472b6" stroke-width="1.5" rx="3"/>
+    <text x="340" y="125" fill="#f472b6" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">VTREF</text>
+    <rect x="300" y="142" width="80" height="30" fill="#1a2847" stroke="#f5a623" stroke-width="1.5" rx="3"/>
+    <text x="340" y="161" fill="#f5a623" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">VDIG</text>
+    <line x1="380" y1="48" x2="420" y2="48" stroke="#8899aa" stroke-width="1" stroke-dasharray="4,2"/>
+    <line x1="380" y1="85" x2="420" y2="85" stroke="#8899aa" stroke-width="1" stroke-dasharray="4,2"/>
+    <line x1="380" y1="121" x2="420" y2="121" stroke="#8899aa" stroke-width="1" stroke-dasharray="4,2"/>
+    <line x1="380" y1="157" x2="420" y2="157" stroke="#8899aa" stroke-width="1" stroke-dasharray="4,2"/>
+    <rect x="420" y="22" width="240" height="172" fill="#131f35" stroke="#1e3358" stroke-width="1" rx="4"/>
+    <text x="540" y="38" fill="#00d4b4" font-size="9" text-anchor="middle" font-family="Space Grotesk,sans-serif">Supply Monitor → FAULT1/FAULT2</text>
+    <text x="540" y="53" fill="#4ade80" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">FAULT1[VANA_ERR] — ±10% band</text>
+    <text x="540" y="89" fill="#a855f7" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">FAULT1[VCOM_ERR] — ±10% band</text>
+    <text x="540" y="125" fill="#f472b6" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">FAULT1[VTREF_ERR] — ±5% band</text>
+    <text x="540" y="161" fill="#f5a623" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">FAULT2[VREG_ERR] — 3.0–3.6 V</text>
+  </svg>
+
+  <h3>Power Supply Fault Register Bits</h3>
+  <table class="reg-table">
+    <thead><tr><th>Register</th><th>Bit Name</th><th>Trigger Condition</th><th>Clearable?</th><th>Action Required</th></tr></thead>
+    <tbody>
+      <tr><td>FAULT1</td><td>VANA_ERR</td><td>VANA out of ±10% band</td><td>W1C after fault gone</td><td>Check VBAT level; power cycle if persistent</td></tr>
+      <tr><td>FAULT1</td><td>VCOM_ERR</td><td>VCOM out of ±10% band</td><td>W1C after fault gone</td><td>Inspect daisy-chain wiring; check VBAT</td></tr>
+      <tr><td>FAULT1</td><td>VTREF_ERR</td><td>VTREF out of ±5% band</td><td>W1C after fault gone</td><td>Check external VTREF filter cap; NTC wiring</td></tr>
+      <tr><td>FAULT2</td><td>VREG_ERR</td><td>VREG &lt; 3.0 V or &gt; 3.6 V</td><td>W1C</td><td>VBAT too low (&lt;6 V) or too high (&gt;42 V)</td></tr>
+      <tr><td>FAULT2</td><td>AGND_ERR</td><td>AGND lifted &gt; 300 mV above DGND</td><td>W1C</td><td>Board-level ground fault; check cell stack negative terminal</td></tr>
+      <tr><td>FAULT2</td><td>DGND_ERR</td><td>DGND–CGND difference &gt; 300 mV</td><td>W1C</td><td>Check MCU/AFE common-ground path</td></tr>
+      <tr><td>STATUS1</td><td>UVLO_ACTIVE</td><td>VBAT &lt; UVLO threshold (~5.5 V)</td><td>Read-only (clears when VBAT recovers)</td><td>Wait for VBAT recovery; device in UVLO lockout</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Power Supply Configuration Registers</h3>
+  <table class="reg-table">
+    <thead><tr><th>Register</th><th>Addr</th><th>Bit Field</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>VTREF_CFG</td><td>0x0F</td><td>VTREF_EN, VTREF_SEL[1:0]</td><td>Enable VTREF output; select 1.65 V / 3.3 V / external divider mode</td></tr>
+      <tr><td>SUPPLY_CFG</td><td>0x11</td><td>VCOM_EN, VANA_BIST_EN</td><td>Enable VCOM supply; enable analog supply BIST during HWSC</td></tr>
+      <tr><td>UVOV_CFG</td><td>0x12</td><td>UVLO_TH[1:0], OVLO_TH[1:0]</td><td>Adjust UVLO (5.5 / 6.0 V) and OVLO (40 / 42 V) thresholds</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout warn">
+    <div class="callout-label">⚠️ Warning</div>
+    <p><strong>VTREF must be stable before ADC calibration:</strong> If <code>VTREF_ERR</code> is set when the first ADC round-robin scan completes, all GPIO ADC results will be invalid. Always confirm <code>FAULT1[VTREF_ERR] == 0</code> before trusting any GPIO-channel measurements or NTC temperature readings.</p>
+  </div>
+
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>VBAT drops to 5.8 V momentarily during a heavy discharge pulse. Which status bit will be set? Will the device go to SLEEP or stay in NORMAL? What firmware action is needed when VBAT returns to 12 V?</p>
+  </div>
+</section>
+
+<!-- ── Ch 67 ──────────────────────────────────────────── -->
+<section class="chapter" id="ch-67">
+  <div class="ch-number">67</div>
+  <h2 class="ch-title">Startup, Reset, and Shutdown Sequences</h2>
+  <p>Correct handling of power-on, software reset, and controlled shutdown is critical for ASIL-D compliance. Each transition has specific register interactions and timing constraints.</p>
+
+  <h3>Power-On Startup Sequence</h3>
+  <p>Hardware resets the device when VBAT crosses the UVLO threshold (~5.5 V rising). The device stays in RESET for a minimum of 2 ms, then transitions to INIT automatically.</p>
+
+  <svg viewBox="0 0 680 110" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:680px;display:block;margin:1.5rem auto;">
+    <rect width="680" height="110" fill="#0b1120"/>
+    <line x1="30" y1="55" x2="660" y2="55" stroke="#1e3358" stroke-width="2"/>
+    <text x="30" y="22" fill="#f5a623" font-size="9" font-family="JetBrains Mono,monospace">VBAT</text>
+    <polyline points="30,75 75,75 115,22" fill="none" stroke="#f5a623" stroke-width="1.5"/>
+    <line x1="85" y1="15" x2="85" y2="95" stroke="#f472b6" stroke-width="1" stroke-dasharray="3,3"/>
+    <text x="87" y="14" fill="#f472b6" font-size="8" font-family="JetBrains Mono,monospace">UVLO ~5.5V</text>
+    <rect x="90" y="42" width="55" height="22" fill="#1a2847" stroke="#a855f7" stroke-width="1.5" rx="3"/>
+    <text x="117" y="57" fill="#a855f7" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">RESET</text>
+    <text x="117" y="74" fill="#8899aa" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">≥2 ms</text>
+    <rect x="148" y="42" width="95" height="22" fill="#1a2847" stroke="#00d4b4" stroke-width="1.5" rx="3"/>
+    <text x="195" y="57" fill="#00d4b4" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">INIT (FW config)</text>
+    <text x="195" y="74" fill="#8899aa" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">50–200 ms typical</text>
+    <rect x="246" y="42" width="110" height="22" fill="#1a2847" stroke="#4ade80" stroke-width="1.5" rx="3"/>
+    <text x="301" y="57" fill="#4ade80" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">NORMAL (running)</text>
+    <text x="301" y="74" fill="#8899aa" font-size="8" text-anchor="middle" font-family="JetBrains Mono,monospace">CYCLIC_EN=1</text>
+    <polygon points="145,52 148,56 145,60" fill="#8899aa"/>
+    <polygon points="243,52 246,56 243,60" fill="#8899aa"/>
+  </svg>
+
+  <h3>Software Reset (MCU-Initiated)</h3>
+  <p>A software reset returns the device to RESET state without cycling VBAT. Use it to reconfigure INIT-only registers after a fault. Trigger via the <code>SWRST</code> command register:</p>
+  <pre><code>/* Software reset */
+#define REG_SWRST   0x06
+#define SWRST_KEY   0xA5   // Must write exact key value
+
+l9963_write_reg(DEV_ADDR, REG_SWRST, SWRST_KEY);
+delay_ms(3);               // Wait ≥2 ms RESET + 1 ms margin
+
+/* Re-run full init sequence (Ch 65 steps 1–16) */
+l9963_init_sequence(DEV_ADDR);</code></pre>
+
+  <div class="callout warn">
+    <div class="callout-label">⚠️ Warning</div>
+    <p>After <code>SWRST</code>, all configuration registers return to reset defaults. NVM-stored config is reloaded automatically if <code>NVM_LOAD_EN</code> was set — but any runtime SPI changes (not stored to NVM) are lost. Always re-run the complete init sequence.</p>
+  </div>
+
+  <h3>Controlled Shutdown Sequence</h3>
+  <pre><code>/* Step 1: Stop all cell balancing */
+l9963_write_reg(DEV_ADDR, REG_BAL_CMD, 0x00);
+
+/* Step 2: Disable cyclic mode (stops ADC round-robin) */
+l9963_write_reg(DEV_ADDR, REG_CONF, CONF_CYCLIC_EN_CLR);
+
+/* Step 3: Save coulomb counter (SoC) to MCU flash before power-off */
+uint32_t coulomb = l9963_read_reg(DEV_ADDR, REG_COULOMB_CNT);
+save_soc_to_flash(coulomb);
+
+/* Step 4: Log all active faults */
+uint32_t f1 = l9963_read_reg(DEV_ADDR, REG_FAULT1);
+uint32_t f2 = l9963_read_reg(DEV_ADDR, REG_FAULT2);
+log_faults(f1, f2);
+
+/* Step 5: Enter SLEEP state (~10 µA quiescent, SPI inactive) */
+l9963_write_reg(DEV_ADDR, REG_SLEEP_CMD, SLEEP_ENTER_KEY);</code></pre>
+
+  <h3>Emergency Shutdown (FAULT Pin Interrupt)</h3>
+  <pre><code>/* FAULT pin = active-low → connect to MCU EXTI */
+void FAULT_IRQHandler(void) {
+    open_main_contactors();                        // safety first
+    l9963_write_reg(DEV_ADDR, REG_BAL_CMD, 0x00); // stop balancing
+
+    uint32_t f1 = l9963_read_reg(DEV_ADDR, REG_FAULT1);
+    uint32_t f2 = l9963_read_reg(DEV_ADDR, REG_FAULT2);
+    fault_log_write(f1, f2, get_timestamp_ms());
+
+    if (is_recoverable_fault(f1, f2))
+        schedule_recovery_attempt();
+    else
+        latch_permanent_fault();
+}</code></pre>
+
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>During a software reset, the MCU sends a new <code>DEV_ADDR</code> write before the 2 ms RESET period expires. What happens to that SPI frame, and why is the 2 ms delay mandatory before any SPI transaction?</p>
+  </div>
+</section>
+
+<!-- ── Ch 68 ──────────────────────────────────────────── -->
+<section class="chapter" id="ch-68">
+  <div class="ch-number">68</div>
+  <h2 class="ch-title">ADC Deep Dive — Measurements, Timing, and Formulas</h2>
+  <p>The L9963E's 16-bit sigma-delta ADC is shared across up to 14 cell voltages, stack voltage, up to 7 GPIO inputs (including NTC thermistors), and an internal temperature sensor. Understanding the measurement schedule, conversion time, and voltage math is essential for choosing the right ADC configuration.</p>
+
+  <h3>What the ADC Measures</h3>
+  <table class="reg-table">
+    <thead><tr><th>Channel</th><th>Inputs</th><th>Result Register</th><th>LSB Weight</th><th>Range</th></tr></thead>
+    <tbody>
+      <tr><td>Cell voltage</td><td>CELL1–CELL14</td><td>CELLx_V (0x40–0x4D)</td><td>89 µV/LSB</td><td>0–5 V (±2 mV accuracy)</td></tr>
+      <tr><td>Stack voltage</td><td>Sum of all cells</td><td>STACK_V (0x4E)</td><td>1.22 mV/LSB</td><td>0–70 V</td></tr>
+      <tr><td>GPIO analog</td><td>GPIO1–GPIO7</td><td>GPIOx_V (0x50–0x56)</td><td>89 µV (ratiometric vs VTREF)</td><td>0 – VTREF</td></tr>
+      <tr><td>NTC temperature</td><td>GPIO in NTC mode</td><td>Same GPIOx_V registers</td><td>Depends on NTC R-T curve</td><td>–40 to 125 °C</td></tr>
+      <tr><td>Internal temperature</td><td>On-chip sensor</td><td>ITMP (0x57)</td><td>~1 °C/LSB, signed</td><td>–40 to 150 °C</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Cell Voltage Conversion Formula</h3>
+  <pre><code>/* Raw 16-bit ADC → physical cell voltage */
+float cell_voltage_V(uint16_t raw) {
+    return raw * 89e-6f;      // 89 µV per LSB
+}
+// Example: raw = 0xBB80 = 48000  →  4.272 V
+
+/* Stack voltage */
+float stack_voltage_V(uint16_t raw) {
+    return raw * 1.22e-3f;    // 1.22 mV per LSB
+}</code></pre>
+
+  <h3>GPIO / NTC Conversion</h3>
+  <pre><code>/* GPIO ADC is ratiometric: result = (V_gpio / VTREF) × 2^16 */
+float gpio_voltage_V(uint16_t raw, float vtref_V) {
+    return (raw / 65536.0f) * vtref_V;
+}
+
+/* NTC temperature via Steinhart-Hart (fit coefficients from NTC datasheet) */
+float ntc_temp_celsius(float v_ntc, float vtref_V, float r_pullup) {
+    float r_ntc = r_pullup * v_ntc / (vtref_V - v_ntc);
+    const float A = 1.129e-3f, B = 2.341e-4f, C = 8.776e-8f;
+    float lnR = logf(r_ntc);
+    float T_inv = A + B * lnR + C * lnR * lnR * lnR;
+    return 1.0f / T_inv - 273.15f;
+}</code></pre>
+
+  <h3>ADC Round-Robin Timing</h3>
+  <p>Channels are scanned in fixed order: CELL1 → CELLn → STACK → GPIO1 → GPIOm → ITMP. One full pass = one <em>conversion cycle</em>. The <code>ADC_RATE</code> bits in <code>ADC_CFG</code> select the per-channel conversion time.</p>
+
+  <table class="reg-table">
+    <thead><tr><th>ADC_RATE</th><th>Cycle time (14 cells + 7 GPIO)</th><th>Cell update rate</th><th>Noise floor</th></tr></thead>
+    <tbody>
+      <tr><td>00 – fast</td><td>~1.4 ms</td><td>~714 Hz</td><td>~±3 mV</td></tr>
+      <tr><td>01 – normal</td><td>~2.8 ms</td><td>~357 Hz</td><td>~±2 mV (datasheet spec)</td></tr>
+      <tr><td>10 – slow</td><td>~5.6 ms</td><td>~178 Hz</td><td>~±1.5 mV</td></tr>
+      <tr><td>11 – slowest</td><td>~11.2 ms</td><td>~89 Hz</td><td>~±1 mV</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Burst-Reading All 14 Cell Voltages</h3>
+  <pre><code>#define BURST_CELL_VOLT  0x78   // Burst command address
+
+void read_all_cells(uint8_t dev_addr, float *cell_v) {
+    uint8_t tx[5] = {0};
+    /* Build burst read command frame for 0x78 */
+    build_spi_frame(tx, dev_addr, BURST_CELL_VOLT, SPI_READ, 0);
+    spi_transfer(tx, NULL, 5);    // trigger: MISO is prev cmd response
+
+    /* Read 14 consecutive response frames */
+    for (int i = 0; i < 14; i++) {
+        uint8_t rx[5];
+        spi_transfer(dummy_frame, rx, 5);
+        verify_crc6(rx);          // always check — don't skip in production
+        uint16_t raw = extract_data_bits(rx);   // bits [22:7] of data field
+        cell_v[i] = raw * 89e-6f;
+    }
+}</code></pre>
+
+  <div class="callout tech">
+    <div class="callout-label">⚙️ Tech Note</div>
+    <p><strong>ADC_FILT vs ADC_RATE:</strong> <code>ADC_FILT</code> selects the sigma-delta decimation filter OSR (higher = lower noise, longer time). <code>ADC_RATE</code> adds inter-channel dead time. For best accuracy with 14 cells + 3 NTCs, use <code>ADC_FILT=11, ADC_RATE=11</code>. For fast fault detection (OV/UV latency), use <code>ADC_FILT=00, ADC_RATE=00</code> — note that analog comparators always respond in &lt;1 µs regardless of ADC setting.</p>
+  </div>
+
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>Your BMS has 14 cells, 3 NTC sensors on GPIO1/2/3, and requires cell voltage accuracy better than ±1.5 mV. Which <code>ADC_FILT</code> setting should you choose, and what is the resulting maximum conversion cycle time?</p>
+  </div>
+</section>
+
+<!-- ── Ch 69 ──────────────────────────────────────────── -->
+<section class="chapter" id="ch-69">
+  <div class="ch-number">69</div>
+  <h2 class="ch-title">Fault Management — Maskable vs Non-Maskable, Clear Procedure</h2>
+  <p>The L9963E implements a two-tier fault system: primary fault registers that capture every anomaly, and fault mask registers that control which faults propagate to the FAULT pin and GSW error flag. Safety-critical faults are hardwired — they cannot be masked.</p>
+
+  <h3>Fault Register Map</h3>
+  <table class="reg-table">
+    <thead><tr><th>Register</th><th>Addr</th><th>Contains</th></tr></thead>
+    <tbody>
+      <tr><td>FAULT1</td><td>0x30</td><td>OV_CMPx, UV_CMPx (comparator-based, per cell), OV_ADCx, UV_ADCx (ADC-based, per cell), OT_x, UT_x</td></tr>
+      <tr><td>FAULT2</td><td>0x31</td><td>VREG_ERR, VANA_ERR, VCOM_ERR, VTREF_ERR, AGND_ERR, DGND_ERR, CGND_ERR</td></tr>
+      <tr><td>FAULT3</td><td>0x32</td><td>SPI_CRC_ERR, COMM_TIMEOUT, OSC_ERR, HWSC_FAIL, ADC_ERR</td></tr>
+      <tr><td>FAULT4</td><td>0x33</td><td>BAL_TIMEOUT, BAL_SHORT_x (per cell)</td></tr>
+      <tr><td>FAULT_MASK1</td><td>0x1C</td><td>Masks for FAULT1 bits (non-maskable bits are read-only 0 here)</td></tr>
+      <tr><td>FAULT_MASK2</td><td>0x1D</td><td>Masks for FAULT2/3/4 bits</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Non-Maskable Faults (Always Assert FAULT Pin)</h3>
+  <div class="callout warn">
+    <div class="callout-label">⚠️ Warning</div>
+    <p>These faults ALWAYS assert the FAULT pin and set GSW ≠ 00, regardless of FAULT_MASK settings. They represent conditions where continued operation risks physical damage or ISO 26262 ASIL-D violation.</p>
+  </div>
+  <table class="reg-table">
+    <thead><tr><th>Fault</th><th>Register / Bit</th><th>Trigger</th><th>Why Not Maskable</th></tr></thead>
+    <tbody>
+      <tr><td>Cell OV (comparator)</td><td>FAULT1[OV_CMPx]</td><td>Cell V &gt; OV_THRESH analog comparator</td><td>ASIL-D: must stop charging immediately</td></tr>
+      <tr><td>Cell UV (comparator)</td><td>FAULT1[UV_CMPx]</td><td>Cell V &lt; UV_THRESH analog comparator</td><td>ASIL-D: must stop discharging immediately</td></tr>
+      <tr><td>Ground loss</td><td>FAULT2[xGND_ERR]</td><td>Ground pin lifted &gt; 300 mV</td><td>All ADC measurements become unreliable</td></tr>
+      <tr><td>Oscillator fault</td><td>FAULT3[OSC_ERR]</td><td>16 MHz main clock out of lock</td><td>Watchdog and HWSC timing unreliable</td></tr>
+      <tr><td>HWSC fail</td><td>FAULT3[HWSC_FAIL]</td><td>BIST detected analog circuit error</td><td>ASIL-D: device integrity compromised</td></tr>
+      <tr><td>SPI CRC error</td><td>FAULT3[SPI_CRC_ERR]</td><td>Incoming frame CRC mismatch</td><td>Communication integrity violation</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Maskable Faults (Suppressible via FAULT_MASK)</h3>
+  <table class="reg-table">
+    <thead><tr><th>Fault</th><th>Register / Bit</th><th>Legitimate Use Case for Masking</th></tr></thead>
+    <tbody>
+      <tr><td>Cell OV (ADC-based)</td><td>FAULT1[OV_ADCx]</td><td>During intentional overcharge testing with tight ADC threshold</td></tr>
+      <tr><td>Cell UV (ADC-based)</td><td>FAULT1[UV_ADCx]</td><td>During deep-discharge characterization</td></tr>
+      <tr><td>OT / UT (temperature)</td><td>FAULT1[OT_x/UT_x]</td><td>Factory calibration at extreme ambient temperatures</td></tr>
+      <tr><td>Balancing timeout</td><td>FAULT4[BAL_TIMEOUT]</td><td>Production top-balance with intentionally long balance sessions</td></tr>
+      <tr><td>VTREF error</td><td>FAULT2[VTREF_ERR]</td><td>During init before VTREF cap settles (first 10 ms — unmask immediately after)</td></tr>
+      <tr><td>CommTimeout</td><td>FAULT3[COMM_TIMEOUT]</td><td>During firmware update / intentional SPI pause (remask immediately after)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Fault Clear Procedure (Write-1-to-Clear)</h3>
+  <p>FAULT register bits are <strong>sticky W1C</strong>: write a 1 to a bit to clear it, but only if the underlying fault condition is no longer present. Attempting to clear an active fault has no effect.</p>
+  <pre><code>void l9963_clear_faults(uint8_t dev_addr) {
+    uint32_t f1 = l9963_read_reg(dev_addr, REG_FAULT1);
+    uint32_t f2 = l9963_read_reg(dev_addr, REG_FAULT2);
+    uint32_t f3 = l9963_read_reg(dev_addr, REG_FAULT3);
+    uint32_t f4 = l9963_read_reg(dev_addr, REG_FAULT4);
+
+    if (!faults_resolved(f1, f2, f3, f4)) return;  // do not clear active faults
+
+    /* Write back what you read — sets W1C bits to 1 → clears them */
+    l9963_write_reg(dev_addr, REG_FAULT1, f1);
+    l9963_write_reg(dev_addr, REG_FAULT2, f2);
+    l9963_write_reg(dev_addr, REG_FAULT3, f3);
+    l9963_write_reg(dev_addr, REG_FAULT4, f4);
+
+    delay_us(100);
+    /* Verify clear succeeded */
+    if (l9963_read_reg(dev_addr, REG_FAULT1) & FAULT1_CRITICAL_MASK)
+        handle_persistent_fault();
+}</code></pre>
+
+  <h3>Checking GSW on Every MISO Frame</h3>
+  <pre><code>/* GSW = bits [1:0] of final byte of every MISO frame */
+#define GSW_OK     0x00
+#define GSW_FAULT  0x02   // fault active — read FAULT registers next
+#define GSW_FATAL  0x03   // fatal — open contactors immediately
+
+uint8_t gsw = spi_rx_last_byte & 0x03;
+if (gsw == GSW_FAULT)  schedule_fault_read();
+if (gsw == GSW_FATAL) { open_contactors(); halt_system(); }</code></pre>
+
+  <div class="callout aha">
+    <div class="callout-label">💡 Aha Moment</div>
+    <p>The GSW piggybacks on every single MISO byte at zero SPI overhead cost — you get a real-time health signal on every cell-read transaction. Never ignore the GSW field. It is your free, always-on fault indicator from the AFE.</p>
+  </div>
+
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>Your firmware masks <code>FAULT3[COMM_TIMEOUT]</code> for a factory test. The test completes. List the exact steps to unmask CommTimeout and verify FAULT3 is clean before returning to field firmware.</p>
+  </div>
+</section>
+
+<!-- ── Ch 70 ──────────────────────────────────────────── -->
+<section class="chapter" id="ch-70">
+  <div class="ch-number">70</div>
+  <h2 class="ch-title">Key Register Quick Reference</h2>
+  <p>Consolidated register reference for all L9963E registers critical to configuration, measurement, and fault management. Addresses are the 6-bit register address in the SPI frame field [39:34]. Reset values apply after power-on or SWRST.</p>
+
+  <h3>Configuration Registers</h3>
+  <table class="reg-table">
+    <thead><tr><th>Name</th><th>Addr</th><th>R/W</th><th>Reset</th><th>Key Bits</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>DEV_ADDR</td><td>0x01</td><td>R/W</td><td>0x00</td><td>ADDR[3:0]</td><td>Device address 1–14 in daisy chain (0 = unaddressed)</td></tr>
+      <tr><td>CONF</td><td>0x05</td><td>R/W</td><td>0x00</td><td>CYCLIC_EN, SLEEP_EN</td><td>Main state control register</td></tr>
+      <tr><td>SWRST</td><td>0x06</td><td>W</td><td>—</td><td>KEY[7:0]</td><td>Write 0xA5 to trigger software reset</td></tr>
+      <tr><td>NCELLS_CFG</td><td>0x0C</td><td>R/W*</td><td>0x0E</td><td>NCELLS[3:0]</td><td>Number of cells 1–14. *INIT-only</td></tr>
+      <tr><td>GPIO_CFG1</td><td>0x0D</td><td>R/W</td><td>0x00</td><td>GPIOx_FUNC[1:0] ×7</td><td>GPIO function: ADC / digital-out / NTC / VTREF per channel</td></tr>
+      <tr><td>GPIO_CFG2</td><td>0x0E</td><td>R/W</td><td>0x00</td><td>GPIOx_PULL, GPIOx_DIR</td><td>GPIO pull-up/down and direction</td></tr>
+      <tr><td>ADC_CFG</td><td>0x10</td><td>R/W*</td><td>0x00</td><td>ADC_FILT[1:0], ADC_RATE[1:0]</td><td>Filter OSR and scan rate. *INIT-only</td></tr>
+      <tr><td>OV_THRESH</td><td>0x14</td><td>R/W</td><td>0xFFF</td><td>OV_TH[11:0]</td><td>OV comparator threshold: V = TH × 305 µV + 2.5 V</td></tr>
+      <tr><td>UV_THRESH</td><td>0x15</td><td>R/W</td><td>0x000</td><td>UV_TH[11:0]</td><td>UV comparator threshold, same formula</td></tr>
+      <tr><td>OT_THRESH</td><td>0x16</td><td>R/W</td><td>0x000</td><td>OT_TH[11:0]</td><td>Over-temperature ADC threshold</td></tr>
+      <tr><td>UT_THRESH</td><td>0x17</td><td>R/W</td><td>0xFFF</td><td>UT_TH[11:0]</td><td>Under-temperature ADC threshold</td></tr>
+      <tr><td>BAL_CFG</td><td>0x18</td><td>R/W</td><td>0x00</td><td>BAL_AUTO_PAUSE, BAL_EXT, BAL_TON[3:0]</td><td>Balancing config. Always set BAL_AUTO_PAUSE=1.</td></tr>
+      <tr><td>COMM_TIMEOUT</td><td>0x1A</td><td>R/W</td><td>0x01</td><td>TIMEOUT_SEL[1:0]</td><td>SPI watchdog: 00=32ms 01=256ms 10=1024ms 11=2048ms</td></tr>
+      <tr><td>FAULT_MASK1</td><td>0x1C</td><td>R/W</td><td>0x00</td><td>Mirrors FAULT1 structure</td><td>1 = mask that fault from asserting FAULT pin</td></tr>
+      <tr><td>FAULT_MASK2</td><td>0x1D</td><td>R/W</td><td>0x00</td><td>Mirrors FAULT2/3/4 structure</td><td>Non-maskable bits are read-only 0 here</td></tr>
+      <tr><td>HWSC_CFG</td><td>0x20</td><td>R/W</td><td>0x00</td><td>NCYCLE_HWSC[7:0], HWSC_EN</td><td>Auto-HWSC every N cyclic scans; 0 = manual only</td></tr>
+      <tr><td>NVM_CFG</td><td>0x1F</td><td>R/W</td><td>0x00</td><td>NVM_LOCK, NVM_LOAD_EN</td><td>Lock NVM (irreversible until power cycle)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Measurement Result Registers</h3>
+  <table class="reg-table">
+    <thead><tr><th>Name</th><th>Addr</th><th>R/W</th><th>Format</th><th>Scale</th></tr></thead>
+    <tbody>
+      <tr><td>CELL1_V … CELL14_V</td><td>0x40–0x4D</td><td>R</td><td>uint16</td><td>89 µV/LSB</td></tr>
+      <tr><td>STACK_V</td><td>0x4E</td><td>R</td><td>uint16</td><td>1.22 mV/LSB</td></tr>
+      <tr><td>GPIO1_V … GPIO7_V</td><td>0x50–0x56</td><td>R</td><td>uint16</td><td>Ratiometric vs VTREF</td></tr>
+      <tr><td>ITMP</td><td>0x57</td><td>R</td><td>int16 signed</td><td>~1 °C/LSB</td></tr>
+      <tr><td>COULOMB_CNT_H/L</td><td>0x60–0x61</td><td>R</td><td>uint32 (2 registers)</td><td>89 µV × dt / R_sense per count</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Status and Fault Registers</h3>
+  <table class="reg-table">
+    <thead><tr><th>Name</th><th>Addr</th><th>R/W</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>STATUS1</td><td>0x28</td><td>R</td><td>INIT_DONE, CYCLIC_ACTIVE, HWSC_DONE, SLEEP_ACTIVE, UVLO_ACTIVE</td></tr>
+      <tr><td>STATUS2</td><td>0x29</td><td>R</td><td>BAL_ACTIVE[13:0] per cell, BAL_PAUSED</td></tr>
+      <tr><td>FAULT1</td><td>0x30</td><td>R/W1C</td><td>OV_CMPx[13:0], UV_CMPx[13:0], OV_ADCx[13:0], UV_ADCx[13:0], OT_x, UT_x</td></tr>
+      <tr><td>FAULT2</td><td>0x31</td><td>R/W1C</td><td>VREG_ERR, VANA_ERR, VCOM_ERR, VTREF_ERR, AGND_ERR, DGND_ERR, CGND_ERR</td></tr>
+      <tr><td>FAULT3</td><td>0x32</td><td>R/W1C</td><td>SPI_CRC_ERR, COMM_TIMEOUT, OSC_ERR, HWSC_FAIL, ADC_ERR</td></tr>
+      <tr><td>FAULT4</td><td>0x33</td><td>R/W1C</td><td>BAL_TIMEOUT, BAL_SHORT_x[13:0]</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout firmware">
+    <div class="callout-label">🔧 For your firmware</div>
+    <p>Maintain a local shadow copy of all configuration registers in MCU RAM. Periodically read back critical registers (OV_THRESH, UV_THRESH, FAULT_MASK1/2) and compare against shadow — this detects silent register corruption and is a common requirement in ASIL-D firmware qualification audits.</p>
+  </div>
+
+  <div class="quick-check">
+    <div class="qc-label">🧠 Quick Check</div>
+    <p>You need to read CELL3_V, FAULT1, and COULOMB_CNT in the minimum number of SPI transactions. Which burst command(s) would you use, and how many total 40-bit frames does it take including the burst trigger frame?</p>
   </div>
 </section>
 
